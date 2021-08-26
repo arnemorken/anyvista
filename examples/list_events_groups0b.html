@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<script src="../../../../../thirdparty/jquery/jquery-3.5.1.min.js"></script>
+<script src="../../../../../thirdparty/jquery/jquery-widget-1.12.1.min.js"></script>
+<link  href="../../../../../thirdparty/w3css/w3.css"                    rel="stylesheet"/>
+<link  href="../../../../../thirdparty/fontawesome/fa.min.css"          rel="stylesheet"/>
+<link  href="../view/skin/default/any_new.css" rel="stylesheet"/>
+<style>
+.any-item-td {
+  width: 202px;
+}
+.any-tool-td {
+  width: 25px;
+}
+</style>
+  <title>anyList test - minimal item</title>
+</head>
+
+<body>
+<script src="../view/any_functions.js"></script>
+<script src="../view/anyStrings_en-GB.js"></script>
+<script src="../view/anyDataModel.js"></script>
+<script src="../view/anyDataView.js"></script>
+<div id="any_data_content" title="Minimal grouped lists / items"></div>
+
+<script>
+let my_data = {
+  seminar: { // NOTE: Non-numerical id
+    head: "group",
+    group_name: "Seminars",
+    data: {
+      10: {
+        item: "event",
+        event_name: "Keynote lecture",
+        event_lecturer: "Isaac Newton",
+        event_arranger: "John",
+      },
+      11: {
+        list: "event",
+        event_name: "Lecture number two",
+        event_lecturer: "Albert Einstein",
+        event_arranger: "John",
+      },
+      18: {
+        event_name: "Evening lecture",
+        event_lecturer: "TBA",
+        event_arranger: "Janne",
+      },
+    },
+  },
+  organization: { // NOTE: Non-numerical id
+    head: "group",
+    group_name: "Organization",
+    data: {
+      17: {
+        list: "org_event",
+        event_name: "Organizing stuff",
+        event_responsible: "Janne",
+      },
+      20: {
+        event_name: "Order pizza",
+        event_responsible: "Lisa",
+      },
+      22: {
+        event_name: "Clean up",
+        event_responsible: "Larry",
+      },
+    },
+  },
+};
+
+ var all_filters = {
+   event: {
+     list: {
+       event_id:        { HEADER:"Id",         DISPLAY:0, HTML_TYPE:"label" },
+       event_name:      { HEADER:"Event name", DISPLAY:1, HTML_TYPE:"text" },
+       event_lecturer:  { HEADER:"Lecturer",   DISPLAY:1, HTML_TYPE:"text" },
+       event_arranger:  { HEADER:"Arranger",   DISPLAY:1, HTML_TYPE:"text" },
+     },
+     item: {
+       event_id:        { HEADER:"Id",         DISPLAY:0, HTML_TYPE:"label" },
+       event_name:      { HEADER:"Event name", DISPLAY:1, HTML_TYPE:"text" },
+       event_lecturer:  { HEADER:"Lecturer",   DISPLAY:1, HTML_TYPE:"text" },
+       event_arranger:  { HEADER:"Arranger",   DISPLAY:1, HTML_TYPE:"text" },
+     },
+   },
+   org_event: {
+     list: {
+       event_id:          { HEADER:"Id",          DISPLAY:0, HTML_TYPE:"label" },
+       event_name:        { HEADER:"Event name",  DISPLAY:1, HTML_TYPE:"text" },
+       event_responsible: { HEADER:"Responsible", DISPLAY:1, HTML_TYPE:"text" },
+     },
+   },
+   group: {
+     head: {
+       group_id  : { HEADER:"Id",     DISPLAY:0, HTML_TYPE:"label" },
+       group_name: { HEADER:"Group:", DISPLAY:1, HTML_TYPE:"text" },
+     },
+   },
+ };
+ var data_model = new anyDataModel({ data:my_data });
+ var data_view  = new anyDataView({ model:   data_model,
+                                    filters: all_filters,
+                                    id:      "any_data_content",
+                                 });
+ data_view.refresh();
+
+ </script>
+ </body>
+ </html>
