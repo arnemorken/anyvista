@@ -1,46 +1,46 @@
 /**
- * <h1>AnyList user's guide</h1>
+ * <h1>anyList user's guide</h1>
  <p>
- The AnyList jQuery API manages data in a flexible hierarchical tree structure, organized as lists and/or
+ The anyList jQuery API manages data in a flexible hierarchical tree structure, organized as lists and/or
  individual items, to be viewed and edited in a web page, used in an Android app or any other place where
  Javascript may be executed. The data may come from any source, i.e. an SQL database, another process, an
- inline script, etc., as long as it is on the proper JSON format as described below. AnyList may be used as a PHP
- framework for interacting with database tables through a web-based user interface, this means that AnyList can work
+ inline script, etc., as long as it is on the proper JSON format as described below. anyList may be used as a PHP
+ framework for interacting with database tables through a web-based user interface, this means that anyList can work
  as a Wordpress plugin. The data can be viewed and manipulated as any combination of lists and items, where a
  list may correspond to a database table and an item to a record in the table and there are only a few preconditions
  on the format of the data tables, which may contain any number of columns of many different types. However, it is
- not necessary to use a database backend, AnyList may be used directly in Javascript code to display and edit data.
- More uses for AnyList can probably be conceived of.
+ not necessary to use a database backend, anyList may be used directly in Javascript code to display and edit data.
+ More uses for anyList can probably be conceived of.
  </p>
  <p>
- The AnyList API is plugin-based and some plugins are included, specifically `user`, `group`, `event` and
+ The anyList API is plugin-based and some plugins are included, specifically `user`, `group`, `event` and
  `document`, all described below. More plugins are under development. Plugins may be linked, e.g. users
- may attend events, groups may have a number of documents, events may publish notes, and so on. When AnyList
+ may attend events, groups may have a number of documents, events may publish notes, and so on. When anyList
  is used with Wordpress, these plugins can offer useful functionality otherwise provided by several separate
  Wordpress plugins.
  </p>
  <p>
- Below we describe the AnyList client API, the server API for using AnyList with a database in a PHP environment, 
- how to write AnyList plugins and how to use AnyList with Wordpress.
+ Below we describe the anyList client API, the server API for using anyList with a database in a PHP environment,
+ how to write anyList plugins and how to use anyList with Wordpress.
  </p>
  *
  * __TABLE OF CONTENTS__
  *
  * &nbsp;<a href="#client_api">Client API</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#client_api_AnyList_classes">- Basic classes</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#client_api_anyList_classes">- Basic classes</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#client_api_data_format">- Data format</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#client_api_data_filter">- Data filter</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#client_api_css_formatting">- CSS formatting</a><br/>
  * <br/>
  * &nbsp;<a href="#server_api">Server API</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#server_api_AnyList_classes">- Basic classes</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#server_api_anyList_classes">- Basic classes</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#server_api_data_format">- Data format</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#server_api_data_filter">- Data filter</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#server_api_AnyList_defs">- Configuration files</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#server_api_anyList_defs">- Configuration files</a><br/>
  * <br/>
- * &nbsp;<a href="#api_plugin_classes">AnyList plugins</a><br/>
+ * &nbsp;<a href="#api_plugin_classes">anyList plugins</a><br/>
  * <br/>
- * &nbsp;<a href="#wordpress_AnyList">AnyList and Wordpress</a><br/>
+ * &nbsp;<a href="#wordpress_anyList">anyList and Wordpress</a><br/>
  * <br/>
  * &nbsp;<a href="#full_examples">Examples</a><br/>
  *
@@ -51,41 +51,41 @@
  *
  * The client API is written in Javascript and uses the jQuery library. It is easily integrated into web
  * pages for displaying and modifying information (for example from database tables) by including the
- * following in your index.html (replace `AnyList.1.0.0` with your actual version of AnyList):
+ * following in your index.html (replace `anyList.1.0.0` with your actual version of anyList):
  *
- *      <script src="AnyList_defs.js"></script>
- *      <script src="AnyList.1.0.0.min.js"></script>
- *      <link  href="AnyList.1.0.0.min.css" rel="stylesheet"/>
+ *      <script src="anyList_defs.js"></script>
+ *      <script src="anyList.1.0.0.min.js"></script>
+ *      <link  href="anyList.1.0.0.min.css" rel="stylesheet"/>
  *
- * Note: The first line (including the <b>AnyList_defs.js</b> configuration file) is only neccessary when using
- * AnyList with a server backend.
- * See <a href="#server_api_AnyList_defs">configuration files</a> and the <a href="#server_api">server API</a>
+ * Note: The first line (including the <b>anyList_defs.js</b> configuration file) is only neccessary when using
+ * anyList with a server backend.
+ * See <a href="#server_api_anyList_defs">configuration files</a> and the <a href="#server_api">server API</a>
  * documentation below for more info on this.
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="client_api_AnyList_classes"></a>
+ * <a name="client_api_anyList_classes"></a>
  * <h3>Basic classes</h3>
  *
- * AnyList currently contains three basic classes: `AnyListDataModel`, `AnyListDataView` and `AnyListDataViewTabs`.
+ * anyList currently contains three basic classes: `anyListDataModel`, `anyListDataView` and `anyListDataViewTabs`.
  *
- * Plugins, such as `event` or `user`, inherits from `AnyListDataModel` and either `AnyListDataView` or
- * `AnyListDataViewTabs`.
+ * Plugins, such as `event` or `user`, inherits from `anyListDataModel` and either `anyListDataView` or
+ * `anyListDataViewTabs`.
  *
- * __<a href="../classes/AnyListDataModel.html">`AnyListDataModel`</a>__: Keeps data in a tree structure in memory and optionally synchronizes it
+ * __<a href="../classes/anyListDataModel.html">`anyListDataModel`</a>__: Keeps data in a tree structure in memory and optionally synchronizes it
  * with a database.
  *
- * __<a href="../classes/AnyListDataView.html">`AnyListDataView`</a>__: Contains methods to display and optionally edit the data structure contained
- * in `AnyListDataModel`.
+ * __<a href="../classes/anyListDataView.html">`anyListDataView`</a>__: Contains methods to display and optionally edit the data structure contained
+ * in `anyListDataModel`.
  *
- * __<a href="../classes/AnyListDataViewTabs.html">`AnyListDataViewTabs`</a>__: Groups a data view using tabs. Inherits from `AnyListDataView`.
+ * __<a href="../classes/anyListDataViewTabs.html">`anyListDataViewTabs`</a>__: Groups a data view using tabs. Inherits from `anyListDataView`.
  *
  * <hr style="color:#eee;"/>
  *
  * <a name="client_api_data_format"></a>
  * <h3>Data format</h3>
  *
- * The data of <a href="../classes/AnyListDataModel.html">`AnyListDataModel`</a> is stored in a tree structure with
+ * The data of <a href="../classes/anyListDataModel.html">`anyListDataModel`</a> is stored in a tree structure with
  * associated methods for searching, inserting, updating and deleting items or lists in memory, as well as
  * methods for synchronizing the data structure with database tables. Methods whose name begins with `data`
  * work on the in-memory data tree, methods whose name begins with `db` communicate with the database.
@@ -96,12 +96,12 @@
  * a Javascript-only database such as AlaSQL could also be used. Client filters that determine which data are
  * displayed and how, are described below.
  *
- * A `AnyListDataModel` object can hold item and/or list data. The data structure, a JSON object internally kept
- * in the `this.data` variable of `AnyListDataModel`, is the same for both items and lists and is organized into
+ * An `anyListDataModel` object can hold item and/or list data. The data structure, a JSON object internally kept
+ * in the `this.data` variable of `anyListDataModel`, is the same for both items and lists and is organized into
  * hierarchical groups (even for a single item) for each data type (where a type can be for example `"user"`,
  * `"event"`, `"group"`, `"document"` etc.).
  *
- * Below is a description of the data structure with which `AnyListDataModel` can be initialized. Items in square
+ * Below is a description of the data structure with which `anyListDataModel` can be initialized. Items in square
  * brackets are not verbatim. The data structure is a collection of objects where each object may have these
  * entries:
 
@@ -110,43 +110,38 @@
     a string, however, if it is a string the methods for finding the maximum or next available id will not work.
     If used with a database backend, it corresponds to an individual row in a database table.
 
-  - A `type` (for example "group", "event", "user" or "document").
-    If not specified, the last preceding type in the data structure is assumed while displaying the data.
-    If there is no last used type, the current model's type is used. If the current model has no type,
-    `type` will be set to the empty string. If used with a database backend, it corresponds to a specific
-    database table / plugin.<br/>
-    *Example: `type:"event"`.
-
-  - A `kind`, which must have one of the values "head", "item" or "list", used to indicated how a data
-    object is to be displayed. If not specified, the last preceding kind in the data structure is assumed
-    while displaying the data. If there is no last used kind, the current model's kind is used. If the current
-    model has no kind, "list" is assumed.<br/>
-    *Example: `kind:"item"`.
+  - A entry specifiying a "kind/type" combination, where "kind" may be one of `head`, `list` or `item` and "type"
+    is a user-specified type, for example "group", "event", "user" or "document". "kind" is used to indicate how the
+    data of type "type" should be displayed.
+    If this entry is not specified, the last preceding entry in the data structure is assumed.
+    If there is no preceding entry, `list` is the default value assumed for "kind" and the current model's type is
+    the default value for assumed for "type" and if the model has no type, "type" will be set to the empty string. 
+    If used with a database backend, "type" corresponds to a specific database table / plugin.<br/>
+    *Example: `list:"event"`.
 
   - An `edit` entry, specifying that this part of the data structure should be editable in a view even though the
     `isEditable` variable of the view is set to false.<br/>
-    TODO! Not tested yet.<br/>
+    TODO: Not tested yet.<br/>
     *Example: `edit:"true"`.
 
   - An `add` entry, specifying that a button for adding a new item of given type should be displayed for entering
     new data at this part of the data structure.<br/>
-    TODO! Not implemented yet.<br/>
+    TODO: Not implemented yet.<br/>
     *Example: `add:"user"`.
 
   - A `skip` entry, an array specifying columns that should not be displayed for this object.<br/>
-    TODO! Not implemented yet.<br/>
+    TODO: Not implemented yet.<br/>
     *Example: `skip:["event_organizer","event_start_date"]`.
 
-  - A `page_links` object, specifying pagination for a list (i.e. when kind == "list"`), containing:
+  - A `page_links` object, specifying pagination for a list, containing:
     - from, the start number in the list,
     - to, the end number in the list,
     - num, the number of list rows to display.
 
-    <br/>TODO! Not implemented yet.<br/>
+    <br/>TODO: Not implemented yet.<br/>
     *Example: `page_links:{from:11,to:20,num:10}`.
 
-  - A number of key / value pairs, that are the actual data that are to be displayed (as a heading, list or item,
-    according to kind).<br/>
+  - A number of key / value pairs, that are the actual data that are to be displayed.<br/>
     *Example: `event_name:"Tour de France"`.
 
  * - A `data` object, which is a collection of objects as described (see description and example below), may
@@ -155,20 +150,19 @@
  * A formal description of a data object:
  *
  *        [object] = {
- *          [id]: {                           // Mandatory.
- *            type: "[type]",                 // Optional. Default: See above.
- *            kind: "head" | "item" | "list", // Optional. Default: See above.
- *            edit: true | false,             // Optional. Default: false.
- *            add:  "[type"]                  // Optional. Default: undefined
- *            page_links: {                    // Optional
- *              from: [start_item_no],        // Mandatory in `page_links`.
- *              to:   [end_item_no],          // Mandatory in `page_links`.
- *              num:  [number_of_items],      // Mandatory in `page_links`.
+ *          [id]: {                         // Mandatory.
+ *            head | item | list: "[type]", // Optional. Default: See above.
+ *            edit: true | false,           // Optional. Default: false.
+ *            add:  "[type]"                // Optional. Default: undefined
+ *            page_links: {                 // Optional
+ *              from: [start_item_no],      // Mandatory in `page_links`.
+ *              to:   [end_item_no],        // Mandatory in `page_links`.
+ *              num:  [number_of_items],    // Mandatory in `page_links`.
  *            },
- *            [type]_name: "[string]",        // Optional, but mandatory if any key / value pairs are given.
- *            [name]: "[value]",              // Optional. One or more key / value pairs.
+ *            [type]_name: "[string]",      // Optional, but mandatory if any key / value pairs are given.
+ *            [name]: "[value]",            // Optional. One or more key / value pairs.
  *            ...
- *            data: [object],                 // Optional. Subdata.
+ *            data: [object],               // Optional. Subdata.
  *          },
  *          ...
  *        };
@@ -178,8 +172,7 @@
  *
  *     let my_data = {
  *       0: {
- *         type: "foo",
- *         kind: "item",
+ *         item: "foo",
  *         foo_name: "Hello world",
  *       },
  *     };
@@ -188,8 +181,7 @@
  *
  *     let my_data = {
  *       0: {
- *         type: "foo",
- *         kind: "list",
+ *         list: "foo",
  *         data: {
  *           1: {
  *             foo_name: "Hello world",
@@ -202,94 +194,106 @@
  *     };
  *
  * Data in a list of a given type may be grouped. A sample data structure for a grouped list may look like this
- * (a full and slightly more complicated version of this example is found in the `examples` folder of the source
- * code as `list_events_groups0a.html`):
+ * (a full version is found in the `examples` folder of the source code as `list_events_groups0a.html`):
  *
  *      let my_data = {
  *        seminar: { // NOTE: Non-numerical id
- *          type: "group",
- *          kind: "head",
+ *          head: "group",
  *          group_name: "Seminars",
  *          data: {
  *            10: {
- *              type: "event",
+ *              list: "event",
  *              event_name: "Keynote lecture",
+ *              event_lecturer: "Isaac Newton",
+ *              event_arranger: "John",
  *            },
  *            11: {
  *              event_name: "Lecture number two",
- *           },
+ *              event_lecturer: "Albert Einstein",
+ *              event_arranger: "John",
+ *            },
  *            18: {
  *              event_name: "Evening lecture",
+ *              event_lecturer: "TBA",
+ *              event_arranger: "Janne",
  *           },
  *          },
  *        },
  *        organization: { // NOTE: Non-numerical id
- *          type: "group",
- *          kind: "head",
+ *          head: "group",
  *          group_name: "Organization",
  *          data: {
  *            17: {
- *              type: "org_event",
+ *              list: "org_event",
  *              event_name: "Organizing stuff",
+ *              event_responsible: "Janne",
  *            },
  *            20: {
  *              event_name: "Order pizza",
+ *              event_responsible: "Lisa",
  *            },
  *            23: {
  *              event_name: "Clean up",
+ *              event_responsible: "Larry",
  *            },
  *          },
  *        },
  *      };
  *
- * When displayed, the above data structure could look like something this (depending on CSS and data filters,
+ * When displayed, the above data structure would look like something this (depending on CSS and data filters,
  * see below for more info on this):<br/>
  * <img src="../../../doc/img/list_events_groups0a.png"/>
  *
  * Items and lists may be freely mixed. For example, the above data structure with the first event displayed
- * as an item and the rest as a list, would look like this  (a full and slightly more complicated version of
- * this example is found in the examples folder of the source code as list_events_groups0b.html):
+ * as an item and the rest as a list, would look like this (a full version is found in the examples folder of
+ * the source code as list_events_groups0b.html):
  *
  *      let my_data = {
- *        seminar: { // NOTE: Non-numerical id
- *          type: "group",
- *          kind: "head",
- *          group_name: "Seminars",
- *          data: {
- *            10: {
- *              type: "event",
- *              kind: "item",
- *              event_name: "Keynote lecture",
- *            },
- *            11: {
- *              kind: "list",
- *              event_name: "Lecture number two",
+ *      seminar: { // NOTE: Non-numerical id
+ *             head: "group",
+ *             group_name: "Seminars",
+ *             data: {
+ *             10: {
+ *                 item: "event",
+ *                 event_name: "Keynote lecture",
+ *                 event_lecturer: "Isaac Newton",
+ *                 event_arranger: "John",
+ *             },
+ *             11: {
+ *                 list: "event",
+ *                 event_name: "Lecture number two",
+ *                 event_lecturer: "Albert Einstein",
+ *                 event_arranger: "John",
+ *             },
+ *             18: {
+ *                 event_name: "Evening lecture",
+ *                 event_lecturer: "TBA",
+ *                 event_arranger: "Janne",
+ *             },
  *           },
- *            18: {
- *              event_name: "Evening lecture",
+ *         },
+ *         organization: { // NOTE: Non-numerical id
+ *             head: "group",
+ *             group_name: "Organization",
+ *             data: {
+ *             17: {
+ *                 list: "org_event",
+ *                 event_name: "Organizing stuff",
+ *                 event_responsible: "Janne",
+ *             },
+ *             20: {
+ *                 event_name: "Order pizza",
+ *                 event_responsible: "Lisa",
+ *             },
+ *             22: {
+ *                 event_name: "Clean up",
+ *                 event_responsible: "Larry",
+ *             },
  *           },
- *          },
- *        },
- *        organization: { // NOTE: Non-numerical id
- *          type: "group",
- *          kind: "head",
- *          group_name: "Organization",
- *          data: {
- *            17: {
- *              type: "org_event",
- *              event_name: "Organizing stuff",
- *            },
- *            20: {
- *              event_name: "Order pizza",
- *            },
- *            23: {
- *              event_name: "Clean up",
- *            },
- *          },
- *        },
+ *         },
  *      };
  *
- * When displayed, the above data structure could look like something this (depending on CSS and data filters,
+ * When displayed, the above data structure would look like something this (depending on CSS and data filters,
  * see below for more info on this):<br/>
  * <img src="../../../doc/img/list_events_groups0b.png"/>
  *
@@ -306,7 +310,7 @@
  * if used with a database, must be the same as the corresponding entry in the server filter. The value is an object
  * describing the field and must as a minimum have `HEADER`, `DISPLAY` and `HTML_TYPE` keys:
  *
- *      { [column name]:{HEADER:"[name]", DISPLAY:[0,false,1,true], HTML_TYPE:"[type]", [OBJ_something]: [something]}, ... }
+ *      { [column name]:{HEADER:"[name]", DISPLAY:[0|false|1|true], HTML_TYPE:"[type]", [OBJ_something]: [something]}, ... }
  *
  * Here [column name] is the name of the table column (which may correspond to column in a database table),
  * e.g. `event_name`. Entries from "OBJ_something" onwards are optional.
@@ -394,15 +398,15 @@
  *
  * The server API implements a simplified abstraction of a general database table as well as some specific table
  * classes corresponding to types (plugins) in the client API. Currently the following plugins are implemented:
- * `user`, `event`, `document` and `group`. The AnyList server API is developed for and tested in the Apache/MySQL
+ * `user`, `event`, `document` and `group`. The anyList server API is developed for and tested in the Apache/MySQL
  * (and Wordpress) environment but should also work in other settings.
  *
- * The file <b>`data/AnyList_defs.php`</b> should be edited to match the `AnyList_defs.js` file of the client.
- * See <a href="#server_api_AnyList_defs">configuration files</a> below for more info on this.
+ * The file <b>`data/anyList_defs.php`</b> should be edited to match the `anyList_defs.js` file of the client.
+ * See <a href="#server_api_anyList_defs">configuration files</a> below for more info on this.
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="server_api_AnyList_classes"></a>
+ * <a name="server_api_anyList_classes"></a>
  * <h3>Basic classes</h3>
  *
  * The general database abstraction is implemented through:
@@ -410,28 +414,28 @@
  *   <img style="width:10px;height:10px" src="../../../doc/img/external_link.png"/></a> extension to PHP. This interface
  *   is found under `data/db/`. The user should edit the <b>`data/db/dbDefs.php`</b> file and set the host name, database
  *   name and database user/password, but would normally not bother with the other  files in the `data/db/` folder,
- * - the class <a href="../../data/out/classes/AnyListTable.html">`AnyListTable`</a> contains the abstract database table interface
+ * - the class <a href="../../data/out/classes/anyListTable.html">`anyListTable`</a> contains the abstract database table interface
  *   and has methods that call the actual database operations such as  search, insert, update, delete, etc.
  *   Plugins may extend this class and provide the methods `createFilters()`, `getSelectItem()`, `getLeftJoinItem()`,
  *   `getSelectList()`, `getLeftJoinList()` and `getOrderByList`. More info on these methods can be found in the
- *   documentation for the `AnyListTable` class,
- * - a helper class <a href="../../data/classes/AnyListTableFactory.html">`AnyListTableFactory`</a> in `data/AnyListTableFactory.php`.
+ *   documentation for the `anyListTable` class,
+ * - a helper class <a href="../../data/classes/anyListTableFactory.html">`anyListTableFactory`</a> in `data/anyListTableFactory.php`.
  *
  * <hr style="color:#eee;"/>
  *
  * <a name="server_api_data_format"></a>
  * <h3>Data format</h3>
  *
- * On the server side, data from the database are handled by the (abstract) `AnyListTable` class.
- * Each class that derives from `AnyListTable` corresponds to a type/plugin/database table.
- * A `AnyListTable` may set an id in which case it contains data for a single item. If id is not set, `AnyListTable` is assumed
+ * On the server side, data from the database are handled by the (abstract) `anyListTable` class.
+ * Each class that derives from `anyListTable` corresponds to a type/plugin/database table.
+ * A `anyListTable` may set an id in which case it contains data for a single item. If id is not set, `anyListTable` is assumed
  * to contain data for a list. Note that an item may contain lists as subdata.
- * `AnyListTable` uses an id key and a name key which must correspond to the `id_key` and `name_key` in the `AnyListDataModel`
- * class on the client side. These values must be set by the plugin classes deriving from `AnyListTable` (see
- * <a href="#api_plugin_classes">AnyList plugins</a> below).
+ * `anyListTable` uses an id key and a name key which must correspond to the `id_key` and `name_key` in the `anyListDataModel`
+ * class on the client side. These values must be set by the plugin classes deriving from `anyListTable` (see
+ * <a href="#api_plugin_classes">anyList plugins</a> below).
  *
- * Data returned from the server is formatted by the `AnyListTable` class into a hierarchical tree structure
- * that can be displayed by the `AnyListDataView` class on the client. This structure is exactly the same
+ * Data returned from the server is formatted by the `anyListTable` class into a hierarchical tree structure
+ * that can be displayed by the `anyListDataView` class on the client. This structure is exactly the same
  * as for the client <a href="#client_api_data_format">described above</a> (except that it is encoded
  * in PHP of course).
  *
@@ -453,8 +457,7 @@
  *      $data = array (
  *        '+0' =>
  *        array (
- *          'type' => 'foo',
- *          'kind' => 'item',
+ *          'item' => 'foo',
  *          'foo_name' => 'Hello world',
  *        ),
  *      );
@@ -464,8 +467,7 @@
  *      $data = array (
  *        '+0' =>
  *        array (
- *          'type' => 'foo',
- *          'kind' => 'list',
+ *          'list' => 'foo',
  *          'data' =>
  *          array (
  *            '+1' =>
@@ -484,15 +486,15 @@
  * simplifications: The server will always put the data into <i>groups</i>, even if it's just a single
  * item. This is done in order to be able to directly display grouped data with the view classes on the
  * client side. It is not something most users will need to think about, unless they are writing new
- * plugins or extending AnyList itself.
+ * plugins or extending anyList itself.
  *
  * <div style="border:1px solid #888; padding:5px;padding-bottom:0px;">
  * <b>A NOTE ON DATA INSULATION:</b>
  *
  * The `GetData.php` script, which is the "gateway" to accessing the server, encapsulates the entire data
  * structure in an object indexed by `JSON_CODE`. This is done in order to insulate the data from error
- * messages that may be generated by the http server. On the client, the db* result methods "unpack" the
- * data structure before it is processed further. If supplying your own success methods, this unpacking
+ * messages that may be generated by the http server. On the client, the db* result methods "unwraps" the
+ * data structure before it is processed further. If supplying your own success methods, this unwrapping
  * should be done explicitely, like this:
  * <pre>
  *   let serverdata = jqXHR;
@@ -538,11 +540,11 @@
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="server_api_AnyList_defs"></a>
+ * <a name="server_api_anyList_defs"></a>
  * <h3>Configuration files</h3>
  *
- * When AnyList is used in a server environment, the client and server must know how to communicate with each other.
- * This is done by setting certain values in the <b>`AnyList_defs.js`</b> and <b>`AnyList_defs.php`</b> configuration files.
+ * When anyList is used in a server environment, the client and server must know how to communicate with each other.
+ * This is done by setting certain values in the <b>`anyList_defs.js`</b> and <b>`anyList_defs.php`</b> configuration files.
  * Some of these values could and should be set by the user. Do this by editing the files, not programmatically.
  *
  * Common values for the two files are:
@@ -550,74 +552,75 @@
  * `gServer`:
  * The host on which the server is run.
  *
- * `gAnyListFolder`:
- * The AnyList root directory. If AnyList is run as a Wordpress plugin, `gAnyListFolder` should be something like
- * `my_wp_installation/wp-content/plugins/AnyList/`.
+ * `ganyListFolder`:
+ * The anyList root directory. If anyList is run as a Wordpress plugin, `ganyListFolder` should be something like
+ * `my_wp_installation/wp-content/plugins/anyList/`.
  *
  * `gThirdpartyFolder`:
- * The location of the third party code for uploading files and for exporting tables to Excel.
+ * The location of the third party code for uploading files, for exporting tables to Excel, etc.
  *
  * `gDataScript`:
- * The location of a script, relative to `gAnyListFolder`, that delivers data on the correct JSON format. Default
+ * The location of a script, relative to `ganyListFolder`, that delivers data on the correct JSON format. Default
  * value is `data/GetData.php`, which is the default script that gets data from the PHP backend. It is used by
- * the db* methods of `AnyListDataModel` and only when the `this.mode` variable is set to `remote`, otherwise the
- * setting is ignored. If a script is not specified in `gDataScript`, the data must be delivered to AnyList by some
- * other means. Refer to the included examples.
+ * the db* methods of `anyListDataModel` and only when the `this.mode` variable is set to `remote`, otherwise the
+ * setting is ignored. If a script is not specified in `gDataScript`, the data must be delivered to anyList by some
+ * other method. Refer to the included examples.
  *
  * `gUploadFolder`:
- * The location of an upload folder, relative to gAnyListFolder. Used by the `document` plugin.
+ * The location of an upload folder, relative to ganyListFolder. Used by the `document` plugin.
  *
  * `gSkin`:
  * The skin (CSS) to use. Skins are found in the `view/skin/` folder.
  *
- * <h4>AnyList_defs.js</h4>
+ * <h4>anyList_defs.js</h4>
  *
- * AnyList_defs.js must be included by Javascript code that wants to interact with the database server backend.
+ * anyList_defs.js is located in the anyList `view` directory and must be included by Javascript code that wants
+ * to interact with the database server backend.
  *
- * Sample listing of the `AnyList_defs.js` file:
+ * Sample listing of the `anyList_defs.js` file:
  *
  *      let gServer           = "//localhost/";
- *      let gAnyListFolder        = "projects/AnyList/testserver/wp-content/plugins/AnyList/";
- *      let gThirdpartyFolder = "projects/AnyList/thirdparty/";
- *      let gDataScript       = "data/GetData.php";  // Relative to gAnyListFolder
- *      let gUploadFolder     = "wordpress/upload/"; // Relative to gAnyListFolder
+ *      let ganyListFolder    = "projects/anyList/testserver/wp-content/plugins/anyList/";
+ *      let gThirdpartyFolder = "projects/anyList/thirdparty/";
+ *      let gDataScript       = "data/GetData.php";  // Relative to ganyListFolder
+ *      let gUploadFolder     = "wordpress/upload/"; // Relative to ganyListFolder
  *      let gSkin             = "default";
  *
  *      // Do not edit below unless you really know what you are doing.
  *
  *      let gVersion = "1.0.0";
  *
- *      let AnyList_defs = {
- *        dataScript:   gServer + gAnyListFolder + gDataScript,                                // URL of data source script
+ *      let anyList_defs = {
+ *        dataScript:   gServer + ganyListFolder + gDataScript,                            // URL of data source script
  *        uploadFolder: gUploadFolder,                                                     // Name of upload folder
- *        uploadURL:    gServer + gAnyListFolder + gUploadFolder,                              // Name of upload folder
+ *        uploadURL:    gServer + ganyListFolder + gUploadFolder,                          // URL of upload folder
  *        uploadScript: gServer + gThirdpartyFolder + "ajaxfileupload/ajaxfileupload.php", // URL of upload script
  *      };
  *
- * <h4>AnyList_defs.php</h4>
+ * <h4>anyList_defs.php</h4>
  *
- * AnyList_defs.php is located in the AnyList data directory and must be included by PHP code that wants to
- * interact with AnyList clients.
+ * anyList_defs.php is located in the anyList `data` directory and must be included by PHP code that wants
+ * to interact with anyList clients.
  *
- * Sample listing of the `AnyList_defs.php` file:
+ * Sample listing of the `anyList_defs.php` file:
  *
  *      <?php
  *      define("gServer",           "//localhost/");
- *      define("gAnyListFolder",        "projects/AnyList/testserver/wp-content/plugins/AnyList/");
- *      define("gThirdpartyFolder", "projects/AnyList/thirdparty/");
- *      define("gDataScript",       "data/GetData.php");  // Relative to gAnyListFolder
- *      define("gUploadFolder",     "wordpress/upload/"); // Relative to gAnyListFolder
+ *      define("ganyListFolder",    "projects/anyList/testserver/wp-content/plugins/anyList/");
+ *      define("gThirdpartyFolder", "projects/anyList/thirdparty/");
+ *      define("gDataScript",       "data/GetData.php");  // Relative to ganyListFolder
+ *      define("gUploadFolder",     "wordpress/upload/"); // Relative to ganyListFolder
  *      define("gSkin",             "default");
  *
  *      // Do not edit below unless you really know what you are doing.
  *
  *      define("gVersion", "1.0.0");
  *
- *      define("gHomePath",   $_SERVER['DOCUMENT_ROOT']."/".gAnyListFolder);
- *      define("gAnyListURL",     gServer.gAnyListFolder);
+ *      define("gHomePath",   $_SERVER['DOCUMENT_ROOT']."/".ganyListFolder);
+ *      define("ganyListURL", gServer.ganyListFolder);
  *
- *      define("gDataSource", $_SERVER['DOCUMENT_ROOT']."/".gAnyListFolder."/".gDataScript);
- *      define("gUploadPath", $_SERVER['DOCUMENT_ROOT']."/".gAnyListFolder."/".gUploadFolder);
+ *      define("gDataSource", $_SERVER['DOCUMENT_ROOT']."/".ganyListFolder.gDataScript);
+ *      define("gUploadPath", $_SERVER['DOCUMENT_ROOT']."/".ganyListFolder.gUploadFolder);
  *
  *      define("gjQueryURL",        gServer.gThirdpartyFolder."jquery/");
  *      define("gjQueryWidgetURL",  gServer.gThirdpartyFolder."jquery/");
@@ -640,16 +643,16 @@
  * Sample listing of the `dbDefs.php` file:
  *
  *      <?php
- *      define('AnyListDB_HOST','127.0.0.1'); // Database server
- *      define('AnyListDB_USER','root');      // Database user
- *      define('AnyListDB_PASS','');          // Database password
- *      define('AnyListDB_NAME','AnyList-testserver'); // Database name
+ *      define('anyListDB_HOST','127.0.0.1'); // Database server
+ *      define('anyListDB_USER','root');      // Database user
+ *      define('anyListDB_PASS','');          // Database password
+ *      define('anyListDB_NAME','anyList-testserver'); // Database name
  *
- *      define('AnyListDB_TYPE',   'mysql');  // Database type
- *      define('AnyListDB_CHARSET','UTF8');   // Database charset
+ *      define('anyListDB_TYPE',   'mysql');  // Database type
+ *      define('anyListDB_CHARSET','UTF8');   // Database charset
  *
- *      define('AnyList_USER',    'wp_users');    // Name of user table
- *      define('AnyList_USERMETA','wp_usermeta'); // Name of user meta table
+ *      define('anyList_USER',    'wp_users');    // Name of user table
+ *      define('anyList_USERMETA','wp_usermeta'); // Name of user meta table
  *      ?>
  *
  * <hr/>
@@ -657,7 +660,7 @@
  * <a name="api_plugin_classes"></a>
  * <h3>Plugins</h3>
  *
- * <h4>Writing AnyList plugins</h4>
+ * <h4>Writing anyList plugins</h4>
  *
  * Each plugin on the client side corresponds to a plugin on the server side (e.g. "event", "user",
  * "document", "group", etc.). A plugin also corresponds to a `type` in the data model and a table
@@ -666,16 +669,16 @@
  * <h5>Client side</h5>
  *
  * It should be noted that it is not absolutely neccessary to create a client side plugin in order to
- * interact with a server side plugin - the default `AnyListDataModel` and `AnyListDataView` (or `AnyListDataViewTabs`)
- * classes might be used. If a client side plugin <i>is</i> created, it should inherit from `AnyListDataModel`
- * and `AnyListDataView` (or `AnyListDataViewTabs`) and should set the `type` (and optionally the `id_key` and
+ * interact with a server side plugin - the default `anyListDataModel` and `anyListDataView` (or `anyListDataViewTabs`)
+ * classes might be used. If a client side plugin <i>is</i> created, it should inherit from `anyListDataModel`
+ * and `anyListDataView` (or `anyListDataViewTabs`) and should set the `type` (and optionally the `id_key` and
  * `name_key`) variable(s).
  *
  * More info coming soon.
  *
  * <h5>Server side</h5>
  *
- * On the server side a plugin corresponds to a table (and optionally a meta table) and inherits from `AnyListTable`.
+ * On the server side a plugin corresponds to a table (and optionally a meta table) and inherits from `anyListTable`.
  * Each plugin class defines the following:
  * - a number of defining characteristica of the plugin table and meta table,
  * - the plugin's specific table (and optionally meta table) fields,
@@ -685,12 +688,12 @@
  *
  * A server side plugin should have 4 files placed in a folder below the `plugins` folder.
  * Using "foo" as an example, a folder named `foo` would be created, containing the files:
- * - foo.php: Should include `AnyList_defs.php`, the common `client.php` file, the `foo`-specific
+ * - foo.php: Should include `anyList_defs.php`, the common `client.php` file, the `foo`-specific
  *            `client.php` file and the `fooBasic.php` file. It may also include the `client.php`
  *            file(s) for any other plugins with which to interact.
  *
  *       <?php
- *       require_once dirname(__FILE__)."/../../AnyList_defs.php"; // Common definitions
+ *       require_once dirname(__FILE__)."/../../anyList_defs.php"; // Common definitions
  *       require_once dirname(__FILE__)."/../client.php";      // Common client files
  *       require_once dirname(__FILE__)."/../bar/client.php";  // Client files for a "bar" plugin that "foo" might interact with
  *       require_once dirname(__FILE__)."/client.php";         // Client files for the "foo" plugin
@@ -704,8 +707,8 @@
  *
  * <h4>Included plugins</h4>
  *
- * A number of useful plugins are included with AnyList. They may be modified to suit the user's need.
- * Currently, AnyList includes the following plugins:
+ * A number of useful plugins are included with anyList. They may be modified to suit the user's need.
+ * Currently, anyList includes the following plugins:
  *
  * - <b>Group</b>: Grouping of other types/plugins.
  *
@@ -719,8 +722,8 @@
  *
  * <hr/>
  *
- * <a name="wordpress_AnyList"></a>
- * <h3>AnyList and Wordpress</h3>
+ * <a name="wordpress_anyList"></a>
+ * <h3>anyList and Wordpress</h3>
  *
  * More info coming soon.
  *
@@ -731,14 +734,14 @@
  *
  * Learning by example is an excellent way to master new programming libraries and concepts.
  * Below you will find a  number of examples ranging from the simple "hello world" to writing
- * complex AnyList plugins in a client-server environment.
+ * complex anyList plugins in a client-server environment.
  *
- * 1) <a href="http://localhost/prosjekter/AnyList/testserver/wp-content/plugins/AnyList/examples/1_hello_world/">Hello world</a>
+ * 1) <a href="http://localhost/prosjekter/anyList/testserver/wp-content/plugins/anyList/examples/1_hello_world/">Hello world</a>
  *
  * 2)
  *
  * A collection of complete examples can be found <a>here</a> (coming soon).
  *
- * @module AnyList
- * @main AnyList
+ * @module anyList
+ * @main anyList
  */
