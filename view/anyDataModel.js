@@ -647,7 +647,8 @@ anyDataModel.prototype.dataSearch = function (options,parent_data,parent_id)
  *                            dbSearchNextId` (if `this.mode == "remote"` - that is, we will ask the database for a new id)
  *                            and the indata will be inserted like this: `item[id].data[new_id] = indata`. Note that in
  *                            this case the indata should not be indexed (i.e. use {type:"foo"} rather than {38:{type:"foo"}}.
- *                          - If `nid` is not specified, the indata will be inserted like this: `item[id].data = indata`.
+ *                          - If `nid` is not specified, the indata will be inserted like this: `item[id].data[idx] = indata[idx]`
+ *                            for all `idx` in `indata`.
  *                          Optional. Default: null.
  *
  * @return A pointer to the place where the indata item was inserted on success, or null if the place was not found or on error.
@@ -725,8 +726,11 @@ anyDataModel.prototype.dataInsert = function (options)
         return null;
       item[id].data[nid] = indata; // NOTE: Requires `indata` to be on a different format than when nid != -1!
     }
-    else
-      item[id].data = indata[id].data; // TODO Is this correct?
+    else {
+      for (let idx in indata)
+        if (indata.hasOwnProperty(idx))
+          item[id].data[idx] = indata[idx];
+    }
   }
   if (this.auto_callback)
     this.cbExecute();
