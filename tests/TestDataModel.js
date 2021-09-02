@@ -142,9 +142,9 @@ function testModel()
 
   ///////////////////// end _getDataSourceName test /////////////////////
 
-  ///////////////////// dataFindNextId / dataFindMaxId tests /////////////////////
+  ///////////////////// dataSearchNextId / dataSearchMaxId tests /////////////////////
 
-  test('dataFindNextId and dataFindMaxId', function() {
+  test('dataSearchNextId and dataSearchMaxId', function() {
 
     let dm1 = new anyDataModel({type:"foo",mode:"remote"});
     var data1 = {
@@ -188,22 +188,22 @@ function testModel()
                     type: "user",
                     data: data1,
                   });
-    // dataFindNextId basically just calls dataFindMaxId and adds 1.
-    deepEqual(dm2.dataFindNextId("group") === 7,
-              true, "dataFindNextId('group') === 7");
-    deepEqual(dm2.dataFindNextId("event") === 919412,
-              true, "dataFindNextId('event') === 919412");
-    deepEqual(dm2.dataFindNextId() === 830,
-              true, "dataFindNextId() === 830");
-    deepEqual(dm2.dataFindNextId("user") === 830,
-              true, "dataFindNextId('user') === 830");
-    deepEqual(dm2.dataFindNextId("new_type") === -1,
-              true, "dataFindNextId('new_type') === -1");
+    // dataSearchNextId basically just calls dataSearchMaxId and adds 1.
+    deepEqual(dm2.dataSearchNextId("group") === 7,
+              true, "dataSearchNextId('group') === 7");
+    deepEqual(dm2.dataSearchNextId("event") === 919412,
+              true, "dataSearchNextId('event') === 919412");
+    deepEqual(dm2.dataSearchNextId() === 830,
+              true, "dataSearchNextId() === 830");
+    deepEqual(dm2.dataSearchNextId("user") === 830,
+              true, "dataSearchNextId('user') === 830");
+    deepEqual(dm2.dataSearchNextId("new_type") === -1,
+              true, "dataSearchNextId('new_type') === -1");
 
     // TODO: Tests for non-numerical indexes
   });
 
-  ///////////////////// end dataFindNextId / dataFindMaxId tests /////////////////////
+  ///////////////////// end dataSearchNextId / dataSearchMaxId tests /////////////////////
 
   ///////////////////// dataSearch tests /////////////////////
 
@@ -361,13 +361,13 @@ function testModel()
     dm = new anyDataModel({type:"foo",data:mdata});
     idata = {13:{list:"barbar",barbar_name:"The barbar"}};
     res = dm.dataInsert({type:"bar",id:99,indata:idata});
-    deepEqual(dm.data[99].data[11] === undefined &&
-              dm.data[99].data[12] === undefined &&
+    deepEqual(dm.data[99].data[11] !== undefined &&
+              dm.data[99].data[12] !== undefined &&
               dm.data[99].data[13] !== undefined,
-              true, "dm.data[99].data[11] === undefined and "+
-                    "dm.data[99].data[12] === undefined and "+
+              true, "dm.data[99].data[11] !== undefined and "+
+                    "dm.data[99].data[12] !== undefined and "+
                     "dm.data[99].data[13] !== undefined "+
-                    "after dataInsert with nid == undefined");
+                    "after dataInsert with id, but nid == undefined");
 
     // Test ptype
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
@@ -388,11 +388,11 @@ function testModel()
     dm = new anyDataModel({type:"foo",data:mdata});
     idata = {13:{list:"foo",foo_name:"The foo"}};
     res = dm.dataInsert({type:null,id:99,indata:idata});
-    deepEqual(dm.data[99].data[11] === undefined &&
-              dm.data[99].data[12] === undefined &&
+    deepEqual(dm.data[99].data[11] !== undefined &&
+              dm.data[99].data[12] !== undefined &&
               dm.data[99].data[13] !== undefined,
-              true, "dm.data[99].data[11] === undefined and "+
-                    "dm.data[99].data[12] === undefined and "+
+              true, "dm.data[99].data[11] !== undefined and "+
+                    "dm.data[99].data[12] !== undefined and "+
                     "dm.data[99].data[13] !== undefined "+
                     "after dataInsert with type == null and correct type");
 

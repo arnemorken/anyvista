@@ -26,7 +26,7 @@
 <script src="<?php print gAnyListURL;?>view/anyDataModel.js"></script>
 
 <!-- QUnit -->
-<title>AnyList QUnit test suite</title>
+<title>anyList QUnit test suite</title>
 <link   rel="stylesheet" href="//code.jquery.com/qunit/qunit-1.23.1.css"/>
 <script src="//code.jquery.com/qunit/qunit-1.23.1.js"></script>
 
@@ -40,7 +40,7 @@ new Promise(function(resolve) { resolve(); })
 
 <body>
   <div>
-    <h1  id="qunit-header">AnyList QUnit test suite</h1>
+    <h1  id="qunit-header">anyList QUnit test suite</h1>
     <h2  id="qunit-banner"></h2>
     <div id="qunit-testrunner-toolbar"></div>
     <h2  id="qunit-userAgent"></h2>
