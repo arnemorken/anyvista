@@ -70,7 +70,6 @@ function testModel()
               true, "Constructor sets correct defaults for id_key and name_key when type is given in options.");
     dm1 = new anyDataModel({
                 type:             "fooobj",
-                kind:             "item",
                 id_key:           "fooobj_id",
                 name_key:         "fooobj_name",
                 data:             { val: "dataobj" },
