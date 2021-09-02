@@ -20,7 +20,8 @@
  * `type` (for example will type "foo" give rise to id_key "foo_id" and name_key "foo_name"). If no type
  * is given, the model cannot be searched, synchronized with database etc. If the model contains data for
  * an item (which may or may not contain any kind of subdata), the `id` property should be set to the id
- * of the item.
+ * of the item and either `this.data[id]` or `this.data[hdr_id].data[id]` should exist (where hdr_id is
+ * the id of a single `head` entry).
  *
  * If used in connection with a database, then `mode` should be set to "remote" (see below). `type` will
  * then correspond to a database table and `id_key` to an id column in that table.
@@ -316,6 +317,13 @@ anyDataModel.prototype._dataInitSelect = function ()
     if (options.data || this.last_db_command == "sea") { this.data             = options.data; }
     if (options.type)                                  { this.type             = options.type; }
     if (options.id)                                    { this.id               = options.id; }
+    if (this.id && this.data) {
+      let hdr_id = Object.keys(this.data)[0];
+      if (!this.data[this.id] || (hdr_id && !this.data[hdr_id].data && this.data[hdr_id].data[this.id])) {
+        console.warn("Id "+this.id+" given to constructor, but not found in data. Resetting id to null.");
+        this.id = null;
+      }
+    }
     if (options.id_key)                                { this.id_key           = options.id_key; }
     else
     if (!this.id_key && this.type)                     { this.id_key           = this.type+"_id"; }
@@ -718,7 +726,7 @@ anyDataModel.prototype.dataInsert = function (options)
       item[id].data[nid] = indata; // NOTE: Requires `indata` to be on a different format than when nid != -1!
     }
     else
-      item[id].data = indata; // TODO Is this correct?
+      item[id].data = indata[id].data; // TODO Is this correct?
   }
   if (this.auto_callback)
     this.cbExecute();
@@ -740,7 +748,8 @@ anyDataModel.prototype.dataInsert = function (options)
  *                          Should be on the format: `indata[filter_id]`.
  *                          Mandatory.
  *
- * @return A pointer to the place where the data was updated on success, or null if the place was not found or on error.
+ * @return A pointer to the place where the data was updated on success,
+ *         or null if the place was not found or on error.
  *
  * @example
  *      mymodel.dataUpdate({type:"user",id:"38",indata:{user_name:"Foz Baz"}});
