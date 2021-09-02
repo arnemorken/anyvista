@@ -440,89 +440,6 @@ anyDataModel.prototype._getDataSourceName = function ()
 }; // _getDataSourceName
 
 /**
- * @method dataFindNextId
- * @description Sets `this.max` to the largest id for the given type in the in-memory data structure
- *              and returns the next id (i.e. `this.max + 1`). Will ignore non-numerical indexes.
- * @param {String} type: The type of the data to search for.
- *                       Optional. Default: The model's type (`this.type`).
- * @param {Object} data: The data structure to search in.
- *                       Optional. Default: The model's data (`this.data`).
- *
- * @return The next available id. If none can be found, -1 is returned and `this.max == -1`.
- */
-anyDataModel.prototype.dataFindNextId = function (type,data)
-{
-  this.max = -1;
-  let res = this.dataFindMaxId(type,data);
-  if (res >= 0)
-    return 1 + parseInt(this.max);
-  this.max = -1;
-  return -1;
-}; // dataFindNextId
-
-/**
- * @method dataFindMaxId
- * @description Sets `this.max` to the largest id for the given type in the in-memory data structure
- *              and returns this.max. Will ignore non-numerical indexes.
- * @param {String} type: The type of the data to search for.
- *                       Optional. Default: The model's type (`this.type`).
- * @param {Object} data: The data structure to search in.
- *                       Optional. Default: The model's data (`this.data`).
- *
- * @return The largest id found. If none can be found, -1 is returned and `this.max` is not changed.
- */
-anyDataModel.prototype.dataFindMaxId = function (type,data)
-{
-  if (!type)
-    type = this.type;
-  if (!data)
-    data = this.data;
-  if (!type || !data)
-    return -1;
-  // Must at least be bigger than biggest "index" in object
-  let datakeys = Object.keys(data);
-  for (const key in datakeys) {
-    if (datakeys.hasOwnProperty(key)) {
-      if (!isInt(datakeys[key]))
-        datakeys[key] = "-1";
-    }
-  }
-  let max = $.isEmptyObject(datakeys) ? -1 : Math.max(...datakeys);
-  if (!isNaN(max)) {
-    let dmax  = data[max] ? max : data["+"+max] ? "+"+max : null;
-    let dtype = dmax && data[dmax]
-                ? data[dmax].list ? data[dmax].list : data[dmax].item ? data[dmax].item : data[dmax].head ? data[dmax].head : null
-                : null;
-    if (!dtype)
-      dtype = this.type;
-    if (!dtype)
-      return -1;
-    if (type == dtype)
-      this.max = Math.max(this.max,max);
-  }
-  // Should also be bigger than biggest id of given type
-  let name_key = type == this.type
-                 ? (this.name_key ? this.name_key : type+"_name")
-                 : type+"_name";
-  for (let idx in data) { // TODO Should we search entire this.data in case of duplicate ids?
-    if (data.hasOwnProperty(idx) && data[idx]) {
-      if (isInt(idx)) {
-        let dtype = data[idx].list ? data[idx].list : data[idx].item ? data[idx].item : data[idx].head ? data[idx].head : null;
-        if (data[idx][name_key] || data[idx][name_key]=="" || dtype == type) {
-          let the_id = Number.isInteger(parseInt(idx)) ? parseInt(idx) : idx;
-          let tmpmax = Math.max(this.max,the_id);
-          if (!isNaN(tmpmax))
-            this.max = tmpmax;
-        }
-      }
-      if (data[idx].data) // subdata
-        this.dataFindMaxId(type,data[idx].data);
-    }
-  }
-  return this.max;
-}; // dataFindMaxId
-
-/**
  * @method dataSearch
  * @description Search for item of type "type" and id "id" in "data".
  *              If "data" is omitted, `this.data` is used.
@@ -624,6 +541,89 @@ anyDataModel.prototype.dataSearch = function (options,parent_data,parent_id)
 }; // dataSearch
 
 /**
+ * @method dataSearchNextId
+ * @description Sets `this.max` to the largest id for the given type in the in-memory data structure
+ *              and returns the next id (i.e. `this.max + 1`). Will ignore non-numerical indexes.
+ * @param {String} type: The type of the data to search for.
+ *                       Optional. Default: The model's type (`this.type`).
+ * @param {Object} data: The data structure to search in.
+ *                       Optional. Default: The model's data (`this.data`).
+ *
+ * @return The next available id. If none can be found, -1 is returned and `this.max == -1`.
+ */
+ anyDataModel.prototype.dataSearchNextId = function (type,data)
+ {
+   this.max = -1;
+   let res = this.dataSearchMaxId(type,data);
+   if (res >= 0)
+     return 1 + parseInt(this.max);
+   this.max = -1;
+   return -1;
+ }; // dataSearchNextId
+ 
+ /**
+  * @method dataSearchMaxId
+  * @description Sets `this.max` to the largest id for the given type in the in-memory data structure
+  *              and returns this.max. Will ignore non-numerical indexes.
+  * @param {String} type: The type of the data to search for.
+  *                       Optional. Default: The model's type (`this.type`).
+  * @param {Object} data: The data structure to search in.
+  *                       Optional. Default: The model's data (`this.data`).
+  *
+  * @return The largest id found. If none can be found, -1 is returned and `this.max` is not changed.
+  */
+ anyDataModel.prototype.dataSearchMaxId = function (type,data)
+ {
+   if (!type)
+     type = this.type;
+   if (!data)
+     data = this.data;
+   if (!type || !data)
+     return -1;
+   // Must at least be bigger than biggest "index" in object
+   let datakeys = Object.keys(data);
+   for (const key in datakeys) {
+     if (datakeys.hasOwnProperty(key)) {
+       if (!isInt(datakeys[key]))
+         datakeys[key] = "-1";
+     }
+   }
+   let max = $.isEmptyObject(datakeys) ? -1 : Math.max(...datakeys);
+   if (!isNaN(max)) {
+     let dmax  = data[max] ? max : data["+"+max] ? "+"+max : null;
+     let dtype = dmax && data[dmax]
+                 ? data[dmax].list ? data[dmax].list : data[dmax].item ? data[dmax].item : data[dmax].head ? data[dmax].head : null
+                 : null;
+     if (!dtype)
+       dtype = this.type;
+     if (!dtype)
+       return -1;
+     if (type == dtype)
+       this.max = Math.max(this.max,max);
+   }
+   // Should also be bigger than biggest id of given type
+   let name_key = type == this.type
+                  ? (this.name_key ? this.name_key : type+"_name")
+                  : type+"_name";
+   for (let idx in data) { // TODO Should we search entire this.data in case of duplicate ids?
+     if (data.hasOwnProperty(idx) && data[idx]) {
+       if (isInt(idx)) {
+         let dtype = data[idx].list ? data[idx].list : data[idx].item ? data[idx].item : data[idx].head ? data[idx].head : null;
+         if (data[idx][name_key] || data[idx][name_key]=="" || dtype == type) {
+           let the_id = Number.isInteger(parseInt(idx)) ? parseInt(idx) : idx;
+           let tmpmax = Math.max(this.max,the_id);
+           if (!isNaN(tmpmax))
+             this.max = tmpmax;
+         }
+       }
+       if (data[idx].data) // subdata
+         this.dataSearchMaxId(type,data[idx].data);
+     }
+   }
+   return this.max;
+ }; // dataSearchMaxId
+ 
+/**
  * @method dataInsert
  * @description Inserts `indata` into the data structure at a place specified by `type`, `id` and possibly ´nid´.
  * @param {Object} options An object which may contain these elements:
@@ -643,8 +643,8 @@ anyDataModel.prototype.dataSearch = function (options,parent_data,parent_id)
  *                          - If `nid` is specified and is a string or an integer >= 0, it is used as the id for the inserted
  *                            data item. Data that may exist at the position specified by nid is overwritten.
  *                            In this case the indata will be inserted like this: `item[id].data[nid] = indata[nid]`.
- *                          - If `nid` is < 0, a new id is created by `dataFindNextId` (if `this.mode == "local"`) or by
- *                            dbFindNextId` (if `this.mode == "remote"` - that is, we will ask the database for a new id)
+ *                          - If `nid` is < 0, a new id is created by `dataSearchNextId` (if `this.mode == "local"`) or by
+ *                            dbSearchNextId` (if `this.mode == "remote"` - that is, we will ask the database for a new id)
  *                            and the indata will be inserted like this: `item[id].data[new_id] = indata`. Note that in
  *                            this case the indata should not be indexed (i.e. use {type:"foo"} rather than {38:{type:"foo"}}.
  *                          - If `nid` is not specified, the indata will be inserted like this: `item[id].data = indata`.
@@ -719,8 +719,8 @@ anyDataModel.prototype.dataInsert = function (options)
     else
     if (nid < 0) {
       nid = this.mode == "local"
-            ? this.dataFindNextId(type)
-            : this.dbFindNextId({type:type}); // TODO! Asynchronous database call
+            ? this.dataSearchNextId(type)
+            : this.dbSearchNextId({type:type}); // TODO! Asynchronous database call
       if ((!nid && nid !== 0) || nid < 0)
         return null;
       item[id].data[nid] = indata; // NOTE: Requires `indata` to be on a different format than when nid != -1!
