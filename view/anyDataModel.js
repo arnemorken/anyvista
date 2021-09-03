@@ -6,13 +6,13 @@
  *
  * @license AGPLv3.0 for open source use or anyList Commercial License for commercial use.
  * Get licences here: http://balanse.info/anylist/license/ (coming soon).
- * 
+ *
  ****************************************************************************************
  *
  * __anyDataModel: Tree structure data model that can manipulate data as lists and items
  * and optionally synchronize with a database.__
  *
- * See <a href="../classes/anyDataView.html">`anyDataView`</a> for a description of a data 
+ * See <a href="../classes/anyDataView.html">`anyDataView`</a> for a description of a data
  * view class.
  *
  * The model should have a type (e.g. `type = "user"`), an id key (e.g. `id_key = "user_id"`) and a name
@@ -319,7 +319,7 @@ anyDataModel.prototype._dataInitSelect = function ()
     if (options.id)                                    { this.id               = options.id; }
     if (this.id && this.data) {
       let hdr_id = Object.keys(this.data)[0];
-      if (!this.data[this.id] || (hdr_id && !this.data[hdr_id].data && this.data[hdr_id].data[this.id])) {
+      if (!this.data[this.id] && (hdr_id && !this.data[hdr_id].data && this.data[hdr_id].data[this.id])) {
         console.warn("Id "+this.id+" given to constructor, but not found in data. Resetting id to null.");
         this.id = null;
       }
@@ -572,7 +572,7 @@ anyDataModel.prototype.dataSearchNextId = function (type,data)
  *
  * @return The largest id found. If none can be found, -1 is returned and `this.max` is not changed.
  */
-anyDataModssel.prototype.dataSearchMaxId = function (type,data)
+anyDataModel.prototype.dataSearchMaxId = function (type,data)
 {
   if (!type)
     type = this.type;
