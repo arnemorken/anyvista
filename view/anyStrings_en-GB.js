@@ -10,22 +10,23 @@
 ****************************************************************************************
 */
 var i18n = {
-    general: {
-    },
-  
-    button: {
-    },
-  
-    message: {
-    },
-  
-    // Error codes
-    error: {
-      CALLBACK_MISSING:    "Callback function or context missing. ",
-      OPTIONS_MISSING:     "Options missing. ",
-      TYPE_MISSING:        "Type missing. ",
-      ID_MISSING:          "Id missing. ",
-      ID_ILLEGAL:          "Id must be a positive integer or a string. ",
-    },
-  };
+  general: {
+  },
+
+  button: {
+  },
+
+  message: {
+  },
+
+  // Error codes
+  error: {
+    CALLBACK_MISSING:    "Callback function or context missing. ",
+    SUCCCESS_CB_MISSING: "Success callback missing for local mode. ",
+    OPTIONS_MISSING:     "Options missing. ",
+    TYPE_MISSING:        "Type missing. ",
+    ID_MISSING:          "Id missing. ",
+    ID_ILLEGAL:          "Id must be a positive integer or a string. ",
+  },
+};
   

@@ -10,22 +10,22 @@
 ****************************************************************************************
 */
 var i18n = {
-    general: {
-    },
-  
-    button: {
-    },
-  
-    message: {
-    },
-  
-    // Error codes
-    error: {
-      CALLBACK_MISSING:    "Mangler callback funksjon eller kontekst. ",
-      OPTIONS_MISSING:     "Mangler options. ",
-      TYPE_MISSING:        "Mangler type. ",
-      ID_MISSING:          "Mangler id. ",
-      ID_ILLEGAL:          "Id må være et positivt heltall eller en streng. ",
-    },
-  };
-  
+  general: {
+  },
+
+  button: {
+  },
+
+  message: {
+  },
+
+  // Error codes
+  error: {
+    CALLBACK_MISSING:    "Mangler callback funksjon eller kontekst. ",
+    SUCCCESS_CB_MISSING: "Mangler suksess callback for local modus. ",
+    OPTIONS_MISSING:     "Mangler options. ",
+    TYPE_MISSING:        "Mangler type. ",
+    ID_MISSING:          "Mangler id. ",
+    ID_ILLEGAL:          "Id må være et positivt heltall eller en streng. ",
+  },
+};
