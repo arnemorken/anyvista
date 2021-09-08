@@ -115,22 +115,22 @@
     data of type "type" should be displayed.
     If this entry is not specified, the last preceding entry in the data structure is assumed.
     If there is no preceding entry, `list` is the default value assumed for "kind" and the current model's type is
-    the default value for assumed for "type" and if the model has no type, "type" will be set to the empty string. 
+    the default value for assumed for "type" and if the model has no type, "type" will be set to the empty string.
     If used with a database backend, "type" corresponds to a specific database table / plugin.<br/>
     *Example: `list:"event"`.
 
   - An `edit` entry, specifying that this part of the data structure should be editable in a view even though the
     `isEditable` variable of the view is set to false.<br/>
-    TODO: Not tested yet.<br/>
+    TODO! Not tested yet.<br/>
     *Example: `edit:"true"`.
 
   - An `add` entry, specifying that a button for adding a new item of given type should be displayed for entering
     new data at this part of the data structure.<br/>
-    TODO: Not implemented yet.<br/>
+    TODO! Not implemented yet.<br/>
     *Example: `add:"user"`.
 
   - A `skip` entry, an array specifying columns that should not be displayed for this object.<br/>
-    TODO: Not implemented yet.<br/>
+    TODO! Not implemented yet.<br/>
     *Example: `skip:["event_organizer","event_start_date"]`.
 
   - A `page_links` object, specifying pagination for a list, containing:
@@ -138,7 +138,7 @@
     - to, the end number in the list,
     - num, the number of list rows to display.
 
-    <br/>TODO: Not implemented yet.<br/>
+    <br/>TODO! Not implemented yet.<br/>
     *Example: `page_links:{from:11,to:20,num:10}`.
 
   - A number of key / value pairs, that are the actual data that are to be displayed.<br/>
@@ -249,48 +249,48 @@
  * the source code as list_events_groups0b.html):
  *
  *      let my_data = {
- *      seminar: { // NOTE: Non-numerical id
- *             head: "group",
- *             group_name: "Seminars",
- *             data: {
- *             10: {
- *                 item: "event",
- *                 event_name: "Keynote lecture",
- *                 event_lecturer: "Isaac Newton",
- *                 event_arranger: "John",
- *             },
- *             11: {
- *                 list: "event",
- *                 event_name: "Lecture number two",
- *                 event_lecturer: "Albert Einstein",
- *                 event_arranger: "John",
- *             },
- *             18: {
- *                 event_name: "Evening lecture",
- *                 event_lecturer: "TBA",
- *                 event_arranger: "Janne",
- *             },
- *           },
- *         },
- *         organization: { // NOTE: Non-numerical id
- *             head: "group",
- *             group_name: "Organization",
- *             data: {
- *             17: {
- *                 list: "org_event",
- *                 event_name: "Organizing stuff",
- *                 event_responsible: "Janne",
- *             },
- *             20: {
- *                 event_name: "Order pizza",
- *                 event_responsible: "Lisa",
- *             },
- *             22: {
- *                 event_name: "Clean up",
- *                 event_responsible: "Larry",
- *             },
- *           },
- *         },
+ *        seminar: { // NOTE: Non-numerical id
+ *          head: "group",
+ *          group_name: "Seminars",
+ *          data: {
+ *            10: {
+ *              item: "event",
+ *              event_name: "Keynote lecture",
+ *              event_lecturer: "Isaac Newton",
+ *              event_arranger: "John",
+ *            },
+ *            11: {
+ *              list: "event",
+ *              event_name: "Lecture number two",
+ *              event_lecturer: "Albert Einstein",
+ *              event_arranger: "John",
+ *            },
+ *            18: {
+ *              event_name: "Evening lecture",
+ *              event_lecturer: "TBA",
+ *              event_arranger: "Janne",
+ *            },
+ *          },
+ *        },
+ *        organization: { // NOTE: Non-numerical id
+ *          head: "group",
+ *          group_name: "Organization",
+ *          data: {
+ *            17: {
+ *              list: "org_event",
+ *              event_name: "Organizing stuff",
+ *              event_responsible: "Janne",
+ *            },
+ *            20: {
+ *              event_name: "Order pizza",
+ *              event_responsible: "Lisa",
+ *            },
+ *            22: {
+ *              event_name: "Clean up",
+ *              event_responsible: "Larry",
+ *            },
+ *          },
+ *        },
  *      };
  *
  * When displayed, the above data structure would look like something this (depending on CSS and data filters,
@@ -331,8 +331,8 @@
  * <li>"number":    A number (allows only digits and .)</li>
  * <li>"label":     A non-editable and non-clickable label.</li>
  * <li>"date":      A (potentially editable) date selector.</li>
- * <li>"function":  The name of a method in the View class receiving the parameters `type`, `kind`, `id`
- *                  and `data` and returning html code.</li>
+ * <li>"function":  The name of a method in the View class receiving the parameters `type`, `kind`, `id` and `data`
+ *                  and returning html code.</li>
  * <li>"image":     An image. Must have an `OBJ_IMAGE` entry in the filter describing the relative path to the
  *                  image <i>or</i> an `OBJ_FUNCTION` entry describing a method in the View class returning a
  *                  html img tag (see "function" above).<br/>
@@ -491,7 +491,7 @@
  * <div style="border:1px solid #888; padding:5px;padding-bottom:0px;">
  * <b>A NOTE ON DATA INSULATION:</b>
  *
- * The `GetData.php` script, which is the "gateway" to accessing the server, encapsulates the entire data
+ * The `anyGetData.php` script, which is the "gateway" to accessing the server, encapsulates the entire data
  * structure in an object indexed by `JSON_CODE`. This is done in order to insulate the data from error
  * messages that may be generated by the http server. On the client, the db* result methods "unwraps" the
  * data structure before it is processed further. If supplying your own success methods, this unwrapping
@@ -561,7 +561,7 @@
  *
  * `gDataScript`:
  * The location of a script, relative to `ganyListFolder`, that delivers data on the correct JSON format. Default
- * value is `data/GetData.php`, which is the default script that gets data from the PHP backend. It is used by
+ * value is `data/anyGetData.php`, which is the default script that gets data from the PHP backend. It is used by
  * the db* methods of `anyListDataModel` and only when the `this.mode` variable is set to `remote`, otherwise the
  * setting is ignored. If a script is not specified in `gDataScript`, the data must be delivered to anyList by some
  * other method. Refer to the included examples.
@@ -582,8 +582,8 @@
  *      let gServer           = "//localhost/";
  *      let ganyListFolder    = "projects/anyList/testserver/wp-content/plugins/anyList/";
  *      let gThirdpartyFolder = "projects/anyList/thirdparty/";
- *      let gDataScript       = "data/GetData.php";  // Relative to ganyListFolder
- *      let gUploadFolder     = "wordpress/upload/"; // Relative to ganyListFolder
+ *      let gDataScript       = "data/anyGetData.php"; // Relative to ganyListFolder
+ *      let gUploadFolder     = "wordpress/upload/";   // Relative to ganyListFolder
  *      let gSkin             = "default";
  *
  *      // Do not edit below unless you really know what you are doing.
@@ -608,8 +608,8 @@
  *      define("gServer",           "//localhost/");
  *      define("ganyListFolder",    "projects/anyList/testserver/wp-content/plugins/anyList/");
  *      define("gThirdpartyFolder", "projects/anyList/thirdparty/");
- *      define("gDataScript",       "data/GetData.php");  // Relative to ganyListFolder
- *      define("gUploadFolder",     "wordpress/upload/"); // Relative to ganyListFolder
+ *      define("gDataScript",       "data/anyGetData.php"); // Relative to ganyListFolder
+ *      define("gUploadFolder",     "wordpress/upload/");   // Relative to ganyListFolder
  *      define("gSkin",             "default");
  *
  *      // Do not edit below unless you really know what you are doing.
