@@ -917,3 +917,260 @@ anyDataModel.prototype.dataDelete = function (options)
     this.cbExecute();
   return item; // Should be null/undefined
 }; // dataDelete
+
+/////////////////////////////////////////////////
+//////// Methods that work with database ////////
+/////////////////////////////////////////////////
+
+/**
+ * @method dbSearch
+ * @description Gets an item or a list from database.
+ *              The data will be handed to the success handler specified in options.success,
+ *              or to this.dbSearchSuccess if no success handler is specified.
+ * @param {Object} options An object which may contain these elements:
+ *
+ *        {integer}  id:         Item's id. If not given, a list of items of the chosen type will be read.
+ *                               Optional. Default: null.
+ *        {integer}  type:       Item's type.
+ *                               Optional. Default: `this.type`.
+ *        {integer}  timeoutSec: Number of seconds before timing out.
+ *                               Optional. Default: 10.
+ *        {Function} success:    Method to call on success.
+ *                               Optional. Default: `this.dbSearchSuccess`.
+ *        {Function} fail:       Method to call on error or timeout.
+ *                               Optional. Default: `this._dbFail`.
+ *        {Function} context:    The context of the success and fail methods.
+ *                               Optional. Default: `this`.
+ *
+ * @return true if the database call was made, false otherwise.
+ */
+anyDataModel.prototype.dbSearch = function (options)
+{
+  if (!options || typeof options != "object")
+    options = {};
+  if (!options.timeoutSec)
+    options.timeoutSec = 10;
+  $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  let self = this;
+  self.success = options.success ? options.success : this.dbSearchSuccess;
+  self.fail    = options.fail    ? options.fail    : this._dbFail;
+  self.context = options.context ? options.context : this;
+  this.message = "";
+  this.error   = "";
+  if (this.mode == "remote") { // Remote server call
+    let url = this.dbSearchGetURL(options);
+    if (!url)
+      return false;
+    $.getJSON(url) // Call server
+    .done(function(rdata,textStatus,jqXHR) {
+      return self.success ? self.success(self,rdata,options) : false;
+    })
+    .fail(function(jqXHR,textStatus,error) {
+      return self.fail    ? self.fail   (self,jqXHR) : false;
+    });
+    return true;
+  }
+  else { // Local method call
+    if (!self.success) {
+      this.message = i18n.error.SUCCCESS_CB_MISSING;
+      console.warn("anyDataModel.dbSearch: "+this.message);
+      return false; // Should never happen
+    }
+    return self.success(options,this);
+  }
+}; // dbSearch
+
+/**
+ * @method dbSearchGetURL
+ * @description Builds a POST string for dbSearch to be sent to server.
+ *              If `options.type` is specified and is not equal to `this.type`, then `[options.type]_id`
+ *              will be used instead of `this.id_key` when calling the server.
+ * @param {Object} options
+ *
+ * @return The complete URL for dbSearch or null on error (missing type or id_key).
+ */
+anyDataModel.prototype.dbSearchGetURL = function (options)
+{
+  let type = options.type ? options.type : this.type;
+  if (!type) {
+    console.error("anyDataModel.dbSearchGetURL: "+i18n.error.TYPE_MISSING);
+    return null;
+  }
+  let id_key = options.type && options.type != this.type ? type+"_id" : this.id_key;
+  if (!id_key) {
+    console.error("anyDataModel.dbSearchGetURL: "+i18n.error.ID_KEY_MISSING);
+    return null;
+  }
+  let param_str = "?echo=y"+
+                  "&type="+type;
+  param_str += options.id || options.id === 0
+               ? "&"+id_key+"="+parseInt(options.id) // Item search
+               : ""; // List search
+  return this._getDataSourceName() + param_str;
+}; // dbSearchGetURL
+
+/**
+ * @method dbSearchSuccess
+ * @description Default success callback method for dbSearch.
+ * @param {Object} context
+ *        {Object} serverdata
+ *        {Object} options
+ *
+ * @return context
+ */
+anyDataModel.prototype.dbSearchSuccess = function (context,serverdata,options)
+{
+  let self = context;
+  self.last_db_command = "sea";
+  if (serverdata) {
+    if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
+      serverdata = serverdata.JSON_CODE;
+    if (Object.size(serverdata.data) == 0)
+      serverdata.data = null;
+    self.message = serverdata.message;
+    self.error   = serverdata.error;
+    if (!serverdata.data) {
+      if (serverdata.id || serverdata.id === 0)
+        self.error = self.type.capitalize()+" not found. "; // TODO i18n
+      else
+        self.error = "No "+self.type+"s found. "; // TODO i18n
+    }
+    if (self.message)
+      console.log("anyDataModel.dbSearchSuccess: "+self.message);
+    if (self.error)
+      console.error("anyDataModel.dbSearchSuccess: "+self.error);
+    if (self.auto_search_init && self.dataInit)
+      self.dataInit(serverdata);
+  }
+  if (self.auto_search_init && self.cbExecute)
+    self.cbExecute();
+  return context;
+}; // dbSearchSuccess
+
+/**
+ * @method dbSearchNextId
+ * @description Gets the next available id for the given type from server.
+ *              The data will be handed to the success handler specified in options.success,
+ *              or to this.dbSearchNextIdSuccess if no success handler is specified.
+ * @param {Object} options An object which may contain these elements:
+ *
+ *        {integer}  type:       Item's type.
+ *                               Optional. Default: `this.type`.
+ *        {integer}  timeoutSec: Number of seconds before timing out.
+ *                               Optional. Default: 10.
+ *        {Function} success:    Method to call on success.
+ *                               Optional. Default: `this.dbSearchNextIdSuccess`.
+ *        {Function} fail:       Method to call on error or timeout.
+ *                               Optional. Default: `this._dbFail`.
+ *        {Function} context:    The context of the success and fail methods.
+ *                               Optional. Default: `this`.
+ *
+ * @return true if the database call was made, false otherwise.
+ */
+anyDataModel.prototype.dbSearchNextId = function (options)
+{
+  if (!options || typeof options != "object")
+    options = {};
+  if (!options.timeoutSec)
+    options.timeoutSec = 10;
+  $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  $.ajaxSetup({ async: false }); // TODO Important! Asynchronous database call
+  let self = this;
+  self.success = options.success ? options.success : this.dbSearchNextIdSuccess;
+  self.fail    = options.fail    ? options.fail    : this._dbFail;
+  self.context = options.context ? options.context : this;
+  this.message = "";
+  this.error   = "";
+  if (this.mode == "remote") { // Remote server call
+    let url = this.dbSearchNextIdGetURL(options);
+    if (!url)
+      return false;
+    $.getJSON(url) // Call server
+    .done(function(rdata,textStatus,jqXHR) {
+      return self.success ? self.success(self,rdata,options) : true;
+    })
+    .fail(function(jqXHR,textStatus,error) {
+      return self.fail    ? self.fail   (self,jqXHR) : false;
+    });
+  }
+  else { // Local method call
+    if (!self.success) {
+      this.message = i18n.error.SUCCCESS_CB_MISSING;
+      console.warn("anyDataModel.dbSearchNextId: "+this.message);
+      return false; // Should never happen
+    }
+    return self.success(options,this);
+  }
+  return true;
+}; // dbSearchNextId
+
+/**
+ * @method dbSearchNextIdGetURL
+ * @description Builds a POST string for dbSearchNextId to be sent to server.
+ *              If `options.type` is specified and is not equal to `this.type`, then `[options.type]_id`
+ *              will be used instead of `this.id_key` when calling the server.
+ * @param {Object} options
+ *
+ * @return The complete URL for dbSearchNextId or null on error (missing type or id_key).
+ */
+anyDataModel.prototype.dbSearchNextIdGetURL = function (options)
+{
+  let type = options.type ? options.type : this.type;
+  if (!type) {
+    console.error("anyDataModel.dbSearchNextIdGetURL: "+i18n.error.TYPE_MISSING);
+    return null;
+  }
+  let id_key = options.type && options.type != this.type ? type+"_id" : this.id_key;
+  if (!id_key) {
+    console.error("anyDataModel.dbSearchNextIdGetURL: "+i18n.error.ID_KEY_MISSING);
+    return null;
+  }
+  let param_str = "?echo=y"+
+                  "&type="+type;
+  param_str += "&"+id_key+"=max";
+  return this._getDataSourceName() + param_str;
+}; // dbSearchNextIdGetURL
+
+/**
+ * @method dbSearchNextIdSuccess
+ * @description Default success callback method for dbSearchNextId.
+ * @param {Object} context
+ *        {Object} serverdata
+ *        {Object} options
+ *
+ * @return context
+ */
+anyDataModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
+{
+  let self = context;
+  self.last_db_command = "sea";
+  if (serverdata) {
+    if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
+      serverdata = serverdata.JSON_CODE;
+    serverdata.is_new = options.is_new;
+    self.max     = parseInt(serverdata.id);
+    self.message = serverdata.message;
+    self.error   = serverdata.error;
+    if (self.message)
+      console.log("anyDataModel.dbSearchNextIdSuccess: "+self.message);
+    if (self.error)
+      console.error("anyDataModel.dbSearchNextIdSuccess: "+self.error);
+  }
+  return context;
+}; // dbSearchNextIdSuccess
+
+
+// Default fail callback for all db* methods
+anyDataModel.prototype._dbFail = function (context,jqXHR)
+{
+  let self = context;
+  if (!self)
+    return false; // Should never happen
+  if (jqXHR) {
+    self.error = jqXHR.statusText+" ("+jqXHR.status+"). ";
+    console.error("anyDataModel._dbFail: "+self.error);
+    if (self.cbExecute)
+      self.cbExecute();
+  }
+  return true;
+}; // _dbFail
