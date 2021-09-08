@@ -6,7 +6,7 @@
  *
  * @license AGPLv3.0 for open source use or anyList Commercial License for commercial use.
  * Get licences here: http://balanse.info/anylist/license/ (coming soon).
- * 
+ *
  ****************************************************************************************
  */
 ///////////////////////////////////////////////////////
@@ -764,5 +764,27 @@ function testModel()
   });
 
   ///////////////////// end dataUpdateLinkList tests /////////////////////
+
+  ///////////////////// dbSearch tests /////////////////////
+
+  asyncTest('dbSearch normal case - item', 4, function() {
+    let dm = new anyDataModel({type:"event",search:false,mode:"remote"});
+    let res = dm.dbSearch({id:"3"});
+    deepEqual(res,
+              true, "dbSearch({id:'3'}) returns true");
+    setTimeout(function() {
+      deepEqual(dm.error === "",
+                true, "dbSearch({id:'3'}) no error:"+dm.error);
+      deepEqual(dm.data !== null,
+                true, "dbSearch({id:'3'}) returns item data:"+JSON.stringify(dm.data));
+      deepEqual(dm.data !== null &&
+                dm.data["+0"].data["+3"]["event_id"]   === "3" &&
+                dm.data["+0"].data["+3"]["event_name"] === "Tour de France",
+                true, "dbSearch({id:'3'}) returns expected data");
+      start();
+    }, millisec);
+  });
+  
+  ///////////////////// end dbSearch tests /////////////////////
 
 } // testModel

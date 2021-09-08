@@ -5,7 +5,7 @@
  *
  * @license AGPLv3.0 for open source use or anyList Commercial License for commercial use.
  * Get licences here: http://balanse.info/anylist/license/ (coming soon).
- * 
+ *
  ****************************************************************************************
 -->
 <!doctype html>
@@ -27,8 +27,8 @@
 
 <!-- QUnit -->
 <title>anyList QUnit test suite</title>
-<link   rel="stylesheet" href="//code.jquery.com/qunit/qunit-1.23.1.css"/>
-<script src="//code.jquery.com/qunit/qunit-1.23.1.js"></script>
+<link  href="http://localhost/Prosjekter/testserver/javascript/jquery/qunit/qunit-1.23.1.css" rel="stylesheet"/>
+<script src="http://localhost/Prosjekter/testserver/javascript/jquery/qunit/qunit-1.23.1.js"></script>
 
 <!-- Test files -->
 <script src="TestDataModel.js"></script>
