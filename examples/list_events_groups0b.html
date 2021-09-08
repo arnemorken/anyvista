@@ -33,7 +33,7 @@
 <script src="../view/anyStrings_en-GB.js"></script>
 <script src="../view/anyDataModel.js"></script>
 <script src="../view/anyDataView.js"></script>
-<div id="any_data_content" title="Minimal grouped lists / items"></div>
+<div id="any_content" title="Minimal grouped lists / items"></div>
 
 <script>
 let my_data = {
@@ -113,7 +113,7 @@ let my_data = {
  var data_model = new anyDataModel({ data:my_data });
  var data_view  = new anyDataView({ model:   data_model,
                                     filters: all_filters,
-                                    id:      "any_data_content",
+                                    id:      "any_content",
                                  });
  data_view.refresh();
 
