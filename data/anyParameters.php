@@ -1,6 +1,6 @@
 <?php
 /**
-  ****************************************************************************************
+ ****************************************************************************************
  *
  * anyList is copyright (C) 2011-2021 Arne D. Morken and Balanse Software.
  *
@@ -10,7 +10,8 @@
  ****************************************************************************************
 */
 //
-// Extracts key/value pairs from $_GET, $_POST and/or a string and puts them into an array.
+// Static class with methods for extracting key/value pairs from
+// $_GET, $_POST and/or a string, and putting them into an array.
 //
 require_once "anyFunctions.php";
 
@@ -105,12 +106,12 @@ class Parameters
     if ($initStr != null)
     foreach($initStr as $key => $val) {
       if (is_array($initStr[$key]))
-      { error_log($key."=".var_export($initStr[$key],true)); }
+        error_log($key."=".var_export($initStr[$key],true));
       else
-      { error_log($key."=".$initStr[$key]); }
+        error_log($key."=".$initStr[$key]);
     }
     if (isset($_FILES["URL_file"]))
-    { error_log("filename:".$_FILES["URL_file"]); }
+      error_log("filename:".$_FILES["URL_file"]);
   } //debugLog
 
 } // class Parameters

@@ -1,6 +1,6 @@
 <?php
 /**
-  ****************************************************************************************
+ ****************************************************************************************
  *
  * anyList is copyright (C) 2011-2021 Arne D. Morken and Balanse Software.
  *
@@ -15,12 +15,16 @@
 define("gServer",           "//localhost/");
 define("gAnyListFolder",    "Prosjekter/testserver/wp-content/plugins/anylist/");
 define("gThirdpartyFolder", "Prosjekter/testserver/javascript/");
-define("gDataScript",       "data/anyGetData.php"); // Relative to gAnyListFolder
 
 //
 // Do not edit below unless you really know what you are doing.
 //
-define("gVersion", "1.0.0");
+
+// Version number
+define("gVersion", "0.1.0");
+
+// Data source
+define("gDataScript",       "data/anyGetData.php"); // Relative to gAnyListFolder
 
 // Paths
 define("gHomePath",   $_SERVER['DOCUMENT_ROOT']."/".gAnyListFolder);
@@ -31,9 +35,11 @@ define("gDataSource", $_SERVER['DOCUMENT_ROOT'] . "/" . gAnyListFolder . "/" . g
 //
 // Thirdparty stuff
 //
+
 // jQuery / jQueryUI
 define("gjQueryURL",        gServer            . gThirdpartyFolder . "jquery/");
 define("gjQuery_js",        gjQueryURL         . "jquery-3.6.0.min.js");
+
 // Font Awesome
 define("gFontAwesomeURL",   gServer            . gThirdpartyFolder . "fontawesome/");
 define("gFontAwesome_css",  gFontAwesomeURL    . "fa.min.css");
