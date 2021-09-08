@@ -20,8 +20,8 @@
 <script src="<?php print gjQuery_js;?>"></script>
 
 <!-- AnyList -->
-<script src="<?php print gAnyListURL;?>view/any_defs.js"></script>
-<script src="<?php print gAnyListURL;?>view/any_functions.js"></script>
+<script src="<?php print gAnyListURL;?>view/anyDefs.js"></script>
+<script src="<?php print gAnyListURL;?>view/anyFunctions.js"></script>
 <script src="<?php print gAnyListURL;?>view/anyStrings_en-GB.js"></script>
 <script src="<?php print gAnyListURL;?>view/anyDataModel.js"></script>
 
