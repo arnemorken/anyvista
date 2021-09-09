@@ -784,7 +784,25 @@ function testModel()
       start();
     }, millisec);
   });
-  
+
+  asyncTest('dbSearch normal case - list', 4, function() {
+    let dm = new anyDataModel({type:"event",search:false,mode:"remote"});
+    deepEqual(dm.dbSearch({type:"event"}),
+              true, "dbSearch() returns true");
+    setTimeout(function() {
+      let item = dm.dataSearch({type:"event",id:3});
+      deepEqual(item !== null &&
+                item["+3"]["event_id"]   === "3" &&
+                item["+3"]["event_name"] === "Tour de France",
+                true, "dbSearch() returns good data");
+      deepEqual(dm.data  !== null,
+                true, "dbSearch() returns list data:"+JSON.stringify(dm.data));
+      deepEqual(dm.error === "",
+                true, "dbSearch() no error:"+dm.error);
+      start();
+    }, millisec);
+  });
+
   ///////////////////// end dbSearch tests /////////////////////
 
 } // testModel
