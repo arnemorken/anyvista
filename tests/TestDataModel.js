@@ -768,32 +768,32 @@ function testModel()
   ///////////////////// dbSearch tests /////////////////////
 
   asyncTest('dbSearch normal case - item', 4, function() {
-    let dm = new anyDataModel({type:"event",search:false,mode:"remote"});
-    let res = dm.dbSearch({id:"3"});
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote"});
+    let res = dm.dbSearch({id:"1"});
     deepEqual(res,
-              true, "dbSearch({id:'3'}) returns true");
+              true, "dbSearch({id:'1'}) returns true");
     setTimeout(function() {
       deepEqual(dm.error === "",
-                true, "dbSearch({id:'3'}) no error:"+dm.error);
+                true, "dbSearch({id:'1'}) no error:"+dm.error);
       deepEqual(dm.data !== null,
-                true, "dbSearch({id:'3'}) returns item data:"+JSON.stringify(dm.data));
+                true, "dbSearch({id:'1'}) returns item data:"+JSON.stringify(dm.data));
       deepEqual(dm.data !== null &&
-                dm.data["+0"].data["+3"]["event_id"]   === "3" &&
-                dm.data["+0"].data["+3"]["event_name"] === "Tour de France",
-                true, "dbSearch({id:'3'}) returns expected data");
+                dm.data["+0"].data["+1"]["user_id"]   === "1" &&
+                dm.data["+0"].data["+1"]["user_name"] === "Administrator",
+                true, "dbSearch({id:'1'}) returns expected data");
       start();
     }, millisec);
   });
 
   asyncTest('dbSearch normal case - list', 4, function() {
-    let dm = new anyDataModel({type:"event",search:false,mode:"remote"});
-    deepEqual(dm.dbSearch({type:"event"}),
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote"});
+    deepEqual(dm.dbSearch({type:"user"}),
               true, "dbSearch() returns true");
     setTimeout(function() {
-      let item = dm.dataSearch({type:"event",id:3});
+      let item = dm.dataSearch({type:"user",id:1});
       deepEqual(item !== null &&
-                item["+3"]["event_id"]   === "3" &&
-                item["+3"]["event_name"] === "Tour de France",
+                item["+1"]["user_id"]   === "1" &&
+                item["+1"]["user_name"] === "Administrator",
                 true, "dbSearch() returns good data");
       deepEqual(dm.data  !== null,
                 true, "dbSearch() returns list data:"+JSON.stringify(dm.data));
