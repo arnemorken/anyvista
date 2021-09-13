@@ -948,6 +948,8 @@ anyDataModel.prototype.dbSearch = function (options)
 {
   if (!options || typeof options != "object")
     options = {};
+  if (options.id == "max")
+    return this.dbSearchNextId(options);
   if (!options.timeoutSec)
     options.timeoutSec = 10;
   $.ajaxSetup({ timeout: options.timeoutSec*1000 });
@@ -1003,7 +1005,7 @@ anyDataModel.prototype.dbSearchGetURL = function (options)
   }
   let param_str = "?echo=y"+
                   "&type="+type;
-  param_str += options.id || options.id === 0
+  param_str += (options.id || options.id === 0) && Number.isInteger(parseInt(options.id))
                ? "&"+id_key+"="+parseInt(options.id) // Item search
                : ""; // List search
   return this._getDataSourceName() + param_str;

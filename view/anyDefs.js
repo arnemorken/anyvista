@@ -10,7 +10,7 @@
  ****************************************************************************************
  */
 //
-// User-editable "constants" that define some basic properties of the AnyList server API.
+// User-editable "constants" that define some basic properties of the server API.
 //
 let gServer           = "//localhost/";
 let gAnyListFolder    = "Prosjekter/testserver/wp-content/plugins/anylist/";

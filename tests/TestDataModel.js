@@ -790,6 +790,8 @@ function testModel()
     deepEqual(dm.dbSearch({type:"user"}),
               true, "dbSearch() returns true");
     setTimeout(function() {
+      deepEqual(dm.error === "",
+                true, "dbSearch() no error:"+dm.error);
       let item = dm.dataSearch({type:"user",id:1});
       deepEqual(item !== null &&
                 item["+1"]["user_id"]   === "1" &&
@@ -797,8 +799,75 @@ function testModel()
                 true, "dbSearch() returns good data");
       deepEqual(dm.data  !== null,
                 true, "dbSearch() returns list data:"+JSON.stringify(dm.data));
+      start();
+    }, millisec);
+  });
+
+  asyncTest('dbSearch with non-existing model type and id_key', 3, function() {
+    let dm = new anyDataModel({type:"foobar",id_key:"foobar_name",search:false,mode:"remote"});
+    deepEqual(dm.dbSearch({id:"3"}),
+              true, "dbSearch({id:'3'}) returns true");
+    setTimeout(function() {
+      deepEqual(dm.error !== "",
+                true, "dbSearch({id:'3'}) error:"+dm.error);
+      deepEqual(dm.data  === null,
+                true, "dbSearch({id:'3'}) returns no data:"+JSON.stringify(dm.data));
+      start();
+    }, millisec);
+  });
+
+  asyncTest('dbSearch with existing model type but non-existing id_key', 3, function() {
+    let dm = new anyDataModel({type:"user",id_key:"foo",search:false,mode:"remote"});
+    deepEqual(dm.dbSearch({id:"1"}),
+              true, "dbSearch({id:'1'}) returns true");
+    setTimeout(function() {
       deepEqual(dm.error === "",
-                true, "dbSearch() no error:"+dm.error);
+                true, "dbSearch({id:'1'}) no error:"+dm.error);
+      deepEqual(dm.data  !== null,
+                true, "dbSearch({id:'1'}) returns list data instead of item data:"+JSON.stringify(dm.data));
+      start();
+    }, millisec);
+  });
+
+  asyncTest('dbSearch with non-existing model type but existing type in search options', 3, function() {
+    let dm = new anyDataModel({type:"foo",search:false,mode:"remote"});
+    deepEqual(dm.dbSearch({type:"user",id:"1"}),
+              true, "dbSearch({type:'user',id:'1'}) returns true");
+    setTimeout(function() {
+      deepEqual(dm.error === "",
+                true, "dbSearch({type:'user',id:'1'}) no error:"+dm.error);
+      deepEqual(dm.data  !== null,
+                true, "dbSearch({type:'user',id:'1'}) returns item data for type given in search options:"+JSON.stringify(dm.data));
+      start();
+    }, millisec);
+  });
+
+  asyncTest('dbSearch for next id through dbSearch', 4, function() {
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote"});
+    deepEqual(dm.dbSearch({type:"user",id:"max"}),
+              true, "dbSearch({type:'user',id:'max'}) returns true");
+    setTimeout(function() {
+      deepEqual(dm.error === "",
+                true, "dbSearch({type:'user',id:'max'}) no error:"+dm.error);
+      deepEqual(dm.data  === null,
+                true, "dbSearch({type:'user',id:'max'}) returns item data for type given in search options:"+JSON.stringify(dm.data));
+      deepEqual(dm.max == "2", // Assuming there is only one user with id==1 in the db table
+                true, "dbSearch({type:'user',id:'max'}) id==2:"+dm.max);
+      start();
+    }, millisec);
+  });
+
+  asyncTest('dbSearch for next id directly', 4, function() {
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote"});
+    deepEqual(dm.dbSearchNextId({type:"user",id:"max"}),
+              true, "dbSearch({type:'user',id:'max'}) returns true");
+    setTimeout(function() {
+      deepEqual(dm.error === "",
+                true, "dbSearch({type:'user',id:'max'}) no error:"+dm.error);
+      deepEqual(dm.data  === null,
+                true, "dbSearch({type:'user',id:'max'}) returns item data for type given in search options:"+JSON.stringify(dm.data));
+      deepEqual(dm.max == "2", // Assuming there is only one user with id==1 in the db table
+                true, "dbSearch({type:'user',id:'max'}) id==2:"+dm.max);
       start();
     }, millisec);
   });
