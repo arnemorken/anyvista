@@ -924,12 +924,13 @@ anyDataModel.prototype.dataDelete = function (options)
 
 /**
  * @method dbSearch
- * @description Gets an item or a list from database.
+ * @description Gets an item or a list from server.
  *              The data will be handed to the success handler specified in options.success,
  *              or to this.dbSearchSuccess if no success handler is specified.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer}  id:         Item's id. If not given, a list of items of the chosen type will be read.
+ *        {integer}  id:         Item's id. If given, the database will be searched for this item.
+                                 If not given, a list of items of the given type will be searched for.
  *                               Optional. Default: null.
  *        {integer}  type:       Item's type.
  *                               Optional. Default: `this.type`.
@@ -948,24 +949,26 @@ anyDataModel.prototype.dbSearch = function (options)
 {
   if (!options || typeof options != "object")
     options = {};
+
   if (options.id == "max")
     return this.dbSearchNextId(options);
+
   if (!options.timeoutSec)
     options.timeoutSec = 10;
   $.ajaxSetup({ timeout: options.timeoutSec*1000 });
-  let self = this;
-  self.success = options.success ? options.success : this.dbSearchSuccess;
-  self.fail    = options.fail    ? options.fail    : this._dbFail;
-  self.context = options.context ? options.context : this;
+  this.success = options.success ? options.success : this.dbSearchSuccess;
+  this.fail    = options.fail    ? options.fail    : this._dbFail;
+  this.context = options.context ? options.context : this;
   this.message = "";
   this.error   = "";
+  let self = this;
   if (this.mode == "remote") { // Remote server call
     let url = this.dbSearchGetURL(options);
     if (!url)
       return false;
     $.getJSON(url) // Call server
-    .done(function(rdata,textStatus,jqXHR) {
-      return self.success ? self.success(self,rdata,options) : false;
+    .done(function(serverdata,textStatus,jqXHR) {
+      return self.success ? self.success(self,serverdata,options) : false;
     })
     .fail(function(jqXHR,textStatus,error) {
       return self.fail    ? self.fail   (self,jqXHR) : false;
@@ -976,18 +979,23 @@ anyDataModel.prototype.dbSearch = function (options)
     if (!self.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
       console.warn("anyDataModel.dbSearch: "+this.message);
-      return false; // Should never happen
+      return false;
     }
-    return self.success(options,this);
+    return self.success(this,this,options);
   }
 }; // dbSearch
 
 /**
  * @method dbSearchGetURL
  * @description Builds a POST string for dbSearch to be sent to server.
- *              If `options.type` is specified and is not equal to `this.type`, then `[options.type]_id`
- *              will be used instead of `this.id_key` when calling the server.
- * @param {Object} options
+ * @param {Object} options An object which may contain these elements:
+ *
+ *        {integer} id:   Item's id. If specified, the server will search for an item with this id,
+ *                        if not specified, the server will search for a list of items of the given type,
+ *                        Optional. Default: null.
+ *        {integer} type: Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
+ *                        be used as the id_key instead of the value in `this.id_key` when calling the server.
+ *                        Optional. Default: `this.type`.
  *
  * @return The complete URL for dbSearch or null on error (missing type or id_key).
  */
@@ -998,16 +1006,24 @@ anyDataModel.prototype.dbSearchGetURL = function (options)
     console.error("anyDataModel.dbSearchGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  let id_key = options.type && options.type != this.type ? type+"_id" : this.id_key;
+  let id_key = options.type && options.type != this.type
+               ? type+"_id"
+               : this.id_key;
   if (!id_key) {
     console.error("anyDataModel.dbSearchGetURL: "+i18n.error.ID_KEY_MISSING);
     return null;
   }
   let param_str = "?echo=y"+
                   "&type="+type;
-  param_str += (options.id || options.id === 0) && Number.isInteger(parseInt(options.id))
-               ? "&"+id_key+"="+parseInt(options.id) // Item search
+  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
+               ? parseInt(options.id)
+               : options.id
+                 ? options.id
+                 : null;
+  param_str += the_id
+               ? "&"+id_key+"="+the_id // Item search
                : ""; // List search
+
   return this._getDataSourceName() + param_str;
 }; // dbSearchGetURL
 
@@ -1033,9 +1049,9 @@ anyDataModel.prototype.dbSearchSuccess = function (context,serverdata,options)
     self.error   = serverdata.error;
     if (!serverdata.data) {
       if (serverdata.id || serverdata.id === 0)
-        self.error = self.type.capitalize()+" not found. "; // TODO i18n
+        self.message = self.type.capitalize()+" not found. "; // TODO! i18n
       else
-        self.error = "No "+self.type+"s found. "; // TODO i18n
+        self.message = "No "+self.type+"s found. "; // TODO! i18n
     }
     if (self.message)
       console.log("anyDataModel.dbSearchSuccess: "+self.message);
@@ -1073,45 +1089,48 @@ anyDataModel.prototype.dbSearchNextId = function (options)
 {
   if (!options || typeof options != "object")
     options = {};
+
   if (!options.timeoutSec)
     options.timeoutSec = 10;
   $.ajaxSetup({ timeout: options.timeoutSec*1000 });
-  $.ajaxSetup({ async: false }); // TODO Important! Asynchronous database call
-  let self = this;
-  self.success = options.success ? options.success : this.dbSearchNextIdSuccess;
-  self.fail    = options.fail    ? options.fail    : this._dbFail;
-  self.context = options.context ? options.context : this;
+  $.ajaxSetup({ async: false }); // TODO! Asynchronous database call
+  this.success = options.success ? options.success : this.dbSearchNextIdSuccess;
+  this.fail    = options.fail    ? options.fail    : this._dbFail;
+  this.context = options.context ? options.context : this;
   this.message = "";
   this.error   = "";
+  let self = this;
   if (this.mode == "remote") { // Remote server call
     let url = this.dbSearchNextIdGetURL(options);
     if (!url)
       return false;
     $.getJSON(url) // Call server
-    .done(function(rdata,textStatus,jqXHR) {
-      return self.success ? self.success(self,rdata,options) : true;
+    .done(function(serverdata,textStatus,jqXHR) {
+      return self.success ? self.success(self,serverdata,options) : false;
     })
     .fail(function(jqXHR,textStatus,error) {
       return self.fail    ? self.fail   (self,jqXHR) : false;
     });
+    return true;
   }
   else { // Local method call
     if (!self.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
       console.warn("anyDataModel.dbSearchNextId: "+this.message);
-      return false; // Should never happen
+      return false;
     }
-    return self.success(options,this);
+    return self.success(this,this,options);
   }
-  return true;
 }; // dbSearchNextId
 
 /**
  * @method dbSearchNextIdGetURL
  * @description Builds a POST string for dbSearchNextId to be sent to server.
- *              If `options.type` is specified and is not equal to `this.type`, then `[options.type]_id`
- *              will be used instead of `this.id_key` when calling the server.
- * @param {Object} options
+ * @param {Object} options An object which may contain these elements:
+ *
+ *        {integer} type: Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
+ *                        be used as the id_key instead of the value in `this.id_key` when calling the server.
+ *                        Optional. Default: `this.type`.
  *
  * @return The complete URL for dbSearchNextId or null on error (missing type or id_key).
  */
@@ -1122,7 +1141,9 @@ anyDataModel.prototype.dbSearchNextIdGetURL = function (options)
     console.error("anyDataModel.dbSearchNextIdGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  let id_key = options.type && options.type != this.type ? type+"_id" : this.id_key;
+  let id_key = options.type && options.type != this.type
+               ? type+"_id"
+               : this.id_key;
   if (!id_key) {
     console.error("anyDataModel.dbSearchNextIdGetURL: "+i18n.error.ID_KEY_MISSING);
     return null;
@@ -1130,6 +1151,7 @@ anyDataModel.prototype.dbSearchNextIdGetURL = function (options)
   let param_str = "?echo=y"+
                   "&type="+type;
   param_str += "&"+id_key+"=max";
+
   return this._getDataSourceName() + param_str;
 }; // dbSearchNextIdGetURL
 
@@ -1161,6 +1183,247 @@ anyDataModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,opti
   return context;
 }; // dbSearchNextIdSuccess
 
+
+/**
+ * @method dbUpdate
+ * @description Insert or update an item in a database table.
+ * @param {Object} options An object which may contain these elements:
+ *
+ *        {integer}  id:         Item's id. If given, an existing item in the database will be updated.
+ *                               If not given, a new item will be inserted into the database.
+ *                               Mandatory if updating, null or undefined if inserting.
+ *        {integer}  type:       Item's type.
+ *                               Optional. Default: `this.type`.
+ *        {Object}   indata:     The data structure from which comes the data to insert/update.
+ *                               An item matching id/type, must exist in `indata`. If no such item
+ *                               can be found, it is an error.
+ *                               Optional. Default: `this.data`.
+ *        {boolean}  is_new:     true if the item is new (does not exist in database) and should be inserted
+ *                               rather than updated. Note: If set, an insert operation will be performed
+ *                               even if `options.id` has a value.
+ *                               Optional. Default: false.
+ *        {integer}  timeoutSec: Number of seconds before timing out.
+ *                               Optional. Default: 10.
+ *        {Function} success:    Method to call on success.
+ *                               Optional. Default: `this.dbUpdateSuccess`.
+ *        {Function} fail:       Method to call on error or timeout.
+ *                               Optional. Default: `this._dbFail`.
+ *        {Function} context:    The context of the success and fail methods.
+ *                               Optional. Default: `this`.
+ *
+ * @return true if the database call was made, false otherwise.
+ */
+anyDataModel.prototype.dbUpdate = function (options)
+{
+  if (!options || typeof options != "object")
+    options = {};
+
+  // Check that we have new or dirty data
+  let the_type = options.type ? options.type : this.type;
+  if (!the_type) {
+    console.error("anyDataModel.dbUpdate: "+i18n.error.TYPE_MISSING);
+    return false;
+  }
+  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
+               ? parseInt(options.id)
+               : options.id
+                 ? options.id
+                 : null;
+  if (!the_id && typeof options.id !== "string") {
+    console.error("anyDataModel.dbUpdate: "+i18n.error.ID_ILLEGAL);
+    return false;
+  }
+  let the_data = options.indata ? options.indata : this.data;
+  let item = this.dataSearch({ type: the_type,
+                               id:   the_id,
+                               data: the_data,
+                            });
+  if (!item || !item[options.id]) {
+    console.error("anyDataModel.dbUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%", ""+options.id));
+    return false;
+  }
+  if (!item[options.id].is_new && !Object.size(item[options.id].dirty)) {
+    this.message = i18n.error.NOTHING_TO_UPDATE;
+    console.warn("anyDataModel.dbUpdate: "+this.message);
+    if (this.cbExecute)
+      this.cbExecute();
+    return false;
+  }
+
+  // Data to update or insert
+  let item_to_send = item[options.id].is_new
+                     ? item[options.id]        // insert
+                     : item[options.id].dirty; // update
+
+  // Data used in dbUpdateSuccess method
+  options.client_id = options.id;     // Update this id in existing data structure with new id from server
+  options.data      = options.indata; // Clean up this data structure after server returns successfully
+  options.is_new    = item[options.id].is_new;
+
+  if (!options.timeoutSec)
+    options.timeoutSec = 10;
+  $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  this.success = options.success ? options.success : this.dbUpdateSuccess;
+  this.fail    = options.fail    ? options.fail    : this._dbFail;
+  this.context = options.context ? options.context : this;
+  this.message = "";
+  this.error   = "";
+  let self = this;
+  if (this.mode == "remote") { // Remote server call
+    let url = this.dbUpdateGetURL(options);
+    if (!url)
+      return false;
+    $.getJSON(url,item_to_send) // Call server
+    .done(function(serverdata,textStatus,jqXHR) {
+      return self.success ? self.success(self,serverdata,options) : false;
+    })
+    .fail(function(jqXHR,textStatus,error) {
+      return self.fail    ? self.fail   (self,jqXHR) : false;
+    });
+    return true;
+  }
+  else {
+    if (!self.success) {
+      this.message = i18n.error.SUCCCESS_CB_MISSING;
+      console.warn("anyDataModel.dbUpdate: "+this.message);
+      return false;
+    }
+    return self.success(this,this,options);
+  }
+}; // dbUpdate
+
+/**
+ * @method dbUpdateGetURL
+ * @description Builds a POST string for dbUpdate to be sent to server.
+ * @param {Object} options An object which may contain these elements:
+ *
+ *        {integer}  id:     Item's id. If specified, the server will update the item,
+ *                           if not specified, the server will insert the item.
+ *                           Optional. Default: null.
+ *        {integer}  type:   Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
+ *                           be used as the id_key instead of the value in `this.id_key` when calling the server.
+ *                           Optional. Default: `this.type`.
+ *        {boolean}  is_new: true if the item is new (does not exist in database) and should be inserted
+ *                           and not updated. Note: If set, an insert operation will be performed even if
+ *                           `options.id` has a value.
+ *                           Optional. Default: false.
+ *
+ * @return The complete URL for dbUpdate or null on error (missing type or id_key).
+ */
+anyDataModel.prototype.dbUpdateGetURL = function (options)
+{
+  let type = options.type ? options.type : this.type;
+  if (!type) {
+    console.error("anyDataModel.dbUpdateGetURL: "+i18n.error.TYPE_MISSING);
+    return null;
+  }
+  let id_key = options.type && options.type != this.type
+               ? type+"_id"
+               : this.id_key;
+  if (!id_key) {
+    console.error("anyDataModel.dbUpdateGetURL: "+i18n.error.ID_KEY_MISSING);
+    return null;
+  }
+  let param_str = "?echo=y"+
+                  "&type="+type;
+  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
+               ? parseInt(options.id)
+               : options.id
+                 ? options.id
+                 : null;
+  param_str += the_id
+               ? "&"+id_key+"="+the_id // Update item
+               : ""; // Insert item
+
+  // If a group id is given, the item will be put into that group immediately
+  let group_id     = type != "group"
+                     ? options.group_id
+                     : null;
+  let the_group_id = type != "group"
+                     ? Number.isInteger(parseInt(group_id)) && group_id >= 0
+                       ? parseInt(group_id)
+                       : group_id
+                         ? group_id
+                         : null
+                     : null;
+  if (the_group_id)
+    param_str += "&group_id="+the_group_id;
+
+  // Command
+  param_str += options.is_new || !the_id
+               ? "&cmd=ins"
+               : "&cmd=upd";
+
+  return this._getDataSourceName() + param_str;
+}; // dbUpdateGetURL
+
+/**
+ * @method dbUpdateSuccess
+ * @description Default success callback method for dbUpdate.
+ * @param {Object} context
+ *        {Object} serverdata
+ *        {Object} options
+ *
+ * @return context
+ */
+anyDataModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
+{
+  let self = context;
+  self.last_db_command = "upd";
+  if (serverdata) {
+    if (serverdata.JSON_CODE)
+      serverdata = serverdata.JSON_CODE;
+    if (Object.size(serverdata.data) == 0)
+      serverdata.data = null;
+    self.message = serverdata.message;
+    self.error   = serverdata.error;
+    if (self.message)
+      console.log("anyDataModel.dbUpdateSuccess: "+self.message);
+    if (self.error)
+      console.error("anyDataModel.dbUpdateSuccess: "+self.error);
+    else {
+      // If item is in model's data structure, we must update model after successful insert/update
+      let type = options.type ? options.type : self.type;
+      let item = self.dataSearch({ type: type,
+                                   id:   options.client_id,
+                                   data: options.data,
+                                });
+      if (item) {
+        if (options.id == options.client_id && (!item || (!item[options.client_id] && !item["+"+options.client_id]))) {
+          // Should never happen
+          console.error("anyDataModel.dbUpdateSuccess: System error: Could not find item with id "+options.client_id);
+          return false;
+        }
+        self.last_insert_id = serverdata.id; // Id of the item inserted/updated, as provided by server
+        if (options.client_id && serverdata.id && parseInt(options.client_id) != parseInt(serverdata.id)) {
+          // Replace item with defunct id with an item using new id from server
+          item[serverdata.id] = item[options.client_id]
+                                ? item[options.client_id]
+                                : item["+"+options.client_id];
+          if (item[serverdata.id][self.id_key])
+            item[serverdata.id][self.id_key] = serverdata.id;
+          self.dataDelete({ type: options.type,
+                            id:   options.client_id,
+                         });
+        }
+        // Remove the is_new mark and dirty data
+        let tmp_id = item[serverdata.id]
+                     ? serverdata.id
+                     : item["+"+serverdata.id]
+                       ? "+"+serverdata.id
+                       : null;
+        if (tmp_id) {
+          delete item[tmp_id].is_new;
+          delete item[tmp_id].dirty;
+        }
+      } // if (item)
+      delete options.client_id; // Delete property set by dbUpdate
+    }
+  }
+  if (self.cbExecute)
+    self.cbExecute();
+  return context;
+}; // dbUpdateSuccess
 
 // Default fail callback for all db* methods
 anyDataModel.prototype._dbFail = function (context,jqXHR)

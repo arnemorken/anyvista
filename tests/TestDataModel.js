@@ -851,8 +851,8 @@ function testModel()
                 true, "dbSearch({type:'user',id:'max'}) no error:"+dm.error);
       deepEqual(dm.data  === null,
                 true, "dbSearch({type:'user',id:'max'}) returns item data for type given in search options:"+JSON.stringify(dm.data));
-      deepEqual(dm.max == "2", // Assuming there is only one user with id==1 in the db table
-                true, "dbSearch({type:'user',id:'max'}) id==2:"+dm.max);
+      deepEqual(dm.max == "3", // Assuming that last user id==2 in the db table
+                true, "dbSearch({type:'user',id:'max'}) id==3:"+dm.max);
       start();
     }, millisec);
   });
@@ -866,12 +866,200 @@ function testModel()
                 true, "dbSearch({type:'user',id:'max'}) no error:"+dm.error);
       deepEqual(dm.data  === null,
                 true, "dbSearch({type:'user',id:'max'}) returns item data for type given in search options:"+JSON.stringify(dm.data));
-      deepEqual(dm.max == "2", // Assuming there is only one user with id==1 in the db table
-                true, "dbSearch({type:'user',id:'max'}) id==2:"+dm.max);
+      deepEqual(dm.max == "3", // Assuming that last user id==2 in the db table
+                true, "dbSearch({type:'user',id:'max'}) id==3:"+dm.max);
       start();
     }, millisec);
   });
 
   ///////////////////// end dbSearch tests /////////////////////
 
+  ///////////////////// dbUpdate tests /////////////////////
+
+  asyncTest('dbUpdate - item: normal case', 3, function() {
+    let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
+                                     12:{list:"faz",foo_name:"The faz foo"},
+                                     2:{list:"user",user_name:"The faz user",
+                                         dirty:{list:"user",user_name:"The faz user",display_name:"The faz display"}}}}};
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data});
+    let res = dm.dbUpdate({type:"user",id:2});
+    deepEqual(res,
+              true, "dbUpdate({type:'user',id:2}) returns true");
+    setTimeout(function() {
+      let item = dm.dataSearch({type:"user",id:2});
+      deepEqual(item[2].user_name === "The faz user" &&
+                item[2].dirty === undefined,
+                true, "dbUpdate({type:'user',id:2}) returns with correct data in memory:"+
+                      item[2].user_name+","+item[2].dirty);
+      let dm2 = new anyDataModel({type:"user",search:false,mode:"remote",data:null});
+      dm2.dbSearch({type:"user",id:2});
+      setTimeout(function() {
+        deepEqual(dm2.data && dm2.data["+0"].data["+2"].user_name === "The faz user",
+                  true, "dbUpdate({type:'user',id:2}) returns with correct data in database:"+
+                        dm2.data["+0"].data["+2"].user_name);
+        start();
+      }, millisec);
+    }, millisec);
+  });
+
+  asyncTest('dbUpdate - item: empty input', 3, function() {
+    let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
+                                     12:{list:"faz",foo_name:"The faz foo"},
+                                     50:{list:"event",event_name:"The faz event",
+                                         dirty:{list:"event",event_name:"The faz event"}}}}};
+    let dm = new anyDataModel({type:"event",search:false,mode:"remote",data:data});
+    let res = dm.dbUpdate();
+    deepEqual(res,
+              false, "dbUpdate({type:'event',id:50}) with empty input returns false");
+    setTimeout(function() {
+      let item = dm.dataSearch({type:"event",id:50});
+      deepEqual(item[50].event_name === "The faz event" &&
+                item[50].dirty !== undefined,
+                true, "dbUpdate({type:'event',id:50}) with empty input returns returns unchanged memory data:"+
+                      item[50].event_name+","+item[50].dirty);
+      let dm2 = new anyDataModel({type:"event",search:false,mode:"remote",data:null});
+      dm2.dbSearch({type:"baz",id:50});
+      setTimeout(function() {
+        deepEqual(dm2.data=== null,
+                  true, "dbUpdate({type:'event',id:50}) with empty input returns null from dbSearch:"+
+                        dm2.data);
+        start();
+      }, millisec);
+    });
+  });
+
+  asyncTest('dbUpdate - item: id exists in model, but not in database', 3, function() {
+    let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
+                                     12:{list:"faz",foo_name:"The faz foo"},
+                                     555:{list:"event",event_name:"The faz event",
+                                         dirty:{list:"event",event_name:"The faz event"}}}}};
+    let dm = new anyDataModel({type:"event",search:false,mode:"remote",data:data});
+    let res = dm.dbUpdate({type:"event",id:555});
+    deepEqual(res,
+              true, "dbUpdate({type:'event',id:555}) returns true");
+    setTimeout(function() {
+      let item = dm.dataSearch({type:"event",id:555});
+      deepEqual(item[555].event_name === "The faz event" &&
+                item[555].dirty !== undefined,
+                true, "dbUpdate({type:'event',id:555}) returns with correct data in memory:"+
+                      item[555].event_name+","+item[555].dirty);
+      let dm2 = new anyDataModel({type:"event",search:false,mode:"remote",data:null});
+      dm2.dbSearch({type:"event",id:555});
+      setTimeout(function() {
+        deepEqual(dm2.data === null,
+                  true, "dbUpdate({type:'event',id:555}) returns null from database");
+        start();
+      }, millisec);
+    }, millisec);
+  });
+
+  asyncTest('dbUpdate - item with nonexisting id', 3, function() {
+    let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
+                                     12:{list:"faz",foo_name:"The faz foo"},
+                                     50:{list:"baz",event_name:"The faz event",
+                                         dirty:{list:"event",event_name:"The faz event"}}}}};
+    let dm = new anyDataModel({type:"event",search:false,mode:"remote",data:data});
+    let res = dm.dbUpdate({type:"event",id:6346});
+    deepEqual(res,
+              false, "dbUpdate({type:'baz',id:6346}) item with nonexisting id returns false");
+    setTimeout(function() {
+      let item = dm.dataSearch({type:"baz",id:6346});
+      deepEqual(item === null,
+                true, "dbUpdate({type:'baz',id:6346}) item with nonexisting id returns returns null from dataSearch");
+      let dm2 = new anyDataModel({type:"biz",search:false,mode:"remote",data:null});
+      dm2.dbSearch({type:"baz",id:6346});
+      setTimeout(function() {
+        deepEqual(dm2.data=== null,
+                  true, "dbUpdate({type:'baz',id:6346}) item with nonexisting id returns null from dbSearch:"+
+                        dm2.data);
+        start();
+      }, millisec);
+    }, millisec);
+  });
+
+  asyncTest('dbUpdate - item with different model.type', 3, function() {
+    let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
+                                     12:{list:"faz",foo_name:"The faz foo"},
+                                     2:{list:"user",user_name:"The faz user",
+                                         dirty:{list:"user",user_name:"The faz user"}}}}};
+    let dm = new anyDataModel({type:"baz",search:false,mode:"remote",data:data});
+    let res = dm.dbUpdate({type:"user",id:2});
+    deepEqual(res,
+              true, "dbUpdate({type:'user',id:2}) with different model type returns true");
+    setTimeout(function() {
+      let item = dm.dataSearch({type:"user",id:2});
+      deepEqual(item[2].user_name === "The faz user" &&
+                item[2].dirty === undefined,
+                true, "dbUpdate({type:'user',id:2}) with different model type returns with correct data in memory:"+
+                      item[2].user_name+","+item[2].dirty);
+      let dm2 = new anyDataModel({type:"user",search:false,mode:"remote",data:null});
+      dm2.dbSearch({type:"user",id:2});
+      setTimeout(function() {
+        deepEqual(dm2.data["+0"].data["+2"].user_name === "The faz user",
+                  true, "dbUpdate({type:'user',id:2}) with different model type returns with correct data in database:"+
+                        dm2.data["+0"].data["+2"].user_name);
+        start();
+      }, millisec);
+    }, millisec);
+  });
+
+  asyncTest('dbUpdate - item with type that does not match model.type', 3, function() {
+    let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
+                                     12:{list:"faz",foo_name:"The faz foo"},
+                                     2:{list:"baz",user_name:"The faz user",
+                                         dirty:{list:"user",user_name:"The faz user"}}}}};
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data});
+    let res = dm.dbUpdate({type:"biz",id:2});
+    deepEqual(res,
+              false, "dbUpdate({type:'baz',id:2}) with input type that does not match model type returns false");
+    setTimeout(function() {
+      let item = dm.dataSearch({type:"baz",id:2});
+      deepEqual(item[2].user_name === "The faz user" &&
+                item[2].dirty !== undefined,
+                true, "dbUpdate({type:'baz',id:2}) with input type that does not match model type returns returns unchanged memory data:"+
+                      item[2].user_name+","+item[2].dirty);
+      let dm2 = new anyDataModel({type:"biz",search:false,mode:"remote",data:null});
+      dm2.dbSearch({type:"baz",id:2});
+      setTimeout(function() {
+        deepEqual(dm2.data=== null,
+                  true, "dbUpdate({type:'baz',id:2}) with input type that does not match model type returns null from dbSearch:"+
+                        dm2.data);
+        start();
+      }, millisec);
+    }, millisec);
+  });
+
+  asyncTest('dbUpdate insert data that is in memory', 2, function() {
+    let data7779 = {77:{list:"user",user_name:"ev77"},
+                    79:{list:"user",user_name:"ev79",is_new:true}};
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data7779});
+    // insert
+    let res = dm.dbUpdate({id:79}); // insert data
+    deepEqual(res,
+              true, "dbUpdate(data) returns true (insert1)");
+    setTimeout(function() {
+      deepEqual(dm.last_insert_id !== undefined &&
+                dm.data[dm.last_insert_id].is_new === undefined,
+                true, "dbDelete() deletes is_new mark when data is given as model's data");
+      start();
+    }, millisec);
+  });
+
+  asyncTest('dbUpdate insert data that is not in memory', 2, function() {
+    let data22 = {22:{list:"user",user_name:"ev22"}};
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data22});
+    // insert
+    let data23 = {23:{list:"user",user_name:"ev23",is_new:true}};
+    let res = dm.dbUpdate({id:23,indata:data23}); // insert data
+    deepEqual(res,
+              true, "dbUpdate(data) returns true (insert2)");
+    setTimeout(function() {
+      deepEqual(dm.data[22] !== undefined &&
+                dm.data[23] === undefined,
+                true, "dbDelete() does not insert into memory when data is given as parameter to update only");
+      start();
+    }, millisec);
+  });
+
+  ///////////////////// end dbUpdate tests /////////////////////
 } // testModel

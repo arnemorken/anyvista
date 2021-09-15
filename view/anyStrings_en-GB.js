@@ -6,7 +6,7 @@
 *
 * @license AGPLv3.0 for open source use or anyList Commercial License for commercial use.
 * Get licences here: http://balanse.info/anylist/license/ (coming soon).
-* 
+*
 ****************************************************************************************
 */
 var i18n = {
@@ -27,6 +27,6 @@ var i18n = {
     TYPE_MISSING:        "Type missing. ",
     ID_MISSING:          "Id missing. ",
     ID_ILLEGAL:          "Id must be a positive integer or a string. ",
+    ITEM_NOT_FOUND:      "Could not find item with id %%. ",
   },
 };
-  
