@@ -12,16 +12,16 @@
 //
 // Gets data from an anyList database server and returns it in a JSON object.
 //
-require_once dirname(__FILE__)."/parameters.php";
+require_once dirname(__FILE__)."/Parameters.php";
 require_once dirname(__FILE__)."/anyTableFactory.php";
 
 function anyGetData($doEcho=false)
 {
-  $type = ltrim(parameters::get("type"));
-  $cmd  = ltrim(parameters::get("cmd"));
+  $type = ltrim(Parameters::get("type"));
+  $cmd  = ltrim(Parameters::get("cmd"));
 
   // Uncomment to log the data received from the client to the error log:
-  //parameters::debugLog(parameters::getStrArr());
+  //Parameters::debugLog(Parameters::getStrArr());
 
   $table = null;
   $data  = null;
@@ -38,8 +38,8 @@ function anyGetData($doEcho=false)
         default:    $data = $table->dbSearch();     break;
       }
       if ($table->isError() ||
-          parameters::get("search") === "no" || parameters::get("search") === "false" ||
-          parameters::get($table->getIdKey()) === "") {
+          Parameters::get("search") === "no" || Parameters::get("search") === "false" ||
+          Parameters::get($table->getIdKey()) === "") {
         $data = $table->getData();
         if ($data !== null && !empty($data))
           $data = $table->prepareData($data);
@@ -76,5 +76,5 @@ function anyGetData($doEcho=false)
 //
 // Get the data
 //
-anyGetData(parameters::get("echo") == "y");
+anyGetData(Parameters::get("echo") == "y");
 ?>
