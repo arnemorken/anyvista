@@ -158,7 +158,7 @@ class anyTable extends dbTable
             $mFilters           = null,
             $mPermission        = null,
             $mOrderBy           = null,
-            $sortFunction       = null;
+            $mSortFunction      = null;
 
   protected $mInsertSuccessMsg  = "",
             $mUpdateSuccessMsg  = "",
@@ -407,9 +407,18 @@ class anyTable extends dbTable
 
   /**
    * @method getPermission
-   * @description
+   * @description Returns the permission object.
    */
   public function getPermission() { return $this->mPermission; }
+
+  /**
+   * @method hasParentId
+   * @description Override and return true in table classes which have parent_id.
+   */
+  public function hasParentId()
+  {
+    return false;
+  } // hasParentId
 
   /////////////////////////
   //////// finders ////////
@@ -475,6 +484,1088 @@ class anyTable extends dbTable
       $str = "any_".$pluginType;
     return $str;
   } // findPluginTableName
+
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////// Searches ////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * @method dbSearch
+   * @description Search database for an item or a list
+   * @return Data array, or null on error or no data
+   * @example
+   */
+  public function dbSearch()
+  {
+    $err = $this->dbValidateSearch();
+    if ($err) {
+      $this->setError($err);
+      return null;
+    }
+    $this->mError = "";
+    $this->mData = null;
+    if ($this->mId == "max")
+      $res = $this->dbSearchMaxId();
+    else
+    if ($this->mId == "par")
+      $res = $this->dbSearchParents();
+    else
+    if ($this->mId)
+      $res = $this->dbSearchItem($this->mData,$this->mIdKeyTable,$this->mId);
+    else {
+      $this->mListFor   = null;
+      $this->mListForId = null;
+      $res = $this->dbSearchList($this->mData);
+    }
+    if (!$res)
+      return null;
+    return $this->prepareData($this->mData);
+  } // dbSearch
+
+  protected function dbValidateSearch()
+  {
+    $err = "";
+    if (!$this->mType)
+      $err = "Type missing. ";
+    return $err;
+  } // dbValidateSearch
+
+  //
+  // Find max id for a table
+  //
+  protected function dbSearchMaxId()
+  {
+    $table = $this->getTableName();
+  //$id    = $this->mIdKeyTable;
+  //$stmt  = "SELECT MAX(".$id.") FROM ".$table;
+    $stmt  = "SELECT AUTO_INCREMENT FROM information_schema.tables ".
+              "WHERE table_name = '".$table."' ".
+              "AND table_schema = DATABASE( )";
+    //elog("dbSearchMaxId query:".$stmt);
+    if (!$this->query($stmt))
+      return false;
+    $nextrow = $this->getNext(true);
+    $this->mMaxId = $nextrow !== null
+                    ? $nextrow["AUTO_INCREMENT"]
+                    : -1;
+    //elog("dbSearchMaxId,mMaxId:".$this->mMaxId);
+    return $this->prepareData($this->mData);
+  } // dbSearchMaxId
+
+  //
+  // Find all items of a certain type and return simple list of id/name pairs
+  //
+  protected function dbSearchParents()
+  {
+    $this->mData = null;
+    if (!$this->dbSearchList($this->mData,true,true,true)) // Search to a flat list
+      return null;
+    return $this->prepareData($this->mData);
+  } // dbSearchParents
+
+  //////////////////////////////// Item search ////////////////////////////////
+
+  //
+  // Search database for an item, including meta data
+  // Returns true on success, false on error
+  //
+  protected function dbSearchItem(&$data,$key,$val,$skipLists=false)
+  {
+    if ($key === null || $val === null) {
+      $this->setError("Missing key ($key) or value ($val)");
+      return false;
+    }
+    // Get query fragments
+    $this->mError = "";
+    $cur_uid   = $this->mPermission["current_user_id"];
+    $select    = $this->findItemSelect();
+    $left_join = $this->findItemLeftJoin($cur_uid);
+    $where     = $this->findItemWhere($key,$val);
+
+    if ($this->mError != "") {
+      error_log($this->mError);
+      return false;
+    }
+
+    // Build and execute the full statement
+    $stmt = $select.
+            "FROM ".$this->getTableName()." ".
+            $left_join.
+            $where;
+    //elog("dbSearchItem:".$stmt);
+    if (!$this->query($stmt))
+      return false; // An error occured
+
+    // Get the data
+    $success = $this->getRowData($data,"item",false,false);
+
+    if ($success) {
+      // Search and get the meta data
+      $this->dbSearchMeta($data,"item",false);
+
+      // Get associated lists, unless they should be skipped
+      if (!$skipLists)
+        $this->dbSearchItemLists($data);
+
+      // Build the data tree
+      $this->buildGroupTreeAndAttach($data,"item");
+    }
+
+    return !$this->isError();
+  } // dbSearchItem
+
+  protected function findItemSelect()
+  {
+    // Select from own table
+    $si = "SELECT DISTINCT ".$this->getTableName().".* ";
+
+    // Select from left joined user table (if this is not a user table)
+    if ($this->mType != "user" &&
+        isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin["user"]) && $this->tableExists($this->mTableNameUserLink)) {
+      foreach ($this->mTableFieldsLeftJoin["user"] as $field)
+        $si .= ", ".$this->mTableNameUserLink.".".$field;
+      if ($this->hasParentId())
+        $si .= ",";
+    }
+    if ($this->hasParentId())
+      $si .= " temp.".$this->mNameKey." AS parent_name";
+    $si .= " ";
+    return $si;
+  } // findItemSelect
+
+  protected function findItemLeftJoin($cur_uid)
+  {
+    // Left join user table (if this is not a user table)
+    $lj = "";
+    if ($this->mType != "user" &&
+        isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin["user"]) && $this->tableExists($this->mTableNameUserLink)) {
+      $lj .= "LEFT JOIN ".$this->mTableNameUserLink." ON ".$this->mTableNameUserLink.".".$this->mIdKeyTable."='".$this->mId."' ";
+      if ($cur_uid)
+        $lj .= "AND ".$this->mTableNameUserLink.".user_id='".$cur_uid."' ";
+    }
+    if ($this->hasParentId())
+      $lj .= "LEFT JOIN ".$this->mTableName." temp ON ".$this->mTableName.".parent_id=temp.".$this->mIdKey." ";
+    return $lj;
+  } // findItemLeftJoin
+
+  protected function findItemWhere($key,$val)
+  {
+    $where = "WHERE ".$this->getTableName().".".$key."='".utf8_encode($val)."' ";
+    return $where;
+  } // findItemWhere
+
+  //
+  // Search for lists associated with the item
+  //
+  protected function dbSearchItemLists(&$data)
+  {
+    $err = $this->dbValidateItemListSearch();
+    if ($err === null)
+      return true; // No plugins found, return with no error
+    if ($err) {
+      $this->setError($err);
+      return false;
+    }
+    // Prepare the data structure
+    $idx = "+".$this->mId;
+    // Loop through all registered plugins (link tables)
+    foreach ($this->mPlugins as $i => $plugin) {
+      $table = anyTableFactory::create($plugin,$this);
+      if ($table) {
+        $table->mListFor     = $this->mType;
+        $table->mListForId   = $this->mId;
+        $table->mListForName = isset($data[$idx]) && isset($data[$idx][$this->mNameKey]) ? $data[$idx][$this->mNameKey] : "";
+        $table_data = null;
+        $skipOwnId = $plugin == $this->mType;
+        if (!$table->dbSearchList($table_data,$skipOwnId,true,false)) // TODO! Searching for "simple" list does not work here
+          $this->mError .= $table->getError();
+        // We found some data, insert it in the data structure
+        if ($table_data) {
+          if (!isset($data[$idx]))
+            $data[$idx] = array();
+          if (!isset($data[$idx]["data"]))
+            $data[$idx]["data"] = array();
+          $data[$idx]["data"]['grouping']        = "tabs";
+          $data[$idx]["data"]['groupingFor']     = $table->mListFor;
+          $data[$idx]["data"]['groupingForId']   = $table->mListForId;
+          $data[$idx]["data"]['groupingForName'] = $table->mListForName;
+          $data[$idx]["data"]["plugin_".$plugin] = array();
+          $data[$idx]["data"]["plugin_".$plugin]["head"] = $plugin;
+          $data[$idx]["data"]["plugin_".$plugin][$table->getNameKey()] = $this->findDefaultHeader($plugin,$data[$idx]["data"]["plugin_".$plugin],true);
+          if (isset($table_data[$plugin]))
+            $data[$idx]["data"]["plugin_".$plugin]["data"] = $table_data[$plugin]["data"];
+          else
+          if ($plugin == $this->mType)
+            $data[$idx]["data"]["plugin_".$plugin]["data"] = $table_data;
+          else
+            $data[$idx]["data"]["plugin_".$plugin]["data"] = "empty"; // So that the view can create an empty container
+        }
+      }
+    } // foreach
+    if ($table_error) {
+      $this->setError($this->mError.$table_error);
+      return false;
+    }
+    return true;
+  } // dbSearchItemLists
+
+  protected function dbValidateItemListSearch()
+  {
+    if (!isset($this->mPlugins))
+      return null;
+    if (!$this->mType)
+      return "Type missing. ";
+    if (!isset($this->mId) || $this->mId == "")
+      return "Id missing. ";
+    if (!in_array($this->mType,$this->mPlugins))
+      return "Unregistered type value: $this->mType. ";
+    return "";
+  } // dbValidateItemListSearch
+
+  //////////////////////////////// List search ////////////////////////////////
+
+  //
+  // Search database for a list, including meta data
+  // Returns true on success, false on error
+  //
+  protected function dbSearchList(&$data,$skipOwnId=false,$flat=false,$simple=false)
+  {
+    if ($this->mType=="user" && $this->mListFor=="user")
+      return true; // We do not have subusers (user table does not have parent_id field)
+
+    // Get query fragments
+    $this->mError = "";
+    $cur_uid   = $this->mPermission["current_user_id"];
+    $select    = $this->findListSelect();
+    $left_join = $this->findListLeftJoin($cur_uid);
+    $where     = $this->findListWhere($skipOwnId);
+    $order_by  = $this->findListOrderBy();
+
+    if ($this->mError != "") {
+      error_log($this->mError);
+      return false;
+    }
+
+    // Build and execute the full statement
+    $stmt = $select.
+            "FROM ".$this->getTableName()." ".
+            $left_join.
+            $where.
+            $order_by;
+    //elog("dbSearchList:".$stmt);
+    if (!$this->query($stmt))
+      return false; // An error occured
+
+    // Get the data
+    if (!$simple) {
+      $lt = Parameters::get("lt");
+      if ($lt == "simple")
+         $simple = true;
+    }
+    $success = $this->getRowData($data,"list",$flat,$simple);
+
+    if ($success) {
+      // Search and get the meta data
+      if (!$simple)
+        $this->dbSearchMeta($data,"list",$flat);
+
+      // Sort the list
+      if ($this->mSortFunction !== null)
+        call_user_func($this->mSortFunction);
+
+      // Build the data tree unless its a 'simple' list
+      if (!$simple)
+        $this->buildGroupTreeAndAttach($data,"list");
+    }
+
+    return !$this->isError();
+  } // dbSearchList
+
+  protected function findListSelect()
+  {
+    // Select from own table
+    $sl = "SELECT DISTINCT ".$this->getTableName().".* ";
+
+    // Always select from group table
+    if (isset($this->mTableFieldsGroup)) {
+      if ("group" != $this->mType) {
+        if ($this->tableExists($this->mTableNameGroup)) {
+          foreach ($this->mTableFieldsGroup as $field)
+            $sl .= ", ".$this->mTableNameGroup.".".$field;
+        }
+      }
+    }
+    // Select from other tables (link tables)
+    if (isset($this->mPlugins)) {
+      foreach($this->mPlugins as $i => $plugin) {
+        if ($plugin != "group" && $plugin != $this->mType) {
+          if ((isset($this->mListFor) || $plugin == "user")) {
+            if (isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin[$plugin])) {
+              $linktable = $this->findLinkTableName($plugin);
+              if ($this->tableExists($linktable)) {
+                foreach ($this->mTableFieldsLeftJoin[$plugin] as $field)
+                  $sl .= ", ".$linktable.".".$field;
+              }
+            }
+          }
+        }
+      }
+      if ($this->hasParentId())
+        $sl .= ",";
+      if ($this->hasParentId())
+        $sl .= " temp.".$this->mNameKey." AS parent_name";
+    }
+    $sl .= " ";
+    return $sl;
+  } // findListSelect
+
+  protected function findListLeftJoin($cur_uid)
+  {
+    $lj = "";
+    // Always left join group table
+    if ("group" != $this->mType)
+      $lj .= $this->findListLeftJoinOne($cur_uid,"group");
+
+    // Left join other tables (link tables)
+    if (isset($this->mPlugins)) {
+      foreach($this->mPlugins as $i => $plugin) {
+        if ($plugin != "group" && $plugin != $this->mType) {
+          if (isset($this->mListFor) || $plugin == "user") {
+            $lj .= $this->findListLeftJoinOne($cur_uid,$plugin);
+          }
+        }
+      }
+    }
+    if ($this->hasParentId())
+      $lj .= "LEFT JOIN ".$this->mTableName." temp ON ".$this->mTableName.".parent_id=temp.".$this->mIdKey." ";
+    return $lj;
+  } // findListLeftJoin
+
+  protected function findListLeftJoinOne($cur_uid,$plugin)
+  {
+    $lj = "";
+    $linktable      = $this->findLinkTableName($plugin);
+    $plugintable    = $this->findPluginTableName($plugin);
+    $metatable      = $this->findMetaTableName($plugin);
+    $linktable_id   = $this->findLinkTableId($plugin);
+    $plugintable_id = $this->findPluginTableId($plugin);
+    $metatable_id   = $plugin."_id";
+    if ($this->tableExists($linktable)) {
+      $lj .= "LEFT JOIN ".$linktable.  " ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->getTableName().".".$this->mIdKeyTable." AS INT) ";
+      if (!isset($this->mListFor) && $plugin=="user" && $cur_uid)
+        $lj .= "AND CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$cur_uid." AS INT) "; // Only return results for current user
+      if ($this->tableExists($plugintable)) {
+        $lj .= "LEFT JOIN ".$plugintable." ON CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$plugintable.         ".".$plugintable_id.  " AS INT) ";
+        if ($this->tableExists($metatable))
+          $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=CAST(".$plugintable.         ".".$plugintable_id.  " AS INT) ";
+      }
+    }
+    else
+      $this->mMessage .= "Table '$linktable' does not exist.";
+    return $lj;
+  } // findListLeftJoinOne
+
+  protected function findListWhere($skipOwnId=false)
+  {
+    $where = null;
+    $link_table = $this->findLinkTableName($this->mListFor);
+    if (isset($this->mListFor) && isset($this->mListForId) && $link_table !== null && !$skipOwnId) {
+      $where_id = $link_table.".".$this->mListFor."_id='".$this->mListForId."' ";
+      $where = "WHERE ".$where_id;
+    }
+    if ($this->mType!="user" && // user table has no parent_id field
+        (isset($this->mListFor) || (isset($this->mId) && $this->mId != ""))) {
+      if (isset($this->mId) && $this->mId != "" && isInteger($this->mId) &&
+          (!isset($this->mListFor) || (isset($this->mListFor) && $this->mListFor == $this->mType))) {
+        $gstr = $this->getTableName().".".$this->mIdKeyTable." IN ( ".
+                "SELECT ".$this->getTableName().".".$this->mIdKeyTable." ".
+                "FROM (SELECT @pv := '$this->mId') ".
+                "INITIALISATION WHERE find_in_set(".$this->getTableName().".parent_id, @pv) > 0 ".
+                "AND   @pv := concat(@pv, ',', ".$this->getTableName().".".$this->mIdKeyTable.") ".
+                ") ";
+        if ($where === null)
+          $where  = "WHERE (".$gstr.") ";
+        else
+          $where .= " OR (".$gstr.") ";
+      }
+    }
+    if ($skipOwnId) {
+      $skip_str = $this->getTableName().".".$this->mIdKeyTable." != '".$this->mId."'";
+      if ($where === null)
+        $where  = "WHERE (".$skip_str.") ";
+      else
+        $where .= " AND (".$skip_str.") ";
+    }
+    return $where;
+  } // findListWhere
+
+  protected function findListOrderBy($sort="ASC")
+  {
+    if (!isset($this->mOrderBy))
+      return "";
+    $ob = "ORDER BY ".$this->getTableName().".".$this->mOrderBy." ".$sort;
+    return $ob;
+  } // findListOrderBy
+
+  protected function setSortFunction($sortFunc)
+  {
+    $this->mSortFunction = $sortFunc;
+  } // setSortFunction
+
+  //
+  // Search database for a list of the items with ids as given in the ids array, including meta data.
+  // Returns true on success, false on error
+  //
+  protected function dbSearchListFromIds(&$data,$ids,$skipOwnId=false,$flat=false,$simple=false)
+  {
+    $sl = "SELECT DISTINCT ".$this->getTableName().".* ".
+          "FROM ".$this->getTableName()." ".
+          "WHERE ".$this->mIdKeyTable." IN (".implode(',',$ids).")";
+    //elog("dbSearchListFromIds:".$sl);
+    if (!$this->query($sl))
+      return false; // An error occured
+
+    $success = $this->getRowData($data,"list");
+
+    if ($success) {
+      // Get the meta data
+      if (!$simple)
+        $this->dbSearchMeta($data,"list",true);
+
+      $this->buildGroupTreeAndAttach($data,"list");
+    }
+
+    return !$this->isError();
+  } // dbSearchListFromIds
+
+  //////////////////////////////// Metadata search ////////////////////////////////
+
+  // Get the meta data
+  protected function dbSearchMeta(&$data,$kind,$flat)
+  {
+    $hasMetaTable = $this->tableExists($this->mTableNameMeta);
+    if (!$hasMetaTable || $this->mTableNameMeta === null) {
+      $this->mMessage = "No meta table. ";
+      return false;
+    }
+
+    $meta_id = Parameters::get($this->mIdKeyMetaTable);
+    $is_list = (!isset($this->mId) || $this->mId == "");
+    $where   = $meta_id !== null && $meta_id !== "" && !$is_list
+              ? "WHERE ".$this->mTableNameMeta.".".$this->mIdKeyMetaTable."='".$meta_id."' "
+              : "";
+    /* TODO! left join with link table - untested code
+    $left_join  = null;
+    $link_table = $this->findLinkTableName($this->mListFor);
+    if (isset($this->mListFor) && isset($this->mListForId) && $link_table !== null) {
+      if ($this->mListFor != $this->mType && $this->mListFor != "group") {
+        $left_join = "LEFT JOIN ".$link_table." ON ".$link_table.".".$this->mListFor."_id='".$this->mListForId."' ";
+        $where_id = $this->mTableNameMeta.".".$this->mIdKeyMetaTable."=".$link_table.".".$this->mIdKeyMetaTable." ";
+        if ($where === null)
+          $where  = "WHERE ".$where_id;
+        else
+          $where .= " AND " .$where_id;
+      }
+    }
+    */
+    if ($this->tableExists($this->mTableNameGroupLink)) {
+      $group_id_sel   = $is_list || isset($this->mListFor) ? ",".$this->mTableNameGroupLink.".group_id " : " ";
+      $group_type_sel = /*$this->mType == "group" ? ",any_group.group_type" :*/ "";
+      $stmt = "SELECT ".$this->mTableNameMeta.".* ".
+              $group_type_sel.
+              $group_id_sel.
+              "FROM ".$this->mTableNameMeta." ".
+              "LEFT JOIN ".$this->mTableNameGroupLink." ".
+              "ON ".$this->mTableNameMeta.".".$this->mIdKeyMetaTable."=".$this->mTableNameGroupLink.".".$this->mIdKeyMetaTable." ".
+              //$left_join.
+              $where;
+      //elog("dbSearchMeta:".$stmt);
+      if (!$this->query($stmt))
+        return false;
+    }
+    // Get the data
+    return $this->getRowMetaData($data,$kind,$flat);
+  } // dbSearchMeta
+
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////// Data retrieval //////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  //
+  // Get the data from query result to array
+  //
+  protected function getRowData(&$data,$kind,$flat=false,$simple=false)
+  {
+    $filter = $kind == "list"
+              ? $this->mFilters["list"]
+              : $this->mFilters["item"];
+    //elog("getRowData,filter:".var_export($filter,true));
+    $cur_user_id = $this->mPermission["current_user_id"];
+    $this->mLastNumRows = 0;
+    $data = array();
+    while (($nextrow = $this->getNext(true)) !== null) {
+      //elog("getRowData,nextrow:".var_export($nextrow,true));
+      ++$this->mLastNumRows;
+      $gidx = $this->mType == "group" || $flat
+              ? $flat
+                ? $this->mType
+                : $nextrow["group_type"]
+              : (isset($nextrow["group_id"])
+                 ? $nextrow["group_id"]
+                 : "nogroup");
+      if ($gidx === null)
+        $gidx = "nogroup";
+      $idx = $nextrow[$this->mIdKeyTable];
+      if ($idx) {
+        // Force idx to be a string in order to keep ordering when sending JSON data to a json client
+        $idx  = "+".$idx;
+        if ($kind == "list") {
+          if (!$simple)
+            $data[$gidx][$idx][$kind] = $this->mType;
+          else
+            $data[$idx][$kind] = $this->mType;
+        }
+        else // kind == "item"
+          $data[$idx][$kind] = $this->mType;
+        // Main table
+        if (isset($this->mTableFields)) {
+          for ($t=0; $t<count($this->mTableFields); $t++) {
+            $item_id_table = $this->mTableFields[$t];
+            if (!$simple || $item_id_table == $this->mIdKey || $item_id_table == $this->mNameKey)
+              $this->getCellData($item_id_table,$nextrow,$data,$idx,$gidx,$filter,$kind,$simple);
+          } // for
+        }
+        // Meta table
+        if (isset($this->mTableFieldsMeta)) {
+          for ($t=0; $t<count($this->mTableFieldsMeta); $t++) {
+            $item_id_table = $this->mTableFieldsMeta[$t];
+            if (!$simple || $item_id_table == $this->mIdKey || $item_id_table == $this->mNameKey)
+              $this->getCellData($item_id_table,$nextrow,$data,$idx,$gidx,$filter,$kind,$simple);
+          } // for
+        }
+        // Link tables for item
+        if (isset($this->mPlugins)) {
+          foreach ($this->mPlugins as $i => $plugin) {
+            if (isset($this->mTableFieldsLeftJoin[$plugin])) {
+              for ($t=0; $t<count($this->mTableFieldsLeftJoin[$plugin]); $t++) {
+                $item_id_table = $this->mTableFieldsLeftJoin[$plugin][$t];
+                if (!$simple || $item_id_table == $this->mIdKey || $item_id_table == $this->mNameKey)
+                  $this->getCellData($item_id_table,$nextrow,$data,$idx,$gidx,$filter,$kind,$simple);
+              } // for
+            }
+          } // foreach
+        }
+      } // if
+    } // while
+    //elog("getRowData1 ($this->mType),data:".var_export($data,true));
+
+    if ($kind == "list" && $this->mType != "group" && !$flat) {
+      // Check and fix conflicts in parent_id / group_id in lists
+      // TODO! Check for circular parent-child relationship.
+      // TODO! Make this work for groups also.
+      $iter = 0;
+      $maxiter = 20;
+      $lastsn = -1;
+      $sn     = $this->fixConflicts($data);
+      while ($sn != $lastsn && $iter < $maxiter) {
+        $lastsn = $sn;
+        $sn = $this->fixConflicts($data,1);
+        ++$iter;
+      }
+    }
+    //elog("getRowData2 ($this->mType),data:".var_export($data,true));
+
+    if ($data === null || empty($data))
+      return false;
+    return true;
+  } // getRowData
+
+  protected function getCellData($item_id_table,$nextrow,&$data,$idx,$gidx,$filter,$kind,$simple)
+  {
+    if (isset($nextrow[$item_id_table])) {
+      $item_id = $item_id_table;
+      if ($item_id == $this->mIdKeyTable)
+        $item_id = $this->mIdKey; // Map id name (e.g. "user_id" and not "ID")
+      if ($item_id == "user_pass") // TODO! "user_pass" is Wordperfect specific
+        $val = ""; // Never send password to client
+      else
+      if ($filter === null || (isset($filter[$item_id]) && $filter[$item_id] == 1))
+        $val = htmlentities((string)$nextrow[$item_id_table],ENT_QUOTES,'utf-8',FALSE);
+      else
+        $val = null;
+      if ($val != null && $val != "") {
+        if ($kind == "list") {
+          if (!$simple)
+            $data[$gidx][$idx][$item_id] = $val;
+          else
+            $data[$idx][$item_id] = $val;
+        }
+        else
+          $data[$idx][$item_id] = $val;
+        //elog("getCellData:".$gidx.",".$idx.",".$item_id.":".$val);
+      }
+    }
+  } // getCellData
+
+  private function fixConflicts(&$data)
+  {
+    if (!$data)
+      return -1;
+    foreach ($data as $gidx => $grp) {
+      foreach ($data[$gidx] as $idx => $item) {
+        $pid = isset($data[$gidx][$idx]["parent_id"]) ? $data[$gidx][$idx]["parent_id"] : null;
+        if ($pid) {
+          if (!isset($data[$gidx]["+".$pid])) {
+            //vlog("illegal gid:",$data[$gidx][$idx]);
+            $item_name  = $this->mNameKey;
+            $gid_of_pid = $this->findGroupIdOfParent($data,$pid);
+            $warning  = "Warning: '$item[$item_name]' in group $gidx ";
+            if ($gid_of_pid) {
+              $warning .= "has its' parent in group $gid_of_pid. ";
+              $warning .= "Temporarily relocating $this->mType to parent's group. ";
+              $warning .= "Consider moving '$item[$item_name]' to group $gid_of_pid or give it another parent.";
+              $data[$gid_of_pid][$idx] = $data[$gidx][$idx];
+              if ($gidx != $gid_of_pid)
+                unset($data[$gidx][$idx]);
+            }
+            else {
+              $warning .= "has a non-existing parent ($pid). ";
+              $warning .= "Temporarily removing $this->mType's parent. ";
+              $warning .= "Consider giving $this->mType ".intval($idx)." another parent. ";
+              unset($data[$gidx][$idx]["parent_id"]);
+              //$gid_of_pid = "nogroup";
+              //$data[$gid_of_pid][$idx] = $data[$gidx][$idx];
+            }
+            error_log($warning);
+            $this->setMessage($warning);
+          }
+        }
+      }
+    }
+    if ($data && $data["nogroup"])
+      return count($data["nogroup"]);
+    else
+      return 0;
+  } // fixConflicts
+
+  private function findGroupIdOfParent($data,$pid)
+  {
+    foreach ($data as $gidx => $grp) {
+      foreach ($data[$gidx] as $idx => $item) {
+        $type_id = $this->mType."_id";
+        if (intval($data[$gidx][$idx][$type_id]) == intval($pid)) {
+          if (isset($data[$gidx][$idx]["group_id"])) {
+            return $data[$gidx][$idx]["group_id"];
+          }
+          return $gidx;
+        }
+      }
+    }
+    return null;
+  } // findGroupIdOfParent
+
+  //
+  // Get the meta data from table row(s) to array
+  //
+  protected function getRowMetaData(&$data,$kind,$flat=false)
+  {
+    $filter = $kind == "list" ? $this->mFilters["list"] : $this->mFilters["item"];
+    while (($nextrow = $this->getNext(true)) !== null) {
+      //elog("getRowMetaData,nextrow:".var_export($nextrow,true));
+      if (!$this->mIdKeyMetaTable || !isset($nextrow[$this->mIdKeyMetaTable]))
+        continue;
+      $idx = $nextrow[$this->mIdKeyMetaTable];
+      if (!$idx)
+        continue;
+      // Force idx to be a string in order to keep ordering when sending JSON data to an application/json client
+      if ($this->mType != "group")
+        $idx  = "+".$idx;
+      $gidx = $this->mType == "group"
+              ? "group"
+              : ($flat
+                 ? $this->mType
+                 : $nextrow["group_id"]); // From left join with any_group table
+      if ($gidx === null)
+        $gidx = "nogroup";
+      if (!isset($data[$gidx]))
+        $gidx = "nogroup";
+      if ($data && $data[$gidx] && $data[$gidx][$idx] && $data[$gidx][$idx]["list"])
+        $the_data = $data[$gidx];
+      else
+      if ($data && $data[$idx] && $data[$idx]["item"])
+        $the_data = $data;
+      //elog($gidx.",".$idx.",".$this->mIdKey.",data[$gidx][$idx]:".var_export($the_data[$idx],true));
+      if (isset($the_data[$idx]) &&
+          isset($the_data[$idx][$this->mIdKey])) {
+        $meta_key   = isset($nextrow["meta_key"])   ? $nextrow["meta_key"]   : null;
+        $meta_value = isset($nextrow["meta_value"]) ? $nextrow["meta_value"] : null;
+        //elog($meta_key."(".$filter[$meta_key].")=".$meta_value.":");
+        if ($filter === null || $filter[$meta_key] == 1) {
+          if ($meta_key !== null && $meta_key !== "" && $meta_value !== null && $meta_value !== "") {
+            $the_data[$idx][$meta_key] = $meta_value;
+          if ($data && $data[$gidx] && $data[$gidx][$idx] && $data[$gidx][$idx]["list"])
+            $data[$gidx] = $the_data;
+          else
+          if ($data && $data[$idx] && $data[$idx]["item"])
+            $data = $the_data;
+          }
+        }
+      }
+    }
+    $this->purgeNull($data);
+    //elog("(meta)data:".var_export($data,true));
+    return true;
+  } // getRowMetaData
+
+  //
+  // Build the group tree. List data are grouped, item data are not.
+  //
+  protected function buildGroupTreeAndAttach(&$data,$kind)
+  {
+    if (!$data)
+      return;
+
+    //vlog("buildGroupTreeAndAttach,data before building tree:",$data);
+    $is_list = (!isset($this->mId) || $this->mId == "");
+    /* TODO! Page links not implemented yet
+    //
+    // Initialize page links
+    //
+    if ($is_list) {
+      $from = Parameters::get("from") !== null && Parameters::get("from") !== "" ? Parameters::get("from") : 0;
+      $to   = Parameters::get("to")   !== null && Parameters::get("to")   !== "" ? Parameters::get("to")   : $this->mPageSize;
+      foreach ($data as $gidx => $grp) {
+        $data[$gidx]["page_links"]["from"] = $from;
+        $data[$gidx]["page_links"]["to"]   = $to;
+        $data[$gidx]["page_links"]["num"]  = 0;
+      }
+    }
+    */
+    //
+    // Build data tree for all groups
+    //
+    $this->mRecDepth = 0;
+    if ($kind == "item") {
+      if ($data)
+        $data["+".$this->mId][$kind] = $this->mType;
+      $data_tree = $data;
+    }
+    else {
+      //
+      // Get the group names
+      //
+      $group_table = anyTableFactory::create("group",$this);
+      $gdata = $group_table
+               ? $group_table->dbGetGroupNames($this->mType)
+               : null;
+      //vlog("buildGroupTreeAndAttach,gdata:",$gdata);
+      if ((empty($gdata) || !isset($gdata["group"])) && $group_table)
+        $this->setMessage($group_table->mError);
+      //
+      // Build data tree
+      //
+      $data_tree = array();
+      foreach ($data as $gidx => $grp) {
+        if (!empty($data[$gidx])) {
+          $num = 0;
+          $ngidx = is_int($gidx) ? "+".$gidx : $gidx;
+          $data_tree[$ngidx] = array();
+          $k = isset($this->mId) && $this->mId != ""
+               ? "item"
+               : (isset($data_tree[$ngidx]["list"]) && $data_tree[$ngidx]["list"] != "group"
+                  ? "list"
+                  : "head");
+          $data_tree[$ngidx][$k] = isset($this->mId) && $this->mId != "" ? $this->mType : "group";
+          if (!isset($this->mId) || $this->mId == "") {
+            $gname = isset($gdata) && isset($gdata["group"][$gidx])
+                     ? $gdata["group"][$gidx]["group_name"]
+                     : ucfirst($gidx)." groups";
+            if ($this->mType != "group") {
+              if (!$gname)
+                $gname = "Other ".$this->mType."s"; // TODO i18n
+            }
+            else {
+              if (!$gname)
+                if ($gidx != "group")
+                  $gname = ucfirst($gidx)." groups"; // TODO i18n
+                else
+                  $gname = "Other groups"; // TODO i18n
+            }
+            if ($this->mType != "group")
+              $data_tree[$ngidx]["group_type"] = $this->mType;
+            else
+              $data_tree[$ngidx]["group_type"] = $gidx;
+            $data_tree['grouping'] = "tabs"; // TODO! Should be able to set this via Parameter
+            $data_tree[$ngidx]["group_name"] = $gname;
+            $data_tree[$ngidx]["group_id"] = $ngidx;
+          }
+          else {
+            $idx = isset($data[$gidx][$this->mId]) ? $this->mId : "+".$this->mId;
+            $data_tree[$ngidx][$this->mNameKey] = $data[$gidx][$idx][$this->mNameKey];
+          }
+          $data_tree[$ngidx]["data"] = $this->buildDataTree($data[$gidx],null,false,$num);
+          if ($data_tree[$ngidx]["data"] === null)
+            unset($data_tree[$ngidx]);
+          /* TODO! Page links not implemented yet
+          $data_tree[$ngidx]["page_links"]["from"] = $data[$gidx]["page_links"]["from"];
+          $data_tree[$ngidx]["page_links"]["to"]   = $data[$gidx]["page_links"]["to"];
+          $data_tree[$ngidx]["page_links"]["num"]  = $num-1;
+          */
+        }
+      }
+    }
+    //vlog("buildGroupTreeAndAttach,data_tree1:",$data_tree);
+    //if ($err)
+    //  $this->setMessage("Warning: ".$err);
+    //
+    // Build group tree and stick data tree to it
+    //
+    if ($this->mType != "group") {
+      if ((!isset($this->mId) || $this->mId == "") && !isset($this->mListForId) && $group_table) {
+        $this->dbAttachToGroups($group_table->tdata["group"],$data_tree);
+        $group_table->tdata["group"]['grouping'] = "tabs";
+        //vlog("buildGroupTreeAndAttach,tdata:",$group_table->tdata);
+        $data = $group_table->tdata["group"];
+      }
+      else
+        $data = $data_tree;
+      //vlog("buildGroupTreeAndAttach,data1:",$data);
+    }
+    else {
+      if ($is_list && $data_tree) {
+        if ($is_list && !isset($this->mListFor)) { // Add the "other" category
+          if ($data_tree["group"] !== null) {
+            foreach ($data_tree["group"] as $gidx => &$group) {
+              if (isset($data_tree["group"][$gidx]["group"])) {
+                $grp = array_values($data_tree["group"][$gidx]["group"])[0];
+                $data_tree["group"][$gidx]["group"]["nogroup"] = array();
+                $data_tree["group"][$gidx]["group"]["nogroup"]["group_type"] = $grp["group_type"];
+                $data_tree["group"][$gidx]["group"]["nogroup"]["group_id"]   = "nogroup";
+                $data_tree["group"][$gidx]["group"]["nogroup"]["group_name"] = "Default ".$grp["group_type"]." group";
+              }
+            }
+          }
+        }
+      }
+      $data = $data_tree;
+    }
+    //vlog("buildGroupTreeAndAttach,data2:",$data);
+  } // buildGroupTreeAndAttach
+
+  // Overridden in group table
+  protected function dbGetGroupNames($type=null)
+  {
+    // Get group tree and append data to it
+    $num = 0;
+    $data_tree = array();
+    $data_tree["group"] = array();
+    $data_tree["group"] = $this->buildDataTree($data_tree["group"],null,false,$num);
+    //vlog("dbGetGroupNames,data_tree:",$data_tree);
+
+    // Add the default "nogroup" group
+    if ($type && $type != "") {
+      $data_tree["group"]["nogroup"]["group_type"] = $type;
+      $data_tree["group"]["nogroup"]["group_id"]   = "nogroup";
+      $data_tree["group"]["nogroup"]["group_name"] = $this->findDefaultHeader($type);
+      $data_tree["group"]["nogroup"]["head"]       = "group";
+    }
+    //vlog("dbGetGroupNames,data_tree:",$data_tree);
+    $this->tdata = $data_tree;
+    return $data_tree;
+  } // dbGetGroupNames
+
+  protected function buildDataTree(&$flatdata,$parentId,$getPageLinks,&$num)
+  {
+    ++$this->mRecDepth;
+    if ($this->mRecDepth > $this->mLastNumRows + $this->mRecMax) {
+      error_log("buildDataTree: Too much recursion ($this->mRecDepth)");
+      return null;
+    }
+    if (!$flatdata)
+      return null;
+    $retval = array();
+    $type_list = $this->mType;
+    $id_name   = $this->mType."_id";
+    foreach ($flatdata as $idx => &$subdata) {
+      if ($idx != "page_links") {
+        $parent_not_in_group = isset($subdata["parent_id"]) &&
+                               $subdata["parent_id"] != "" &&
+                               !isset($flatdata[$subdata["parent_id"]]) &&
+                               !isset($flatdata["+".$subdata["parent_id"]]);
+        $pid = null;
+        if ($parent_not_in_group) {
+          $pid = $subdata["parent_id"];
+          unset($subdata["parent_id"]);
+        }
+        if (!isset($subdata["parent_id"]))
+          $subdata["parent_id"] = NULL;
+        if ($subdata["parent_id"] == $parentId) {
+          if ($getPageLinks && $subdata["parent_id"] === null) {
+            $num++; // "Top-level" item, so we count it
+          }
+          if (!$getPageLinks || ($num > $flatdata["page_links"]["from"] && $num <= $flatdata["page_links"]["to"])) {
+            if (isset($subdata[$id_name]) && $subdata[$id_name] != "")
+              $children = $this->buildDataTree($flatdata,$subdata[$id_name],$getPageLinks,$num);
+            else
+              $children = null;
+            if ($this->mRecDepth > $this->mLastNumRows + $this->mRecMax)
+              break; // Break recursion
+            if ($children) {
+              $subdata["data"] = $children;
+            }
+            if ($parent_not_in_group)
+              $subdata["parent_id"] = $pid;
+            $retval[$idx] = $subdata;
+            unset($subdata);
+          } // if getPageLinks
+        } // if subdata
+        else {
+          if ($pid != null)
+            $subdata["parent_id"] = $pid;
+        }
+      } // if page_links
+    } // foreach
+    return $retval;
+  } // buildDataTree
+
+  private function dbAttachToGroups(&$group_tree,$data_tree)
+  {
+    //vlog("dbAttachToGroups,group_tree:",$group_tree);
+    //vlog("dbAttachToGroups,data_tree:", $data_tree);
+    if ($group_tree !== null) {
+      foreach ($group_tree as $gid => $group) { // Iterate over group ids
+        if (isset($group_tree[$gid]["group_type"]) && $group_tree[$gid]["group_type"] == $this->mType) {
+          if (isset($group_tree[$gid]["data"]) && $group_tree[$gid]["data"] !== null)
+            $this->dbAttachToGroups($group_tree[$gid]["data"],$data_tree);
+          if (isset($data_tree[$gid]) && $data_tree[$gid] != "")
+            $idx = $gid;
+          else
+          if (isset($data_tree["+".$gid]) && $data_tree["+".$gid] != "")
+            $idx = "+".$gid;
+          if ($data_tree[$idx] !== null) {
+            if (isset($data_tree[$idx]["data"]) && $data_tree[$idx]["data"] != "") {
+              $group_tree[$gid]["head"] = "group";
+              if (array_key_exists("data",$group_tree[$gid]) && !isset($group_tree[$gid]["data"]) && $group_tree[$gid]["data"] != "")
+                $group_tree[$gid]["data"] = array();
+              foreach ($data_tree[$idx]["data"] as $id => $obj)
+                $group_tree[$gid]["data"][$id] = $data_tree[$idx]["data"][$id];
+            }
+            /* TODO! Page links not implemented yet
+            if (isset($data_tree[$idx]["page_links"]) && $data_tree[$idx]["page_links"] != "") {
+              $group_tree[$gid]["page_links"]["from"] = $data_tree[$idx]["page_links"]["from"];
+              $group_tree[$gid]["page_links"]["to"]   = $data_tree[$idx]["page_links"]["to"];
+              $group_tree[$gid]["page_links"]["num"]  = $data_tree[$idx]["page_links"]["num"];
+              unset($data_tree[$idx]["page_links"]);
+            }
+            */
+          }
+        } // if group_tree
+        else
+          ;//unset($group_tree[$gid]);
+      } // foreach
+    } // if
+  } // dbAttachToGroups
+
+  /**
+   * @method prepareData
+   * @description Get all data related to a list or a single item. The data must have been returned by
+   *              `{{#crossLink "anyTable/dbSearch:method"}}{{/crossLink}}`. See the `{{#crossLink "anyTable"}}{{/crossLink}}`
+   *              constructor for a description of the data format. This method is normally not called by derived
+   *              classes, but may be overridden by classes that want to return data in a non-standard format.
+   * @return Data array.
+   * @example
+   *      $data = $myTable->prepareData();
+   */
+  public function prepareData(&$inData)
+  {
+    //vlog("inData before prepare:",$inData);
+    $data = array();
+    $this->prepareTypeKindId($data);
+    if (!$inData)
+      return $data;
+    $data["data"]["+0"]["head"] = $this->mType;
+    if ($inData) {
+      if (!isset($this->mId) || $this->mId == "") {
+        $data["data"]["+0"][$this->mNameKey] = $this->findDefaultListHeader($this->mType);
+        $data["data"]["+0"]["data"]          = $inData;
+      }
+      else {
+        $data["data"]["+0"][$this->mNameKey] = $inData["+".$this->mId][$this->mNameKey]; // findDefaultItemHeader
+        $data["data"]["+0"]["data"]["+".$this->mId]["item"] = $this->mType;
+        $data["data"]["+0"]["data"] = $inData;
+      }
+    }
+    $data["plugins"] = $this->mPlugins;
+    //vlog("data after prepare:",$data);
+    return $data;
+  } // prepareData
+
+  public function prepareTypeKindId(&$data)
+  {
+    if (!$data)
+      $data = array();
+    if (isset($this->mId) && $this->mId != "") {
+      $data["id"] = $this->mId != "max"
+                    ? $this->mId
+                    : $this->mMaxId;
+      $k = "item";
+    }
+    else {
+      $data["id"] = null;
+      $k = "head";
+    }
+    if (isset($this->mType) && $this->mType != "")
+      $data[$k] = $this->mType;
+    else
+      $data[$k] = null;
+    return $data;
+  } // prepareTypeKindId
+
+  public function prepareParents($type,$itemIdKey,$itemNameKey)
+  {
+    // TODO! Not tested!
+    return null;
+    $lf   = $this->mListFor;
+    $lfid = $this->mListForId;
+    $this->mListFor   = null;
+    $this->mListForId = null;
+    $this->dbSearchList($items,false,true); // Search to a flat list
+    $this->mListFor   = $lf;
+    $this->mListForId = $lfid;
+    //elog("prepareParents,items:".var_export($items,true));
+    $sel_arr = array();
+    if ($items != null) {
+      $item_id       = Parameters::get($itemIdKey);
+      $item_id_key   = $itemIdKey;
+      $item_name_key = $itemNameKey;
+      $i = 0;
+      $children = array();
+      if ($item_id_key != null)
+      foreach ($items as $gid => $group) {
+        if ($group != null)
+        foreach ($group as $id => $item) {
+          if (isset($item[$item_id_key])) {
+            $sel_arr[$item[$item_id_key]] = $item[$item_name_key];
+            if (isset($item["parent_id"]) && $item["parent_id"] != "") {
+              // Check that (grand)child is not available as parent
+              if ($item["parent_id"] == $item_id || in_array($item_id,$children)) {
+                $children[$i++] = $item_id;
+                unset($sel_arr[$item[$item_id_key]]);
+              }
+            }
+          }
+        }
+      }
+    }
+    //elog(var_export($sel_arr,true));
+    return $sel_arr;
+  } // prepareParents
+
+  public function prepareSetting($settingName)
+  {
+    // TODO! Not implemented yet
+    return null;
+  } // prepareSetting
 
 } // class anyTable
 ?>
