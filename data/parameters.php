@@ -13,7 +13,7 @@
 // Static class with methods for extracting key/value pairs from
 // $_GET, $_POST and/or a string, and putting them into an array.
 //
-class httpParameters
+class parameters
 {
   private static $mDebug  = false;
   public  static $isInit  = false;
@@ -23,9 +23,9 @@ class httpParameters
   public function __construct($parStr=null)
   {
     self::$isInit = true;
-    httpParameters::initFromPOST();
-    httpParameters::initFromGET();
-    httpParameters::initFromParStr($parStr);
+    parameters::initFromPOST();
+    parameters::initFromGET();
+    parameters::initFromParStr($parStr);
   }
 
   public static function getStrArr() { return self::$mStrarr; }
@@ -112,11 +112,11 @@ class httpParameters
       error_log("filename:".$_FILES["URL_file"]);
   } //debugLog
 
-} // class httpParameters
+} // class parameters
 
 //
 // Initialize the static class
 //
-if (!httpParameters::$isInit)
-  new httpParameters();
+if (!parameters::$isInit)
+  new parameters();
 ?>
