@@ -842,7 +842,7 @@ function testModel()
     }, millisec);
   });
 
-  asyncTest('dbSearch for next id through dbSearch', 4, function() {
+  asyncTest('dbSearch for next id through dbSearch with id==max', 4, function() {
     let dm = new anyDataModel({type:"user",search:false,mode:"remote"});
     deepEqual(dm.dbSearch({type:"user",id:"max"}),
               true, "dbSearch({type:'user',id:'max'}) returns true");
@@ -851,13 +851,13 @@ function testModel()
                 true, "dbSearch({type:'user',id:'max'}) no error:"+dm.error);
       deepEqual(dm.data  === null,
                 true, "dbSearch({type:'user',id:'max'}) returns item data for type given in search options:"+JSON.stringify(dm.data));
-      deepEqual(dm.max == "3", // Assuming that last user id==2 in the db table
-                true, "dbSearch({type:'user',id:'max'}) id==3:"+dm.max);
+      deepEqual(parseInt(dm.max) > 2, // Assuming that last user id==2 in the db table
+                true, "dbSearch({type:'user',id:'max'}) id > 2:"+dm.max);
       start();
     }, millisec);
   });
 
-  asyncTest('dbSearch for next id directly', 4, function() {
+  asyncTest('dbSearch for next id through dbSearchNextId', 4, function() {
     let dm = new anyDataModel({type:"user",search:false,mode:"remote"});
     deepEqual(dm.dbSearchNextId({type:"user",id:"max"}),
               true, "dbSearch({type:'user',id:'max'}) returns true");
@@ -866,8 +866,8 @@ function testModel()
                 true, "dbSearch({type:'user',id:'max'}) no error:"+dm.error);
       deepEqual(dm.data  === null,
                 true, "dbSearch({type:'user',id:'max'}) returns item data for type given in search options:"+JSON.stringify(dm.data));
-      deepEqual(dm.max == "3", // Assuming that last user id==2 in the db table
-                true, "dbSearch({type:'user',id:'max'}) id==3:"+dm.max);
+      deepEqual(parseInt(dm.max) > 2, // Assuming that last user id==2 in the db table
+                true, "dbSearch({type:'user',id:'max'}) id > 2:"+dm.max);
       start();
     }, millisec);
   });
