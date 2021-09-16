@@ -12,11 +12,13 @@
 if (defined("WP_PLUGIN")) {
   define('DB_USER_TABLE',    'wp_users');     // Name of user table
   define('DB_USERMETA_TABLE','wp_usermeta');  // Name of user meta table
+  define('DB_USER_ID',       'ID');           // Name of user id key in table
   require_once "wordpress/wpPermission.php";
 }
 else {
   define('DB_USER_TABLE',    'any_user');     // Name of user table
   define('DB_USERMETA_TABLE','any_usermeta'); // Name of user meta table
+  define('DB_USER_ID',       'user_id');      // Name of user id key in table
 }
 require_once "permission.php";
 require_once "anyTableFactory.php";
@@ -408,6 +410,71 @@ class anyTable extends dbTable
    * @description
    */
   public function getPermission() { return $this->mPermission; }
+
+  /////////////////////////
+  //////// finders ////////
+  /////////////////////////
+
+  protected function findDefaultListHeader($type)
+  {
+    return ucfirst($type." list"); // TODO: i18n
+  } // findDefaultListHeader
+
+  protected function findDefaultItemHeader($type)
+  {
+    return ucfirst($type);
+  } // findDefaultItemHeader
+
+  protected function findDefaultHeader($type,$data=null,$skipOther=false)
+  {
+    $other = $skipOther ? "" : "Other "; // TODO: i18n
+    return $other.ucfirst($type)."s";    // TODO: i18n
+  } // findDefaultHeader
+
+  protected function findMetaTableName($pluginType)
+  {
+    if ($pluginType == "user")
+      $str = DB_USERMETA_TABLE;
+    else
+      $str = "any_".$pluginType."meta";
+    return $str;
+  } // findMetaTableName
+
+  protected function findLinkTableId($pluginType)
+  {
+    $str = $pluginType."_id";
+    return $str;
+  } // findLinkTableId
+
+  protected function findLinkTableName($pluginType)
+  {
+    if ($pluginType === null || $pluginType === "")
+      return null;
+    if ($pluginType == $this->mType)
+      return $this->mTableName;
+    $ltn = [$pluginType,$this->mType];
+    sort($ltn);
+    $ltn = "any_".implode("_",$ltn);
+    return $ltn;
+  } // findLinkTableName
+
+  protected function findPluginTableId($pluginType)
+  {
+    if ($pluginType == "user")
+      $str = DB_USER_ID;
+    else
+      $str = $pluginType."_id";
+    return $str;
+  } // findPluginTableId
+
+  protected function findPluginTableName($pluginType)
+  {
+    if ($pluginType == "user")
+      $str = DB_USER_TABLE;
+    else
+      $str = "any_".$pluginType;
+    return $str;
+  } // findPluginTableName
 
 } // class anyTable
 ?>
