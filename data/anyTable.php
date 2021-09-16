@@ -356,5 +356,58 @@ class anyTable extends dbTable
   protected function initFilters($filters)
   {
   } // initFilters
+
+  /////////////////////////
+  //////// getters ////////
+  /////////////////////////
+
+  /**
+   * @method getTableName
+   * @description Returns the table's name.
+   */
+  public function getTableName()  { return $this->mTableName; }
+
+  /**
+   * @method getTableNameMeta
+   * @description Returns the meta table's name.
+   */
+  public function getTableNameMeta()  { return $this->mTableNameMeta; }
+
+  /**
+   * @method getType
+   * @description Returns the type of the table data.
+   */
+  public function getType()       { return $this->mType; }
+
+  /**
+   * @method getIdKey
+   * @description Returns the id key of the table data.
+   */
+  public function getIdKey()      { return $this->mIdKey; }
+
+  /**
+   * @method getNameKey
+   * @description Returns the name name of the table data.
+   */
+  public function getNameKey()    { return $this->mNameKey; }
+
+  /**
+   * @method getId
+   * @description Returns the id of the table data, if an item. If a list, the result is undefined.
+   */
+  public function getId()         { return $this->mId; }
+
+  /**
+   * @method getData
+   * @description Returns the data.
+   */
+  public function getData()       { return $this->mData; }
+
+  /**
+   * @method getPermission
+   * @description
+   */
+  public function getPermission() { return $this->mPermission; }
+
 } // class anyTable
 ?>
