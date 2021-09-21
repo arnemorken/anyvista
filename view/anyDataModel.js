@@ -1407,10 +1407,10 @@ anyDataModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
                          });
         }
         // Remove the is_new mark and dirty data
-        let tmp_id = item[serverdata.id]
-                     ? serverdata.id
-                     : item["+"+serverdata.id]
-                       ? "+"+serverdata.id
+        let tmp_id = item[options.client_id]
+                     ? options.client_id
+                     : item["+"+options.client_id]
+                       ? "+"+options.client_id
                        : null;
         if (tmp_id) {
           delete item[tmp_id].is_new;

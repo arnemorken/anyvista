@@ -9,11 +9,11 @@
  *
  ****************************************************************************************
 */
-define('DB_HOST','127.0.0.1');      // Database server
-define('DB_USER','root');           // Database user
-define('DB_PASS','');               // Database password
-define('DB_NAME','any_testserver'); // Database name
+define('ANY_DB_HOST','127.0.0.1');      // Database server
+define('ANY_DB_USER','root');           // Database user
+define('ANY_DB_PASS','');               // Database password
+define('ANY_DB_NAME','psi-testserver'); // Database name
 
-define('DB_TYPE',   'mysql');       // Database type
-define('DB_CHARSET','UTF8');        // Database charset
+define('ANY_DB_TYPE',   'mysql');       // Database type
+define('ANY_DB_CHARSET','UTF8');        // Database charset
 ?>

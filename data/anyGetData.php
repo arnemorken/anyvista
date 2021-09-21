@@ -62,6 +62,7 @@ function anyGetData($doEcho=false)
   $json_string = "{\"JSON_CODE\":".
                  json_encode($data).
                  "}";
+  //error_log("anyGetData json data:\n".var_export(json_encode($data),true));
 
   //header('Access-Control-Allow-Origin: *');
   //header("Content-Type: application/json");

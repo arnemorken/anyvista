@@ -28,9 +28,9 @@ class dbConnection
   // Constructor: Connect to database
   public function __construct()
   {
-    $dsn = DB_TYPE.":dbname=".DB_NAME.";host=".DB_HOST.";charset=".DB_CHARSET;
+    $dsn = ANY_DB_TYPE.":dbname=".ANY_DB_NAME.";host=".ANY_DB_HOST.";charset=".ANY_DB_CHARSET;
     try {
-      $this->mDBHandle = new PDO($dsn, DB_USER, DB_PASS);
+      $this->mDBHandle = new PDO($dsn, ANY_DB_USER, ANY_DB_PASS);
     }
     catch (PDOException $e) {
       $this->mError = $e->getMessage();

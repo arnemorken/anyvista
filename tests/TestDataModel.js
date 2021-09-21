@@ -1029,9 +1029,10 @@ function testModel()
     }, millisec);
   });
 
-  asyncTest('dbUpdate insert data that is in memory', 2, function() {
+  asyncTest('dbUpdate insert (user) data that is in memory', 3, function() {
+    let usrname = "user"+Math.floor(Math.random()*100000);
     let data7779 = {77:{list:"user",user_name:"ev77"},
-                    79:{list:"user",user_name:"ev79",is_new:true}};
+                    79:{list:"user",user_name:"ev79",user_login:usrname,user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
     let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data7779});
     // insert
     let res = dm.dbUpdate({id:79}); // insert data
@@ -1039,8 +1040,11 @@ function testModel()
               true, "dbUpdate(data) returns true (insert1)");
     setTimeout(function() {
       deepEqual(dm.last_insert_id !== undefined &&
-                dm.data[dm.last_insert_id].is_new === undefined,
-                true, "dbDelete() deletes is_new mark when data is given as model's data");
+                dm.data[dm.last_insert_id].is_new === undefined &&
+                dm.message == "User created. ",
+                true, "dbUpdate() deletes is_new mark when data is given as model's data");
+      deepEqual(dm.message == "User created. ",
+                true, "dbUpdate() creates user");
       start();
     }, millisec);
   });
@@ -1056,7 +1060,7 @@ function testModel()
     setTimeout(function() {
       deepEqual(dm.data[22] !== undefined &&
                 dm.data[23] === undefined,
-                true, "dbDelete() does not insert into memory when data is given as parameter to update only");
+                true, "dbUpdate() does not insert into memory when data is given as parameter to update only");
       start();
     }, millisec);
   });

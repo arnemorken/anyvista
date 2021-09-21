@@ -10,15 +10,15 @@
  ****************************************************************************************
  */
 if (defined("WP_PLUGIN")) {
-  define('DB_USER_TABLE',    'wp_users');     // Name of user table
-  define('DB_USERMETA_TABLE','wp_usermeta');  // Name of user meta table
-  define('DB_USER_ID',       'ID');           // Name of user id key in table
+  define('ANY_DB_USER_TABLE',    'wp_users');     // Name of user table
+  define('ANY_DB_USERMETA_TABLE','wp_usermeta');  // Name of user meta table
+  define('ANY_DB_USER_ID',       'ID');           // Name of user id key in table
   require_once "wordpress/wpPermission.php";
 }
 else {
-  define('DB_USER_TABLE',    'any_user');     // Name of user table
-  define('DB_USERMETA_TABLE','any_usermeta'); // Name of user meta table
-  define('DB_USER_ID',       'user_id');      // Name of user id key in table
+  define('ANY_DB_USER_TABLE',    'any_user');     // Name of user table
+  define('ANY_DB_USERMETA_TABLE','any_usermeta'); // Name of user meta table
+  define('ANY_DB_USER_ID',       'user_id');      // Name of user id key in table
 }
 require_once "permission.php";
 require_once "anyTableFactory.php";
@@ -138,7 +138,7 @@ class anyTable extends dbTable
             $mTableNameGroupLink = null,
             $mTableNameUserLink  = null,
             $mTableNameGroup     = "any_group",
-            $mTableNameUser      = DB_USER_TABLE;
+            $mTableNameUser      = ANY_DB_USER_TABLE;
 
   protected $mTableFields         = null,
             $mTableFieldsMeta     = null,
@@ -168,7 +168,7 @@ class anyTable extends dbTable
             $mUpdateNothingToDo = "Nothing to update",
             $mDeleteNothingToDo = "Nothing to delete";
 
-  private   $mSumNumRowsChanged = 0,
+  private   $mNumRowsChanged    = 0,
             $mLastNumRows       = 0,
             $mPageSize          = 30,  // Number of items returned per page
             $mRecMax            = 100, // Used to avoid infinite recursion
@@ -443,7 +443,7 @@ class anyTable extends dbTable
   protected function findMetaTableName($pluginType)
   {
     if ($pluginType == "user")
-      $str = DB_USERMETA_TABLE;
+      $str = ANY_DB_USERMETA_TABLE;
     else
       $str = "any_".$pluginType."meta";
     return $str;
@@ -470,7 +470,7 @@ class anyTable extends dbTable
   protected function findPluginTableId($pluginType)
   {
     if ($pluginType == "user")
-      $str = DB_USER_ID;
+      $str = ANY_DB_USER_ID;
     else
       $str = $pluginType."_id";
     return $str;
@@ -479,7 +479,7 @@ class anyTable extends dbTable
   protected function findPluginTableName($pluginType)
   {
     if ($pluginType == "user")
-      $str = DB_USER_TABLE;
+      $str = ANY_DB_USER_TABLE;
     else
       $str = "any_".$pluginType;
     return $str;
@@ -498,7 +498,7 @@ class anyTable extends dbTable
   public function dbSearch()
   {
     $err = $this->dbValidateSearch();
-    if ($err) {
+    if ($err != "") {
       $this->setError($err);
       return null;
     }
@@ -526,7 +526,7 @@ class anyTable extends dbTable
   {
     $err = "";
     if (!$this->mType)
-      $err = "Type missing. ";
+      $err .= "Type missing. ";
     return $err;
   } // dbValidateSearch
 
@@ -575,25 +575,10 @@ class anyTable extends dbTable
       $this->setError("Missing key ($key) or value ($val)");
       return false;
     }
-    // Get query fragments
-    $this->mError = "";
-    $cur_uid   = $this->mPermission["current_user_id"];
-    $select    = $this->findItemSelect();
-    $left_join = $this->findItemLeftJoin($cur_uid);
-    $where     = $this->findItemWhere($key,$val);
-
-    if ($this->mError != "") {
-      error_log($this->mError);
-      return false;
-    }
-
     // Build and execute the full statement
-    $stmt = $select.
-            "FROM ".$this->getTableName()." ".
-            $left_join.
-            $where;
+    $stmt = $this->dbPrepareSearchItemStmt($key,$val);
     //elog("dbSearchItem:".$stmt);
-    if (!$this->query($stmt))
+    if (!$stmt || !$this->query($stmt))
       return false; // An error occured
 
     // Get the data
@@ -614,6 +599,25 @@ class anyTable extends dbTable
     return !$this->isError();
   } // dbSearchItem
 
+  protected function dbPrepareSearchItemStmt($key,$val)
+  {
+    // Get query fragments
+    $this->mError = "";
+    $select    = $this->findItemSelect();
+    $left_join = $this->findItemLeftJoin();
+    $where     = $this->findItemWhere($key,$val);
+
+    if ($this->mError != "") {
+      error_log($this->mError);
+      return false;
+    }
+    $stmt = $select.
+            "FROM ".$this->getTableName()." ".
+            $left_join.
+            $where;
+    return $stmt;
+  } // dbPrepareSearchItemStmt
+
   protected function findItemSelect()
   {
     // Select from own table
@@ -633,8 +637,9 @@ class anyTable extends dbTable
     return $si;
   } // findItemSelect
 
-  protected function findItemLeftJoin($cur_uid)
+  protected function findItemLeftJoin()
   {
+    $cur_uid = $this->mPermission["current_user_id"];
     // Left join user table (if this is not a user table)
     $lj = "";
     if ($this->mType != "user" &&
@@ -659,10 +664,11 @@ class anyTable extends dbTable
   //
   protected function dbSearchItemLists(&$data)
   {
-    $err = $this->dbValidateItemListSearch();
-    if ($err === null)
+    if (!isset($this->mPlugins))
       return true; // No plugins found, return with no error
-    if ($err) {
+
+    $err = $this->dbValidateItemListSearch();
+    if ($err != "") {
       $this->setError($err);
       return false;
     }
@@ -702,24 +708,19 @@ class anyTable extends dbTable
         }
       }
     } // foreach
-    if ($table_error) {
-      $this->setError($this->mError.$table_error);
-      return false;
-    }
     return true;
   } // dbSearchItemLists
 
   protected function dbValidateItemListSearch()
   {
-    if (!isset($this->mPlugins))
-      return null;
+    $err = "";
     if (!$this->mType)
-      return "Type missing. ";
+      $err .= "Type missing. ";
     if (!isset($this->mId) || $this->mId == "")
-      return "Id missing. ";
-    if (!in_array($this->mType,$this->mPlugins))
-      return "Unregistered type value: $this->mType. ";
-    return "";
+      $err .= "Id missing. ";
+    if (!isset($this->mPlugins) || !in_array($this->mType,$this->mPlugins))
+      $err .= "Unregistered plugin: $this->mType. ";
+    return $err;
   } // dbValidateItemListSearch
 
   //////////////////////////////// List search ////////////////////////////////
@@ -733,35 +734,16 @@ class anyTable extends dbTable
     if ($this->mType=="user" && $this->mListFor=="user")
       return true; // We do not have subusers (user table does not have parent_id field)
 
-    // Get query fragments
-    $this->mError = "";
-    $cur_uid   = $this->mPermission["current_user_id"];
-    $select    = $this->findListSelect();
-    $left_join = $this->findListLeftJoin($cur_uid);
-    $where     = $this->findListWhere($skipOwnId);
-    $order_by  = $this->findListOrderBy();
-
-    if ($this->mError != "") {
-      error_log($this->mError);
-      return false;
-    }
-
     // Build and execute the full statement
-    $stmt = $select.
-            "FROM ".$this->getTableName()." ".
-            $left_join.
-            $where.
-            $order_by;
+    $stmt = $this->dbPrepareSearchListStmt();
     //elog("dbSearchList:".$stmt);
-    if (!$this->query($stmt))
+    if (!$stmt || !$this->query($stmt))
       return false; // An error occured
 
     // Get the data
-    if (!$simple) {
-      $lt = Parameters::get("lt");
-      if ($lt == "simple")
+    if (!$simple)
+      if (Parameters::get("lt") == "simple")
          $simple = true;
-    }
     $success = $this->getRowData($data,"list",$flat,$simple);
 
     if ($success) {
@@ -780,6 +762,28 @@ class anyTable extends dbTable
 
     return !$this->isError();
   } // dbSearchList
+
+  protected function dbPrepareSearchListStmt()
+  {
+    // Get query fragments
+    $this->mError = "";
+    $select    = $this->findListSelect();
+    $left_join = $this->findListLeftJoin();
+    $where     = $this->findListWhere();
+    $order_by  = $this->findListOrderBy();
+
+    if ($this->mError != "") {
+      error_log($this->mError);
+      return null;
+    }
+    // Build the full statement
+    $stmt = $select.
+            "FROM ".$this->getTableName()." ".
+            $left_join.
+            $where.
+            $order_by;
+    return $stmt;
+  } // dbPrepareSearchListStmt
 
   protected function findListSelect()
   {
@@ -819,8 +823,9 @@ class anyTable extends dbTable
     return $sl;
   } // findListSelect
 
-  protected function findListLeftJoin($cur_uid)
+  protected function findListLeftJoin()
   {
+    $cur_uid = $this->mPermission["current_user_id"];
     $lj = "";
     // Always left join group table
     if ("group" != $this->mType)
@@ -1015,7 +1020,9 @@ class anyTable extends dbTable
                  : "nogroup");
       if ($gidx === null)
         $gidx = "nogroup";
-      $idx = $nextrow[$this->mIdKeyTable];
+      $idx = isset($nextrow[$this->mIdKeyTable])
+      		 ? $nextrow[$this->mIdKeyTable]
+      		 : null;
       if ($idx) {
         // Force idx to be a string in order to keep ordering when sending JSON data to a json client
         $idx  = "+".$idx;
@@ -1142,7 +1149,7 @@ class anyTable extends dbTable
         }
       }
     }
-    if ($data && $data["nogroup"])
+    if ($data && isset($data["nogroup"]))
       return count($data["nogroup"]);
     else
       return 0;
@@ -1153,7 +1160,8 @@ class anyTable extends dbTable
     foreach ($data as $gidx => $grp) {
       foreach ($data[$gidx] as $idx => $item) {
         $type_id = $this->mType."_id";
-        if (intval($data[$gidx][$idx][$type_id]) == intval($pid)) {
+        if (isset($data[$gidx][$idx][$type_id]) &&
+            intval($data[$gidx][$idx][$type_id]) == intval($pid)) {
           if (isset($data[$gidx][$idx]["group_id"])) {
             return $data[$gidx][$idx]["group_id"];
           }
@@ -1184,15 +1192,17 @@ class anyTable extends dbTable
               ? "group"
               : ($flat
                  ? $this->mType
-                 : $nextrow["group_id"]); // From left join with any_group table
+                 : (isset($nextrow["group_id"])
+                   ? $nextrow["group_id"]
+                   : null)); // From left join with any_group table
       if ($gidx === null)
         $gidx = "nogroup";
       if (!isset($data[$gidx]))
         $gidx = "nogroup";
-      if ($data && $data[$gidx] && $data[$gidx][$idx] && $data[$gidx][$idx]["list"])
+      if ($data && isset($data[$gidx]) && isset($data[$gidx][$idx]) && isset($data[$gidx][$idx]["list"]))
         $the_data = $data[$gidx];
       else
-      if ($data && $data[$idx] && $data[$idx]["item"])
+      if ($data && isset($data[$idx]) && isset($data[$idx]["item"]))
         $the_data = $data;
       //elog($gidx.",".$idx.",".$this->mIdKey.",data[$gidx][$idx]:".var_export($the_data[$idx],true));
       if (isset($the_data[$idx]) &&
@@ -1200,13 +1210,13 @@ class anyTable extends dbTable
         $meta_key   = isset($nextrow["meta_key"])   ? $nextrow["meta_key"]   : null;
         $meta_value = isset($nextrow["meta_value"]) ? $nextrow["meta_value"] : null;
         //elog($meta_key."(".$filter[$meta_key].")=".$meta_value.":");
-        if ($filter === null || $filter[$meta_key] == 1) {
+        if ($filter === null || (isset($filter[$meta_key]) && $filter[$meta_key] == 1)) {
           if ($meta_key !== null && $meta_key !== "" && $meta_value !== null && $meta_value !== "") {
             $the_data[$idx][$meta_key] = $meta_value;
-          if ($data && $data[$gidx] && $data[$gidx][$idx] && $data[$gidx][$idx]["list"])
+          if ($data && isset($data[$gidx]) && isset($data[$gidx][$idx]) && isset($data[$gidx][$idx]["list"]))
             $data[$gidx] = $the_data;
           else
-          if ($data && $data[$idx] && $data[$idx]["item"])
+          if ($data && isset($data[$idx]) && isset($data[$idx]["item"]))
             $data = $the_data;
           }
         }
@@ -1523,7 +1533,7 @@ class anyTable extends dbTable
 
   public function prepareParents($type,$itemIdKey,$itemNameKey)
   {
-    // TODO! Not tested!
+    // TODO! Untested
     return null;
     $lf   = $this->mListFor;
     $lfid = $this->mListForId;
@@ -1566,6 +1576,302 @@ class anyTable extends dbTable
     // TODO! Not implemented yet
     return null;
   } // prepareSetting
+
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////// Insert //////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * @method dbInsert
+   * @description
+   * @return data structure on success, null on failure.
+   * @example
+   */
+  public function dbInsert()
+  {
+    $err = $this->dbValidateInsert();
+    if ($err != "") {
+      $this->setError($err);
+      return null;
+    }
+    $this->mError = "";
+    $this->mData = null;
+    $this->mNumRowsChanged = 0;
+
+    $res = $this->dbInsertItem();
+    if (!$res)
+      return null;
+
+    if (method_exists($this,"dbInsertExtra"))
+      $res2 = $this->dbInsertExtra();
+
+    $data = array();
+    return $this->prepareTypeKindId($data);
+  } // dbInsert
+
+  protected function dbValidateInsert()
+  {
+    $err = "";
+    return $err;
+  } // dbValidateInsert
+
+  protected function dbInsertItem()
+  {
+    $this->mNumRowsChanged = 0;
+    // Insert in normal table
+    $stmt = $this->dbPrepareInsertStmt();
+    //elog("dbInsertItem:".$stmt);
+    if (!$stmt || !$this->query($stmt))
+      return null;
+    $this->mNumRowsChanged += $this->getNumRowsChanged();
+
+    // Insert in meta table
+    $this->dbMetaInsertOrUpdate($this->mId);
+
+    // Get the id that was auto-created
+    $this->mId = $this->getLastInsertID($this->getTableName());
+    Parameters::set($this->mIdKey,$this->mId);
+
+    // Set result message and return
+    if ($this->mNumRowsChanged > 0)
+      $this->setMessage($this->mInsertSuccessMsg);
+    else
+      $this->setMessage($this->mInsertNothingToDo);
+    $data = array();
+    return $this->prepareTypeKindId($data);
+  } // dbInsertItem
+
+  protected function dbPrepareInsertStmt()
+  {
+    // TODO Check for all fields empty
+    $stmt = "INSERT INTO ".$this->getTableName()." (";
+    $n = 0;
+    for ($t=0; $t<count($this->mTableFields); $t++) {
+      $key = $this->mTableFields[$t];
+      if ($key != $this->mIdKeyTable) { // Do not update the id key ield
+        $val = Parameters::get($key);
+        //elog("dbPrepareInsertStmt,".$key.":".$val);
+        if ($val && $val != "") { // Only allow values that are set (or blank)
+          $stmt.= $key .",";
+          ++$n;
+        }
+      }
+    }
+    $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
+    $stmt.= ") VALUES (";
+    for ($t=0; $t<count($this->mTableFields); $t++) {
+      $key  = $this->mTableFields[$t];
+      if ($key != $this->mIdKeyTable) { // Do not update the id key ield
+        $val = Parameters::get($key);
+        if ($val && $val != "") { // Only allow values that are set (or blank)
+          $val = htmlentities((string)$val,ENT_QUOTES,'utf-8',FALSE);
+          $stmt .= "'".$val."',";
+        }
+      }
+    }
+    $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
+    $stmt.= ")";
+    elog("dbPrepareInsertStmt:".$stmt);
+    if ($n == 0) {
+      $this->setMessage($this->mInsertNothingToDo);
+      return null;
+    }
+    return $stmt;
+  } // dbPrepareInsertStmt
+
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////// Update //////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * @method dbUpdate
+   * @description
+   * @return data structure on success, null on failure.
+   * @example
+   */
+  public function dbUpdate()
+  {
+    $err = $this->dbValidateUpdate();
+    if ($err != "") {
+      $this->setError($err);
+      return null;
+    }
+    $this->mError = "";
+    $this->mData = null;
+    $this->mNumRowsChanged = 0;
+
+    if (!isset($this->mId) || $this->mId == "") {
+      // No id, assume it is a new item
+      return $this->dbInsert();
+    }
+    // We have an id, so we are updating an existing item or a link to one.
+    $upd_what = Parameters::get("upd");
+    if (!$upd_what) {
+      $res = $this->dbUpdateItem();
+      if (!$res)
+        return null;
+    }
+    else
+    if ($upd_what == "link") { // TODO
+      $res = $this->dbUpdateLink();
+      if (!$res)
+        return null;
+    }
+    else {
+      $this->setError("Illegal parameter value: $upd_what. ");
+      return null;
+    }
+
+    if (method_exists($this,"dbUpdateExtra"))
+      $res2 = $this->dbUpdateExtra();
+
+    $data = array();
+    return $this->prepareTypeKindId($data);
+  } // dbUpdate
+
+  protected function dbValidateUpdate()
+  {
+    $err = "";
+    return $err;
+  } // dbValidateUpdate
+
+  protected function dbUpdateItem()
+  {
+    if (!isset($this->mId) || $this->mId == "")
+      return null;
+    $this->mNumRowsChanged = 0;
+    // Update normal table
+    $stmt = $this->dbPrepareUpdateStmt();
+    //elog("dbUpdateItem:".$stmt);
+    if (!$stmt || !$this->query($stmt))
+      return null;
+    $this->mNumRowsChanged += $this->getNumRowsChanged();
+
+    // Update meta table
+    $this->dbMetaInsertOrUpdate($this->mId);
+
+    // Set result message and return
+    if ($this->mNumRowsChanged > 0)
+      $this->setMessage($this->mUpdateSuccessMsg);
+    else
+      $this->setMessage($this->mUpdateNothingToDo);
+    $data = array();
+    return $this->prepareTypeKindId($data);
+  } // dbUpdateItem
+
+  protected function dbPrepareUpdateStmt()
+  {
+    if (!$this->dbItemExists()) {
+      $this->setError($this->mType.$this->mItemUnexists." ($this->mId). ");
+      return null;
+    }
+    $stmt = "UPDATE ".$this->getTableName()." SET ";
+    $n = 0;
+    for ($t=0; $t<count($this->mTableFields); $t++) {
+      $key = $this->mTableFields[$t];
+      if ($key != $this->mIdKeyTable) { // Do not update the id key ield
+        $val = Parameters::get($key);
+        //elog("dbPrepareUpdateStmt,".$key.":".$val);
+        if ($val || $val === "") { // Only allow values that are set (or blank)
+          $val = htmlentities((string)$val,ENT_QUOTES,'utf-8',FALSE);
+          $stmt .= $this->dbPrepareUpdateStmtKeyVal($key,$val);
+          ++$n;
+        }
+      }
+    }
+    $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
+    $stmt.= "WHERE ".$this->mIdKeyTable."='".$this->mId."' ";
+    //elog("dbPrepareUpdateStmt,stmt:".$stmt);
+    if ($n == 0) {
+      $this->setMessage($this->mUpdateNothingToDo);
+      return null;
+    }
+    return $stmt;
+  } // dbPrepareUpdateStmt
+
+  protected function dbPrepareUpdateStmtKeyVal($key,$val)
+  {
+    if (!isset($val) || $val === null || $val === "")
+      return $key."=NULL,";
+    return $key."='".$val."',";
+  } // dbPrepareUpdateStmtKeyVal
+
+  // Check if item exists
+  protected function dbItemExists()
+  {
+    $stmt = "SELECT * FROM ".$this->getTableName()." WHERE ".$this->mIdKeyTable."=".$this->mId;
+    //elog("dbItemExists,stmt:".$stmt);
+    if (!$this->query($stmt))
+      return false;
+    if ($this->getNext(true) === null)
+      return false;
+    return true;
+  } // dbItemExists
+
+  private function dbUpdateLink()
+  {
+    $link_type = Parameters::get("link_type");
+    if (!$link_type) {
+      $this->setError("No link type. ");
+      return false;
+    }
+    $this->mNumRowsChanged = 0;
+    $id_key       = $this->mType."_id";
+    $id_key_list  = $link_type."_id";
+    $id           = Parameters::get($id_key);
+    $updlist      = explode(",",Parameters::get("add"));
+    $dellist      = explode(",",Parameters::get("del"));
+    $list_table   = $this->findLinkTableName($link_type);
+    if ($list_table !== null && $list_table !== "" && $link_type != $this->mType) {
+      if ($dellist !== null) {
+        foreach ($dellist as $delval) {
+          $stmt = "DELETE FROM ".$list_table." WHERE ".$id_key_list ."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
+          //elog("dbUpdateLink(1):".$stmt);
+          if (!$this->query($stmt))
+            return false;
+        }
+      }
+      if ($updlist !== null) {
+        foreach ($updlist as $insval) {
+          // Delete old list so as to avoid error message when inserting (insert-or-update)
+          $stmt = "DELETE FROM ".$list_table." WHERE ".$id_key_list ."='".intval($insval)."' AND ".$id_key."='".intval($id)."'";
+          //elog("dbUpdateLink(2):".$stmt);
+          if (!$this->query($stmt))
+            return false;
+          $stmt = "INSERT INTO ".$list_table." (".$id_key_list.",".$id_key.") VALUES (".intval($insval).",".intval($id).")";
+          //elog("dbUpdateLink(3):".$stmt);
+          if (!$this->query($stmt))
+            return false;
+        }
+      }
+    }
+    else { // Subitem with parent of same type
+      if ($this->hasParentId()) {
+        if ($dellist !== null) {
+          foreach ($dellist as $updval) {
+            if ($gid != $id) {
+              $stmt = "UPDATE ".$this->getTableName()." SET parent_id=null WHERE ".$id_key."='".intval($updval)."'";
+              //elog("dbUpdateLink(4):".$stmt);
+              if (!$this->query($stmt))
+                return false;
+            }
+          }
+        }
+        if ($updlist !== null) {
+          foreach ($updlist as $updval) {
+            if ($gid != $id) {
+              $stmt = "UPDATE ".$this->getTableName()." SET parent_id='".intval($id)."' WHERE ".$id_key."='".intval($updval)."'";
+              //elog("dbUpdateLink(5):".$stmt);
+              if (!$this->query($stmt))
+                return false;
+            }
+          }
+        }
+      }
+    }
+    $this->setMessage($this->mUpdateSuccessMsg);
+    return true;
+  } // dbUpdateLink
 
 } // class anyTable
 ?>
