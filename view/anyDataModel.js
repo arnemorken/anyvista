@@ -1402,6 +1402,8 @@ anyDataModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
                                 : item["+"+options.client_id];
           if (item[serverdata.id][self.id_key])
             item[serverdata.id][self.id_key] = serverdata.id;
+          delete item[serverdata.id].is_new;
+          delete item[serverdata.id].dirty;
           self.dataDelete({ type: options.type,
                             id:   options.client_id,
                          });
@@ -1412,7 +1414,7 @@ anyDataModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
                      : item["+"+options.client_id]
                        ? "+"+options.client_id
                        : null;
-        if (tmp_id) {
+        if (tmp_id && item[tmp_id]) {
           delete item[tmp_id].is_new;
           delete item[tmp_id].dirty;
         }
@@ -1597,7 +1599,7 @@ anyDataModel.prototype._dbUpdateLinkListSuccess = function (context,serverdata,o
  *
  * @return true if the database call was made, false otherwise.
  */
-psiDataModel.prototype.dbDelete = function (options)
+anyDataModel.prototype.dbDelete = function (options)
 {
   if (!options || typeof options != "object")
     options = {};
@@ -1607,7 +1609,7 @@ psiDataModel.prototype.dbDelete = function (options)
 
   let the_type = options.type ? options.type : this.type;
   if (!the_type) {
-    console.error("psiDataModel.dbDelete: "+i18n.error.TYPE_MISSING);
+    console.error("anyDataModel.dbDelete: "+i18n.error.TYPE_MISSING);
     return false;
   }
   let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
@@ -1616,7 +1618,7 @@ psiDataModel.prototype.dbDelete = function (options)
                  ? options.id
                  : null;
   if (!the_id && typeof options.id !== "string") {
-    console.error("psiDataModel.dbDelete: "+i18n.error.ID_ILLEGAL);
+    console.error("anyDataModel.dbDelete: "+i18n.error.ID_ILLEGAL);
     return false;
   }
 
@@ -1645,7 +1647,7 @@ psiDataModel.prototype.dbDelete = function (options)
   else {
     if (!self.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("psiDataModel.dbDelete: "+this.message);
+      console.warn("anyDataModel.dbDelete: "+this.message);
       return false;
     }
     return self.success(this,this,options);
@@ -1659,18 +1661,18 @@ psiDataModel.prototype.dbDelete = function (options)
  *
  * @return The complete URL for dbDelete or null on error.
  */
-psiDataModel.prototype.dbDeleteGetURL = function (options)
+anyDataModel.prototype.dbDeleteGetURL = function (options)
 {
   let type = options.type ? options.type : this.type;
   if (!type) {
-    console.error("psiDataModel.dbDeleteGetURL: "+i18n.error.TYPE_MISSING);
+    console.error("anyDataModel.dbDeleteGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
   let id_key = options.type && options.type != this.type
                ? type+"_id"
                : this.id_key;
   if (!id_key) {
-    console.error("psiDataModel.dbDeleteGetURL: "+i18n.error.ID_KEY_MISSING);
+    console.error("anyDataModel.dbDeleteGetURL: "+i18n.error.ID_KEY_MISSING);
     return null;
   }
   let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
@@ -1679,7 +1681,7 @@ psiDataModel.prototype.dbDeleteGetURL = function (options)
                  ? options.id
                  : null;
   if (!the_id && typeof options.id !== "string") {
-    console.error("psiDataModel.dbDeleteGetURL: "+i18n.error.ID_ILLEGAL);
+    console.error("anyDataModel.dbDeleteGetURL: "+i18n.error.ID_ILLEGAL);
     return false;
   }
   let param_str = "?echo=y"+
@@ -1692,7 +1694,7 @@ psiDataModel.prototype.dbDeleteGetURL = function (options)
 }; // dbDeleteGetURL
 
 // Default success callback method for dbDelete
-psiDataModel.prototype._dbDeleteSuccess = function (context,serverdata,options)
+anyDataModel.prototype._dbDeleteSuccess = function (context,serverdata,options)
 {
   let self = context;
   self.last_db_command = "del";
@@ -1705,9 +1707,9 @@ psiDataModel.prototype._dbDeleteSuccess = function (context,serverdata,options)
     self.message = serverdata.message;
     self.error   = serverdata.error;
     if (self.message)
-      console.log("psiDataModel._dbDeleteSuccess: "+self.message);
+      console.log("anyDataModel._dbDeleteSuccess: "+self.message);
     if (self.error)
-      console.error("psiDataModel._dbDeleteSuccess: "+self.error);
+      console.error("anyDataModel._dbDeleteSuccess: "+self.error);
   }
   if (self.cbExecute)
     self.cbExecute();
