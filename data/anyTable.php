@@ -735,7 +735,7 @@ class anyTable extends dbTable
       return true; // We do not have subusers (user table does not have parent_id field)
 
     // Build and execute the full statement
-    $stmt = $this->dbPrepareSearchListStmt();
+    $stmt = $this->dbPrepareSearchListStmt($skipOwnId);
     //elog("dbSearchList:".$stmt);
     if (!$stmt || !$this->query($stmt))
       return false; // An error occured
@@ -763,13 +763,13 @@ class anyTable extends dbTable
     return !$this->isError();
   } // dbSearchList
 
-  protected function dbPrepareSearchListStmt()
+  protected function dbPrepareSearchListStmt($skipOwnId=false)
   {
     // Get query fragments
     $this->mError = "";
     $select    = $this->findListSelect();
     $left_join = $this->findListLeftJoin();
-    $where     = $this->findListWhere();
+    $where     = $this->findListWhere($skipOwnId);
     $order_by  = $this->findListOrderBy();
 
     if ($this->mError != "") {
@@ -1021,8 +1021,8 @@ class anyTable extends dbTable
       if ($gidx === null)
         $gidx = "nogroup";
       $idx = isset($nextrow[$this->mIdKeyTable])
-      		 ? $nextrow[$this->mIdKeyTable]
-      		 : null;
+             ? $nextrow[$this->mIdKeyTable]
+             : null;
       if ($idx) {
         // Force idx to be a string in order to keep ordering when sending JSON data to a json client
         $idx  = "+".$idx;
@@ -1038,7 +1038,7 @@ class anyTable extends dbTable
         if (isset($this->mTableFields)) {
           for ($t=0; $t<count($this->mTableFields); $t++) {
             $item_id_table = $this->mTableFields[$t];
-            if (!$simple || $item_id_table == $this->mIdKey || $item_id_table == $this->mNameKey)
+            if (!$simple || $item_id_table == $this->mIdKeyTable || $item_id_table == $this->mNameKey)
               $this->getCellData($item_id_table,$nextrow,$data,$idx,$gidx,$filter,$kind,$simple);
           } // for
         }
@@ -1671,7 +1671,7 @@ class anyTable extends dbTable
     }
     $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
     $stmt.= ")";
-    elog("dbPrepareInsertStmt:".$stmt);
+    //elog("dbPrepareInsertStmt:".$stmt);
     if ($n == 0) {
       $this->setMessage($this->mInsertNothingToDo);
       return null;
@@ -1807,6 +1807,81 @@ class anyTable extends dbTable
       return false;
     return true;
   } // dbItemExists
+
+  /////////////////////////////////////////////////////////////////////////////
+  //////////////////////// Insert or update meta table ////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  protected function dbMetaInsertOrUpdate($id)
+  {
+    if (!isset($this->mTableFieldsMeta))
+      return true;
+    $is_err = false;
+    // Insert any_ Parameters
+    $strarr = Parameters::getStrArr();
+    foreach ($strarr as $key => $val) {
+      if (in_array($key,$this->mTableFieldsMeta)) {
+        //elog($key."=".$val);
+        if ($val !== null && $val !== "") {
+          $is_err |= $this->dbMetaInsertOrUpdateSingle($id,$key,$val);
+        }
+      }
+    }
+    // Insert WP Parameters
+    if (defined("WP_PLUGIN") && $this->mType == "user") {
+      $first_name  = Parameters::get("first_name");
+      $last_name   = Parameters::get("last_name");
+      $description = Parameters::get("description");
+      if ($first_name || $first_name === "")
+        $this->dbMetaInsertOrUpdateSingle($id,"first_name", $first_name);
+      if ($last_name || $last_name === "")
+        $this->dbMetaInsertOrUpdateSingle($id,"last_name", $last_name);
+      if ($description || $description === "")
+        $this->dbMetaInsertOrUpdateSingle($id,"description", $description);
+    }
+    return $is_err;
+  } // dbMetaInsertOrUpdate
+
+  protected function dbMetaInsertOrUpdateSingle($id,$key,$val)
+  {
+    if ($id === null || $id == "" || $key === null || $key == "")
+      return false;
+    if ($key == "user_login" && ($val === null || $val == ""))
+      return false; // Cannot have blank login_name
+
+    // Check if item exists
+    $stmt = "SELECT * FROM ".$this->mTableNameMeta." WHERE ".$this->mIdKeyMetaTable."=".$id." AND meta_key='".$key."' ";
+    //elog("dbMetaInsertOrUpdateSingle:".$stmt);
+    if (!$this->query($stmt))
+      return false;
+    $nextrow = $this->getNext(true);
+    if ($nextrow === null)
+      // Insert
+      $stmt = "INSERT INTO ".$this->mTableNameMeta." ".
+              "(".$this->mIdKeyMetaTable.",meta_key,meta_value) VALUES (".
+              $id.",'".$key."','".$val."'".
+              ")";
+    else {
+      // Update
+      $meta_id = $nextrow[$this->mMetaId];
+      if ($meta_id === null || $meta_id == "")
+        return false;
+      $stmt = "UPDATE ".$this->mTableNameMeta." SET ".
+              "".$this->mIdKeyMetaTable."='".$id."',".
+              "meta_key='"  .$key."',".
+              "meta_value='".$val."' ".
+              "WHERE ".$this->mMetaId."='".$meta_id."' ";
+    }
+    //elog("dbMetaInsertOrUpdateSingle:".$stmt);
+    if (!$this->query($stmt))
+      return false;
+    $this->mNumRowsChanged += $this->getNumRowsChanged();
+    return true;
+  } // dbMetaInsertOrUpdateSingle
+
+  ///////////////////////////////////////////////////////////////////////
+  //////////////////////// Insert or update link ////////////////////////
+  ///////////////////////////////////////////////////////////////////////
 
   private function dbUpdateLink()
   {
