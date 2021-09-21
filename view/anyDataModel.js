@@ -1425,6 +1425,156 @@ anyDataModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
   return context;
 }; // dbUpdateSuccess
 
+/**
+ * @method dbUpdateLinkList
+ * @description Add and/or remove items to/from a link (association) list by updating the link
+ *              table in the database. This can be used to (un)link an item from another item.
+ * @param {Object} options An object which may contain these elements:
+ *
+ *        {String} type:    The type of items in the list.
+ *                          Optional. Default: `this.type`.
+ *        {String} link_id: The id of the item to which the list "belongs" (is linked to).
+ *                          Mandatory.
+ *        {Object} data:    List of items from which the user choses.
+ *                          Mandatory.
+ *
+ * @return true if the database call was made, false on error.
+ */
+anyDataModel.prototype.dbUpdateLinkList = function (options)
+{
+  if (!options || typeof options != "object")
+    options = {};
+
+  let the_type = options.type ? options.type : this.type;
+  if (!the_type) {
+    console.error("anyDataModel.dbUpdateLinkList: "+i18n.error.TYPE_MISSING);
+    return false;
+  }
+  let the_link_id = Number.isInteger(parseInt(options.link_id)) && options.link_id >= 0
+               ? parseInt(options.link_id)
+               : options.link_id
+                 ? options.link_id
+                 : null;
+  if (!the_link_id && typeof options.link_id !== "string") {
+    console.error("anyDataModel.dbUpdateLinkList: "+i18n.error.ID_ILLEGAL);
+    return false;
+  }
+
+  if (!options.timeoutSec)
+    options.timeoutSec = 10;
+  $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  this.success = options.success ? options.success : this._dbUpdateLinkListSuccess;
+  this.fail    = options.fail    ? options.fail    : this._dbFail;
+  this.context = options.context ? options.context : this;
+  this.message = "";
+  this.error   = "";
+  let self = this;
+  if (this.mode == "remote") { // Remote server call
+    let url = this.dbUpdateLinkListGetURL(options);
+    if (!url)
+      return false;
+    $.getJSON(url) // Call server
+    .done(function(serverdata,textStatus,jqXHR) {
+      return self.success ? self.success(self,serverdata,options) : false;
+    })
+    .fail(function(jqXHR,textStatus,error) {
+      return self.fail    ? self.fail   (self,jqXHR) : false;
+    });
+  }
+  else {
+    if (!self.success) {
+      this.message = i18n.error.SUCCCESS_CB_MISSING;
+      console.warn("anyDataModel.dbUpdateLinkList: "+this.message);
+      return false;
+    }
+    return options.success(this,options);
+  }
+  return true;
+}; // dbUpdateLinkList
+
+/**
+ * @method dbUpdateLinkListGetURL
+ * @description Builds a POST string for dbUpdateLinkListGetURL to be sent to server.
+ * @param {Object} options An object which may contain these elements:
+ *
+ * @return The complete URL for dbUpdateLinkList or null on error.
+ */
+anyDataModel.prototype.dbUpdateLinkListGetURL = function (options)
+{
+  let type = options.type ? options.type : this.type;
+  if (!type) {
+    console.error("anyDataModel.dbUpdateLinkListGetURL: "+i18n.error.TYPE_MISSING);
+    return null;
+  }
+  let id_key = options.type && options.type != this.type
+               ? type+"_id"
+               : this.id_key;
+  if (!id_key) {
+    console.error("anyDataModel.dbUpdateLinkListGetURL: "+i18n.error.ID_KEY_MISSING);
+    return null;
+  }
+  let the_link_id = Number.isInteger(parseInt(options.link_id)) && options.link_id >= 0
+                    ? parseInt(options.link_id)
+                    : options.link_id
+                      ? options.link_id
+                      : null;
+  if (!the_link_id && typeof options.link_id !== "string") {
+    console.error("anyDataModel.dbUpdateLinkList: "+i18n.error.ID_ILLEGAL);
+    return false;
+  }
+  let param_str = "?echo=y"+
+                  "&cmd=upd"+
+                  "&upd=link"+
+                  "&type="+options.link_type+
+                  "&"+options.link_type+"_id"+"="+the_link_id+ // TODO _id
+                  "&link_type="+options.type+
+                  "&sea=y";
+  if (options.context && options.context.select && options.context.unselect) {
+    let sel = [...options.context.select];
+    let uns = [...options.context.unselect];
+    param_str += "&add="+sel+"&del="+uns;
+  }
+  return this._getDataSourceName() + param_str;
+}; // dbUpdateLinkListGetURL
+
+// Default success callback method for dbUpdateLinkList
+anyDataModel.prototype._dbUpdateLinkListSuccess = function (context,serverdata,options)
+{
+  let self = context;
+  self.last_db_command = "updlink";
+  if (serverdata) {
+    if (serverdata.JSON_CODE)
+      serverdata = serverdata.JSON_CODE;
+    if (Object.size(serverdata.data) == 0)
+      serverdata.data = null;
+    self.message = serverdata.message;
+    self.error   = serverdata.error;
+    if (self.message)
+      console.log("anyDataModel._dbUpdateLinkListSuccess: "+self.message);
+    if (self.error)
+      console.error("anyDataModel._dbUpdateLinkListSuccess: "+self.error);
+  }
+
+  let ins_id = "plugin_"+options.context.type; // TODO! "plugin_" is not general enough
+  let model = options && options.view // TODO! Direct ref to view (move this to view class?)
+              ? options.view.viewList && options.view.viewList[ins_id]
+                 ? options.view.viewList[ins_id].model
+                 : options.view.model
+              : options.context;
+
+  let opt = {};
+  opt.data      = model.data;
+  opt.type      = options.context.type;
+  opt.del       = options.context.unselect;
+  opt.ins       = options.context.select;
+  opt.indata    = serverdata.data;
+  opt.insert_id = ins_id;
+  model.dataUpdateLinkList(opt);
+
+  if (model.cbExecute)
+    model.cbExecute();
+  return true;
+}; // _dbUpdateLinkListSuccess
 
 /**
  * @method dbDelete
