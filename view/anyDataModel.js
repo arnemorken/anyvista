@@ -1218,7 +1218,6 @@ anyDataModel.prototype.dbUpdate = function (options)
   if (!options || typeof options != "object")
     options = {};
 
-  // Check that we have new or dirty data
   let the_type = options.type ? options.type : this.type;
   if (!the_type) {
     console.error("anyDataModel.dbUpdate: "+i18n.error.TYPE_MISSING);
@@ -1233,6 +1232,7 @@ anyDataModel.prototype.dbUpdate = function (options)
     console.error("anyDataModel.dbUpdate: "+i18n.error.ID_ILLEGAL);
     return false;
   }
+  // Check that we have new or dirty data
   let the_data = options.indata ? options.indata : this.data;
   let item = this.dataSearch({ type: the_type,
                                id:   the_id,
@@ -1308,7 +1308,7 @@ anyDataModel.prototype.dbUpdate = function (options)
  *                           `options.id` has a value.
  *                           Optional. Default: false.
  *
- * @return The complete URL for dbUpdate or null on error (missing type or id_key).
+ * @return The complete URL for dbUpdate or null on error.
  */
 anyDataModel.prototype.dbUpdateGetURL = function (options)
 {
@@ -1424,6 +1424,145 @@ anyDataModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
     self.cbExecute();
   return context;
 }; // dbUpdateSuccess
+
+
+/**
+ * @method dbDelete
+ * @description Deletes an item from a database table.
+ *              TODO! Also deletes any links the item may have in other tables.
+ * @param {Object} options An object which may contain these elements:
+ *
+ *        {integer}  id:         The id of the item to delete.
+ *                               Mandatory.
+ *        {integer}  type:       Item's type.
+ *                               Optional. Default: `this.type`.
+ *        {integer}  timeoutSec: Number of seconds before timing out.
+ *                               Optional. Default: 10.
+ *        {Function} success:    Method to call on success.
+ *                               Optional. Default: `this._dbDeleteSuccess`.
+ *        {Function} fail:       Method to call on error or timeout.
+ *                               Optional. Default: `this._dbFail`.
+ *        {Function} context:    The context of the success and fail methods.
+ *                               Optional. Default: `this`.
+ *
+ * @return true if the database call was made, false otherwise.
+ */
+psiDataModel.prototype.dbDelete = function (options)
+{
+  if (!options || typeof options != "object")
+    options = {};
+
+  if (options.is_new)
+    return false; // No need to call database
+
+  let the_type = options.type ? options.type : this.type;
+  if (!the_type) {
+    console.error("psiDataModel.dbDelete: "+i18n.error.TYPE_MISSING);
+    return false;
+  }
+  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
+               ? parseInt(options.id)
+               : options.id
+                 ? options.id
+                 : null;
+  if (!the_id && typeof options.id !== "string") {
+    console.error("psiDataModel.dbDelete: "+i18n.error.ID_ILLEGAL);
+    return false;
+  }
+
+  if (!options.timeoutSec)
+    options.timeoutSec = 10;
+  $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  this.success = options.success ? options.success : this._dbDeleteSuccess;
+  this.fail    = options.fail    ? options.fail    : this._dbFail;
+  this.context = options.context ? options.context : this;
+  this.message = "";
+  this.error   = "";
+  let self = this;
+  if (this.mode == "remote") { // Remote server call
+    let url = this.dbDeleteGetURL(options);
+    if (!url)
+      return false;
+    $.getJSON(url) // Call server
+    .done(function(serverdata,textStatus,jqXHR) {
+      return self.success ? self.success(self,serverdata,options) : false;
+    })
+    .fail(function(jqXHR,textStatus,error) {
+      return self.fail    ? self.fail   (self,jqXHR) : false;
+    });
+    return true;
+  }
+  else {
+    if (!self.success) {
+      this.message = i18n.error.SUCCCESS_CB_MISSING;
+      console.warn("psiDataModel.dbDelete: "+this.message);
+      return false;
+    }
+    return self.success(this,this,options);
+  }
+}; // dbDelete
+
+/**
+ * @method dbDeleteGetURL
+ * @description Builds a POST string for dbDelete to be sent to server.
+ * @param {Object} options An object which may contain these elements:
+ *
+ * @return The complete URL for dbDelete or null on error.
+ */
+psiDataModel.prototype.dbDeleteGetURL = function (options)
+{
+  let type = options.type ? options.type : this.type;
+  if (!type) {
+    console.error("psiDataModel.dbDeleteGetURL: "+i18n.error.TYPE_MISSING);
+    return null;
+  }
+  let id_key = options.type && options.type != this.type
+               ? type+"_id"
+               : this.id_key;
+  if (!id_key) {
+    console.error("psiDataModel.dbDeleteGetURL: "+i18n.error.ID_KEY_MISSING);
+    return null;
+  }
+  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
+               ? parseInt(options.id)
+               : options.id
+                 ? options.id
+                 : null;
+  if (!the_id && typeof options.id !== "string") {
+    console.error("psiDataModel.dbDeleteGetURL: "+i18n.error.ID_ILLEGAL);
+    return false;
+  }
+  let param_str = "?echo=y"+
+                  "&type="+type;
+  param_str += "&cmd=del"+
+               "&del="+type+
+               "&"+id_key+"="+the_id;
+
+  return this._getDataSourceName() + param_str;
+}; // dbDeleteGetURL
+
+// Default success callback method for dbDelete
+psiDataModel.prototype._dbDeleteSuccess = function (context,serverdata,options)
+{
+  let self = context;
+  self.last_db_command = "del";
+
+  if (serverdata) {
+    if (serverdata.JSON_CODE)
+      serverdata = serverdata.JSON_CODE;
+    if (Object.size(serverdata.data) == 0)
+      serverdata.data = null;
+    self.message = serverdata.message;
+    self.error   = serverdata.error;
+    if (self.message)
+      console.log("psiDataModel._dbDeleteSuccess: "+self.message);
+    if (self.error)
+      console.error("psiDataModel._dbDeleteSuccess: "+self.error);
+  }
+  if (self.cbExecute)
+    self.cbExecute();
+  return context;
+}; // _dbDeleteSuccess
 
 // Default fail callback for all db* methods
 anyDataModel.prototype._dbFail = function (context,jqXHR)

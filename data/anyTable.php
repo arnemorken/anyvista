@@ -1950,75 +1950,104 @@ class anyTable extends dbTable
 
 
   /////////////////////////////////////////////////////////////////////////////
-  //////////////////////// Insert or update meta table ////////////////////////
+  /////////////////////////////// Delete //////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function dbMetaInsertOrUpdate($id)
+  /**
+   * @method dbDelete
+   * @description Deletes an item of given type with given id from a database table
+   *              TODO! Delete a list of items.
+   * @return data structure on success, null on failure.
+   * @example
+   */
+  public function dbDelete()
   {
-    if (!isset($this->mTableFieldsMeta))
-      return true;
-    $is_err = false;
-    // Insert any_ Parameters
-    $strarr = Parameters::getStrArr();
-    foreach ($strarr as $key => $val) {
-      if (in_array($key,$this->mTableFieldsMeta)) {
-        //elog($key."=".$val);
-        if ($val !== null && $val !== "") {
-          $is_err |= $this->dbMetaInsertOrUpdateSingle($id,$key,$val);
-        }
+    // Delete item(s) from table or file from disk
+    $del_what = Parameters::get("del");
+    if ($del_what == "ulf") { // Delete file from upload folder
+      $fname = Parameters::get("ulf");
+      if ($fname)
+        unlink(gUploadPath.$fname);
+      else {
+        $this->mError .= "Filename missing for delete. ";
+        return null;
       }
     }
-    // Insert WP Parameters
-    if (defined("WP_PLUGIN") && $this->mType == "user") {
-      $first_name  = Parameters::get("first_name");
-      $last_name   = Parameters::get("last_name");
-      $description = Parameters::get("description");
-      if ($first_name || $first_name === "")
-        $this->dbMetaInsertOrUpdateSingle($id,"first_name", $first_name);
-      if ($last_name || $last_name === "")
-        $this->dbMetaInsertOrUpdateSingle($id,"last_name", $last_name);
-      if ($description || $description === "")
-        $this->dbMetaInsertOrUpdateSingle($id,"description", $description);
-    }
-    return $is_err;
-  } // dbMetaInsertOrUpdate
+    else { // Delete from dbase
+      $err = $this->dbValidateDelete();
+      if ($err != "") {
+        $this->setError($err);
+        return null;
+      }
+      $this->mError = "";
+      $this->mData = null;
 
-  protected function dbMetaInsertOrUpdateSingle($id,$key,$val)
+      $stmt = "DELETE FROM ".$this->getTableName()." WHERE ".$this->mIdKeyTable."='".$this->mId."'";
+      //elog("dbDelete:".$stmt);
+      if (!$this->query($stmt))
+        return null;
+      if ($this->getNumRowsChanged() > 0)
+        $this->setMessage($this->mDeleteSuccessMsg);
+      else
+        $this->setError($this->mDeleteNothingToDo);
+
+      // Delete from meta table
+      $stmt = "DELETE FROM ".$this->mTableNameMeta." WHERE ".$this->mIdKeyMetaTable."='".$this->mId."'";
+      //elog("dbDelete:".$stmt);
+      if (!$this->query($stmt))
+        return null;
+
+      // Update parent_id of children
+      if ($this->hasParentId()) {
+        $stmt = "UPDATE ".$this->getTableName()." SET parent_id=NULL WHERE parent_id='".$this->mId."'";
+        //elog("dbDelete:".$stmt);
+        if (!$this->query($stmt))
+          return null;
+      }
+      // Delete from associated tables
+      if (isset($this->mPlugins)) {
+        foreach ($this->mPlugins as $type => $plugin) {
+          $table = anyTableFactory::create($plugin,$this);
+          if ($this->mType !== $type) {
+            $this->dbDeleteAssoc($table);
+          }
+        }
+      }
+      $this->mId = null;
+    }
+    $data = array();
+    return $this->prepareTypeKindId($data);
+  } // dbDelete
+
+  protected function dbValidateDelete()
   {
-    if ($id === null || $id == "" || $key === null || $key == "")
-      return false;
-    if ($key == "user_login" && ($val === null || $val == ""))
-      return false; // Cannot have blank login_name
+    $err = "";
+    if (!isset($this->mId) || $this->mId == "" || !is_numeric($this->mId))
+      $err .= $this->mType." id missing. ";
+    if (method_exists($this,"dbValidateDeletePermission"))
+      $err .= $this->dbValidateDeletePermission();
+    return $err;
+  } // dbValidateDelete
 
-    // Check if item exists
-    $stmt = "SELECT * FROM ".$this->mTableNameMeta." WHERE ".$this->mIdKeyMetaTable."=".$id." AND meta_key='".$key."' ";
-    //elog("dbMetaInsertOrUpdateSingle:".$stmt);
-    if (!$this->query($stmt))
+  public function dbDeleteAssoc($table)
+  {
+    if (!$table) {
+      $this->mError = "System error: No table. ";
       return false;
-    $nextrow = $this->getNext(true);
-    if ($nextrow === null)
-      // Insert
-      $stmt = "INSERT INTO ".$this->mTableNameMeta." ".
-              "(".$this->mIdKeyMetaTable.",meta_key,meta_value) VALUES (".
-              $id.",'".$key."','".$val."'".
-              ")";
-    else {
-      // Update
-      $meta_id = $nextrow[$this->mMetaId];
-      if ($meta_id === null || $meta_id == "")
-        return false;
-      $stmt = "UPDATE ".$this->mTableNameMeta." SET ".
-              "".$this->mIdKeyMetaTable."='".$id."',".
-              "meta_key='"  .$key."',".
-              "meta_value='".$val."' ".
-              "WHERE ".$this->mMetaId."='".$meta_id."' ";
     }
-    //elog("dbMetaInsertOrUpdateSingle:".$stmt);
+    if (!isset($this->mId) || $this->mId == "" || !is_numeric($this->mId)) {
+      $this->mError .= $this->mType." id missing. ";
+      return false;
+    }
+    $type = $table->getType();
+    $table_name = $this->findLinkTableName($type);
+    $stmt = "DELETE FROM ".$table_name." WHERE ".$this->getIdKey()."='".$this->mId."'";
+    //elog("dbDeleteAssoc:".$stmt);
     if (!$this->query($stmt))
       return false;
-    $this->mNumRowsChanged += $this->getNumRowsChanged();
+
     return true;
-  } // dbMetaInsertOrUpdateSingle
+  } // dbDeleteAssoc
 
 } // class anyTable
 ?>
