@@ -959,7 +959,7 @@ class anyTable extends dbTable
     $where   = $meta_id !== null && $meta_id !== "" && !$is_list
               ? "WHERE ".$this->mTableNameMeta.".".$this->mIdKeyMetaTable."='".$meta_id."' "
               : "";
-    /* TODO! left join with link table - untested code
+    /* TODO! Untested (left join with link table)
     $left_join  = null;
     $link_table = $this->findLinkTableName($this->mListFor);
     if (isset($this->mListFor) && isset($this->mListForId) && $link_table !== null) {
@@ -1872,6 +1872,78 @@ class anyTable extends dbTable
     $this->setMessage($this->mUpdateSuccessMsg);
     return true;
   } // dbUpdateLink
+
+
+  /////////////////////////////////////////////////////////////////////////////
+  //////////////////////// Insert or update meta table ////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  protected function dbMetaInsertOrUpdate($id)
+  {
+    if (!isset($this->mTableFieldsMeta))
+      return true;
+    $is_err = false;
+    // Insert any_ Parameters
+    $strarr = Parameters::getStrArr();
+    foreach ($strarr as $key => $val) {
+      if (in_array($key,$this->mTableFieldsMeta)) {
+        //elog($key."=".$val);
+        if ($val !== null && $val !== "") {
+          $is_err |= $this->dbMetaInsertOrUpdateSingle($id,$key,$val);
+        }
+      }
+    }
+    // Insert WP Parameters
+    if (defined("WP_PLUGIN") && $this->mType == "user") {
+      $first_name  = Parameters::get("first_name");
+      $last_name   = Parameters::get("last_name");
+      $description = Parameters::get("description");
+      if ($first_name || $first_name === "")
+        $this->dbMetaInsertOrUpdateSingle($id,"first_name", $first_name);
+      if ($last_name || $last_name === "")
+        $this->dbMetaInsertOrUpdateSingle($id,"last_name", $last_name);
+      if ($description || $description === "")
+        $this->dbMetaInsertOrUpdateSingle($id,"description", $description);
+    }
+    return $is_err;
+  } // dbMetaInsertOrUpdate
+
+  protected function dbMetaInsertOrUpdateSingle($id,$key,$val)
+  {
+    if ($id === null || $id == "" || $key === null || $key == "")
+      return false;
+    if ($key == "user_login" && ($val === null || $val == ""))
+      return false; // Cannot have blank login_name
+
+    // Check if item exists
+    $stmt = "SELECT * FROM ".$this->mTableNameMeta." WHERE ".$this->mIdKeyMetaTable."=".$id." AND meta_key='".$key."' ";
+    //elog("dbMetaInsertOrUpdateSingle:".$stmt);
+    if (!$this->query($stmt))
+      return false;
+    $nextrow = $this->getNext(true);
+    if ($nextrow === null)
+      // Insert
+      $stmt = "INSERT INTO ".$this->mTableNameMeta." ".
+              "(".$this->mIdKeyMetaTable.",meta_key,meta_value) VALUES (".
+              $id.",'".$key."','".$val."'".
+              ")";
+    else {
+      // Update
+      $meta_id = $nextrow[$this->mMetaId];
+      if ($meta_id === null || $meta_id == "")
+        return false;
+      $stmt = "UPDATE ".$this->mTableNameMeta." SET ".
+              "".$this->mIdKeyMetaTable."='".$id."',".
+              "meta_key='"  .$key."',".
+              "meta_value='".$val."' ".
+              "WHERE ".$this->mMetaId."='".$meta_id."' ";
+    }
+    //elog("dbMetaInsertOrUpdateSingle:".$stmt);
+    if (!$this->query($stmt))
+      return false;
+    $this->mNumRowsChanged += $this->getNumRowsChanged();
+    return true;
+  } // dbMetaInsertOrUpdateSingle
 
 } // class anyTable
 ?>
