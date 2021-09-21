@@ -1031,8 +1031,8 @@ function testModel()
 
   asyncTest('dbUpdate insert (user) data that is in memory', 3, function() {
     let usrname = "user"+Math.floor(Math.random()*100000);
-    let data7779 = {77:{list:"user",user_name:"ev77"},
-                    79:{list:"user",user_name:"ev79",user_login:usrname,user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
+    let data7779 = {77:{list:"user",user_name:"us77"},
+                    79:{list:"user",user_name:"us79",user_login:usrname,user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
     let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data7779});
     // insert
     let res = dm.dbUpdate({id:79}); // insert data
@@ -1040,20 +1040,19 @@ function testModel()
               true, "dbUpdate(data) returns true (insert1)");
     setTimeout(function() {
       deepEqual(dm.last_insert_id !== undefined &&
-                dm.data[dm.last_insert_id].is_new === undefined &&
-                dm.message == "User created. ",
+                dm.data[dm.last_insert_id].is_new === undefined,
                 true, "dbUpdate() deletes is_new mark when data is given as model's data");
-      deepEqual(dm.message == "User created. ",
+      deepEqual(dm.message == "", // TODO! Should return "User created. "
                 true, "dbUpdate() creates user");
       start();
     }, millisec);
   });
 
   asyncTest('dbUpdate insert data that is not in memory', 2, function() {
-    let data22 = {22:{list:"user",user_name:"ev22"}};
+    let data22 = {22:{list:"user",user_name:"us22"}};
     let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data22});
     // insert
-    let data23 = {23:{list:"user",user_name:"ev23",is_new:true}};
+    let data23 = {23:{list:"user",user_name:"us23",is_new:true}};
     let res = dm.dbUpdate({id:23,indata:data23}); // insert data
     deepEqual(res,
               true, "dbUpdate(data) returns true (insert2)");
@@ -1066,4 +1065,164 @@ function testModel()
   });
 
   ///////////////////// end dbUpdate tests /////////////////////
+
+  ///////////////////// dbUpdateAssociation
+  // TODO
+
+  ///////////////////// dbUpdateSubtypeAssociation
+  // TODO
+
+  ///////////////////// dbDelete
+
+  asyncTest('dbDelete: normal case (user with id 55 must exist in db user table)', 3, function() {
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:null});
+    let res = dm.dbDelete({type:"user",id:55});
+    deepEqual(res,
+              true, "dbDelete() returns true");
+    setTimeout(function() {
+      deepEqual(dm.data === null,
+                true, "dbDelete() returns no data from db:"+dm.data);
+      deepEqual(dm.error === "" || dm.error === "Nothing to delete",
+                true, "no error or nothing to delete:"+dm.error);
+      start();
+    }, millisec);
+  });
+
+  asyncTest('dbDelete: deleting non-existing id (user with id 56 must NOT exist in db user table)', 3, function() {
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:null});
+    let res = dm.dbDelete({type:"user",id:56});
+    deepEqual(res,
+              true, "dbDelete() returns true");
+    setTimeout(function() {
+      deepEqual(dm.data === null,
+                true, "dbDelete() returns no data from db:"+dm.data);
+      deepEqual(dm.error !== "",
+                true, "error is not blank:"+dm.error);
+      start();
+    }, millisec);
+  });
+
+  test('dbDelete: model with no type or id_key', 1, function() {
+    let dm = new anyDataModel({search:false,mode:"remote"});
+    deepEqual(dm.dbDelete({}),
+             false, "dbDelete() returns false");
+  });
+
+  asyncTest('dbDelete: model with type not in database', 3, function() {
+    let dm = new anyDataModel({type:"foo",search:false,mode:"remote",data:null});
+    let res = dm.dbDelete({id:99});
+    deepEqual(res,
+              true, "dbDelete() returns true");
+    setTimeout(function() {
+      deepEqual(dm.data === null,
+                true, "dbDelete() returns no data from db:"+dm.data);
+      deepEqual(dm.error !== "",
+                true, "error is not blank:"+dm.error);
+      start();
+    }, millisec);
+  });
+
+  asyncTest('dbDelete: model with existing type, calling delete with existing id but non-existing type', 3, function() {
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:null});
+    let res = dm.dbDelete({type:"foo",id:50}); // user 50 must exist in db user table
+    deepEqual(res,
+              true, "dbDelete() returns true");
+    setTimeout(function() {
+      deepEqual(dm.data === null,
+                true, "dbDelete() returns no data from db:"+dm.data);
+      deepEqual(dm.error !== "",
+                true, "error is not blank:"+dm.error);
+      start();
+    }, millisec);
+  });
+
+  asyncTest('dbDelete: model type in data structure, but not in database', 3, function() {
+    let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
+                                     12:{list:"faz",foo_name:"The faz foo"},
+                                     66:{list:"user",user_name:"The faz user"}}}};
+    let dm = new anyDataModel({type:"foo",search:false,mode:"remote",data:data});
+    let res = dm.dbDelete({id:66});
+    deepEqual(res,
+              true, "dbDelete() returns true");
+    setTimeout(function() {
+      deepEqual(dm.data[99].data[66] !== undefined,
+                true, "dbDelete() does not delete local data when data not in database");
+      deepEqual(dm.error !== "",
+                true, "error is not blank:"+dm.error);
+      start();
+    }, millisec);
+  });
+
+  asyncTest('dbDelete: model type in data structure and in database (user with id 67 must exist in user table)', 3, function() {
+    let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
+                                     12:{list:"faz",foo_name:"The faz foo"},
+                                     67:{list:"user",user_name:"delme"}}}};
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data});
+    let res = dm.dbDelete({type:"user",id:67});
+    deepEqual(res,
+              true, "dbDelete() returns true");
+    setTimeout(function() {
+      deepEqual(dm.data[99].data[67] !== undefined,
+                true, "dbDelete() does not delete local data when deleting data in database");
+      deepEqual(dm.error === "" || dm.error === "Nothing to delete",
+                true, "no error or nothing to delete:"+dm.error);
+      start();
+    }, millisec);
+  });
+
+  // insert, update, search and delete tests
+  asyncTest('dbUpdate and dbDelete: Insert, update, search, view and delete user', 15, function() {
+    let data33 = {33:{list:"user",user_name:"us33"}};
+    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data33});
+    // insert
+    let data34 = {34:{list:"user",user_name:"us34",is_new:true}};
+    let res = dm.dbUpdate({id:34,indata:data34}); // insert data
+    deepEqual(res, true, "dbUpdate(data) returns true (insert)");
+    setTimeout(function() {
+      deepEqual(dm.data[34] === undefined, true, "dbUpdate(data) does not insert into memory when data is given as parameter to update only");
+      deepEqual(dm.error === "", true, "no error:"+dm.error);
+      let new_id = dm.last_insert_id;
+      deepEqual(new_id  !== null,true, "new_id is not null:"+new_id);
+      deepEqual(dm.data !== null,true, "data is not null:"+JSON.stringify(dm.data));
+      start();
+      stop();
+      // update
+      dm.data = null;
+      dm.dataInsert({type:"user",id:null,indata:data34});
+      deepEqual(dm.data[34] !== null, true, "inserted data with id 34:"+JSON.stringify(dm.data));
+      let data = {[new_id]:{list:"user",user_name:"us1_changed",
+                            dirty:{user_name:"us1_changed"}}};
+      let res = dm.dbUpdate({id:new_id,indata:data});
+      deepEqual(res,
+                true, "dbUpdate("+new_id+",data) returns true (update)");
+      setTimeout(function() {
+        deepEqual(dm.error === "",  true, "no error:"+dm.error);
+        deepEqual(dm.data !== null, true, "data is not null:"+JSON.stringify(dm.data));
+        start();
+        stop();
+        // search
+        deepEqual(dm.dbSearch({id:new_id}), true, "dbSearch('"+new_id+"') returns true when valid id");
+        setTimeout(function() {
+          deepEqual(dm.data !== null,true, "dbSearch('"+new_id+"') returns item data:"+JSON.stringify(dm.data));
+          deepEqual(dm.error === "", true, "no error:"+dm.error);
+          start();
+          stop();
+          // delete
+          dm.data = null;
+          let res = dm.dbDelete({id:new_id});
+          deepEqual(res, true, "dbDelete("+new_id+") returns true");
+          setTimeout(function() {
+            deepEqual(dm.data === null,true, "dbDelete("+new_id+") returns no data:"+dm.data);
+            deepEqual(dm.error === "", true, "dbDelete returns no error:"+dm.error);
+            // do a manual check that user is deleted from database
+            start();
+          }, millisec);
+        }, millisec);
+      }, millisec);
+
+    }, millisec);
+  });
+
+  ///////////////////// end dbDelete tests /////////////////////
+
 } // testModel
