@@ -13,6 +13,8 @@
 // Static class with methods for extracting key/value pairs from
 // $_GET, $_POST and/or a string, and putting them into an array.
 //
+require_once "functions.php";
+
 class Parameters
 {
   private static $mDebug  = false;
