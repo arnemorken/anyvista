@@ -837,34 +837,38 @@ anyDataModel.prototype.dataUpdateLinkList = function (options)
     return false;
   }
   // Delete items
-  for (let id of options.del) {
-    let obj = this.dataDelete({ data: data,
-                                id:   id,
-                                type: type,
-                             });
+  if (options.unselect) {
+    for (let id of options.unselect) {
+      let obj = this.dataDelete({ data: data,
+                                  id:   id,
+                                  type: type,
+                               });
+    }
   }
   // Insert items
-  let indata = options.indata;
-  let ins_id = options.insert_id;
-  for (let id of options.ins) {
-    if (!this.dataSearch({id:id})) { // Insert item only if its not already in model
-      // See if we got the new data
-      let item = this.dataSearch({ data: indata,
-                                   id:   id,
-                                   type: type,
-                                });
-      if (item) {
-        let obj = this.dataInsert({ data:   data,
-                                    id:     ins_id, // TODO
-                                    type:   type,
-                                    indata: item,
-                                    nid:    id,
-                                 });
-      }
-      else
-        console.warn("Couldn't add item for "+type+" "+id+" (not found in indata). "); // TODO i18n
-    } // if
-  } // for
+  if (options.select) {
+    let indata = options.indata;
+    let ins_id = options.insert_id;
+    for (let id of options.select) {
+      if (!this.dataSearch({id:id})) { // Insert item only if its not already in model
+        // See if we got the new data
+        let item = this.dataSearch({ data: indata,
+                                     id:   id,
+                                     type: type,
+                                  });
+        if (item) {
+          let obj = this.dataInsert({ data:   data,
+                                      id:     ins_id, // TODO
+                                      type:   type,
+                                      indata: item,
+                                      nid:    id,
+                                   });
+        }
+        else
+          console.warn("Couldn't add item for "+type+" "+id+" (not found in indata). "); // TODO i18n
+      } // if
+    } // for
+  }
   this._dataInitSelect(); // Reset
   return true;
 }; // dataUpdateLinkList
@@ -934,6 +938,8 @@ anyDataModel.prototype.dataDelete = function (options)
  *                               Optional. Default: null.
  *        {integer}  type:       Item's type.
  *                               Optional. Default: `this.type`.
+ *        {boolean}  simple:
+ *
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
  *        {Function} success:    Method to call on success.
@@ -990,12 +996,13 @@ anyDataModel.prototype.dbSearch = function (options)
  * @description Builds a POST string for dbSearch to be sent to server.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer} id:   Item's id. If specified, the server will search for an item with this id,
- *                        if not specified, the server will search for a list of items of the given type,
- *                        Optional. Default: null.
- *        {integer} type: Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
- *                        be used as the id_key instead of the value in `this.id_key` when calling the server.
- *                        Optional. Default: `this.type`.
+ *        {integer} id:     Item's id. If specified, the server will search for an item with this id,
+ *                          if not specified, the server will search for a list of items of the given type,
+ *                          Optional. Default: null.
+ *        {integer} type:   Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
+ *                          be used as the id_key instead of the value in `this.id_key` when calling the server.
+ *                          Optional. Default: `this.type`.
+ *        {boolean} simple:
  *
  * @return The complete URL for dbSearch or null on error (missing type or id_key).
  */
@@ -1531,10 +1538,13 @@ anyDataModel.prototype.dbUpdateLinkListGetURL = function (options)
                   "&"+options.link_type+"_id"+"="+the_link_id+ // TODO _id
                   "&link_type="+options.type+
                   "&sea=y";
-  if (options.context && options.context.select && options.context.unselect) {
-    let sel = [...options.context.select];
-    let uns = [...options.context.unselect];
-    param_str += "&add="+sel+"&del="+uns;
+  if (options.select) {
+    let sel = [...options.select];
+    param_str += "&add="+sel;
+  }
+  if (options.unselect) {
+    let uns = [...options.unselect];
+    param_str += "&del="+uns;
   }
   return this._getDataSourceName() + param_str;
 }; // dbUpdateLinkListGetURL
@@ -1556,26 +1566,9 @@ anyDataModel.prototype._dbUpdateLinkListSuccess = function (context,serverdata,o
     if (self.error)
       console.error("anyDataModel._dbUpdateLinkListSuccess: "+self.error);
   }
-
-  let ins_id = "plugin_"+options.context.type; // TODO! "plugin_" is not general enough
-  let model = options && options.view // TODO! Direct ref to view (move this to view class?)
-              ? options.view.viewList && options.view.viewList[ins_id]
-                 ? options.view.viewList[ins_id].model
-                 : options.view.model
-              : options.context;
-
-  let opt = {};
-  opt.data      = model.data;
-  opt.type      = options.context.type;
-  opt.del       = options.context.unselect;
-  opt.ins       = options.context.select;
-  opt.indata    = serverdata.data;
-  opt.insert_id = ins_id;
-  model.dataUpdateLinkList(opt);
-
-  if (model.cbExecute)
-    model.cbExecute();
-  return true;
+  if (self.cbExecute)
+    self.cbExecute();
+  return context;
 }; // _dbUpdateLinkListSuccess
 
 /**

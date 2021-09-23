@@ -641,8 +641,8 @@ function testModel()
     let del = new Set(); del.add(11);
     let ins = new Set(); ins.add(14);
     let res = dm.dataUpdateLinkList({type:"bar",
-                                     del:       del,
-                                     ins:       ins,
+                                     unselect:  del,
+                                     select:    ins,
                                      indata:    {14:{list:"bar",foo_name:"Fourteen bar"}},
                                      insert_id: 99});
     deepEqual(res !== null &&
@@ -659,8 +659,8 @@ function testModel()
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     res = dm.dataUpdateLinkList({type:"foo",
-                                 del:       del,
-                                 ins:       ins,
+                                 unselect:  del,
+                                 select:    ins,
                                  indata:    {14:{list:"bar",foo_name:"Fourteen bar"}},
                                  insert_id: 99});
     deepEqual(res !== null &&
@@ -677,8 +677,8 @@ function testModel()
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     res = dm.dataUpdateLinkList({type:"bar",
-                                 del:       del,
-                                 ins:       ins,
+                                 unselect:  del,
+                                 select:    ins,
                                  indata:    {14:{list:"bar",foo_name:"Fourteen bar"}},
                                  insert_id: 99});
     deepEqual(res !== null &&
@@ -695,8 +695,8 @@ function testModel()
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     res = dm.dataUpdateLinkList({type:"bar",
-                                 del:       del,
-                                 ins:       ins,
+                                 unselect:  del,
+                                 select:    ins,
                                  indata:    {14:{list:"foo",foo_name:"Fourteen foo"}},
                                  insert_id: 99});
     deepEqual(res !== null &&
@@ -713,8 +713,8 @@ function testModel()
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     res = dm.dataUpdateLinkList({type:"foo",
-                                 del:       del,
-                                 ins:       ins,
+                                 unselect:  del,
+                                 select:    ins,
                                  indata:    {14:{list:"foo",foo_name:"Fourteen foo"}},
                                  insert_id: 99});
     deepEqual(res !== null &&
@@ -731,8 +731,8 @@ function testModel()
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     res = dm.dataUpdateLinkList({type:"bar",
-                                 del:       del,
-                                 ins:       ins,
+                                 unselect:  del,
+                                 select:    ins,
                                  indata:    {14:{list:"foo",foo_name:"Fourteen foo"}},
                                  insert_id: 99});
     deepEqual(res !== null &&
@@ -750,8 +750,8 @@ function testModel()
     ins = new Set(); ins.add(14);
     console.log(dm.data)
     res = dm.dataUpdateLinkList({type:"foo",
-                                 del:       del,
-                                 ins:       ins,
+                                 unselect:  del,
+                                 select:    ins,
                                  indata:    {14:{list:"foo",foo_name:"Fourteen foo"}},
                                  insert_id: 99});
     console.log(dm.data)
