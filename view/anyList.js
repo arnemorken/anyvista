@@ -104,46 +104,46 @@
  * Below is a description of the data structure with which `anyListDataModel` can be initialized. Items in square
  * brackets are not verbatim. The data structure is a collection of objects where each object may have these
  * entries:
-
-  - An `id`, which is the object's unique identifier. It is mandatory, meaning that it must be specified even
-    if the data structure displays a list only (in that case, use any id, e.g. "0"). `id` can be an integer or
-    a string, however, if it is a string the methods for finding the maximum or next available id will not work.
-    If used with a database backend, it corresponds to an individual row in a database table.
-
-  - A entry specifiying a "kind/type" combination, where "kind" may be one of `head`, `list` or `item` and "type"
-    is a user-specified type, for example "group", "event", "user" or "document". "kind" is used to indicate how the
-    data of type "type" should be displayed.
-    If this entry is not specified, the last preceding entry in the data structure is assumed.
-    If there is no preceding entry, `list` is the default value assumed for "kind" and the current model's type is
-    the default value for assumed for "type" and if the model has no type, "type" will be set to the empty string.
-    If used with a database backend, "type" corresponds to a specific database table / plugin.<br/>
-    *Example: `list:"event"`.
-
-  - An `edit` entry, specifying that this part of the data structure should be editable in a view even though the
-    `isEditable` variable of the view is set to false.<br/>
-    TODO! Not tested yet.<br/>
-    *Example: `edit:"true"`.
-
-  - An `add` entry, specifying that a button for adding a new item of given type should be displayed for entering
-    new data at this part of the data structure.<br/>
-    TODO! Not implemented yet.<br/>
-    *Example: `add:"user"`.
-
-  - A `skip` entry, an array specifying columns that should not be displayed for this object.<br/>
-    TODO! Not implemented yet.<br/>
-    *Example: `skip:["event_organizer","event_start_date"]`.
-
-  - A `page_links` object, specifying pagination for a list, containing:
-    - from, the start number in the list,
-    - to, the end number in the list,
-    - num, the number of list rows to display.
-
-    <br/>TODO! Not implemented yet.<br/>
-    *Example: `page_links:{from:11,to:20,num:10}`.
-
-  - A number of key / value pairs, that are the actual data that are to be displayed.<br/>
-    *Example: `event_name:"Tour de France"`.
-
+ *
+ * - An `id`, which is the object's unique identifier. It is mandatory, meaning that it must be specified even
+ *   if the data structure displays a list only (in that case, use any id, e.g. "0"). `id` can be an integer or
+ *   a string, however, if it is a string the methods for finding the maximum or next available id will not work.
+ *   If used with a database backend, it corresponds to an individual row in a database table.
+ *
+ * - A entry specifiying a "kind/type" combination, where "kind" may be one of `head`, `list` or `item` and "type"
+ *   is a user-specified type, for example "group", "event", "user" or "document". "kind" is used to indicate how the
+ *   data of type "type" should be displayed.
+ *   If this entry is not specified, the last preceding entry in the data structure is assumed.
+ *   If there is no preceding entry, `list` is the default value assumed for "kind" and the current model's type is
+ *   the default value for assumed for "type" and if the model has no type, "type" will be set to the empty string.
+ *   If used with a database backend, "type" corresponds to a specific database table / plugin.<br/>
+ *   *Example: `list:"event"`.
+ *
+ * - An `edit` entry, specifying that this part of the data structure should be editable in a view even though the
+ *   `isEditable` variable of the view is set to false.<br/>
+ *   TODO! Not tested yet.<br/>
+ *   *Example: `edit:"true"`.
+ *
+ * - An `add` entry, specifying that a button for adding a new item of given type should be displayed for entering
+ *   new data at this part of the data structure.<br/>
+ *   TODO! Not implemented yet.<br/>
+ *   *Example: `add:"user"`.
+ *
+ * - A `skip` entry, an array specifying columns that should not be displayed for this object.<br/>
+ *   TODO! Not implemented yet.<br/>
+ *   *Example: `skip:["event_organizer","event_start_date"]`.
+ *
+ * - A `page_links` object, specifying pagination for a list, containing:
+ *   - from, the start number in the list,
+ *   - to, the end number in the list,
+ *   - num, the number of list rows to display.
+ *
+ *   <br/>TODO! Not implemented yet.<br/>
+ *   *Example: `page_links:{from:11,to:20,num:10}`.
+ *
+ * - A number of key / value pairs, that are the actual data that are to be displayed.<br/>
+ *   *Example: `event_name:"Tour de France"`.
+ *
  * - A `data` object, which is a collection of objects as described (see description and example below), may
  *   also contain further `data` objects (subdata), making up a tree structure.
  *
@@ -160,7 +160,7 @@
  *              num:  [number_of_items],    // Mandatory in `page_links`.
  *            },
  *            [type]_name: "[string]",      // Optional, but mandatory if any key / value pairs are given.
- *            [name]: "[value]",            // Optional. One or more key / value pairs.
+ *            [key]: "[value]",             // Optional. One or more key / value pairs.
  *            ...
  *            data: [object],               // Optional. Subdata.
  *          },

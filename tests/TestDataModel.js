@@ -640,12 +640,12 @@ function testModel()
     let dm = new anyDataModel({list:"bar",data:mdata});
     let del = new Set(); del.add(11);
     let ins = new Set(); ins.add(14);
-    let res = dm.dataUpdateLinkList({type:"bar",
+    let res = dm.dataUpdateLinkList({link_type: "bar",
                                      unselect:  del,
                                      select:    ins,
-                                     indata:    {14:{list:"bar",foo_name:"Fourteen bar"}},
+                                     data:      {14:{list:"bar",foo_name:"Fourteen bar"}},
                                      insert_id: 99});
-    deepEqual(res !== null &&
+    deepEqual(res &&
               dm.data[99].data[11] === undefined &&
               dm.data[99].data[14] !== undefined &&
               dm.data[99].data[14].foo_name == "Fourteen bar" ,
@@ -658,10 +658,10 @@ function testModel()
     dm = new anyDataModel({list:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({type:"foo",
+    res = dm.dataUpdateLinkList({link_type: "foo",
                                  unselect:  del,
                                  select:    ins,
-                                 indata:    {14:{list:"bar",foo_name:"Fourteen bar"}},
+                                 data:      {14:{list:"bar",foo_name:"Fourteen bar"}},
                                  insert_id: 99});
     deepEqual(res !== null &&
               dm.data[99].data[11] !== undefined &&
@@ -676,10 +676,10 @@ function testModel()
     dm = new anyDataModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({type:"bar",
+    res = dm.dataUpdateLinkList({link_type: "bar",
                                  unselect:  del,
                                  select:    ins,
-                                 indata:    {14:{list:"bar",foo_name:"Fourteen bar"}},
+                                 data:      {14:{list:"bar",foo_name:"Fourteen bar"}},
                                  insert_id: 99});
     deepEqual(res !== null &&
               dm.data[99].data[11] === undefined &&
@@ -694,10 +694,10 @@ function testModel()
     dm = new anyDataModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({type:"bar",
+    res = dm.dataUpdateLinkList({link_type: "bar",
                                  unselect:  del,
                                  select:    ins,
-                                 indata:    {14:{list:"foo",foo_name:"Fourteen foo"}},
+                                 data:      {14:{list:"foo",foo_name:"Fourteen foo"}},
                                  insert_id: 99});
     deepEqual(res !== null &&
               dm.data[99].data[11] === undefined &&
@@ -712,10 +712,10 @@ function testModel()
     dm = new anyDataModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({type:"foo",
+    res = dm.dataUpdateLinkList({link_type: "foo",
                                  unselect:  del,
                                  select:    ins,
-                                 indata:    {14:{list:"foo",foo_name:"Fourteen foo"}},
+                                 data:      {14:{list:"foo",foo_name:"Fourteen foo"}},
                                  insert_id: 99});
     deepEqual(res !== null &&
               dm.data[99].data[11] !== undefined &&
@@ -730,10 +730,10 @@ function testModel()
     dm = new anyDataModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({type:"bar",
+    res = dm.dataUpdateLinkList({link_type: "bar",
                                  unselect:  del,
                                  select:    ins,
-                                 indata:    {14:{list:"foo",foo_name:"Fourteen foo"}},
+                                 data:      {14:{list:"foo",foo_name:"Fourteen foo"}},
                                  insert_id: 99});
     deepEqual(res !== null &&
               dm.data[99].data[11] === undefined &&
@@ -749,10 +749,10 @@ function testModel()
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     console.log(dm.data)
-    res = dm.dataUpdateLinkList({type:"foo",
+    res = dm.dataUpdateLinkList({link_type: "foo",
                                  unselect:  del,
                                  select:    ins,
-                                 indata:    {14:{list:"foo",foo_name:"Fourteen foo"}},
+                                 data:      {14:{list:"foo",foo_name:"Fourteen foo"}},
                                  insert_id: 99});
     console.log(dm.data)
     deepEqual(res !== null &&
@@ -1066,10 +1066,7 @@ function testModel()
 
   ///////////////////// end dbUpdate tests /////////////////////
 
-  ///////////////////// dbUpdateAssociation
-  // TODO
-
-  ///////////////////// dbUpdateSubtypeAssociation
+  ///////////////////// dbUpdateLinkList
   // TODO
 
   ///////////////////// dbDelete

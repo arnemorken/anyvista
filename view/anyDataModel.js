@@ -518,12 +518,12 @@ anyDataModel.prototype.dataSearch = function (options,parent_data,parent_id)
         }
       }
       if (!item && data[idx].data) { // subdata
-        let pdata = options.parent ? data : null;
-        let pidx  = options.parent ? idx  : null;
+        let p_data = options.parent ? data : null;
+        let p_idx  = options.parent ? idx  : null;
         if (id || id === 0)
-          item              = this.dataSearch({data:data[idx].data,id:id,type:type},pdata,pidx);
+          item              = this.dataSearch({data:data[idx].data,id:id,type:type},p_data,p_idx);
         else
-          options.item_list = this.dataSearch({data:data[idx].data,id:id,type:type},pdata,pidx);
+          options.item_list = this.dataSearch({data:data[idx].data,id:id,type:type},p_data,p_idx);
       }
       if (item && id != null)
         return item; // Found
@@ -830,18 +830,18 @@ anyDataModel.prototype.dataUpdateLinkList = function (options)
     console.error("anyDataModel.dataUpdateLinkList: "+i18n.error.OPTIONS_MISSING);
     return false;
   }
-  let data = options.data ? options.data : this.data;
-  let type = options.type;
-  if (!type) {
+  let data      = options.data ? options.data : this.data;
+  let link_type = options.link_type;
+  if (!link_type) {
     console.error("anyDataModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
     return false;
   }
   // Delete items
   if (options.unselect) {
     for (let id of options.unselect) {
-      let obj = this.dataDelete({ data: data,
+      let obj = this.dataDelete({ data: this.data,
                                   id:   id,
-                                  type: type,
+                                  type: link_type,
                                });
     }
   }
@@ -850,22 +850,27 @@ anyDataModel.prototype.dataUpdateLinkList = function (options)
     let indata = options.indata;
     let ins_id = options.insert_id;
     for (let id of options.select) {
-      if (!this.dataSearch({id:id})) { // Insert item only if its not already in model
+      if (!this.dataSearch({ data: this.data,
+                             id:   id,
+                             type: link_type,
+                          })) { // Insert item only if its not already in model
         // See if we got the new data
-        let item = this.dataSearch({ data: indata,
+        let item = this.dataSearch({ data: options.data,
                                      id:   id,
-                                     type: type,
+                                     type: link_type,
                                   });
         if (item) {
-          let obj = this.dataInsert({ data:   data,
-                                      id:     ins_id, // TODO
-                                      type:   type,
+          if (!ins_id)
+            ins_id = "plugin-"+link_type; // TODO! Not general enough
+          let obj = this.dataInsert({ data:   this.data,
+                                      id:     ins_id,
+                                      type:   link_type,
                                       indata: item,
                                       nid:    id,
                                    });
         }
         else
-          console.warn("Couldn't add item for "+type+" "+id+" (not found in indata). "); // TODO i18n
+          console.warn("Couldn't add item for "+link_type+" "+id+" (not found in indata). "); // TODO i18n
       } // if
     } // for
   }
@@ -1440,12 +1445,12 @@ anyDataModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *              table in the database. This can be used to (un)link an item from another item.
  * @param {Object} options An object which may contain these elements:
  *
- *        {String} type:    The type of items in the list.
- *                          Optional. Default: `this.type`.
- *        {String} link_id: The id of the item to which the list "belongs" (is linked to).
- *                          Mandatory.
- *        {Object} data:    List of items from which the user choses.
- *                          Mandatory.
+ *        {String} type:     The type of items in the list.
+ *                           Optional. Default: `this.type`.
+ *        {String} link_id:  The id of the item to which the list "belongs" (is linked to).
+ *                           Mandatory.
+ *        {Object} select:
+ *        {Object} unselect:
  *
  * @return true if the database call was made, false on error.
  */
@@ -1459,12 +1464,12 @@ anyDataModel.prototype.dbUpdateLinkList = function (options)
     console.error("anyDataModel.dbUpdateLinkList: "+i18n.error.TYPE_MISSING);
     return false;
   }
-  let the_link_id = Number.isInteger(parseInt(options.link_id)) && options.link_id >= 0
-               ? parseInt(options.link_id)
-               : options.link_id
-                 ? options.link_id
+  let the_link_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
+               ? parseInt(options.id)
+               : options.id
+                 ? options.id
                  : null;
-  if (!the_link_id && typeof options.link_id !== "string") {
+  if (!the_id && typeof options.id !== "string") {
     console.error("anyDataModel.dbUpdateLinkList: "+i18n.error.ID_ILLEGAL);
     return false;
   }
@@ -1510,41 +1515,42 @@ anyDataModel.prototype.dbUpdateLinkList = function (options)
  */
 anyDataModel.prototype.dbUpdateLinkListGetURL = function (options)
 {
-  let type = options.type ? options.type : this.type;
-  if (!type) {
+  let the_type = options.type ? options.type : this.type;
+  if (!the_type) {
     console.error("anyDataModel.dbUpdateLinkListGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  let id_key = options.type && options.type != this.type
-               ? type+"_id"
-               : this.id_key;
-  if (!id_key) {
-    console.error("anyDataModel.dbUpdateLinkListGetURL: "+i18n.error.ID_KEY_MISSING);
+  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
+               ? parseInt(options.id)
+               : options.id
+                 ? options.id
+                 : null;
+  if (!the_id && typeof options.id !== "string") {
+    console.error("anyDataModel.dbUpdateLinkListGetURL: "+i18n.error.ID_ILLEGAL);
     return null;
-  }
-  let the_link_id = Number.isInteger(parseInt(options.link_id)) && options.link_id >= 0
-                    ? parseInt(options.link_id)
-                    : options.link_id
-                      ? options.link_id
-                      : null;
-  if (!the_link_id && typeof options.link_id !== "string") {
-    console.error("anyDataModel.dbUpdateLinkList: "+i18n.error.ID_ILLEGAL);
-    return false;
   }
   let param_str = "?echo=y"+
                   "&cmd=upd"+
                   "&upd=link"+
-                  "&type="+options.link_type+
-                  "&"+options.link_type+"_id"+"="+the_link_id+ // TODO _id
-                  "&link_type="+options.type+
-                  "&sea=y";
+                  "&type="+the_type+
+                  "&"+the_type+"_id"+"="+the_id;
+  if (options.link_type)
+    param_str += "&link_type="+options.link_type;
+  param_str += "&sea=y";
+  let has_add_or_del = false;
   if (options.select) {
     let sel = [...options.select];
     param_str += "&add="+sel;
+    has_add_or_del = true;
   }
   if (options.unselect) {
     let uns = [...options.unselect];
     param_str += "&del="+uns;
+    has_add_or_del = true;
+  }
+  if (!has_add_or_del) {
+    console.error("anyDataModel.dbUpdateLinkListGetURL: "+"No items selected. "); // TODO! i18n
+    return null;
   }
   return this._getDataSourceName() + param_str;
 }; // dbUpdateLinkListGetURL
@@ -1565,6 +1571,20 @@ anyDataModel.prototype._dbUpdateLinkListSuccess = function (context,serverdata,o
       console.log("anyDataModel._dbUpdateLinkListSuccess: "+self.message);
     if (self.error)
       console.error("anyDataModel._dbUpdateLinkListSuccess: "+self.error);
+    let item = self.dataSearch({ type: options.link_type,
+                                 id:   "plugin-"+options.link_type, // TODO! Not general enough
+                              });
+    if (!item) {
+      // Should never happen
+      console.error("anyDataModel._dbUpdateLinkListSuccess: "+options.type+" not found. "); // TODO! i18n
+    }
+    else {
+      self.dataUpdateLinkList({ data:      serverdata.data,
+                                link_type: options.link_type,
+                                unselect:  options.unselect,
+                                select:    options.select,
+                             });
+    }
   }
   if (self.cbExecute)
     self.cbExecute();
@@ -1721,5 +1741,5 @@ anyDataModel.prototype._dbFail = function (context,jqXHR)
     if (self.cbExecute)
       self.cbExecute();
   }
-  return true;
+  return context;
 }; // _dbFail

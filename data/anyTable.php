@@ -54,7 +54,7 @@ require_once "anyTableFactory.php";
  *                },
  *                ...
  *                'grouping':        'tabs',    // Optional
- *                'groupingFor':     '[type]',  // Optional, but mandatory if both 'grouping' and 'id' is specified.
+ *                'groupingForType': '[type]',  // Optional, but mandatory if both 'grouping' and 'id' is specified.
  *                'groupingForId':   '[id]',    // Optional, but mandatory if both 'grouping' and 'id' is specified.
  *                'groupingForName': '[value]', // Optional, but mandatory if both 'grouping' and 'id' is specified.
  *              },
@@ -152,7 +152,7 @@ class anyTable extends dbTable
             $mNameKey           = null,
             $mId                = null, // Non-null if item, null if list
             $mMetaId            = null,
-            $mListFor           = null, // Used by items that have associated lists
+            $mListForType       = null, // Used by items that have associated lists
             $mListForId         = null, // Used by items that have associated lists
             $mData              = null, // List or item data
             $mFilters           = null,
@@ -513,8 +513,8 @@ class anyTable extends dbTable
     if ($this->mId)
       $res = $this->dbSearchItem($this->mData,$this->mIdKeyTable,$this->mId);
     else {
-      $this->mListFor   = null;
-      $this->mListForId = null;
+      $this->mListForType = null;
+      $this->mListForId   = null;
       $res = $this->dbSearchList($this->mData);
     }
     if (!$res)
@@ -678,7 +678,7 @@ class anyTable extends dbTable
     foreach ($this->mPlugins as $i => $plugin) {
       $table = anyTableFactory::create($plugin,$this);
       if ($table) {
-        $table->mListFor     = $this->mType;
+        $table->mListForType = $this->mType;
         $table->mListForId   = $this->mId;
         $table->mListForName = isset($data[$idx]) && isset($data[$idx][$this->mNameKey]) ? $data[$idx][$this->mNameKey] : "";
         $table_data = null;
@@ -692,19 +692,19 @@ class anyTable extends dbTable
           if (!isset($data[$idx]["data"]))
             $data[$idx]["data"] = array();
           $data[$idx]["data"]['grouping']        = "tabs";
-          $data[$idx]["data"]['groupingFor']     = $table->mListFor;
+          $data[$idx]["data"]['groupingForType'] = $table->mListForType;
           $data[$idx]["data"]['groupingForId']   = $table->mListForId;
           $data[$idx]["data"]['groupingForName'] = $table->mListForName;
-          $data[$idx]["data"]["plugin_".$plugin] = array();
-          $data[$idx]["data"]["plugin_".$plugin]["head"] = $plugin;
-          $data[$idx]["data"]["plugin_".$plugin][$table->getNameKey()] = $this->findDefaultHeader($plugin,$data[$idx]["data"]["plugin_".$plugin],true);
+          $data[$idx]["data"]["plugin-".$plugin] = array();
+          $data[$idx]["data"]["plugin-".$plugin]["head"] = $plugin;
+          $data[$idx]["data"]["plugin-".$plugin][$table->getNameKey()] = $this->findDefaultHeader($plugin,$data[$idx]["data"]["plugin-".$plugin],true);
           if (isset($table_data[$plugin]))
-            $data[$idx]["data"]["plugin_".$plugin]["data"] = $table_data[$plugin]["data"];
+            $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data[$plugin]["data"];
           else
           if ($plugin == $this->mType)
-            $data[$idx]["data"]["plugin_".$plugin]["data"] = $table_data;
+            $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data;
           else
-            $data[$idx]["data"]["plugin_".$plugin]["data"] = "empty"; // So that the view can create an empty container
+            $data[$idx]["data"]["plugin-".$plugin]["data"] = "empty"; // So that the view can create an empty container
         }
       }
     } // foreach
@@ -731,7 +731,7 @@ class anyTable extends dbTable
   //
   protected function dbSearchList(&$data,$skipOwnId=false,$flat=false,$simple=false)
   {
-    if ($this->mType=="user" && $this->mListFor=="user")
+    if ($this->mType == "user" && $this->mListForType == "user")
       return true; // We do not have subusers (user table does not have parent_id field)
 
     // Build and execute the full statement
@@ -803,7 +803,7 @@ class anyTable extends dbTable
     if (isset($this->mPlugins)) {
       foreach($this->mPlugins as $i => $plugin) {
         if ($plugin != "group" && $plugin != $this->mType) {
-          if ((isset($this->mListFor) || $plugin == "user")) {
+          if ((isset($this->mListForType) || $plugin == "user")) {
             if (isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin[$plugin])) {
               $linktable = $this->findLinkTableName($plugin);
               if ($this->tableExists($linktable)) {
@@ -835,7 +835,7 @@ class anyTable extends dbTable
     if (isset($this->mPlugins)) {
       foreach($this->mPlugins as $i => $plugin) {
         if ($plugin != "group" && $plugin != $this->mType) {
-          if (isset($this->mListFor) || $plugin == "user") {
+          if (isset($this->mListForType) || $plugin == "user") {
             $lj .= $this->findListLeftJoinOne($cur_uid,$plugin);
           }
         }
@@ -857,7 +857,7 @@ class anyTable extends dbTable
     $metatable_id   = $plugin."_id";
     if ($this->tableExists($linktable)) {
       $lj .= "LEFT JOIN ".$linktable.  " ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->getTableName().".".$this->mIdKeyTable." AS INT) ";
-      if (!isset($this->mListFor) && $plugin=="user" && $cur_uid)
+      if (!isset($this->mListForType) && $plugin == "user" && $cur_uid)
         $lj .= "AND CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$cur_uid." AS INT) "; // Only return results for current user
       if ($this->tableExists($plugintable)) {
         $lj .= "LEFT JOIN ".$plugintable." ON CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$plugintable.         ".".$plugintable_id.  " AS INT) ";
@@ -873,15 +873,15 @@ class anyTable extends dbTable
   protected function findListWhere($skipOwnId=false)
   {
     $where = null;
-    $link_table = $this->findLinkTableName($this->mListFor);
-    if (isset($this->mListFor) && isset($this->mListForId) && $link_table !== null && !$skipOwnId) {
-      $where_id = $link_table.".".$this->mListFor."_id='".$this->mListForId."' ";
+    $link_table = $this->findLinkTableName($this->mListForType);
+    if (isset($this->mListForType) && isset($this->mListForId) && $link_table !== null && !$skipOwnId) {
+      $where_id = $link_table.".".$this->mListForType."_id='".$this->mListForId."' ";
       $where = "WHERE ".$where_id;
     }
     if ($this->mType!="user" && // user table has no parent_id field
-        (isset($this->mListFor) || (isset($this->mId) && $this->mId != ""))) {
+        (isset($this->mListForType) || (isset($this->mId) && $this->mId != ""))) {
       if (isset($this->mId) && $this->mId != "" && isInteger($this->mId) &&
-          (!isset($this->mListFor) || (isset($this->mListFor) && $this->mListFor == $this->mType))) {
+          (!isset($this->mListForType) || (isset($this->mListForType) && $this->mListForType == $this->mType))) {
         $gstr = $this->getTableName().".".$this->mIdKeyTable." IN ( ".
                 "SELECT ".$this->getTableName().".".$this->mIdKeyTable." ".
                 "FROM (SELECT @pv := '$this->mId') ".
@@ -935,7 +935,7 @@ class anyTable extends dbTable
     if ($success) {
       // Get the meta data
       if (!$simple)
-        $this->dbSearchMeta($data,"list",true);
+        $this->dbSearchMeta($data,"list",true); // TODO! WHERE wp_usermeta.user_id IN ({ids})
 
       $this->buildGroupTreeAndAttach($data,"list");
     }
@@ -961,10 +961,10 @@ class anyTable extends dbTable
               : "";
     /* TODO! Untested (left join with link table)
     $left_join  = null;
-    $link_table = $this->findLinkTableName($this->mListFor);
-    if (isset($this->mListFor) && isset($this->mListForId) && $link_table !== null) {
-      if ($this->mListFor != $this->mType && $this->mListFor != "group") {
-        $left_join = "LEFT JOIN ".$link_table." ON ".$link_table.".".$this->mListFor."_id='".$this->mListForId."' ";
+    $link_table = $this->findLinkTableName($this->mListForType);
+    if (isset($this->mListForType) && isset($this->mListForId) && $link_table !== null) {
+      if ($this->mListForType != $this->mType && $this->mListForType != "group") {
+        $left_join = "LEFT JOIN ".$link_table." ON ".$link_table.".".$this->mListForType."_id='".$this->mListForId."' ";
         $where_id = $this->mTableNameMeta.".".$this->mIdKeyMetaTable."=".$link_table.".".$this->mIdKeyMetaTable." ";
         if ($where === null)
           $where  = "WHERE ".$where_id;
@@ -974,7 +974,7 @@ class anyTable extends dbTable
     }
     */
     if ($this->tableExists($this->mTableNameGroupLink)) {
-      $group_id_sel   = $is_list || isset($this->mListFor) ? ",".$this->mTableNameGroupLink.".group_id " : " ";
+      $group_id_sel   = $is_list || isset($this->mListForType) ? ",".$this->mTableNameGroupLink.".group_id " : " ";
       $group_type_sel = /*$this->mType == "group" ? ",any_group.group_type" :*/ "";
       $stmt = "SELECT ".$this->mTableNameMeta.".* ".
               $group_type_sel.
@@ -1093,7 +1093,7 @@ class anyTable extends dbTable
       $item_id = $item_id_table;
       if ($item_id == $this->mIdKeyTable)
         $item_id = $this->mIdKey; // Map id name (e.g. "user_id" and not "ID")
-      if ($item_id == "user_pass") // TODO! "user_pass" is Wordperfect specific
+      if ($item_id == "user_pass") // TODO! "user_pass" is Wordpress specific
         $val = ""; // Never send password to client
       else
       if ($filter === null || (isset($filter[$item_id]) && $filter[$item_id] == 1))
@@ -1343,7 +1343,7 @@ class anyTable extends dbTable
     }
     else {
       if ($is_list && $data_tree) {
-        if ($is_list && !isset($this->mListFor)) { // Add the "other" category
+        if ($is_list && !isset($this->mListForType)) { // Add the "other" category
           if ($data_tree["group"] !== null) {
             foreach ($data_tree["group"] as $gidx => &$group) {
               if (isset($data_tree["group"][$gidx]["group"])) {
@@ -1535,13 +1535,13 @@ class anyTable extends dbTable
   {
     // TODO! Untested
     return null;
-    $lf   = $this->mListFor;
+    $lf   = $this->mListForType;
     $lfid = $this->mListForId;
-    $this->mListFor   = null;
-    $this->mListForId = null;
+    $this->mListForType = null;
+    $this->mListForId   = null;
     $this->dbSearchList($items,false,true); // Search to a flat list
-    $this->mListFor   = $lf;
-    $this->mListForId = $lfid;
+    $this->mListForType = $lf;
+    $this->mListForId   = $lfid;
     //elog("prepareParents,items:".var_export($items,true));
     $sel_arr = array();
     if ($items != null) {
@@ -1632,6 +1632,22 @@ class anyTable extends dbTable
     $this->mId = $this->getLastInsertID($this->getTableName());
     Parameters::set($this->mIdKey,$this->mId);
 
+    // Insert in group table, if group id is given and we have a group table
+    // TODO! Untested
+    if (isset($this->mTableNameGroupLink)) {
+      $gid = Parameters::get("group_id");
+      if ($gid && $gid != ""  && $gid != "nogroup" && $this->mType != "group") {
+        $stmt = "INSERT INTO ".$this->mTableNameGroupLink." (group_id,".$this->mType."_id) ".
+                "VALUES ('".$gid."','".$this->mId."')";
+        //error_log("stmt:".$stmt);
+        if (!$this->query($stmt))
+          return null;
+      }
+    }
+
+    // Insert in association table, if association id is given
+    // TODO! Missing code
+
     // Set result message and return
     if ($this->mNumRowsChanged > 0)
       $this->setMessage($this->mInsertSuccessMsg);
@@ -1648,7 +1664,7 @@ class anyTable extends dbTable
     $n = 0;
     for ($t=0; $t<count($this->mTableFields); $t++) {
       $key = $this->mTableFields[$t];
-      if ($key != $this->mIdKeyTable) { // Do not update the id key ield
+      if ($key != $this->mIdKeyTable) { // Do not update the id key field
         $val = Parameters::get($key);
         //elog("dbPrepareInsertStmt,".$key.":".$val);
         if ($val && $val != "") { // Only allow values that are set (or blank)
@@ -1716,6 +1732,16 @@ class anyTable extends dbTable
       $res = $this->dbUpdateLink();
       if (!$res)
         return null;
+      if (!empty(Parameters::get("add")) && Parameters::get("sea") == "y") {
+        // Search data for the links that were added and return it to the client
+        $updlist = explode(",",Parameters::get("add"));
+        $link_type = Parameters::get("link_type");
+        $table = anyTableFactory::create($link_type,$this);
+        if ($table->dbSearchListFromIds($table->mData,$updlist))
+          return $table->prepareData($table->mData);
+        $this->setError($table->getError());
+        return null;
+      }
     }
     else {
       $this->setError("Illegal parameter value: $upd_what. ");
@@ -1892,31 +1918,37 @@ class anyTable extends dbTable
     }
     $this->mNumRowsChanged = 0;
     $id_key       = $this->mType."_id";
-    $id_key_list  = $link_type."_id";
+    $id_key_link  = $link_type."_id";
     $id           = Parameters::get($id_key);
+    $id_link      = Parameters::get($id_key_link);
+    $list_table   = $this->findLinkTableName($link_type);
     $updlist      = explode(",",Parameters::get("add"));
     $dellist      = explode(",",Parameters::get("del"));
-    $list_table   = $this->findLinkTableName($link_type);
+
     if ($list_table !== null && $list_table !== "" && $link_type != $this->mType) {
       if ($dellist !== null) {
         foreach ($dellist as $delval) {
-          $stmt = "DELETE FROM ".$list_table." WHERE ".$id_key_list ."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
-          //elog("dbUpdateLink(1):".$stmt);
-          if (!$this->query($stmt))
-            return false;
+          if ($delval) {
+            $stmt = "DELETE FROM ".$list_table." WHERE ".$id_key_link."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
+            //elog("dbUpdateLink(1):".$stmt);
+            if (!$this->query($stmt))
+              return false;
+          }
         }
       }
       if ($updlist !== null) {
         foreach ($updlist as $insval) {
-          // Delete old list so as to avoid error message when inserting (insert-or-update)
-          $stmt = "DELETE FROM ".$list_table." WHERE ".$id_key_list ."='".intval($insval)."' AND ".$id_key."='".intval($id)."'";
-          //elog("dbUpdateLink(2):".$stmt);
-          if (!$this->query($stmt))
-            return false;
-          $stmt = "INSERT INTO ".$list_table." (".$id_key_list.",".$id_key.") VALUES (".intval($insval).",".intval($id).")";
-          //elog("dbUpdateLink(3):".$stmt);
-          if (!$this->query($stmt))
-            return false;
+          if ($insval) {
+            // Delete old list so as to avoid error message when inserting (insert-or-update)
+            $stmt = "DELETE FROM ".$list_table." WHERE ".$id_key_link."='".intval($insval)."' AND ".$id_key."='".intval($id)."'";
+            //elog("dbUpdateLink(2):".$stmt);
+            if (!$this->query($stmt))
+              return false;
+            $stmt = "INSERT INTO ".$list_table." (".$id_key_link.",".$id_key.") VALUES (".intval($insval).",".intval($id).")";
+            //elog("dbUpdateLink(3):".$stmt);
+            if (!$this->query($stmt))
+              return false;
+          }
         }
       }
     }
@@ -1924,7 +1956,7 @@ class anyTable extends dbTable
       if ($this->hasParentId()) {
         if ($dellist !== null) {
           foreach ($dellist as $updval) {
-            if ($gid != $id) {
+            if ($delval && $gid != $id) {
               $stmt = "UPDATE ".$this->getTableName()." SET parent_id=null WHERE ".$id_key."='".intval($updval)."'";
               //elog("dbUpdateLink(4):".$stmt);
               if (!$this->query($stmt))
@@ -1934,7 +1966,7 @@ class anyTable extends dbTable
         }
         if ($updlist !== null) {
           foreach ($updlist as $updval) {
-            if ($gid != $id) {
+            if ($updval && $gid != $id) {
               $stmt = "UPDATE ".$this->getTableName()." SET parent_id='".intval($id)."' WHERE ".$id_key."='".intval($updval)."'";
               //elog("dbUpdateLink(5):".$stmt);
               if (!$this->query($stmt))
@@ -1948,6 +1980,110 @@ class anyTable extends dbTable
     return true;
   } // dbUpdateLink
 
+  // TODO! Neccessary? Can we use dbUpdateLink instead?
+  public function dbAddLink()
+  {
+    if (!isset($this->mId) || $this->mId == "") {
+      $this->setError($this->mType." id missing. ");
+      return null;
+    }
+    $add = Parameters::get("add");
+    if (!$add){
+      $this->setError("Don't know what to add. ");
+      return null;
+    }
+    $add_id = Parameters::get($add."_id"); // TODO! id
+    if (!$add_id){
+      $this->setError($add." id missing. ");
+      return null;
+    }
+    // Check if already assigned
+    $link_table = $this->findLinkTableName($add);
+    if ($link_table === null) {
+      $this->setError("Association table not found");
+      return null;
+    }
+    $add_id_key = $add."_id";
+    if ($this->dbTableHasLink($link_table, $add_id_key, $add_id, $this->mIdKey, $this->mId)) {
+      $this->setMessage($this->mJoinedAlreadyMsg,true);
+      return array();
+    }
+    // Not assigned, we can insert
+    if (isset($this->mTableFieldsLeftJoin["user"])) {
+      $stmt = "INSERT INTO ".$this->mTableNameUserLink." (";
+      for ($t=0; $t<count($this->mTableFieldsLeftJoin["user"]); $t++) {
+        $str  = $this->mTableFieldsLeftJoin["user"][$t];
+        $stmt.= Parameters::get($str) && Parameters::get($str) != "" ? $str."," : "";
+      }
+      $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
+      $stmt.= ") VALUES (";
+      for ($t=0; $t<count($this->mTableFieldsLeftJoin["user"]); $t++) {
+        $str  = $this->mTableFieldsLeftJoin["user"][$t];
+        $stmt.= Parameters::get($str) && Parameters::get($str) != "" ? "'".Parameters::get($str)."'," : "";
+      }
+      $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
+      $stmt .= ")";
+      //elog("dbAddLink:".$stmt);
+      if (!$this->query($stmt))
+        return null;
+
+      $this->setMessage($this->mJoinedSuccessMsg);
+    }
+    $data = array();
+    return $this->prepareTypeKindId($data);
+  } // dbAddLink
+
+  // TODO! Neccessary? Can we use dbUpdateLink instead?
+  public function dbRemoveLink()
+  {
+    if (!isset($this->mId) || $this->mId == "") {
+      $this->setError($this->mType." id missing. ");
+      return null;
+    }
+    $rem = Parameters::get("rem");
+    if (!$rem){
+      $this->setError("Don't know what to remove. ");
+      return null;
+    }
+    $rem_id = Parameters::get($rem."_id"); // TODO! id
+    if (!$rem_id){
+      $this->setError($rem." id missing. ");
+      return null;
+    }
+    // Check if already assigned
+    $link_table = $this->findLinkTableName($rem);
+    if ($link_table === null) {
+      $this->setMessage("Association table not found",true);
+      return null;
+    }
+    $rem_id_key = $rem."_id"; // TODO! id
+    if (!$this->dbTableHasLink($link_table, $rem_id_key, $rem_id, $this->mIdKey, $this->mId)) {
+      $this->setMessage($this->mLeftAlreadyMsg);
+      return array();
+    }
+    // Assigned, we can delete
+    $stmt = "DELETE FROM ".$link_table." ".
+            "WHERE ".$rem_id_key."='".$rem_id."' AND ".$this->mIdKey."='".$this->mId."'";
+   //elog("dbRemoveLink:".$stmt);
+    if (!$this->query($stmt))
+      return null;
+
+    $this->setMessage($this->mLeftSuccessMsg);
+
+    $data = array();
+    return $this->prepareTypeKindId($data);
+  } // dbRemoveLink
+
+  protected function dbTableHasLink($tableName,$idName1,$id1,$idName2,$id2)
+  {
+    $stmt = "SELECT count(*) AS num_rows FROM ".$tableName." ".
+            "WHERE ".$idName1."='".$id1."' AND ".$idName2."='".$id2."'";
+    //elog("dbTableHasLink:".$stmt);
+    if (!$this->query($stmt))
+      return false;
+    $row = $this->getNext(true);
+    return ($row !== null && $row["num_rows"] > 0);
+  } // dbTableHasLink
 
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Delete //////////////////////////////////////
