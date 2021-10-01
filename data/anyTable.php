@@ -12,15 +12,17 @@
 if (defined("WP_PLUGIN")) {
   define('ANY_DB_USER_TABLE',    'wp_users');     // Name of user table
   define('ANY_DB_USERMETA_TABLE','wp_usermeta');  // Name of user meta table
-  define('ANY_DB_USER_ID',       'ID');           // Name of user id key in table
-  define('ANY_DB_USER_NAME',     'display_name'); // Name of user name key in table
+  define('ANY_DB_USER_ID',       'ID');           // Name of id key in user table
+  define('ANY_DB_USER_NAME',     'display_name'); // Name of name key in user table
+  define('ANY_DB_USER_META_ID',  'umeta_id');     // Name of id key in user meta table
   require_once "wordpress/wpPermission.php";
 }
 else {
   define('ANY_DB_USER_TABLE',    'any_user');     // Name of user table
   define('ANY_DB_USERMETA_TABLE','any_usermeta'); // Name of user meta table
-  define('ANY_DB_USER_ID',       'user_id');      // Name of user id key in table
-  define('ANY_DB_USER_NAME',     'user_name');    // Name of user name key in table
+  define('ANY_DB_USER_ID',       'user_id');      // Name of id key in user table
+  define('ANY_DB_USER_NAME',     'user_name');    // Name of name key in user table
+  define('ANY_DB_USER_META_ID',  'meta_id');      // Name of id key in user meta table
 }
 require_once "permission.php";
 require_once "anyTableFactory.php";
