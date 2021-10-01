@@ -1269,7 +1269,7 @@ anyDataModel.prototype.dbUpdate = function (options)
 
   // Data used in dbUpdateSuccess method
   options.client_id = options.id;     // Update this id in existing data structure with new id from server
-  options.data      = options.indata; // Clean up this data structure after server returns successfully
+  options.data      = the_data;       // Clean up this data structure after server returns successfully
   options.is_new    = item[options.id].is_new;
 
   if (!options.timeoutSec)
