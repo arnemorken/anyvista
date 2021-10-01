@@ -13,12 +13,14 @@ if (defined("WP_PLUGIN")) {
   define('ANY_DB_USER_TABLE',    'wp_users');     // Name of user table
   define('ANY_DB_USERMETA_TABLE','wp_usermeta');  // Name of user meta table
   define('ANY_DB_USER_ID',       'ID');           // Name of user id key in table
+  define('ANY_DB_USER_NAME',     'display_name'); // Name of user name key in table
   require_once "wordpress/wpPermission.php";
 }
 else {
   define('ANY_DB_USER_TABLE',    'any_user');     // Name of user table
   define('ANY_DB_USERMETA_TABLE','any_usermeta'); // Name of user meta table
   define('ANY_DB_USER_ID',       'user_id');      // Name of user id key in table
+  define('ANY_DB_USER_NAME',     'user_name');    // Name of user name key in table
 }
 require_once "permission.php";
 require_once "anyTableFactory.php";
@@ -793,7 +795,9 @@ class anyTable extends dbTable
     // Always select from group table
     if (isset($this->mTableFieldsGroup)) {
       if ("group" != $this->mType) {
-        if ($this->tableExists($this->mTableNameGroup)) {
+        $linktable = $this->findLinkTableName("group");
+        if ($this->tableExists($this->mTableNameGroup) &&
+            $this->tableExists($linktable)) {
           foreach ($this->mTableFieldsGroup as $field)
             $sl .= ", ".$this->mTableNameGroup.".".$field;
         }
@@ -1344,7 +1348,7 @@ class anyTable extends dbTable
     else {
       if ($is_list && $data_tree) {
         if ($is_list && !isset($this->mListForType)) { // Add the "other" category
-          if ($data_tree["group"] !== null) {
+          if (isset($data_tree["group"]) && $data_tree["group"] !== null) {
             foreach ($data_tree["group"] as $gidx => &$group) {
               if (isset($data_tree["group"][$gidx]["group"])) {
                 $grp = array_values($data_tree["group"][$gidx]["group"])[0];
