@@ -1040,9 +1040,10 @@ function testModel()
               true, "dbUpdate(data) returns true (insert1)");
     setTimeout(function() {
       deepEqual(dm.last_insert_id !== undefined &&
-                dm.data[dm.last_insert_id].is_new === undefined,
+                dm.data[dm.last_insert_id].is_new === undefined &&
+                dm.message == "User created. ",
                 true, "dbUpdate() deletes is_new mark when data is given as model's data");
-      deepEqual(dm.message == "", // TODO! Should return "User created. "
+      deepEqual(dm.message == "User created. ",
                 true, "dbUpdate() creates user");
       start();
     }, millisec);
@@ -1106,7 +1107,7 @@ function testModel()
   });
 
   asyncTest('dbDelete: model with type not in database', 3, function() {
-    let dm = new anyDataModel({type:"foo",search:false,mode:"remote",data:null});
+    let dm = new anyDataModel({type:"foox",search:false,mode:"remote",data:null});
     let res = dm.dbDelete({id:99});
     deepEqual(res,
               true, "dbDelete() returns true");
@@ -1121,7 +1122,7 @@ function testModel()
 
   asyncTest('dbDelete: model with existing type, calling delete with existing id but non-existing type', 3, function() {
     let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:null});
-    let res = dm.dbDelete({type:"foo",id:50}); // user 50 must exist in db user table
+    let res = dm.dbDelete({type:"foox",id:50}); // user 50 must exist in db user table
     deepEqual(res,
               true, "dbDelete() returns true");
     setTimeout(function() {
@@ -1134,10 +1135,10 @@ function testModel()
   });
 
   asyncTest('dbDelete: model type in data structure, but not in database', 3, function() {
-    let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
+    let data = {99:{list:"bar",data:{11:{list:"foox",foz_name:"The foox foz"},
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      66:{list:"user",user_name:"The faz user"}}}};
-    let dm = new anyDataModel({type:"foo",search:false,mode:"remote",data:data});
+    let dm = new anyDataModel({type:"foox",search:false,mode:"remote",data:data});
     let res = dm.dbDelete({id:66});
     deepEqual(res,
               true, "dbDelete() returns true");
@@ -1179,7 +1180,7 @@ function testModel()
       deepEqual(dm.data[34] === undefined, true, "dbUpdate(data) does not insert into memory when data is given as parameter to update only");
       deepEqual(dm.error === "", true, "no error:"+dm.error);
       let new_id = dm.last_insert_id;
-      deepEqual(new_id != null && new_id != undefined,true, "new_id has a value:"+new_id);
+      deepEqual(new_id  != null && new_id != undefined,true, "new_id has a value:"+new_id);
       deepEqual(dm.data != null && dm.data!= undefined,true, "data has a value:"+JSON.stringify(dm.data));
       start();
       stop();
