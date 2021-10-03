@@ -1093,8 +1093,8 @@ function testModel()
     setTimeout(function() {
       deepEqual(dm.data === null,
                 true, "dbDelete() returns no data from db:"+dm.data);
-      deepEqual(dm.error !== "",
-                true, "error is not blank:"+dm.error);
+      deepEqual(dm.message !== "",
+                true, "message is not blank:"+dm.message);
       start();
     }, millisec);
   });
@@ -1169,32 +1169,32 @@ function testModel()
 
   // insert, update, search and delete tests
   asyncTest('dbUpdate and dbDelete: Insert, update, search, view and delete user', 15, function() {
-    let data33 = {33:{list:"user",user_name:"us33"}};
+    let data33 = {33:{list:"user",user_name:"us33",user_pass:"qqq",user_pass_again:"qqq"}};
     let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data33});
     // insert
-    let data34 = {34:{list:"user",user_name:"us34",is_new:true}};
+    let data34 = {34:{list:"user",user_name:"us34",user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
     let res = dm.dbUpdate({id:34,indata:data34}); // insert data
     deepEqual(res, true, "dbUpdate(data) returns true (insert)");
     setTimeout(function() {
       deepEqual(dm.data[34] === undefined, true, "dbUpdate(data) does not insert into memory when data is given as parameter to update only");
       deepEqual(dm.error === "", true, "no error:"+dm.error);
       let new_id = dm.last_insert_id;
-      deepEqual(new_id  !== null,true, "new_id is not null:"+new_id);
-      deepEqual(dm.data !== null,true, "data is not null:"+JSON.stringify(dm.data));
+      deepEqual(new_id != null && new_id != undefined,true, "new_id has a value:"+new_id);
+      deepEqual(dm.data != null && dm.data!= undefined,true, "data has a value:"+JSON.stringify(dm.data));
       start();
       stop();
       // update
       dm.data = null;
       dm.dataInsert({type:"user",id:null,indata:data34});
       deepEqual(dm.data[34] !== null, true, "inserted data with id 34:"+JSON.stringify(dm.data));
-      let data = {[new_id]:{list:"user",user_name:"us1_changed",
-                            dirty:{user_name:"us1_changed"}}};
+      let data = {[new_id]:{list:"user",user_name:"us1_changed",user_pass:"qqq",user_pass_again:"qqq",
+                            dirty:{user_name:"us1_changed",user_pass:"qqq",user_pass_again:"qqq"}}};
       let res = dm.dbUpdate({id:new_id,indata:data});
       deepEqual(res,
                 true, "dbUpdate("+new_id+",data) returns true (update)");
       setTimeout(function() {
         deepEqual(dm.error === "",  true, "no error:"+dm.error);
-        deepEqual(dm.data !== null, true, "data is not null:"+JSON.stringify(dm.data));
+        deepEqual(dm.data != null && dm.data!= undefined, true, "data has a value:"+JSON.stringify(dm.data));
         start();
         stop();
         // search

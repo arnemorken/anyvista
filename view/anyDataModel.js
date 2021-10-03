@@ -1464,7 +1464,7 @@ anyDataModel.prototype.dbUpdateLinkList = function (options)
     console.error("anyDataModel.dbUpdateLinkList: "+i18n.error.TYPE_MISSING);
     return false;
   }
-  let the_link_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
+  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
                ? parseInt(options.id)
                : options.id
                  ? options.id
