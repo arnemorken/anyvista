@@ -49,7 +49,7 @@ function anyGetData($doEcho=false)
       $data["error"]      = $table->getError();
     }
     else { // No table
-      $data["data"] = null;
+      $data["data"]    = null;
       $data["message"] = "";
       $data["error"]   = anyTableFactory::getError();
     }

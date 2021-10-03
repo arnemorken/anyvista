@@ -15,6 +15,7 @@ if (defined("WP_PLUGIN")) {
   define('ANY_DB_USER_ID',       'ID');           // Name of id key in user table
   define('ANY_DB_USER_NAME',     'display_name'); // Name of name key in user table
   define('ANY_DB_USER_META_ID',  'umeta_id');     // Name of id key in user meta table
+  define('ANY_DB_USER_LOGIN',    'user_login');   // Name of user login in user table
   require_once "wordpress/wpPermission.php";
 }
 else {
@@ -23,6 +24,7 @@ else {
   define('ANY_DB_USER_ID',       'user_id');      // Name of id key in user table
   define('ANY_DB_USER_NAME',     'user_name');    // Name of name key in user table
   define('ANY_DB_USER_META_ID',  'meta_id');      // Name of id key in user meta table
+  define('ANY_DB_USER_LOGIN',    'user_name');    // Name of user login in user table
 }
 require_once "permission.php";
 require_once "anyTableFactory.php";
@@ -1258,6 +1260,16 @@ class anyTable extends dbTable
     }
     */
     //
+    // Get the group names
+    //
+    $group_table = anyTableFactory::create("group",$this);
+    $gdata = $group_table
+             ? $group_table->dbGetGroupNames($this->mType)
+             : null;
+    //vlog("buildGroupTreeAndAttach,gdata:",$gdata);
+    if ((empty($gdata) || !isset($gdata["group"])) && $group_table)
+      $this->setMessage($group_table->mError);
+    //
     // Build data tree for all groups
     //
     $this->mRecDepth = 0;
@@ -1267,16 +1279,6 @@ class anyTable extends dbTable
       $data_tree = $data;
     }
     else {
-      //
-      // Get the group names
-      //
-      $group_table = anyTableFactory::create("group",$this);
-      $gdata = $group_table
-               ? $group_table->dbGetGroupNames($this->mType)
-               : null;
-      //vlog("buildGroupTreeAndAttach,gdata:",$gdata);
-      if ((empty($gdata) || !isset($gdata["group"])) && $group_table)
-        $this->setMessage($group_table->mError);
       //
       // Build data tree
       //
@@ -1458,7 +1460,7 @@ class anyTable extends dbTable
           else
           if (isset($data_tree["+".$gid]) && $data_tree["+".$gid] != "")
             $idx = "+".$gid;
-          if ($data_tree[$idx] !== null) {
+          if (isset($idx) && $data_tree[$idx] !== null) {
             if (isset($data_tree[$idx]["data"]) && $data_tree[$idx]["data"] != "") {
               $group_tree[$gid]["head"] = "group";
               if (array_key_exists("data",$group_tree[$gid]) && !isset($group_tree[$gid]["data"]) && $group_tree[$gid]["data"] != "")
@@ -1631,12 +1633,12 @@ class anyTable extends dbTable
       return null;
     $this->mNumRowsChanged += $this->getNumRowsChanged();
 
-    // Insert in meta table
-    $this->dbMetaInsertOrUpdate($this->mId);
-
     // Get the id that was auto-created
     $this->mId = $this->getLastInsertID($this->getTableName());
     Parameters::set($this->mIdKey,$this->mId);
+
+    // Insert in meta table
+    $this->dbMetaInsertOrUpdate($this->mId);
 
     // Insert in group table, if group id is given and we have a group table
     // TODO! Untested
@@ -1659,6 +1661,7 @@ class anyTable extends dbTable
       $this->setMessage($this->mInsertSuccessMsg);
     else
       $this->setMessage($this->mInsertNothingToDo);
+
     $data = array();
     return $this->prepareTypeKindId($data);
   } // dbInsertItem
@@ -1666,10 +1669,10 @@ class anyTable extends dbTable
   protected function dbPrepareInsertStmt()
   {
     // TODO Check for all fields empty
+    $unique_table_fields = array_unique($this->mTableFields);
     $stmt = "INSERT INTO ".$this->getTableName()." (";
     $n = 0;
-    for ($t=0; $t<count($this->mTableFields); $t++) {
-      $key = $this->mTableFields[$t];
+    foreach ($unique_table_fields as $key) {
       if ($key != $this->mIdKeyTable) { // Do not update the id key field
         $val = Parameters::get($key);
         //elog("dbPrepareInsertStmt,".$key.":".$val);
@@ -1681,8 +1684,7 @@ class anyTable extends dbTable
     }
     $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
     $stmt.= ") VALUES (";
-    for ($t=0; $t<count($this->mTableFields); $t++) {
-      $key  = $this->mTableFields[$t];
+    foreach ($unique_table_fields as $key) {
       if ($key != $this->mIdKeyTable) { // Do not update the id key ield
         $val = Parameters::get($key);
         if ($val && $val != "") { // Only allow values that are set (or blank)
@@ -1787,6 +1789,7 @@ class anyTable extends dbTable
       $this->setMessage($this->mUpdateSuccessMsg);
     else
       $this->setMessage($this->mUpdateNothingToDo);
+
     $data = array();
     return $this->prepareTypeKindId($data);
   } // dbUpdateItem
@@ -1797,10 +1800,10 @@ class anyTable extends dbTable
       $this->setError($this->mType.$this->mItemUnexists." ($this->mId). ");
       return null;
     }
+    $unique_table_fields = array_unique($this->mTableFields);
     $stmt = "UPDATE ".$this->getTableName()." SET ";
     $n = 0;
-    for ($t=0; $t<count($this->mTableFields); $t++) {
-      $key = $this->mTableFields[$t];
+    foreach ($unique_table_fields as $key) {
       if ($key != $this->mIdKeyTable) { // Do not update the id key ield
         $val = Parameters::get($key);
         //elog("dbPrepareUpdateStmt,".$key.":".$val);
@@ -1878,7 +1881,7 @@ class anyTable extends dbTable
   {
     if ($id === null || $id == "" || $key === null || $key == "")
       return false;
-    if ($key == "user_login" && ($val === null || $val == ""))
+    if ($key == ANY_DB_USER_LOGIN && ($val === null || $val == ""))
       return false; // Cannot have blank login_name
 
     // Check if item exists
@@ -2104,6 +2107,9 @@ class anyTable extends dbTable
    */
   public function dbDelete()
   {
+    $this->mError = "";
+    $this->mData  = null;
+
     // Delete item(s) from table or file from disk
     $del_what = Parameters::get("del");
     if ($del_what == "ulf") { // Delete file from upload folder
@@ -2111,7 +2117,7 @@ class anyTable extends dbTable
       if ($fname)
         unlink(gUploadPath.$fname);
       else {
-        $this->mError .= "Filename missing for delete. ";
+        $this->setError("Filename missing for delete. ");
         return null;
       }
     }
@@ -2121,9 +2127,6 @@ class anyTable extends dbTable
         $this->setError($err);
         return null;
       }
-      $this->mError = "";
-      $this->mData = null;
-
       $stmt = "DELETE FROM ".$this->getTableName()." WHERE ".$this->mIdKeyTable."='".$this->mId."'";
       //elog("dbDelete:".$stmt);
       if (!$this->query($stmt))
@@ -2131,7 +2134,7 @@ class anyTable extends dbTable
       if ($this->getNumRowsChanged() > 0)
         $this->setMessage($this->mDeleteSuccessMsg);
       else
-        $this->setError($this->mDeleteNothingToDo);
+        $this->setMessage($this->mDeleteNothingToDo);
 
       // Delete from meta table
       $stmt = "DELETE FROM ".$this->mTableNameMeta." WHERE ".$this->mIdKeyMetaTable."='".$this->mId."'";
@@ -2148,9 +2151,9 @@ class anyTable extends dbTable
       }
       // Delete from associated tables
       if (isset($this->mPlugins)) {
-        foreach ($this->mPlugins as $type => $plugin) {
+        foreach ($this->mPlugins as $idx => $plugin) {
           $table = anyTableFactory::create($plugin,$this);
-          if ($this->mType !== $type) {
+          if ($this->mType !== $plugin) {
             $this->dbDeleteAssoc($table);
           }
         }
@@ -2178,7 +2181,7 @@ class anyTable extends dbTable
       return false;
     }
     if (!isset($this->mId) || $this->mId == "" || !is_numeric($this->mId)) {
-      $this->mError .= $this->mType." id missing. ";
+      $this->mError = $this->mType." id missing. ";
       return false;
     }
     $type = $table->getType();
