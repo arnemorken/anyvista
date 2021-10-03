@@ -157,10 +157,11 @@ class userTable extends anyTable
 
   protected function initFilters($filters)
   {
+    $has_perm = is_object($this->mPermission) && $this->mPermission;
     $user_id         = Parameters::get("user_id");
-    $current_user_id = $this->mPermission->current_user_id;
+    $current_user_id = $has_perm ? $this->mPermission->current_user_id : null;
     $thisIsMe        = $user_id && $user_id > 0 && $current_user_id == $user_id;
-    $thisIsAdmin     = $this->mPermission->is_admin;
+    $thisIsAdmin     = $has_perm ? $this->mPermission->is_admin : false;
     $parents         = $this->prepareParents("user","user_id",ANY_DB_USER_LOGIN);
     $status          = $this->prepareSetting("USER_STATUS");
     $privacy         = $this->prepareSetting("USER_PRIVACY");
@@ -184,7 +185,8 @@ class userTable extends anyTable
   protected function dbValidateInsert($validatePassword=true)
   {
     $err = "";
-    if (is_object($this->mPermission) && $this->mPermission && $this->mPermission->is_logged_in && !$this->mPermission->is_admin)
+    $has_perm = is_object($this->mPermission) && $this->mPermission;
+    if ($has_perm && $this->mPermission->is_logged_in && !$this->mPermission->is_admin)
       $err .= "You do not have permission to create users. ";
     $err .= $this->dbValidateInsertUpdate($validatePassword);
     if ($err != "")
@@ -195,7 +197,8 @@ class userTable extends anyTable
   protected function dbValidateUpdate($validatePassword=true)
   {
     $err = "";
-    if ($this->mPermission->is_logged_in && !$this->mPermission->is_admin)
+    $has_perm = is_object($this->mPermission) && $this->mPermission;
+    if ($has_perm && $this->mPermission->is_logged_in && !$this->mPermission->is_admin)
       if ($this->mPermission->current_user_id != Parameters::get($this->mIdKey))
         $err .= "You do not have permission to edit this user. ";
     $err .= $this->dbValidateInsertUpdate($validatePassword);
@@ -315,7 +318,8 @@ class userTable extends anyTable
     if ($key == "user_pass") {
       if ($val && defined("WP_PLUGIN")) {
         wp_set_password($val,$this->mId);
-        if (!$this->mPermission->is_admin)
+        $has_perm = is_object($this->mPermission) && $this->mPermission;
+        if ($has_perm && !$this->mPermission->is_admin)
           wp_set_auth_cookie($this->mId); // Stay logged in
         $this->pw_change = true;
       }
@@ -370,7 +374,8 @@ class userTable extends anyTable
       }
       else {
         $this->mMessage = "User created. ";
-        if (!$this->mPermission->is_admin) { // Dont login as the new user if we are admin
+        $has_perm = is_object($this->mPermission) && $this->mPermission;
+        if ($has_perm && !$this->mPermission->is_admin) { // Dont login as the new user if we are admin
           if (!$this->dbLoginUser())
             $this->mMessage .= "Couldn't log in. ";
         }
