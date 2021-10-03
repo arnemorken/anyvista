@@ -1040,10 +1040,9 @@ function testModel()
               true, "dbUpdate(data) returns true (insert1)");
     setTimeout(function() {
       deepEqual(dm.last_insert_id !== undefined &&
-                dm.data[dm.last_insert_id].is_new === undefined &&
-                dm.message == "User created. ",
+                dm.data[dm.last_insert_id].is_new === undefined,
                 true, "dbUpdate() deletes is_new mark when data is given as model's data");
-      deepEqual(dm.message == "User created. ",
+      deepEqual(dm.message == "User created. " || dm.message == "User created. User logged in. ",
                 true, "dbUpdate() creates user");
       start();
     }, millisec);
