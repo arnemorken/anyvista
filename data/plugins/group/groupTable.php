@@ -130,7 +130,33 @@ class groupTable extends anyTable
   } // findListOrderBy
 
   /////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////// Search /////////////////////////////////////
+  /////////////////////////////// Validate ////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  protected function dbValidateInsert()
+  {
+    $err = "";
+    $name = Parameters::get($this->mNameKey);
+    if (!$name)
+      $err .= "Group name missing. ";
+    $groupType = Parameters::get("group_type");
+    if (!$groupType)
+      $err .= "Group type missing. ";
+    if (strtolower($name) == "admin" || strtolower($name) == "administrator")
+      $err .= $name."' is a reserved name. ";
+    else {
+      if (!$this->dbSearchItem($this->mData,$this->mNameKey,$name)) // TODO! Allow for several groups with same name?
+        return $err;
+      if ($this->mData != null)
+        $err .= "Group '".$name."' already exists. ";
+    }
+    if ($err != "")
+      $this->setError($err);
+    return $err;
+  } // dbValidateInsert
+
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////// Search //////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
   protected function dbSearchItem(&$data,$key,$val,$skipLists=false)
@@ -194,32 +220,6 @@ class groupTable extends anyTable
 
     return $data;
   } // dbSearchGroupNames
-
-  /////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////// Validate ////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////
-
-  protected function dbValidateInsert()
-  {
-    $err = "";
-    $name = Parameters::get($this->mNameKey);
-    if (!$name)
-      $err .= "Group name missing. ";
-    $groupType = Parameters::get("group_type");
-    if (!$groupType)
-      $err .= "Group type missing. ";
-    if (strtolower($name) == "admin" || strtolower($name) == "administrator")
-      $err .= $name."' is a reserved name. ";
-    else {
-      if ($this->dbSearchItem($this->mData,$this->mNameKey,$name) != null) // Should it be allowed to have several groups with same name?
-        return $err;
-      if ($this->mData != null)
-        $err .= "Group '".$name."' already exists. ";
-    }
-    if ($err != "")
-      $this->setError($err);
-    return $err;
-  } // dbValidateInsert
 
 } // class groupTable
 ?>
