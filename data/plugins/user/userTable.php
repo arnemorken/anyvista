@@ -160,17 +160,17 @@ class userTable extends anyTable
     $has_perm = is_object($this->mPermission) && $this->mPermission;
     $user_id         = Parameters::get("user_id");
     $current_user_id = $has_perm ? $this->mPermission->current_user_id : null;
-    $thisIsMe        = $user_id && $user_id > 0 && $current_user_id == $user_id;
-    $thisIsAdmin     = $has_perm ? $this->mPermission->is_admin : false;
+    $is_admin        = $has_perm ? $this->mPermission->is_admin : false;
+    $is_me           = $user_id && $user_id > 0 && $current_user_id == $user_id;
     $parents         = $this->prepareParents("user","user_id",ANY_DB_USER_LOGIN);
     $status          = $this->prepareSetting("USER_STATUS");
     $privacy         = $this->prepareSetting("USER_PRIVACY");
     $discounts       = $this->prepareSetting("DISCOUNTS");
 
-    $this->mFilters["list"]["_HIDEBEGIN_"]     = $thisIsMe || $thisIsAdmin ? 1 : 0;
-    $this->mFilters["list"]["user_pass"]       = $thisIsMe || $thisIsAdmin ? 1 : 0;
-    $this->mFilters["list"]["user_pass_again"] = $thisIsMe || $thisIsAdmin ? 1 : 0;
-    $this->mFilters["list"]["_HIDEEND_"]       = $thisIsMe || $thisIsAdmin ? 1 : 0;
+    $this->mFilters["list"]["_HIDEBEGIN_"]     = $is_me || $is_admin ? 1 : 0;
+    $this->mFilters["list"]["user_pass"]       = $is_me || $is_admin ? 1 : 0;
+    $this->mFilters["list"]["user_pass_again"] = $is_me || $is_admin ? 1 : 0;
+    $this->mFilters["list"]["_HIDEEND_"]       = $is_me || $is_admin ? 1 : 0;
   } // initFilters
 
   public static function prepareGender()
@@ -270,7 +270,7 @@ class userTable extends anyTable
   } // dbValidateDeletePermission
 
   /////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////// Search /////////////////////////////////////
+  /////////////////////////////// Search //////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
   private function dbSearchUserByLogin($userLogin)

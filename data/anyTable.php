@@ -1264,7 +1264,7 @@ class anyTable extends dbTable
     //
     $group_table = anyTableFactory::create("group",$this);
     $gdata = $group_table
-             ? $group_table->dbGetGroupNames($this->mType)
+             ? $group_table->dbSearchGroupNames($this->mType)
              : null;
     //vlog("buildGroupTreeAndAttach,gdata:",$gdata);
     if ((empty($gdata) || !isset($gdata["group"])) && $group_table)
@@ -1371,14 +1371,14 @@ class anyTable extends dbTable
   } // buildGroupTreeAndAttach
 
   // Overridden in group table
-  protected function dbGetGroupNames($type=null)
+  protected function dbSearchGroupNames($type=null)
   {
     // Get group tree and append data to it
     $num = 0;
     $data_tree = array();
     $data_tree["group"] = array();
     $data_tree["group"] = $this->buildDataTree($data_tree["group"],null,false,$num);
-    //vlog("dbGetGroupNames,data_tree:",$data_tree);
+    //vlog("dbSearchGroupNames,data_tree:",$data_tree);
 
     // Add the default "nogroup" group
     if ($type && $type != "") {
@@ -1387,10 +1387,10 @@ class anyTable extends dbTable
       $data_tree["group"]["nogroup"]["group_name"] = $this->findDefaultHeader($type);
       $data_tree["group"]["nogroup"]["head"]       = "group";
     }
-    //vlog("dbGetGroupNames,data_tree:",$data_tree);
+    //vlog("dbSearchGroupNames,data_tree:",$data_tree);
     $this->tdata = $data_tree;
     return $data_tree;
-  } // dbGetGroupNames
+  } // dbSearchGroupNames
 
   protected function buildDataTree(&$flatdata,$parentId,$getPageLinks,&$num)
   {
