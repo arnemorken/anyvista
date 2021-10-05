@@ -39,6 +39,8 @@ define("gDataSource", $_SERVER['DOCUMENT_ROOT'] . "/" . gAnyListFolder . "/" . g
 // jQuery / jQueryUI
 define("gjQueryURL",        gServer            . gThirdpartyFolder . "jquery/");
 define("gjQuery_js",        gjQueryURL         . "jquery-3.6.0.min.js");
+define("gjQueryWidgetURL",  gServer            . gThirdpartyFolder . "jquery/");
+define("gjQueryWidget_js",  gjQueryWidgetURL   . "jquery-widget-1.12.1.min.js");
 
 // Font Awesome
 define("gFontAwesomeURL",   gServer            . gThirdpartyFolder . "fontawesome/");
