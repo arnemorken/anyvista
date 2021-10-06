@@ -18,6 +18,22 @@ Object.size = function (obj)
   return objsize;
 };
 
-let isInt = function (obj) { return !isNaN(obj) && parseInt(Number(obj)) == obj && !isNaN(parseInt(obj,10)); };
+let isInt = function (obj)
+{
+  return !isNaN(obj) && parseInt(Number(obj)) == obj && !isNaN(parseInt(obj,10));
+};
 
-String.prototype.capitalize = function () { return this.charAt(0).toUpperCase() + this.slice(1); };
+String.prototype.capitalize = function ()
+{
+  return this.charAt(0).toUpperCase() + this.slice(1);
+};
+
+let isFunction = function (functionToCheck)
+{
+  if (functionToCheck === undefined)
+    return false;
+  if (typeof functionToCheck == "function")
+    return true;
+  let getType = {};
+  return getType.toString.call(functionToCheck) === "[object Function]";
+};
