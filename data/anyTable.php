@@ -24,7 +24,7 @@ else {
   define('ANY_DB_USER_ID',       'user_id');      // Name of id key in user table
   define('ANY_DB_USER_NAME',     'user_name');    // Name of name key in user table
   define('ANY_DB_USER_META_ID',  'meta_id');      // Name of id key in user meta table
-  define('ANY_DB_USER_LOGIN',    'user_name');    // Name of user login in user table
+  define('ANY_DB_USER_LOGIN',    'user_login');   // Name of user login in user table
 }
 require_once "permission.php";
 require_once "anyTableFactory.php";
@@ -443,7 +443,7 @@ class anyTable extends dbTable
   protected function findDefaultHeader($type,$data=null,$skipOther=false)
   {
     $other = $skipOther ? "" : "Other "; // TODO: i18n
-    return $other.ucfirst($type)."s";    // TODO: i18n
+    return $other.$type."s";             // TODO: i18n
   } // findDefaultHeader
 
   protected function findMetaTableName($pluginType)
