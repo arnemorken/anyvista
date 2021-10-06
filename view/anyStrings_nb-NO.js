@@ -28,5 +28,6 @@ var i18n = {
     ID_MISSING:          "Mangler id. ",
     ID_ILLEGAL:          "Id må være et positivt heltall eller en streng. ",
     ITEM_NOT_FOUND:      "Fant ikke element med id %%. ",
+    FILTER_NOT_FOUND:    "Filter for %% finnes ikke. ",
   },
 };

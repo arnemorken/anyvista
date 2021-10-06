@@ -1,3 +1,6 @@
+/* jshint sub:true */
+/* jshint esversion: 9 */
+/* globals $,i18n,any_defs,isInt, */
 "use strict";
 /**
  ****************************************************************************************
@@ -502,8 +505,8 @@ anyDataModel.prototype.dataSearch = function (options,parent_data,parent_id)
   for (let idx in data) {
     if (data.hasOwnProperty(idx) && data[idx]) {
       let item = null;
-      let dtype = data[idx].list ? data[idx].list : data[idx].item ? data[idx].item : data[idx].head ? data[idx].head : null
-      if (dtype == type || (!dtype && data[idx][name_key])) {
+      let dtype = data[idx].list ? data[idx].list : data[idx].item ? data[idx].item : data[idx].head ? data[idx].head : null;
+          if (dtype == type || (!dtype && data[idx][name_key])) {
         if (id || id === 0) {
           // id search
           let is_int = Number.isInteger(parseInt(idx));
@@ -812,11 +815,11 @@ anyDataModel.prototype.dataUpdate = function (options)
  *              data item to another (for example, remove a user from an event).
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data:      The data structure to update. Optional. Default: `this.data`.
+ *        {Object}  data:      The data structure to update. Optional. Default: `this.data`. TODO!
  *        {String}  type:      The type of the data to update. Mandatory.
  *        {Set}     del:       A list of ids of the items to be deleted. Optional. Default: null.
  *        {Set}     ins:       A list of ids of the items to be inserted. Optional. Default: null.
- *        {Object}  indata:    Contains the selected items to be inserted. Optional. Default: null.
+ *        {Object}  indata:    Contains the selected items to be inserted. Optional. Default: null. TODO!
  *        {integer} insert_id: The id of the item where the selected items should be inserted.
  *                             Mandatory if `ins` and `indata` are given.
  *
@@ -830,7 +833,6 @@ anyDataModel.prototype.dataUpdateLinkList = function (options)
     console.error("anyDataModel.dataUpdateLinkList: "+i18n.error.OPTIONS_MISSING);
     return false;
   }
-  let data      = options.data ? options.data : this.data;
   let link_type = options.link_type;
   if (!link_type) {
     console.error("anyDataModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
@@ -847,7 +849,7 @@ anyDataModel.prototype.dataUpdateLinkList = function (options)
   }
   // Insert items
   if (options.select) {
-    let indata = options.indata;
+  //let indata = options.indata;
     let ins_id = options.insert_id;
     for (let id of options.select) {
       if (!this.dataSearch({ data: this.data,
