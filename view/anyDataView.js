@@ -376,7 +376,7 @@ $.any.DataView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,p
           }
           let curr_type = view._findType(data,prev_type,idc);
           let curr_kind = view._findKind(data,prev_kind,idc);
-          if ((prev_type || curr_type != view.model.type) && prev_type != curr_type)
+          if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type || (prev_type == "group" && view.model.type == "group")))
             view = view.createDataView(parent,data,idc,curr_type,curr_kind); // New type to display, create new view
           if (view)
             view.refreshOne(parent,data,idc,curr_type,curr_kind,edit,"",pdata,pid);
