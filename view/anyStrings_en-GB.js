@@ -17,6 +17,7 @@ var i18n = {
   },
 
   message: {
+    newType:        "New %%",
   },
 
   // Error codes
@@ -27,6 +28,7 @@ var i18n = {
     TYPE_MISSING:        "Type missing. ",
     ID_MISSING:          "Id missing. ",
     ID_ILLEGAL:          "Id must be a positive integer or a string. ",
+    NEW_ID_NOT_FOUND:    "Could not find new id for type %%. ",
     ITEM_NOT_FOUND:      "Could not find item with id %%. ",
     FILTER_NOT_FOUND:    "Filter for %% not found. ",
   },

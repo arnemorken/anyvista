@@ -15,6 +15,7 @@
 define("gServer",           "//localhost/");
 define("gAnyListFolder",    "Prosjekter/testserver/wp-content/plugins/anylist/");
 define("gThirdpartyFolder", "Prosjekter/testserver/javascript/");
+define("gSkin",             "default");
 
 //
 // Do not edit below unless you really know what you are doing.

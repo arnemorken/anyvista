@@ -10,6 +10,8 @@
 <!--
   -- AnyList
   -->
+<link  href="<?php print gAnyListURL;?>view/skin/<?php print gSkin;?>/anylist.css" rel="stylesheet"/>
+
 <script src="<?php print gAnyListURL;?>view/functions.js"></script>
 <script src="<?php print gAnyListURL;?>view/anyDefs.js"></script>
 <script src="<?php print gAnyListURL;?>view/anyStrings_en-GB.js"></script>

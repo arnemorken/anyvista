@@ -17,6 +17,7 @@ var i18n = {
   },
 
   message: {
+    newType:        "Ny %%",
   },
 
   // Error codes
@@ -27,6 +28,7 @@ var i18n = {
     TYPE_MISSING:        "Mangler type. ",
     ID_MISSING:          "Mangler id. ",
     ID_ILLEGAL:          "Id må være et positivt heltall eller en streng. ",
+    NEW_ID_NOT_FOUND:    "Fant ikke ny id for type %%. ",
     ITEM_NOT_FOUND:      "Fant ikke element med id %%. ",
     FILTER_NOT_FOUND:    "Filter for %% finnes ikke. ",
   },
