@@ -888,7 +888,7 @@ class anyTable extends dbTable
     }
     if ($this->mType!="user" && // user table has no parent_id field
         (isset($this->mListForType) || (isset($this->mId) && $this->mId != ""))) {
-      if (isset($this->mId) && $this->mId != "" && isInteger($this->mId) &&
+      if (isset($this->mId) && $this->mId != "" && is_numeric($this->mId) &&
           (!isset($this->mListForType) || (isset($this->mListForType) && $this->mListForType == $this->mType))) {
         $gstr = $this->getTableName().".".$this->mIdKeyTable." IN ( ".
                 "SELECT ".$this->getTableName().".".$this->mIdKeyTable." ".
