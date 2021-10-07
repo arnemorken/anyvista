@@ -97,19 +97,22 @@
 }
 
 /**************************
+ * Buttons
+ **************************/
+
+.any-tool-cancel {
+  float:            right;
+  padding-right:    3px;
+  font-size:        0.8em;
+}
+
+/**************************
  * Plugins
  **************************/
 
 .group_description {
   font-size:    0.9em;
   font-style:   italic;
-}
-
-.any-tool-cancel {
-  display:          inline-block;
-  float:            right;
-  padding-right:    3px;
-  font-size:        0.8em;
 }
 
 /***********************************************************************
