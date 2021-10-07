@@ -1739,7 +1739,9 @@ anyDataModel.prototype._dbFail = function (context,jqXHR)
     return false; // Should never happen
   if (jqXHR) {
     self.error = jqXHR.statusText+" ("+jqXHR.status+"). ";
-    console.error("anyDataModel._dbFail: "+self.error);
+    if (jqXHR.responseText)
+      self.error_extra += jqXHR.responseText;
+    console.error("anyDataModel._dbFail: "+self.error+"\n"+self.error_extra);
     if (self.cbExecute)
       self.cbExecute();
   }
