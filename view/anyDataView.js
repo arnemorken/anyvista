@@ -1697,7 +1697,7 @@ $.any.DataView.prototype._foundNextIdFromDB = function (context,serverdata,optio
 
 $.any.DataView.prototype._doShowItem = function (eventData)
 {
-  let type   = eventData.type;
+  let type   = eventData.head ? eventData.head : eventData.item ? eventData.item : eventData.list ? eventData.list : "";
   let kind   = "item";
   let view   = eventData.view;
   let filter = view.getFilter(type,kind);
