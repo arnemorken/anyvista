@@ -81,7 +81,7 @@ $.widget("any.DataView", {
 
     showHeader:            true,
     showTableHeader:       true,
-
+    showMessages:          true,
     showEmptyRows:         false,
   //showSelectAll:         false, // TODO! NOT IMPLEMENTED
     showButtonAdd:         1, // 0 == do not show, 1 == first cell, 2 == last cell
@@ -91,7 +91,7 @@ $.widget("any.DataView", {
     showButtonLink:        false,
     showButtonDelete:      true,
     showButtonCancel:      true,
-    showButtonNew:         false,
+    showButtonNew:         true,
     showButtonAddLink:     true,
     showButtonLabels:      false,
     useOddEven:            true,
@@ -285,6 +285,34 @@ $.any.DataView.prototype._findKind = function (data,okind,id)
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ * @method showMessages
+ * @description Shows errors and/or messages in the field with id 'this.base_id+"_any_message"'.
+ * @param {Object} modelOrString If a string, the message/error to display.
+ *                               If a model, the model from which to display a message/error.
+ *                               If null, `this.model` is assumed.
+ * @return `this`.
+ */
+$.any.DataView.prototype.showMessages = function (modelOrString)
+{
+  let div_id = this.base_id+"_any_message";
+  let msgdiv = $("#"+div_id);
+  if (msgdiv.length) {
+    msgdiv.empty();
+    if (!modelOrString)
+      modelOrString = this.model;
+    if (typeof modelOrString == "object") {
+      if (modelOrString.error || modelOrString.message)
+        msgdiv.append("<span style='color:red;'>"+modelOrString.error+"</span> "+modelOrString.message);
+    }
+    else
+    if (typeof modelOrString == "string") {
+        msgdiv.append("<span style='color:red;'>"+modelOrString+"</span>");
+    }
+  }
+  return this;
+}; // showMessages
+
+/**
  * @method onModelChange
  * @description Default callback method.
  *              Calls `this.refreshLoop` to refresh the view after model has changed.
@@ -301,6 +329,7 @@ $.any.DataView.prototype.onModelChange = function (model)
     this.model = model;
   }
   this.refreshLoop();
+  this.showMessages(model);
   return this;
 }; // onModelChange
 
@@ -385,7 +414,11 @@ $.any.DataView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,p
         }
       }
     }
-
+    // Refresh bottom toolbar
+    if (!this.options.isSelectable && kind && this.id_stack && this.id_stack.length==1 &&
+        (this.options.showMessages || this.options.showButtonNew)) {
+      this.refreshToolbarBottom(parent,data,this.model.id,type,kind,edit);
+    }
     if (kind == "head")
       --this.options.data_level;
   } // if data
@@ -417,6 +450,64 @@ $.any.DataView.prototype.refreshToolbarTop = function (parent,data,id,type,kind,
     this.item_opening = false;
   }
 }; // refreshToolbarTop
+
+//
+// Display a toolbar for messages and a "new item" button
+//
+$.any.DataView.prototype.refreshToolbarBottom = function (parent,data,id,type,kind,edit)
+{
+  if (!parent || !type || !kind)
+    return null;
+  if (!this.options.showMessages &&
+      !this.options.showButtonNew)
+    return null;
+
+  // Create container
+  let con_id_str = this.id_stack.join("_");
+  let div_id     = this.base_id+"_"+type+"_"+kind+"_"+con_id_str+"_toolbar";
+  let class_id   = "any-toolbar-bottom any-"+kind+"-toolbar any-toolbar-"+this.options.data_level;
+  if ($("#"+div_id).length)
+    $("#"+div_id).remove();
+  let bardiv   = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
+  parent.append(bardiv);
+
+  if (this.options.showMessages) {
+    // Create a message area
+    let opt = { type: type,
+                kind: kind,
+              };
+    this.refreshMessageArea(bardiv,opt);
+  }
+  if (this.options.isEditable && this.options.showButtonNew) {
+    // Create a "new item" button
+    let opt = { data:   data,
+                id:     id, // Find a new id
+                type:   type,
+                kind:   "item",
+                id_str: con_id_str,
+                edit:   true,
+                is_new: true,
+              };
+    this.refreshNewItemButton(bardiv,opt);
+  }
+  return bardiv;
+}; // refreshToolbarBottom
+
+//
+// A message area
+//
+$.any.DataView.prototype.refreshMessageArea = function (parent,opt)
+{
+  let div_id   = this.base_id+"_any_"+opt.type+"_"+opt.kind+"_message";
+  let class_id = "any-message any-"+opt.kind+"-message any-message-"+this.options.data_level;
+  let msgdiv = $("#"+div_id);
+  if (msgdiv.length)
+    msgdiv.empty();
+  else
+    msgdiv = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
+  parent.append(msgdiv);
+  return msgdiv;
+}; // refreshMessageArea
 
 //
 // Refresh header and data for one list entry or one item
@@ -1513,6 +1604,28 @@ $.any.DataView.prototype.refreshCloseItemButton = function (parent,opt)
   return btn;
 }; // refreshCloseItemButton
 
+
+// Button in bottom toolbar for opening a new empty item view
+// By default calls showItem
+$.any.DataView.prototype.refreshNewItemButton = function (parent,opt)
+{
+  let tit_str = this.options.newButtonLabel ? this.options.newButtonLabel : i18n.button.buttonNew+" "+opt.type;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'> "+/*tit_str+*/"</span>" : "";
+  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_new_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-new-icon any-icon pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-plus-circle fa-lg'></i>"+
+              btn_str+
+              "</div>");
+  let fun = this.option("localNewItem")
+            ? this.option("localNewItem")
+            : this.showItem;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  if (parent && parent.length)
+    parent.append(btn);
+  return btn;
+}; // refreshNewItemButton
 ///////////////////////////////////////////////////////////////////////////////
 
 // Process Esc and Enter keys.
@@ -1576,7 +1689,7 @@ $.any.DataView.prototype.showItem = function (event)
 $.any.DataView.prototype._foundNextIdFromDB = function (context,serverdata,options)
 {
   let view = options.context ? options.context : this;
-  view.model.dbSearchNextIdSuccess(serverdata,options);
+  view.model.dbSearchNextIdSuccess(this,serverdata,options);
   let ev = serverdata.JSON_CODE;
   ev.view = view;
   view._doShowItem(ev);

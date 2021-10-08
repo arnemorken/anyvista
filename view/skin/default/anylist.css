@@ -33,8 +33,9 @@
   padding-top:      .4em;
   padding-bottom:   .2em;
   font-size:        1.4em;
-  background:       #666;
+  background:       #777;
   color:            #eee;
+  border-bottom:    1px solid #333;
 }
 .any-header-1 {
   padding-left:     0.9em;
@@ -104,6 +105,27 @@
   float:            right;
   padding-right:    3px;
   font-size:        0.8em;
+}
+
+.any-new-icon {
+  float:            right;
+  padding:          1em;
+  padding-right:    .2em;
+}
+
+/**************************
+ * Toolbars
+ **************************/
+
+.any-toolbar-bottom {
+  width:        800px;
+  margin-top:   1em;
+  border-top:   1px solid #333;
+  background:   #e8e8e8;
+}
+
+.any-message {
+  margin-left:  0.7em;
 }
 
 /**************************
