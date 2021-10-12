@@ -506,7 +506,7 @@ anyDataModel.prototype.dataSearch = function (options,parent_data,parent_id)
     if (data.hasOwnProperty(idx) && data[idx]) {
       let item = null;
       let dtype = data[idx].list ? data[idx].list : data[idx].item ? data[idx].item : data[idx].head ? data[idx].head : null;
-          if (dtype == type || (!dtype && data[idx][name_key])) {
+      if (dtype == type || (!dtype && data[idx][name_key])) {
         if (id || id === 0) {
           // id search
           let is_int = Number.isInteger(parseInt(idx));
@@ -633,14 +633,15 @@ anyDataModel.prototype.dataSearchMaxId = function (type,data)
  *
  *        {Object}  data:   The data structure to insert into.
  *                          Optional. Default: The model's data (`this.data`).
- *        {integer} id:     The id of the item where the new data should be inserted. If null or undefined, the data will be
- *                          inserted at top level of the model's data unless `nid` is given, in which case `nid` will be used
- *                          as the index on the top level.
- *                          Optional. Default: null.
+ *        {integer} id:     The id of the item in `data` where the data in `indata` should be inserted. If null or undefined,
+ *                          the data will be inserted at top level of the model's data, unless `nid` is given, in which case
+ *                          `nid` will be used as the index on the top level.
+ *                          Optional. Default: undefined.
  *        {String}  type:   The type of the item where the new data should be inserted.
  *                          Optional. Default: The model's type (`this.type`).
- *        {Object}  indata: The data to be inserted. Should be on a format that can be recognized by the model.
- *                          See <a href="../modules/anyList.html">`anyList`</a>.
+ *        {Object}  indata: The values to insert into the data structure
+ *                          Should be on a format that can be recognized by the model.
+ *                          See <a href="../modules/PSI.html">`PSI`</a>.
  *                          Mandatory.
  *        {integer} nid:    A new id that may be used when inserting the item:
  *                          - If `nid` is specified and is a string or an integer >= 0, it is used as the id for the inserted
@@ -703,12 +704,12 @@ anyDataModel.prototype.dataInsert = function (options)
     if (nid)
        if (!item[nid])
          item[nid] = {};
-    for (let idx in indata)
-      if (indata.hasOwnProperty(idx))
+    for (let filter_id in indata)
+      if (indata.hasOwnProperty(filter_id))
         if (nid && nid >= 0)
-          item[nid][idx] = indata[idx]; // item[nid] == data
+          item[nid][filter_id] = indata[filter_id];
         else
-          item[idx] = indata[idx]; // item == data
+          item[filter_id] = indata[filter_id];
     return item;
   }
   else {
@@ -742,17 +743,23 @@ anyDataModel.prototype.dataInsert = function (options)
 
 /**
  * @method dataUpdate
- * @description Updates data structure at a place specified by `type` and `id` with the data given in `indata`.
+ * @description Updates data structure at a place specified by `type` and `id` with data in `indata`.
  * @param {Object} options An object which may contain these elements:
  *
  *        {Object}  data:   The data structure to update.
  *                          Optional. Default: The model's data (`this.data`).
- *        {integer} id:     The id of the item where the data should be updated.
+ *        {integer} id:     The id of the item in `data` to update with values from `indata`.
  *                          Mandatory.
- *        {String}  type:   The type of the item where the data should be updated.
+ *        {String}  type:   The type of the item in `data` with id `id`.
  *                          Optional. Default: The model's type (`this.type`).
  *        {Object}  indata: The values to update the data structure with.
- *                          Should be on the format: `indata[filter_id]`.
+ *                          Should be on the format: `indata[filter_id]` where `filter_id` are the
+ *                          values containing new values. For example:
+ *                          indata = { user_name:        "Johhny B. Goode",
+ *                                     user_description: "Musician",
+ *                                   }
+ *                          If an item with the given `id` is found in the structure `data`, it will
+ *                          be updated with the values for `user_name` and `user_description`.
  *                          Mandatory.
  *
  * @return A pointer to the place where the data was updated on success,
@@ -761,8 +768,8 @@ anyDataModel.prototype.dataInsert = function (options)
  * @example
  *      mymodel.dataUpdate({type:"user",id:"38",indata:{user_name:"Foz Baz"}});
  */
-// TODO: Not tested with non-numerical indexes
-// TODO What if type/id combination exists several places in data structure?
+// TODO! Not tested with non-numerical indexes
+// TODO! What if type/id combination exists several places in data structure?
 anyDataModel.prototype.dataUpdate = function (options)
 {
   if (!options || typeof options != "object") {
@@ -783,10 +790,12 @@ anyDataModel.prototype.dataUpdate = function (options)
     console.error("anyDataModel.dataUpdate: "+i18n.error.ID_ILLEGAL);
     return null;
   }
+  if (!indata) {
+    console.error("anyDataModel.dataUpdate: "+i18n.error.UPDATE_DATA_MISSING);
+    return null;
+  }
   if (!data)
-    return null; // Nowhere to insert
-  if (!indata)
-    return null; // TODO Error msg
+    return null; // Nowhere to insert TODO! Should create data structure and insert at top
 
   let item = this.dataSearch({data:data,id:id,type:type});
   if (!item || !item[id])
@@ -803,7 +812,7 @@ anyDataModel.prototype.dataUpdate = function (options)
     }
   }
   if (!Object.size(item[id].dirty))
-    delete item[id].dirty; // Nothing was changed
+    delete item[id].dirty;
   if (this.auto_callback)
     this.cbExecute();
   return item;
@@ -1247,7 +1256,9 @@ anyDataModel.prototype.dbUpdate = function (options)
     return false;
   }
   // Check that we have new or dirty data
-  let the_data = options.indata ? options.indata : this.data;
+  let the_data = options.indata
+                 ? options.indata // Update with data from the given indata
+                 : this.data;     // Update with data from the model
   let item = this.dataSearch({ type: the_type,
                                id:   the_id,
                                data: the_data,
