@@ -101,16 +101,36 @@
  * Buttons
  **************************/
 
+.any-button-text {
+}
+
+.any-tool-button {
+}
+
 .any-tool-cancel {
   float:            right;
   padding-right:    3px;
   font-size:        0.8em;
 }
 
+.any-icon {
+}
+
 .any-new-icon {
   float:            right;
   padding:          1em;
   padding-right:    .2em;
+}
+
+.any-edit-icon {
+  display:  inline-block;
+}
+
+.any-update-icon {
+  display:  inline-block;
+}
+
+.any-new-icon {
 }
 
 /**************************

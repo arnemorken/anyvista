@@ -98,6 +98,10 @@ $.widget("any.DataView", {
 
     // Local methods
     localSelect:           null,
+    localEdit:             null,
+    localUpdate:           null,
+    localNewItem:          null,
+    localCloseItem:        null,
 
     // "Private" and undocumented options:
     subscribe_default:     true, // The default onModelChange method will be subscribed to.
@@ -1046,6 +1050,37 @@ $.any.DataView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,k
     $("#"+td_id).remove();
   let td = $("<td id='"+td_id+"' class='any-td any-"+kind+"-td any-td-first'></td>");
   tr.append(td);
+  if (this.options.isEditable || edit || isEditable) {
+    if (this.options.showButtonEdit) {
+      let edt_opt = { data:       data,
+                      id:         id,
+                      type:       type,
+                      kind:       kind,
+                      id_str:     id_str,
+                      filter:     filter,
+                      isEditable: isEditable,
+                      edit:       edit,
+                      pdata:      pdata,
+                      pid:        pid,
+                    };
+      this.refreshEditButton(td,edt_opt);
+    }
+    if (this.options.showButtonUpdate) {
+      let upd_opt = { indata:     data,
+                      id:         id,
+                      type:       type,
+                      kind:       kind,
+                      filter:     filter,
+                      id_str:     id_str,
+                      is_new:     data && data[id] ? data[id].is_new : false,
+                      isEditable: isEditable,
+                      edit:       edit,
+                      pdata:      pdata,
+                      pid:        pid,
+                    };
+      this.refreshUpdateButton(td,upd_opt);
+    }
+  }
 }; // refreshTableDataFirstCell
 
 $.any.DataView.prototype.refreshTableDataLastCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
@@ -1605,6 +1640,55 @@ $.any.DataView.prototype.refreshCloseItemButton = function (parent,opt)
 }; // refreshCloseItemButton
 
 
+// Edit-button in first list or item table cell
+// By default calls _toggleEdit
+$.any.DataView.prototype.refreshEditButton = function (parent,opt)
+{
+  let tit_str = i18n.button.buttonEdit;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_edit_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-edit-icon any-icon pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-pencil-alt'></i>"+
+              btn_str+
+              "</div>");
+  if (parent && parent.length)
+    parent.append(btn);
+  if (opt.edit)
+    btn.hide();
+  opt.edit = !opt.edit;
+  let fun = this.option("localEdit")
+            ? this.option("localEdit")
+            : this._toggleEdit;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  return btn;
+}; // refreshEditButton
+
+// Update-button in first list or item table cell
+// By default calls dbUpdate
+$.any.DataView.prototype.refreshUpdateButton = function (parent,opt)
+{
+  let tit_str = i18n.button.buttonUpdate;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_update_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-update-icon any-icon pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-check'></i>"+
+              btn_str+
+              "</div>");
+  if (parent && parent.length)
+    parent.append(btn);
+  if (!opt.edit)
+    btn.hide();
+  opt.edit = !opt.edit;
+  let fun = this.option("localUpdate")
+            ? this.option("localUpdate")
+            : this.dbUpdate;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  return btn;
+}; // refreshUpdateButton
 // Button in bottom toolbar for opening a new empty item view
 // By default calls showItem
 $.any.DataView.prototype.refreshNewItemButton = function (parent,opt)
@@ -1626,6 +1710,7 @@ $.any.DataView.prototype.refreshNewItemButton = function (parent,opt)
     parent.append(btn);
   return btn;
 }; // refreshNewItemButton
+
 ///////////////////////////////////////////////////////////////////////////////
 
 // Process Esc and Enter keys.
@@ -1792,6 +1877,113 @@ $.any.DataView.prototype.toggleEdit = function (opt)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+$.any.DataView.prototype.dbUpdate = function (event)
+{
+  if (!this.model)
+    throw i18n.error.MODEL_MISSING;
+  if (!event || !event.data) {
+    console.warn("event or event.data missing. ");
+    return false;
+  }
+  // Validate input data
+  let errstr = this.validateUpdate(event.data);
+  if (errstr) {
+    this.model.error = errstr;
+    console.error(this.model.error);
+    this.showMessages();
+    return false;
+  }
+  let indata = event.data.indata;
+  let id     = event.data.id;
+  let type   = event.data.type;
+  let kind   = event.data.kind;
+  let id_str = event.data.id_str;
+  let pdata  = event.data.pdata;
+  let pid    = event.data.pid;
+//let is_new = event.data.is_new;
+
+  this.model.error = "";
+  if (!id) // Should never happen
+    this.model.error += i18n.error.ID_MISSING;
+  if (!indata || !indata[id]) // Should never happen
+    this.model.error += i18n.error.DATA_MISSING;
+  if (this.model.error) {
+    console.error("System error: "+this.model.error);
+    this.showMessages();
+    return false;
+  }
+
+  // Update model with contents of input fields
+  let filter = this.getFilter(type,kind);
+  let data_values = {};
+  for (let filter_id in filter) {
+    if (filter.hasOwnProperty(filter_id)) {
+      let val = null;
+      let input_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+" .itemEdit";
+      if ($("#"+input_id).length)
+        val = $("#"+input_id).val();
+      else {
+        // Send values marked as dirty to server even if they are not editable
+        input_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+"[dirty='true']";
+        if ($("#"+input_id).length)
+          val = $("#"+input_id).val();
+      }
+      if (val || val == "") {
+        data_values[filter_id] = val;
+        if (filter_id == "parent_id") {
+          let input_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+" .itemSelect option:selected";
+          let pname = $("#"+input_id).text();
+          data_values["parent_name"] = pname;
+        }
+      }
+    }
+  }
+  this.model.dataUpdate({ type:   type,
+                          id:     id,
+                          indata: data_values,
+                       });
+  if (data_values["parent_name"])
+    delete data_values["parent_name"];
+  if (id || id === 0) { // TODO!
+    // Update header for item view
+    let head_item = this.model.dataSearch({ type: type,
+                                            id:   "+0",
+                                         });
+    if (head_item && head_item["+0"]) {
+      head_item["+0"][this.model.name_key] = data_values[this.model.name_key];
+      let con_div = this.getOrCreateMainContainer(null,type,kind,id_str);
+      this.refreshHeader(con_div,this.model.data,"0",type,"head",false,"0",true);
+    }
+    // Make sure the items original model is also updated
+    if (this.options.view && this.options.view != this)
+      this.options.view.model.dataUpdate({ type:   type,
+                                           id:     id,
+                                           indata: data_values,
+                                        });
+  }
+
+  // Update view TODO! Why not just call refreshData()?
+  this.tabs_list = {}; // TODO! Belongs in Tabs class
+  if (kind == "list" || kind == "select") {
+    let tr_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tr";
+    let tr    = $("#"+tr_id);
+    this.refreshListTableDataRow(tr,indata,id,type,kind,false,id_str,pdata,pid);
+  }
+  else {
+    let tr_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tbody";
+    let tr    = $("#"+tr_id);
+    this.refreshItemTableDataRow(tr,indata,id,type,kind,false,id_str,pdata,pid);
+  }
+
+  // Update database
+  return this.model.dbUpdate(event.data);
+}; // dbUpdate
+
+// Override this in derived classes
+$.any.DataView.prototype.validateUpdate = function (data)
+{
+  return "";
+}; // validateUpdate
 
 ///////////////////////////////////////////////////////////////////////////////
 
