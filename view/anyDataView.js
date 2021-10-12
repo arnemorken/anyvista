@@ -1641,7 +1641,7 @@ $.any.DataView.prototype.refreshCloseItemButton = function (parent,opt)
 
 
 // Edit-button in first list or item table cell
-// By default calls _toggleEdit
+// By default calls toggleEdit
 $.any.DataView.prototype.refreshEditButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonEdit;
@@ -1660,7 +1660,7 @@ $.any.DataView.prototype.refreshEditButton = function (parent,opt)
   opt.edit = !opt.edit;
   let fun = this.option("localEdit")
             ? this.option("localEdit")
-            : this._toggleEdit;
+            : this.toggleEdit;
   btn.off("click").on("click",opt,$.proxy(fun,this));
   return btn;
 }; // refreshEditButton
@@ -1775,16 +1775,16 @@ $.any.DataView.prototype._foundNextIdFromDB = function (context,serverdata,optio
 {
   let view = options.context ? options.context : this;
   view.model.dbSearchNextIdSuccess(this,serverdata,options);
-  let ev = serverdata.JSON_CODE;
-  ev.view = view;
-  view._doShowItem(ev);
+  let opt = serverdata.JSON_CODE;
+  opt.view = view;
+  view._doShowItem(opt);
 }; // _foundNextIdFromDB
 
-$.any.DataView.prototype._doShowItem = function (eventData)
+$.any.DataView.prototype._doShowItem = function (opt)
 {
-  let type   = eventData.head ? eventData.head : eventData.item ? eventData.item : eventData.list ? eventData.list : "";
+  let type   = opt.head ? opt.head : opt.item ? opt.item : opt.list ? opt.list : "";
   let kind   = "item";
-  let view   = eventData.view;
+  let view   = opt.view;
   let filter = view.getFilter(type,kind);
   if (!filter) {
     view.model.message = i18n.error.FILTER_NOT_FOUND.replace("%%", type+" "+kind+"");
@@ -1804,21 +1804,21 @@ $.any.DataView.prototype._doShowItem = function (eventData)
   view.main_div = null;
   view.options.data_level = 0;
   view.id_stack     = [...view.root_id_stack];
-  let is_new  = eventData.is_new != undefined ? eventData.is_new : false;
+  let is_new  = opt.is_new != undefined ? opt.is_new : false;
   if (is_new)
     view.options.isDeletable = false;
   if (view.model.mode == "remote" && !is_new) {
     // Remote search, will (normally) call refresh via onModelChange
     let mod_opt = { context: view.model,
-                    id:      eventData.id,
-                    type:    eventData.type,
+                    id:      opt.id,
+                    type:    opt.type,
                   };
     view.model.dbSearch(mod_opt);
   }
   else {
     // Prepare item data for display
-    let id        = eventData.id;
-    let data      = eventData.data;
+    let id        = opt.id;
+    let data      = opt.data;
     let name_key  = view.model.name_key ? view.model.name_key : type+"_name";
     let item_name = data && data[id] && data[id][name_key]
                     ? data[id][name_key]                       // Edit existing
@@ -1864,16 +1864,97 @@ $.any.DataView.prototype.closeItem = function (event)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.DataView.prototype._toggleEdit = function (event)
+$.any.DataView.prototype.toggleEdit = function (event)
 {
-}; // _toggleEdit
-
-$.any.DataView.prototype.toggleEdit = function (opt)
-{
-  let e = {};
-  e.data = opt;
-  this._toggleEdit(e);
+  if (!event || !event.data)
+    return null;
+  return this.doToggleEdit(event.data);
 }; // toggleEdit
+
+$.any.DataView.prototype.doToggleEdit = function (opt)
+{
+  if (!opt)
+    return null;
+  if (this.current_edit && this.current_edit.edit) {
+    opt = this.current_edit;
+    opt.edit = false;
+  }
+  let prefix  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
+  let elem_id = opt.kind == "item"
+                ? this.base_id+"_"+opt.type+"_item_"+opt.id_str+"_tbody"
+                : this.base_id+"_"+opt.type+"_list_"+opt.id_str+"_tr";
+  let elem = $("#"+elem_id);
+  if (elem.length) {
+    if (opt.kind != "item") {
+      if (this.options.onEscRemoveEmpty || this.options.onFocusoutRemoveEmpty) {
+        // Remove if empty
+        let filter_id = this.model && this.model.name_key ? this.model.name_key : opt.type+"_name"; // TODO! Should work for all input fields!
+        let input_id  = prefix+"_"+filter_id+" .itemEdit";
+        let elem_empty = $("#"+input_id);
+        if (this.model && elem_empty.length) {
+          if (!elem_empty.val()) {
+            this.model.dataDelete({ data: opt.data,
+                                    type: opt.type,
+                                    id:   opt.id,
+                                 });
+            elem_empty.parent().parent().remove();
+            this.current_edit = null;
+          }
+        }
+      }
+      this.refreshData(this.element,opt.data,opt.id,opt.type,opt.kind,opt.edit,opt.id_str,opt.pdata,opt.pid);
+    }
+    else {
+      this.refreshItemTableDataRow(elem,opt.data,opt.id,opt.type,opt.kind,opt.edit,opt.id_str,opt.pdata,opt.pid);
+    }
+  }
+  let edit_icon   = prefix+"_edit .any-edit-icon";
+  let update_icon = prefix+"_edit .any-update-icon";
+  let add_icon    = prefix+"_add_icon";
+  let remove_icon = prefix+"_remove_icon";
+  let delete_icon = prefix+"_delete_icon";
+  let cancel_icon = prefix+"_cancel_icon";
+  if (opt.edit) {
+    $("#"+edit_icon).hide();
+    $("#"+update_icon).show();
+    $("#"+add_icon).show();
+    $("#"+remove_icon).hide();
+    $("#"+delete_icon).show();
+    $("#"+cancel_icon).show();
+    this.current_edit = {
+      data:       opt.data,
+      id:         opt.id,
+      type:       opt.type,
+      kind:       opt.kind,
+      filter:     opt.filter,
+      id_str:     opt.id_str,
+      edit:       true,
+      pdata:      opt.pdata,
+      pid:        opt.pid,
+      isEditable: opt.isEditable,
+      is_new:     opt.is_new,
+    };
+    let filter_id = this.model && this.model.name_key ? this.model.name_key : opt.type+"_name";
+    let nameid = prefix+"_"+filter_id+" .itemEdit";
+    let txt = $("#"+nameid);
+    if (txt.length) {
+      // Bind enter key
+      txt.off("keyup");
+      txt.on("keyup", this.current_edit, $.proxy(this._processKeyup,this));
+    }
+  }
+  else {
+    $("#"+edit_icon).show();
+    $("#"+update_icon).hide();
+    $("#"+add_icon).hide();
+    $("#"+remove_icon).show();
+    $("#"+delete_icon).hide();
+    $("#"+cancel_icon).hide();
+    this.current_edit = null;
+    this.showMessages("");
+  }
+  return this;
+}; // doToggleEdit
 
 ///////////////////////////////////////////////////////////////////////////////
 
