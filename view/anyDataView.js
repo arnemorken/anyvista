@@ -100,6 +100,7 @@ $.widget("any.DataView", {
     localSelect:           null,
     localEdit:             null,
     localUpdate:           null,
+    localCancel:           null,
     localNewItem:          null,
     localCloseItem:        null,
 
@@ -919,7 +920,7 @@ $.any.DataView.prototype.refreshListTableDataCells = function (tr,data,id,type,k
         let style_str = disp_str || pln_str ? "style='"+disp_str+pln_str+"'" : "";
         let td  = $("<td id='"+td_id+"' class='any-td any-list-td "+odd_even+" "+class_id+"' "+style_str+"></td>");
         tr.append(td);
-        let str = this.getItem(id,type,kind,id_str,filter_id,filter_key,data[id],edit);
+        let str = this.createCellEntry(id,type,kind,id_str,filter_id,filter_key,data[id],edit);
         td.append(str);
         this.initTableDataCell(td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n);
       }
@@ -1038,7 +1039,7 @@ $.any.DataView.prototype.refreshItemTableDataCells = function (tr,data,id,type,k
   let td3           = $("<td id= '"+td_id+"' class='any-td any-item-val  "+class_id_val +"'></td>");
   tr.append(td2);
   tr.append(td3);
-  let str = this.getItem(id,type,kind,id_str,filter_id,filter_key,data[id],edit);
+  let str = this.createCellEntry(id,type,kind,id_str,filter_id,filter_key,data[id],edit);
   td3.append(str);
   this.initTableDataCell(td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n);
 }; // refreshItemTableDataCells
@@ -1090,6 +1091,21 @@ $.any.DataView.prototype.refreshTableDataLastCell = function (tr,data,id,type,ki
     $("#"+td_id).remove();
   let td = $("<td id='"+td_id+"' class='any-td any-"+kind+"-td any-td-last'></td>");
   tr.append(td);
+  if (this.options.isEditable || edit || isEditable) {
+    let last_opt = { data:       data,
+                     id:         id,
+                     type:       type,
+                     kind:       kind,
+                     id_str:     id_str,
+                     filter:     filter,
+                     isEditable: true,
+                     edit:       edit,
+                     pdata:      pdata,
+                     pid:        pid,
+                   };
+    if (this.options.showButtonCancel && isEditable && edit)
+      this.refreshCancelButton(td,last_opt);
+  }
 }; // refreshTableDataLastCell
 
 $.any.DataView.prototype._rowHasData = function (data,filter)
@@ -1287,7 +1303,7 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
 // Methods that create cell items
 //
 
-$.any.DataView.prototype.getItem = function (id,type,kind,id_str,filter_id,filter_key,data_item,edit)
+$.any.DataView.prototype.createCellEntry = function (id,type,kind,id_str,filter_id,filter_key,data_item,edit)
 {
   if (!filter_id || !filter_key)
     return "";
@@ -1323,7 +1339,7 @@ $.any.DataView.prototype.getItem = function (id,type,kind,id_str,filter_id,filte
   if (!val)
     val = "";
   return val;
-}; // getItem
+}; // createCellEntry
 
 $.any.DataView.prototype.getHtmlStr = function (type,kind,id,val,edit)
 {
@@ -1689,6 +1705,32 @@ $.any.DataView.prototype.refreshUpdateButton = function (parent,opt)
   btn.off("click").on("click",opt,$.proxy(fun,this));
   return btn;
 }; // refreshUpdateButton
+
+// Cancel-button in last list or item table cell
+// By default calls toggleEdit
+$.any.DataView.prototype.refreshCancelButton = function (parent,opt)
+{
+  let tit_str = i18n.button.buttonCancel;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_cancel_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-cancel-icon any-tool-button pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-ban'></i>"+
+              btn_str+
+              "</div>");
+  let fun = this.option("localCancel")
+            ? this.option("localCancel")
+            : this.toggleEdit;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  if (parent && parent.length)
+    parent.append(btn);
+  if (!opt.edit)
+    btn.hide();
+  opt.edit = false;
+  return btn;
+}; // refreshCancelButton
+
 // Button in bottom toolbar for opening a new empty item view
 // By default calls showItem
 $.any.DataView.prototype.refreshNewItemButton = function (parent,opt)
