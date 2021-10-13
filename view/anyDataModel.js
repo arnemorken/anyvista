@@ -795,11 +795,13 @@ anyDataModel.prototype.dataUpdate = function (options)
     return null;
   }
   if (!data)
-    return null; // Nowhere to insert TODO! Should create data structure and insert at top
+    return null; // Nowhere to update TODO! Should create data structure and insert at top
 
   let item = this.dataSearch({data:data,id:id,type:type});
-  if (!item || !item[id])
+  if (!item || !item[id]) {
+    console.error("anyDataModel.dataUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+id));
     return null;
+  }
   if (!item[id].dirty)
     item[id].dirty = {};
   for (let filter_id in indata) {
@@ -1264,7 +1266,7 @@ anyDataModel.prototype.dbUpdate = function (options)
                                data: the_data,
                             });
   if (!item || !item[options.id]) {
-    console.error("anyDataModel.dbUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%", ""+options.id));
+    console.error("anyDataModel.dbUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+options.id));
     return false;
   }
   if (!item[options.id].is_new && !Object.size(item[options.id].dirty)) {
