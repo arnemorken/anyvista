@@ -327,7 +327,7 @@ class userTable extends anyTable
     else
     if ($key == ANY_DB_USER_LOGIN) {
       if (!$val) // Cannot have blank login_name
-        return ",";
+        return "";
     }
     return parent::dbPrepareUpdateStmtKeyVal($key,$val);
   } // dbPrepareUpdateStmtKeyVal
