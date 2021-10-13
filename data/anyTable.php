@@ -137,7 +137,7 @@ require_once "anyTableFactory.php";
  */
 class anyTable extends dbTable
 {
-  protected $mTableDefs = null;
+  protected $mTableDefs = null; // Must be provided by deriving class
 
   protected $mTableName          = null,
             $mTableNameMeta      = null,
@@ -1777,8 +1777,9 @@ class anyTable extends dbTable
     // Update normal table
     $stmt = $this->dbPrepareUpdateStmt();
     //elog("dbUpdateItem:".$stmt);
-    if (!$stmt || !$this->query($stmt))
-      return null;
+    if ($stmt) // May be null if we only update meta fields
+      if (!$this->query($stmt))
+        return null;
     $this->mNumRowsChanged += $this->getNumRowsChanged();
 
     // Update meta table
@@ -1804,7 +1805,7 @@ class anyTable extends dbTable
     $stmt = "UPDATE ".$this->getTableName()." SET ";
     $n = 0;
     foreach ($unique_table_fields as $key) {
-      if ($key != $this->mIdKeyTable) { // Do not update the id key ield
+      if ($key != $this->mIdKeyTable) { // Do not update the id key field
         $val = Parameters::get($key);
         //elog("dbPrepareUpdateStmt,".$key.":".$val);
         if ($val || $val === "") { // Only allow values that are set (or blank)
