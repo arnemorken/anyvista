@@ -406,7 +406,7 @@ $.any.DataView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,p
         if (view && !idc.startsWith("grouping")) {
           if (view.model.error) {
             console.log("Error: "+view.model.error);
-            continue;
+            //continue;
           }
           let curr_type = view._findType(data,prev_type,idc);
           let curr_kind = view._findKind(data,prev_kind,idc);
@@ -503,7 +503,7 @@ $.any.DataView.prototype.refreshToolbarBottom = function (parent,data,id,type,ki
 //
 $.any.DataView.prototype.refreshMessageArea = function (parent,opt)
 {
-  let div_id   = this.base_id+"_any_"+opt.type+"_"+opt.kind+"_message";
+  let div_id   = this.base_id+"_any_message";
   let class_id = "any-message any-"+opt.kind+"-message any-message-"+this.options.data_level;
   let msgdiv = $("#"+div_id);
   if (msgdiv.length)
@@ -1392,7 +1392,7 @@ $.any.DataView.prototype.getLinkStr = function (type,kind,id,val,edit)
   if (edit)
     return this.getTextStr(type,kind,id,val,edit);
   else
-    return "<div class='itemUnedit pointer underline' attr='link'>"+val+"</div>";
+    return "<div class='itemUnedit itemText pointer underline' attr='link'>"+val+"</div>";
 }; // getLinkStr
 
 $.any.DataView.prototype.getEmailStr = function (type,kind,id,val,edit)
@@ -1400,7 +1400,7 @@ $.any.DataView.prototype.getEmailStr = function (type,kind,id,val,edit)
   if (edit)
     return this.getTextStr(type,kind,id,val,edit);
   else
-    return "<div class='itemUnedit pointer underline'><a href='mailto:"+val+"'>"+val+"</a></div>";
+    return "<div class='itemUnedit itemText pointer underline'><a href='mailto:"+val+"'>"+val+"</a></div>";
 }; // getEmailStr
 
 // In edit mode, the input field is modified with a filter
@@ -1824,8 +1824,11 @@ $.any.DataView.prototype._foundNextIdFromDB = function (context,serverdata,optio
 
 $.any.DataView.prototype._doShowItem = function (opt)
 {
+  let data   = opt.data;
+  let id     = opt.id;
   let type   = opt.head ? opt.head : opt.item ? opt.item : opt.list ? opt.list : "";
   let kind   = "item";
+  let is_new = opt.is_new != undefined ? opt.is_new : false;
   let view   = opt.view;
   let filter = view.getFilter(type,kind);
   if (!filter) {
@@ -1846,21 +1849,18 @@ $.any.DataView.prototype._doShowItem = function (opt)
   view.main_div = null;
   view.options.data_level = 0;
   view.id_stack     = [...view.root_id_stack];
-  let is_new  = opt.is_new != undefined ? opt.is_new : false;
   if (is_new)
     view.options.isDeletable = false;
   if (view.model.mode == "remote" && !is_new) {
     // Remote search, will (normally) call refresh via onModelChange
     let mod_opt = { context: view.model,
-                    id:      opt.id,
-                    type:    opt.type,
+                    id:      id,
+                    type:    type,
                   };
     view.model.dbSearch(mod_opt);
   }
   else {
     // Prepare item data for display
-    let id        = opt.id;
-    let data      = opt.data;
     let name_key  = view.model.name_key ? view.model.name_key : type+"_name";
     let item_name = data && data[id] && data[id][name_key]
                     ? data[id][name_key]                       // Edit existing
@@ -2023,7 +2023,7 @@ $.any.DataView.prototype.dbUpdate = function (event)
   let id_str = event.data.id_str;
   let pdata  = event.data.pdata;
   let pid    = event.data.pid;
-//let is_new = event.data.is_new;
+  let is_new = event.data.is_new;
 
   this.model.error = "";
   if (!id) // Should never happen
@@ -2061,10 +2061,16 @@ $.any.DataView.prototype.dbUpdate = function (event)
       }
     }
   }
-  this.model.dataUpdate({ type:   type,
-                          id:     id,
-                          indata: data_values,
-                       });
+  if (!is_new)
+    this.model.dataUpdate({ type:   type,
+                            id:     id,
+                            indata: data_values,
+                         });
+  else {
+    event.data.indata = {};
+    event.data.indata[id] = data_values;
+    event.data.indata[id].is_new = true;
+  }
   if (data_values["parent_name"])
     delete data_values["parent_name"];
   if (id || id === 0) { // TODO!
@@ -2078,14 +2084,20 @@ $.any.DataView.prototype.dbUpdate = function (event)
       this.refreshHeader(con_div,this.model.data,"0",type,"head",false,"0",true);
     }
     // Make sure the items original model is also updated
-    if (this.options.view && this.options.view != this)
-      this.options.view.model.dataUpdate({ type:   type,
-                                           id:     id,
-                                           indata: data_values,
-                                        });
+    if (this.options.view && this.options.view != this) { // TODO! no view here
+      if (!is_new)
+        this.options.view.model.dataUpdate({ type:   type,
+                                             id:     id,
+                                             indata: data_values,
+                                          });
+      else
+        this.options.view.model.dataInsert({ type:   type,
+                                             id:     id,
+                                             indata: data_values,
+                                          });
+    }
   }
-
-  // Update view TODO! Why not just call refreshData()?
+  // Update view
   this.tabs_list = {}; // TODO! Belongs in Tabs class
   if (kind == "list" || kind == "select") {
     let tr_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tr";
@@ -2093,9 +2105,7 @@ $.any.DataView.prototype.dbUpdate = function (event)
     this.refreshListTableDataRow(tr,indata,id,type,kind,false,id_str,pdata,pid);
   }
   else {
-    let tr_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tbody";
-    let tr    = $("#"+tr_id);
-    this.refreshItemTableDataRow(tr,indata,id,type,kind,false,id_str,pdata,pid);
+    this.refreshData();
   }
 
   // Update database
