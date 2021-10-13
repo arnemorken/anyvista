@@ -1508,7 +1508,12 @@ class anyTable extends dbTable
         $data["data"]["+0"]["data"]          = $inData;
       }
       else {
-        $data["data"]["+0"][$this->mNameKey] = $inData["+".$this->mId][$this->mNameKey]; // findDefaultItemHeader
+        if (isset($inData["+".$this->mId][$this->mNameKey]))
+          $data["data"]["+0"][$this->mNameKey] = $inData["+".$this->mId][$this->mNameKey]; // findDefaultItemHeader
+        else {
+          $data["data"]["+0"][$this->mNameKey] = "";
+          $this->setError($this->mNameKey." missing"); // TODO: i18n
+        }
         $data["data"]["+0"]["data"]["+".$this->mId]["item"] = $this->mType;
         $data["data"]["+0"]["data"] = $inData;
       }
@@ -1804,19 +1809,22 @@ class anyTable extends dbTable
     $unique_table_fields = array_unique($this->mTableFields);
     $stmt = "UPDATE ".$this->getTableName()." SET ";
     $n = 0;
+    $to_set = "";
     foreach ($unique_table_fields as $key) {
       if ($key != $this->mIdKeyTable) { // Do not update the id key field
         $val = Parameters::get($key);
         //elog("dbPrepareUpdateStmt,".$key.":".$val);
         if ($val || $val === "") { // Only allow values that are set (or blank)
           $val = htmlentities((string)$val,ENT_QUOTES,'utf-8',FALSE);
-          $stmt .= $this->dbPrepareUpdateStmtKeyVal($key,$val);
+          $to_set .= $this->dbPrepareUpdateStmtKeyVal($key,$val);
           ++$n;
         }
       }
     }
-    $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
-    $stmt.= "WHERE ".$this->mIdKeyTable."='".$this->mId."' ";
+    if ($to_set == "")
+      return null;
+    $to_set[strlen($to_set)-1] = " "; // Replace last "," with " "
+    $stmt.= $to_set." WHERE ".$this->mIdKeyTable."='".$this->mId."' ";
     //elog("dbPrepareUpdateStmt,stmt:".$stmt);
     if ($n == 0) {
       $this->setMessage($this->mUpdateNothingToDo);
