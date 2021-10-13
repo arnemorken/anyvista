@@ -79,6 +79,7 @@ $.widget("any.DataView", {
   //isLinkable:            false, // TODO! NOT IMPLEMENTED
     isSelectable:          false,
 
+    confirmDelete:         true,
     showHeader:            true,
     showTableHeader:       true,
     showMessages:          true,
@@ -100,6 +101,7 @@ $.widget("any.DataView", {
     localSelect:           null,
     localEdit:             null,
     localUpdate:           null,
+    localDelete:           null,
     localCancel:           null,
     localNewItem:          null,
     localCloseItem:        null,
@@ -1103,6 +1105,9 @@ $.any.DataView.prototype.refreshTableDataLastCell = function (tr,data,id,type,ki
                      pdata:      pdata,
                      pid:        pid,
                    };
+    last_opt.isEditable = isEditable;
+    if (this.options.showButtonDelete && this.options.isDeletable && id)
+      this.refreshDeleteButton(td,last_opt);
     if (this.options.showButtonCancel && isEditable && edit)
       this.refreshCancelButton(td,last_opt);
   }
@@ -1706,6 +1711,30 @@ $.any.DataView.prototype.refreshUpdateButton = function (parent,opt)
   return btn;
 }; // refreshUpdateButton
 
+// Delete-button in last list or item table cell
+// By default calls dbDeleteDialog
+$.any.DataView.prototype.refreshDeleteButton = function (parent,opt)
+{
+  let tit_str = i18n.button.buttonDelete;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_delete_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-delete-icon any-tool-button pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-trash-alt'></i>"+
+              btn_str+
+              "</div>");
+  let fun = this.option("localDelete")
+            ? this.option("localDelete")
+            : this.dbDeleteDialog;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  if (parent && parent.length)
+    parent.append(btn);
+  if (!opt.edit)
+    btn.hide();
+  return btn;
+}; // refreshDeleteButton
+
 // Cancel-button in last list or item table cell
 // By default calls toggleEdit
 $.any.DataView.prototype.refreshCancelButton = function (parent,opt)
@@ -2122,6 +2151,109 @@ $.any.DataView.prototype.validateUpdate = function (data)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+/**
+ * @method dbDeleteDialog
+ * @description Deletes an item from memory and database and refreshes view.
+ * @param {Object}  options
+ *
+ * @return this
+ *
+ * @throws {MODEL_MISSING} If `this.model` or `this.model.permission` are null or undefined.
+ */
+$.any.DataView.prototype.dbDeleteDialog = function (event)
+{
+  if (!this.model/* || !this.model.permission*/)
+    throw i18n.error.MODEL_MISSING;
+  if (!event || !event.data)
+    throw i18n.error.DATA_MISSING;
+
+  let data   = event.data.data;
+  let id     = event.data.id;
+  let type   = event.data.type;
+  let kind   = event.data.kind;
+  let id_str = event.data.id_str;
+/*
+  if (type == "user" && this.model.permission.is_admin && parseInt(id) == this.model.permission.current_user_id) {
+    alert("Cannot delete administrator user!");
+    return false;
+  }
+*/
+  let item = this.model.dataSearch({ type: type,
+                                     id:   id,
+                                     data: data,
+                                  });
+  if (!item || !item[id])
+    throw i18n.error.SYSTEM_ERROR; // Should never happen
+
+  if (item[id].is_new || !this.options.confirmDelete) {
+    if (item[id].is_new)
+      event.data.top_view = this.options.view;
+    this.dbDelete(event.data);
+  }
+  else { // Ask for confirmation
+    let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
+    let the_name = item[id][name_key] ? item[id][name_key] : "";
+    let msgstr = event.data.message
+                 ? event.data.message
+                 : i18n.message.deleteByName.replace("%%", the_name);
+    let msg = "<div class='any-confirm-delete-dialog' id='"+this.base_id+"_confirm_delete' style='padding:1em;'>"+
+              msgstr+
+              "</div>";
+    let parent_id = this.main_div.attr("id");
+    if (!parent_id)
+      parent_id = this.current_div_id; // TODO! current_div_id belongs in tabs class!
+    w3_modaldialog({parentId:   parent_id,
+                    elementId:  "",
+                    heading:    i18n.button.buttonDelete,
+                    contents:   msg,
+                    parent_div: this.main_div,
+                    width:      "25em",
+                    ok:         true,
+                    cancel:     true,
+                    okFunction: this.dbDelete,
+                    view:       this,
+                    // Sent to okFunction:
+                    data:       data,
+                    id:         id,
+                    type:       type,
+                    kind:       kind,
+                    id_str:     id_str,
+                  });
+  }
+  return true;
+}; // dbDeleteDialog
+
+$.any.DataView.prototype.dbDelete = function (opt)
+{
+  // Close dialog
+  w3_modaldialog_close(opt);
+
+  if (!this.model)
+    throw i18n.error.MODEL_MISSING;
+
+  let item = this.model.dataSearch(opt);
+  if (!item || !item[opt.id])
+    throw i18n.error.SYSTEM_ERROR; // Should never happen
+
+  // Delete from model
+  let is_new = item[opt.id].is_new;
+  this.model.dataDelete(opt);
+
+  // Delete from database, but only if the item is not new (i.e. exists in db).
+  // TODO! The method must also delete links in link tables
+  if (!is_new)
+    this.model.dbDelete(opt);
+
+  // Update view
+  this.removeFromView(opt);
+
+  // If in an item view, close the view
+  if (this.isItemView)
+    this.closeItem({data:opt});
+
+  return true;
+}; // dbDelete
+
 })($);
 
 /////////////////////////////////////////////////////////////////////////////

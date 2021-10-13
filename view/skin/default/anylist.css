@@ -175,7 +175,13 @@
 .any-update-icon {
   display:  inline-block;
 }
-.any-new-icon {
+.any-delete-icon {
+  display:  inline-block;
+  padding-right:    .2em;
+}
+.any-cancel-icon {
+  display:  inline-block;
+  padding-right:    .2em;
 }
 
 /**************************

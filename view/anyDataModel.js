@@ -641,7 +641,7 @@ anyDataModel.prototype.dataSearchMaxId = function (type,data)
  *                          Optional. Default: The model's type (`this.type`).
  *        {Object}  indata: The values to insert into the data structure
  *                          Should be on a format that can be recognized by the model.
- *                          See <a href="../modules/PSI.html">`PSI`</a>.
+ *                          See <a href="../modules/AnyList.html">`AnyList`</a>.
  *                          Mandatory.
  *        {integer} nid:    A new id that may be used when inserting the item:
  *                          - If `nid` is specified and is a string or an integer >= 0, it is used as the id for the inserted

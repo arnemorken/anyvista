@@ -17,15 +17,18 @@ var i18n = {
     buttonNew:            "Ny",
     buttonEdit:           "Rediger",
     buttonUpdate:         "Lagre",
+    buttonDelete:         "Slett",
     buttonCancel:         "Avbryt",
   },
 
   message: {
     newType:        "Ny %%",
+    deleteByName:   "Vil du slette '%%'?\n\n<br/>Du kan ikke angre denne handlingen.",
   },
 
   // Error codes
   error: {
+    SYSTEM_ERROR:        "Systemfeil. ",
     CALLBACK_MISSING:    "Mangler callback funksjon eller kontekst. ",
     SUCCCESS_CB_MISSING: "Mangler suksess callback for local modus. ",
     MODEL_MISSING:       "Mangler modell. ",

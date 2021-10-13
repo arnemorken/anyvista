@@ -17,15 +17,18 @@ var i18n = {
     buttonNew:            "New",
     buttonEdit:           "Edit",
     buttonUpdate:         "Save",
+    buttonDelete:         "Delete",
     buttonCancel:         "Cancel",
   },
 
   message: {
     newType:        "New %%",
+    deleteByName:   "Do you want to delete '%%'?\n\n<br/>You can not undo this action.",
   },
 
   // Error codes
   error: {
+    SYSTEM_ERROR:        "System error. ",
     CALLBACK_MISSING:    "Callback function or context missing. ",
     SUCCCESS_CB_MISSING: "Success callback missing for local mode. ",
     MODEL_MISSING:       "Model missing. ",
