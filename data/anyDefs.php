@@ -43,6 +43,10 @@ define("gjQuery_js",        gjQueryURL         . "jquery-3.6.0.min.js");
 define("gjQueryWidgetURL",  gServer            . gThirdpartyFolder . "jquery/");
 define("gjQueryWidget_js",  gjQueryWidgetURL   . "jquery-widget-1.12.1.min.js");
 
+// W3CSS
+define("gW3CSSURL",         gServer            . gThirdpartyFolder . "w3css/");
+define("gW3CSS_css",        gW3CSSURL          . "w3.css");
+
 // Font Awesome
 define("gFontAwesomeURL",   gServer            . gThirdpartyFolder . "fontawesome/");
 define("gFontAwesome_css",  gFontAwesomeURL    . "fa.min.css");

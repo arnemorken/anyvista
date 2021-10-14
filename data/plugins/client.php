@@ -4,7 +4,8 @@
 <script src="<?php print gjQuery_js;?>"></script>
 <script src="<?php print gjQueryWidget_js;?>"></script>
 
-<!-- Font Awesome -->
+<!-- W3.CSS and Font Awesome -->
+<link href="<?php print gW3CSS_css;?>"       rel="stylesheet"/>
 <link href="<?php print gFontAwesome_css;?>" rel="stylesheet"/>
 
 <!--
