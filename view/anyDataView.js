@@ -611,9 +611,10 @@ $.any.DataView.prototype.refreshHeader = function (parent,data,id,type,kind,edit
     return null;
   }
   // Create the header "cells"
+  let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null; // TODO! Do this other places in the code too
   let n = 0;
   for (let filter_id in filter) {
-    if (data && data[id] && data[id][filter_id]) {
+    if (d && d[filter_id]) {
       let filter_key = filter[filter_id];
       if (filter_key && filter_key.DISPLAY)
         this.refreshHeaderEntry(header_div,data,id,filter_id,n++);
@@ -658,10 +659,11 @@ $.any.DataView.prototype._emptyHeaderDiv = function (div)
 //
 $.any.DataView.prototype.refreshHeaderEntry = function (header_div,data,id,filter_id,n)
 {
-  if (!header_div || !data || !data[id])
+  let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null; // TODO! Do this other places in the code too
+  if (!header_div || !d)
     return null;
   let stylestr = (n==0) ? "style='display:inline-block;'" : "";
-  let div = $("<div "+stylestr+" class='"+filter_id+"'>"+data[id][filter_id]+"</div>");
+  let div = $("<div "+stylestr+" class='"+filter_id+"'>"+d[filter_id]+"</div>");
   header_div.append(div);
   return div;
 }; // refreshHeaderEntry
@@ -1226,8 +1228,6 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
   if (!parent)
     parent = this.element;
   if (!parent)
-    return null;
-  if (!data)
     return null;
   type = type ? type : this._findType(data,null,id);
   kind = kind ? kind : this._findKind(data,null,id);
