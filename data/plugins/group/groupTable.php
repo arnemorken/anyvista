@@ -89,6 +89,10 @@ class groupTable extends anyTable
     "plugins" => ["group","user"],
   ];
 
+  protected $mInsertSuccessMsg  = "Group created. ",
+            $mUpdateSuccessMsg  = "Group updated. ",
+            $mDeleteSuccessMsg  = "Group deleted. ";
+
   protected $mJoinedAlreadyMsg = "The user is already a member of this group. ",
             $mJoinedSuccessMsg = "Joined group. ",
             $mLeftAlreadyMsg   = "The user is not a member of this group. ",

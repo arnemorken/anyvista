@@ -139,6 +139,11 @@ class userTable extends anyTable
     ],
     "plugins" => ["group","user"],
   ];
+
+  protected $mInsertSuccessMsg  = "User created. ",
+            $mUpdateSuccessMsg  = "User updated. ",
+            $mDeleteSuccessMsg  = "User deleted. ";
+
   private $emailAsLogin          = false,
           $emailOptional         = true,
           $can_change_user_login = true;
@@ -373,7 +378,7 @@ class userTable extends anyTable
         $user_id = null;
       }
       else {
-        $this->mMessage = "User created. ";
+        $this->mMessage = $this->mInsertSuccessMsg;
         $has_perm = is_object($this->mPermission) && $this->mPermission;
         if ($has_perm && !$this->mPermission->is_admin) { // Dont login as the new user if we are admin
           if (!$this->dbLoginUser())
@@ -385,7 +390,7 @@ class userTable extends anyTable
       $user_id = null;
       error_log("Non-Wordpress user handling not implemented, using standard dbInsertItem method. ");
       $res = parent::dbInsertItem();
-      $this->mMessage = "User created. ";
+      $this->mMessage = $this->mInsertSuccessMsg;
       return $res;
     }
     //error_log($this->getError().":".var_export($user_id,true));
