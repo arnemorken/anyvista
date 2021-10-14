@@ -1269,7 +1269,7 @@ anyDataModel.prototype.dbUpdate = function (options)
     console.error("anyDataModel.dbUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+options.id));
     return false;
   }
-  if (!item[options.id].is_new && !Object.size(item[options.id].dirty)) {
+  if (!options.is_new && !Object.size(item[options.id].dirty)) {
     this.message = i18n.error.NOTHING_TO_UPDATE;
     console.warn("anyDataModel.dbUpdate: "+this.message);
     if (this.cbExecute)
@@ -1278,14 +1278,13 @@ anyDataModel.prototype.dbUpdate = function (options)
   }
 
   // Data to update or insert
-  let item_to_send = item[options.id].is_new
+  let item_to_send = options.is_new
                      ? item[options.id]        // insert
                      : item[options.id].dirty; // update
 
   // Data used in dbUpdateSuccess method
   options.client_id = options.id;     // Update this id in existing data structure with new id from server
   options.data      = the_data;       // Clean up this data structure after server returns successfully
-  options.is_new    = item[options.id].is_new;
 
   if (!options.timeoutSec)
     options.timeoutSec = 10;
@@ -1609,7 +1608,7 @@ anyDataModel.prototype._dbUpdateLinkListSuccess = function (context,serverdata,o
 /**
  * @method dbDelete
  * @description Deletes an item from a database table.
- *              TODO! Also deletes any links the item may have in other tables.
+ *              TODO! Check that the server also deletes any links the item may have in other tables.
  * @param {Object} options An object which may contain these elements:
  *
  *        {integer}  id:         The id of the item to delete.
@@ -1658,14 +1657,14 @@ anyDataModel.prototype.dbDelete = function (options)
   this.context = options.context ? options.context : this;
   this.message = "";
   this.error   = "";
-  let self = this;
   if (this.mode == "remote") { // Remote server call
     let url = this.dbDeleteGetURL(options);
     if (!url)
       return false;
+    let self = this;
     $.getJSON(url) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
-      return self.success ? self.success(self,serverdata,options) : false;
+      return self.success ? self.success(self.context,serverdata,options) : false;
     })
     .fail(function(jqXHR,textStatus,error) {
       return self.fail    ? self.fail   (self,jqXHR) : false;
@@ -1673,12 +1672,12 @@ anyDataModel.prototype.dbDelete = function (options)
     return true;
   }
   else {
-    if (!self.success) {
+    if (!this.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
       console.warn("anyDataModel.dbDelete: "+this.message);
       return false;
     }
-    return self.success(this,this,options);
+    return this.success(this,this,options);
   }
 }; // dbDelete
 
