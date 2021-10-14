@@ -2090,16 +2090,10 @@ $.any.DataView.prototype.dbUpdate = function (event)
       }
     }
   }
-  if (!is_new)
-    this.model.dataUpdate({ type:   type,
-                            id:     id,
-                            indata: data_values,
-                         });
-  else {
-    event.data.indata = {};
-    event.data.indata[id] = data_values;
-    event.data.indata[id].is_new = true;
-  }
+  this.model.dataUpdate({ type:   type,
+                          id:     id,
+                          indata: data_values,
+                       });
   if (data_values["parent_name"])
     delete data_values["parent_name"];
   if (id || id === 0) { // TODO!
@@ -2119,21 +2113,31 @@ $.any.DataView.prototype.dbUpdate = function (event)
                                              id:     id,
                                              indata: data_values,
                                           });
-      else
+      else {
+        let dv = {};
+        dv[id] = data_values;
         this.options.view.model.dataInsert({ type:   type,
-                                             id:     id,
-                                             indata: data_values,
+                                             id:     pid,
+                                             indata: dv,
+                                             nid:    id,
                                           });
+        }
     }
   }
-  // Update view
-  this.tabs_list = {}; // TODO! Belongs in Tabs class
+  // Update view TODO! Neccessary for mode == "remote"?
+  let item = this.model.dataSearch({ type: type,
+                                     id:   id,
+                                  });
+  if (item && item[id])
+    delete item[id].is_new; // TODO! Neccessary?
+  //this.tabs_list = {}; // TODO! Belongs in Tabs class
   if (kind == "list" || kind == "select") {
     let tr_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tr";
     let tr    = $("#"+tr_id);
     this.refreshListTableDataRow(tr,indata,id,type,kind,false,id_str,pdata,pid);
   }
   else {
+    this.options.isDeletable = this.options.isEditable;
     this.refreshData();
   }
 
