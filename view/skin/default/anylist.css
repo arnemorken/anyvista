@@ -194,6 +194,39 @@
   font-weight:  normal;
 }
 
+
+/**************************
+ * W3CSS
+ **************************/
+
+.w3-container  {
+  padding:  0;
+}
+
+.w3-modal {
+  color:    #111;
+  z-index:  9999;
+}
+
+.w3-modal-content {
+  padding:  .4em;
+}
+
+.w3-modaldialog-header {
+  font-size:        1.3em;
+  text-decoration:  underline;
+  height:           2em;
+}
+
+.w3-button {
+  background:   #ccc;
+}
+
+.w3-display-topright {
+  background:   #eee;
+}
+
+
 /***********************************************************************
  * Miscellaneous
  ***********************************************************************/

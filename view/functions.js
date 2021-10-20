@@ -37,3 +37,79 @@ let isFunction = function (functionToCheck)
   let getType = {};
   return getType.toString.call(functionToCheck) === "[object Function]";
 };
+
+//
+// Simple modal dialog
+//
+function w3_modaldialog(options)
+{
+  if (!options) {
+    console.log("w3_modaldialog: options missing."); // TODO! i18n
+    return;
+  }
+  let parentId       = options.parentId,
+      elementId      = options.elementId,
+      heading        = options.heading,
+      contents       = options.contents,
+      width          = options.width,
+      ok             = options.ok,
+      cancel         = options.cancel,
+      okFunction     = options.okFunction,
+      cancelFunction = options.cancelFunction,
+      context        = options.context;
+  if (!okFunction)
+    okFunction = w3_modaldialog_close;
+  if (!cancelFunction)
+    cancelFunction = w3_modaldialog_close;
+
+  let dia_id = "moddia_"+parentId+"_"+elementId;
+  $("#"+dia_id).remove();
+  let ok_btn_str    = ok     ? "<button id='"+dia_id+"_ok_btn'     type='button' class='w3-button' style='border:1px solid #aaa;'>Ok</button>" : "";
+  let can_btn_str   = cancel ? "<button id='"+dia_id+"_cancel_btn' type='button' class='w3-button' style='border:1px solid #aaa;'>Cancel</button>" : "";
+  let btn_panel_str = "<div class='w3-container w3-border-top w3-padding-small w3-light-grey'>"+
+                      "&nbsp;"+
+                      ok_btn_str+
+                      "&nbsp;"+
+                      can_btn_str+
+                      "</div>";
+  let con = (typeof contents == "string") ? contents : "<div id='"+parentId+"_dialog'></div>";
+  let str = "<div class='w3-modal' style='z-index:9999;margin-bottom:1em;' id='"+dia_id+"'>"+
+            "<div class='w3-modal-content' style='width:"+width+";border:1px solid #555;overflow-x:auto;'>"+
+            // Header
+            "<header class='w3-container'>"+
+            "<div class='w3-modaldialog-header' style='font-weight:bold;'>"+heading+"&nbsp;"+
+            "<span onclick='$(\"#"+dia_id+"\").remove()' class='w3-button w3-display-topright'>&times;</span>"+
+            "</div>"+
+            "</header>"+
+            // Contents
+            con+
+            // Buttons
+            btn_panel_str+
+            "</div>"+
+            "</div>";
+  let p = $("#"+parentId);
+  p.append(str);
+  $("#"+dia_id+"_ok_btn").on    ("click",context,$.proxy(okFunction,    context,options));
+  $("#"+dia_id+"_cancel_btn").on("click",context,$.proxy(cancelFunction,context,options));
+  $("#"+dia_id+"").css("display","block");
+  // If contents is not a string, asssume it is a jQuery object and append it to the div created above
+  if (typeof contents != "string") {
+    let dia_con = $("#"+parentId+"_dialog");
+    if (dia_con.length) {
+      dia_con.append(context.element);
+      dia_con.css("display","block");
+    }
+  }
+  return dia_id;
+} // w3_modaldialog
+
+// default cancel function
+function w3_modaldialog_close(options)
+{
+  if (!options)
+    return;
+  let parentId  = options.parentId,
+      elementId = options.elementId;
+  let dia_id = "moddia_"+parentId+"_"+elementId;
+  $("#"+dia_id).remove();
+} // w3_modaldialog_close

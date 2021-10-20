@@ -611,6 +611,7 @@ $.any.DataView.prototype.refreshHeader = function (parent,data,id,type,kind,edit
     return null;
   }
   // Create the header "cells"
+  header_div.empty();
   let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null; // TODO! Do this other places in the code too
   let n = 0;
   for (let filter_id in filter) {
@@ -1858,15 +1859,55 @@ $.any.DataView.prototype._doShowItem = function (opt)
   let type   = opt.head ? opt.head : opt.item ? opt.item : opt.list ? opt.list : "";
   let kind   = "item";
   let is_new = opt.is_new != undefined ? opt.is_new : false;
-  let view   = opt.view;
+  let item   = null;
+  if (!is_new)
+    item = this.model.dataSearch({ type: type,
+                                   id:   id,
+                                  });
+  else {
+    // Prepare new item data for display
+    let name_key  = this.model.name_key ? this.model.name_key : type+"_name";
+    let item_name = data && data[id] && data[id][name_key]
+                    ? data[id][name_key]                       // Edit existing
+                    : i18n.message.newType.replace("%%",type); // Edit new
+    item = {
+      "+0": { // Header
+        head: type,
+        [name_key]: item_name,
+        data: {},
+      },
+    };
+    if (is_new) {
+      // Create a new item with empty data for displayable entries
+      item["+0"].data[id] = {};
+      let filter = this.getFilter(type,"item");
+      for (let filter_id in filter)
+        if (filter[filter_id].DISPLAY)
+          item["+0"].data[id][filter_id] = "";
+    }
+    else {
+      // Create a new item filled with data copied from original data structure
+      item["+0"].data[id] = data && data[id] ? $.extend(true, {}, data[id]) : null;
+    }
+    if (item["+0"].data[id]) {
+      if (item["+0"].data[id].list)
+        delete item["+0"].data[id].list;
+      if (item["+0"].data[id].head)
+        delete item["+0"].data[id].head;
+      item["+0"].data[id].item   = type;
+      item["+0"].data[id].is_new = true;
+    }
+  }
+  let view = this.createDataView(opt.view,item,id,type,kind); // New type to display, create new view
+  if (!view || !view.options || !view.options.top_view) {
+    console.warn("View missing. "); // Should never happen TODO! i18n
+   return false;
+  }
   let filter = view.getFilter(type,kind);
   if (!filter) {
-    view.model.message = i18n.error.FILTER_NOT_FOUND.replace("%%", type+" "+kind+"");
+    this.model.message = i18n.error.FILTER_NOT_FOUND.replace("%%", type+" "+kind+"");
     console.warn(this.model.message);
-    return false;
-  }
-  if (!view || !view.options || !view.options.top_view) {
-    console.warn("View missing. "); // TODO! i18n
+    this.showMessages();
     return false;
   }
   // Create a new display area and display the item data
@@ -1878,8 +1919,10 @@ $.any.DataView.prototype._doShowItem = function (opt)
   view.main_div = null;
   view.options.data_level = 0;
   view.id_stack     = [...view.root_id_stack];
-  if (is_new)
+  if (is_new) {
     view.options.isDeletable = false;
+    view.options.isRemovable = false;
+  }
   if (view.model.mode == "remote" && !is_new) {
     // Remote search, will (normally) call refresh via onModelChange
     let mod_opt = { context: view.model,
@@ -1889,39 +1932,8 @@ $.any.DataView.prototype._doShowItem = function (opt)
     view.model.dbSearch(mod_opt);
   }
   else {
-    // Prepare item data for display
-    let name_key  = view.model.name_key ? view.model.name_key : type+"_name";
-    let item_name = data && data[id] && data[id][name_key]
-                    ? data[id][name_key]                       // Edit existing
-                    : i18n.message.newType.replace("%%",type); // Edit new
-    let temp_item = {
-      "+0": { // Header
-        head: type,
-        [name_key]: item_name,
-        data: {},
-      },
-    };
-    if (is_new) {
-      // Create a new item with empty data for displayable entries
-      temp_item["+0"].data[id] = {};
-      for (let filter_id in filter)
-        if (filter[filter_id].DISPLAY)
-          temp_item["+0"].data[id][filter_id] = "";
-    }
-    else {
-      // Create a new item filled with data copied from original data structure
-      temp_item["+0"].data[id] = data && data[id] ? $.extend(true, {}, data[id]) : null;
-    }
-    if (temp_item["+0"].data[id]) {
-      if (temp_item["+0"].data[id].list)
-        delete temp_item["+0"].data[id].list;
-      if (temp_item["+0"].data[id].head)
-        delete temp_item["+0"].data[id].head;
-      temp_item["+0"].data[id].item   = type;
-      temp_item["+0"].data[id].is_new = is_new;
-    }
     // Local refresh
-    view.refreshLoop(con_div,temp_item,"+0",type,"item");
+    view.refreshLoop(con_div,item,"+0",type,"item");
   } // else
   return true;
 }; // _doShowItem
@@ -2095,7 +2107,7 @@ $.any.DataView.prototype.dbUpdate = function (event)
                           indata: data_values,
                        });
   if (data_values["parent_name"])
-    delete data_values["parent_name"];
+    delete data_values["parent_name"]; // TODO! Why?
   if (id || id === 0) { // TODO!
     // Update header for item view
     let head_item = this.model.dataSearch({ type: type,
@@ -2104,7 +2116,7 @@ $.any.DataView.prototype.dbUpdate = function (event)
     if (head_item && head_item["+0"]) {
       head_item["+0"][this.model.name_key] = data_values[this.model.name_key];
       let con_div = this.getOrCreateMainContainer(null,type,kind,id_str);
-      this.refreshHeader(con_div,this.model.data,"0",type,"head",false,"0",true);
+      this.refreshHeader(con_div,this.model.data,"0",type,"head",false,"0",true); // TODO! Does not work!
     }
     // Make sure the items original model is also updated
     if (this.options.view && this.options.view != this) { // TODO! no view here
@@ -2163,6 +2175,7 @@ $.any.DataView.prototype.validateUpdate = function (data)
  * @return this
  *
  * @throws {MODEL_MISSING} If `this.model` or `this.model.permission` are null or undefined.
+ * @throws {DATA_MISSING}
  */
 $.any.DataView.prototype.dbDeleteDialog = function (event)
 {
@@ -2204,19 +2217,18 @@ $.any.DataView.prototype.dbDeleteDialog = function (event)
               msgstr+
               "</div>";
     let parent_id = this.main_div.attr("id");
-    if (!parent_id)
-      parent_id = this.current_div_id; // TODO! current_div_id belongs in tabs class!
+    //if (!parent_id)
+      //parent_id = this.current_div_id; // TODO! current_div_id belongs in tabs class!
     w3_modaldialog({parentId:   parent_id,
                     elementId:  "",
                     heading:    i18n.button.buttonDelete,
                     contents:   msg,
-                    parent_div: this.main_div,
                     width:      "25em",
                     ok:         true,
                     cancel:     true,
                     okFunction: this.dbDelete,
-                    view:       this,
-                    // Sent to okFunction:
+                    context:    this,
+                    // Sent to okFunction dbDelete:
                     data:       data,
                     id:         id,
                     type:       type,
@@ -2239,24 +2251,82 @@ $.any.DataView.prototype.dbDelete = function (opt)
   if (!item || !item[opt.id])
     throw i18n.error.SYSTEM_ERROR; // Should never happen
 
-  // Delete from model
   let is_new = item[opt.id].is_new;
-  this.model.dataDelete(opt);
 
-  // Delete from database, but only if the item is not new (i.e. exists in db).
-  // TODO! The method must also delete links in link tables
-  if (!is_new)
-    this.model.dbDelete(opt);
+  // Delete from model
+  // If deleting an item (as opposed to a list entry), we must also delete from a potential top view
+  if (opt.kind == "item") {
+    this.model.data = null;
+    if (this.options.top_view && this.options.top_view.model) {
+      let top_model = this.options.top_view.model;
+      opt.success = top_model._dbDeleteSuccess;
+      opt.context = top_model;
+      top_model.dataDelete({id:opt.id,type:opt.type});
+    }
+  }
+  else {
+    opt.success = null;
+    opt.context = null;
+    this.model.dataDelete(opt);
+  }
 
   // Update view
   this.removeFromView(opt);
 
   // If in an item view, close the view
-  if (this.isItemView)
+  if (opt.kind == "item")
     this.closeItem({data:opt});
+
+  // Delete from database, but only if the item is not new (i.e. exists in db).
+  if (!is_new)
+    this.model.dbDelete(opt);
 
   return true;
 }; // dbDelete
+
+// Remove a row (and subrows, id any) from a list, or the main container of an item
+// Must be called after deleting or removing data.
+$.any.DataView.prototype.removeFromView = function (opt)
+{
+  let data   = opt.data;
+  let id     = opt.id;
+  let type   = opt.type;
+  let kind   = opt.kind;
+  let id_str = opt.id_str;
+
+  if (kind == "list" || kind == "select") {
+    let elem_id = this.base_id+"_"+type+"_"+kind+"_"+id_str +"_tr";
+    let tr = $("#"+elem_id);
+    if (tr.length)
+      tr.remove();
+    // Remove subrows, if any
+    let item = this.model.dataSearch({ data: data,
+                                       id:   id,
+                                       type: type,
+                                    });
+    if (!item || !item[id])
+      return false;
+    if (item[id].data) {
+      for (let nid in item[id].data) {
+        if (item[id].data.hasOwnProperty(nid)) {
+          let the_id = Number.isInteger(parseInt(nid)) ? parseInt(nid) : nid;
+          let elem_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+the_id+"_tr";
+          let tr      = $("#"+elem_id);
+          if (tr.length)
+            tr.remove();
+        }
+      }
+    }
+  }
+  else
+  if (kind == "item") {
+    let elem_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_container";
+    let con = $("#"+elem_id);
+    if (con.length && con.parent().length && con.parent().parent().length)
+      con.parent().parent().remove();
+  }
+  return this;
+}; // removeFromView
 
 })($);
 

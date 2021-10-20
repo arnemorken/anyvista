@@ -19,7 +19,7 @@ var userDataModel = function (options)
 {
   this.type     = "user";
   this.id_key   = "user_id";
-  this.name_key = "display_name";
+  this.name_key = "user_name";
   anyDataModel.call(this,options);
 };
 
