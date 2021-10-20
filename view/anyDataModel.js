@@ -21,10 +21,10 @@
  * The model should have a type (e.g. `type = "user"`), an id key (e.g. `id_key = "user_id"`) and a name
  * key (e.g. `name_key = "user_name"`). If `id_key` or `name_key` is omitted, they are constructed from
  * `type` (for example will type "foo" give rise to id_key "foo_id" and name_key "foo_name"). If no type
- * is given, the model cannot be searched, synchronized with database etc. If the model contains data for
- * an item (which may or may not contain any kind of subdata), the `id` property should be set to the id
- * of the item and either `this.data[id]` or `this.data[hdr_id].data[id]` should exist (where hdr_id is
- * the id of a single `head` entry).
+ * is specified, the model cannot be searched, synchronized with database etc. If the model contains data
+ * for an item (which may or may not contain any kind of subdata), the `id` property should be set to the
+ * if of the item and either `this.data[id]` or `this.data[hdr_id].data[id]` should exist (where hdr_id
+ * is the id of a single `head` entry).
  *
  * If used in connection with a database, then `mode` should be set to "remote" (see below). `type` will
  * then correspond to a database table and `id_key` to an id column in that table.
@@ -285,7 +285,7 @@ anyDataModel.prototype._dataInitSelect = function ()
 
 /**
  * @method dataInit
- * @description Set the model's data, such as type, data and more with the given options or to
+ * @description Set the model's data, such as type, data and more with the specified options or to
  *              default values. Called by the constructor and the success method of `dbSearch`.
  * @param {Object} options An object containing data with which to initialize the model.
  *                         If the encapsulation `options.JSON_CODE` has been set, it will be removed
@@ -456,11 +456,11 @@ anyDataModel.prototype._getDataSourceName = function ()
  *                        Optional. Default: null.
  *        {String}  type: The type of the data to search for.
  *                        Optional. Default: The model's type (`this.type`).
- *        {boolean} parent: If true, search for parent of the given id.
+ *        {boolean} parent: If true, search for parent of the item with the specified id.
  *
  * @return If id is specified and parent is false: A pointer to the item found, or null if not found or on error.
  *         If id is specified and parent is true: A pointer to the parent of the item found, or null if not found or on error.
- *         If id is not specified: A new set of pointers to all the items of the given type (might be empty if none found).
+ *         If id is not specified: A new set of pointers to all the items of the specified type (might be empty if none found).
  *
  * @example
  *      mymodel.dataSearch({type:"user",id:"38"});
@@ -545,7 +545,7 @@ anyDataModel.prototype.dataSearch = function (options,parent_data,parent_id)
 
 /**
  * @method dataSearchNextId
- * @description Sets `this.max` to the largest id for the given type in the in-memory data structure
+ * @description Sets `this.max` to the largest id for the specified type in the in-memory data structure
  *              and returns the next id (i.e. `this.max + 1`). Will ignore non-numerical indexes.
  * @param {String} type: The type of the data to search for.
  *                       Optional. Default: The model's type (`this.type`).
@@ -566,7 +566,7 @@ anyDataModel.prototype.dataSearchNextId = function (type,data)
 
 /**
  * @method dataSearchMaxId
- * @description Sets `this.max` to the largest id for the given type in the in-memory data structure
+ * @description Sets `this.max` to the largest id for the specified type in the in-memory data structure
  *              and returns this.max. Will ignore non-numerical indexes.
  * @param {String} type: The type of the data to search for.
  *                       Optional. Default: The model's type (`this.type`).
@@ -604,7 +604,7 @@ anyDataModel.prototype.dataSearchMaxId = function (type,data)
     if (type == dtype)
       this.max = Math.max(this.max,max);
   }
-  // Should also be bigger than biggest id of given type
+  // Should also be bigger than biggest id of specified type
   let name_key = type == this.type
                  ? (this.name_key ? this.name_key : type+"_name")
                  : type+"_name";
@@ -628,31 +628,40 @@ anyDataModel.prototype.dataSearchMaxId = function (type,data)
 
 /**
  * @method dataInsert
- * @description Inserts `indata` into the data structure at a place specified by `type`, `id` and possibly ´nid´.
+ * @description Inserts `indata` into the data structure at a place specified by `type`, `id`
+ *              and optionally ´new_id´. If the type/id combination exists several places in
+ *              the data structure, only the first place found is used.
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data:   The data structure to insert into.
- *                          Optional. Default: The model's data (`this.data`).
- *        {integer} id:     The id of the item in `data` where the data in `indata` should be inserted. If null or undefined,
- *                          the data will be inserted at top level of the model's data, unless `nid` is given, in which case
- *                          `nid` will be used as the index on the top level.
- *                          Optional. Default: undefined.
- *        {String}  type:   The type of the item where the new data should be inserted.
- *                          Optional. Default: The model's type (`this.type`).
- *        {Object}  indata: The values to insert into the data structure
- *                          Should be on a format that can be recognized by the model.
+ *        {Object}  indata: The values to insert into the data structure.
+ *                          Must be on a format that can be recognized by the model.
  *                          See <a href="../modules/AnyList.html">`AnyList`</a>.
  *                          Mandatory.
- *        {integer} nid:    A new id that may be used when inserting the item:
- *                          - If `nid` is specified and is a string or an integer >= 0, it is used as the id for the inserted
- *                            data item. Data that may exist at the position specified by nid is overwritten.
- *                            In this case the indata will be inserted like this: `item[id].data[nid] = indata[nid]`.
- *                          - If `nid` is < 0, a new id is created by `dataSearchNextId` (if `this.mode == "local"`) or by
- *                            dbSearchNextId` (if `this.mode == "remote"` - that is, we will ask the database for a new id)
- *                            and the indata will be inserted like this: `item[id].data[new_id] = indata`. Note that in
- *                            this case the indata should not be indexed (i.e. use {type:"foo"} rather than {38:{type:"foo"}}.
- *                          - If `nid` is not specified, the indata will be inserted like this: `item[id].data[idx] = indata[idx]`
- *                            for all `idx` in `indata`.
+ *        {Object}  data:   The data structure to insert into.
+ *                          Optional. Default: The model's data (`this.data`).
+ *        {String}  type:   The type of the item where the new data should be inserted (i.e. the type of
+ *                          the item with id `id`.)
+ *                          Optional. Default: The model's type (`this.type`).
+ *        {integer} id:     The id of the item in `data` where `indata` should be inserted.
+ *                          If id is specified but not found in the data structure, it is an error.
+ *                          If id is null or undefined, the data will be inserted like this:
+ *                          - If `new_id` is not specified:
+ *                            `data = indata`
+ *                          - If `new_id` is specified:
+ *                            `data[new_id] = indata[new_id]`
+ *                          Optional. Default: undefined.
+ *        {integer} new_id: If specified, indicates a new id that will be used when inserting the item:
+ *                          - If `new_id` is specified, it is used as the id for the
+ *                            inserted data item. Data that may already exist at the position specified
+ *                            by new_id is overwritten. In this case `indata` will be inserted like this:
+ *                            `item[id].data[new_id] = indata[new_id]`.
+ *                          - If `new_id` is < 0, a new id is created by `dataSearchNextId` the indata will
+ *                            be inserted like this:
+ *                            `item[id].data[new_id] = indata`.
+ *                            Note that in this case the indata must not be indexed (i.e. use {type:"foo"}
+ *                            rather than {38:{type:"foo"}}.
+ *                          - If `new_id` is not specified, the indata will be inserted like this:
+ *                           `item[id].data = indata`.
  *                          Optional. Default: null.
  *
  * @return A pointer to the place where the indata item was inserted on success, or null if the place was not found or on error.
@@ -661,80 +670,81 @@ anyDataModel.prototype.dataSearchMaxId = function (type,data)
  *      mymodel.dataInsert({type:"user",id:"38",indata:{user_name:"Foo Bar"}});
  */
 // TODO: Not tested with non-numerical indexes
-// TODO What if type/id combination exists several places in data structure?
 anyDataModel.prototype.dataInsert = function (options)
 {
   if (!options || typeof options != "object") {
     console.error("anyDataModel.dataInsert: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
-  let data   = options.data ? options.data : this.data;
-  let id     = options.id;
-  let type   = options.type ? options.type : this.type;
-  let indata = options.indata;
-  let nid    = options.nid;
+  let indata   = options.indata;
+  let the_data = options.data ? options.data : this.data;
+  let the_type = options.type ? options.type : this.type;
+  let the_id   = options.id;
+  let new_id   = options.new_id;
 
-  if (!type) {
+  if (!indata) {
+    console.error("anyDataModel.dataInsert: "+"Nothing to insert. "); // TODO! i18n
+    return null; // Nothing to insert
+  }
+  if (!the_data) {
+    this.data = {};
+    the_data = this.data;
+  }
+  if (!the_type) {
     console.error("anyDataModel.dataInsert: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  if ((id || id === 0) &&
-      ((Number.isInteger(parseInt(id)) && id < 0) ||
-       (!Number.isInteger(parseInt(id)) && typeof id != "string"))) {
+  if ((the_id || the_id === 0) &&
+      ((Number.isInteger(parseInt(the_id)) && the_id < 0) ||
+       (!Number.isInteger(parseInt(the_id)) && typeof the_id != "string"))) {
     console.error("anyDataModel.dataInsert: "+i18n.error.ID_ILLEGAL);
     return null;
   }
-  if (!indata)
-    return null; // Nothing to insert
-  if (!data) {
-    if (options.data !== undefined)
-      data = {};
-    else {
-      this.data = {};
-      data = this.data;
-    }
-  }
-  let item = id || id === 0
-             ? this.dataSearch({data:data,id:id,type:type})
-             : data;
-  if (!item)
-    return null; // Didnt find insertion point in data
-  if (!id && id !== 0) {
-    // Insert at top level
-    if (nid)
-       if (!item[nid])
-         item[nid] = {};
-    for (let filter_id in indata)
-      if (indata.hasOwnProperty(filter_id))
-        if (nid && nid >= 0)
-          item[nid][filter_id] = indata[filter_id];
-        else
+  let item = the_id || the_id === 0
+             ? this.dataSearch({data:the_data,id:the_id,type:the_type})
+             : the_data;
+  if (!item || ((the_id || the_id === 0) && !item[the_id] && !item["+"+the_id]))
+    return null; // Didnt find insertion point in the_data
+  if (the_id || the_id === 0) {
+    // An id was specified and found in the_data
+    if (!item[the_id])
+      the_id = "+"+the_id;
+    if (new_id) {
+      // A new id was specified or should be auto-generated
+      if (new_id < 0)
+        new_id = this.dataSearchNextId(the_type); // Auto-generate new id
+      if (new_id < 0) {
+        console.error("anyDataModel.dataInsert: "+"New id not found for "+the_type+". "); // TODO! i18n
+        return null;
+      }
+      if (!item[the_id].data)
+        item[the_id].data = {};
+      if (!item[the_id].data[new_id])
+        item[the_id].data[new_id] = {};
+      item = item[the_id].data[new_id];
+      for (let filter_id in indata)
+        if (indata.hasOwnProperty(filter_id))
           item[filter_id] = indata[filter_id];
-    return item;
+    }
+    else
+    if (!new_id && new_id != 0) {
+      // No new id was specified and none should be generated
+      item = item[the_id];
+      for (let filter_id in indata)
+        if (indata.hasOwnProperty(filter_id))
+          item[filter_id] = indata[filter_id];
+    }
   }
   else {
-    if (!item || (!item[id] && !item["+"+id]))
-      return null;
-    if (item["+"+id])
-      id = "+"+id;
-    if (!item[id].data)
-      item[id].data = {};
-    if ((nid && typeof(nid) == "string") || nid >= 0)
-      item[id].data[nid] = indata[nid] ? indata[nid] : indata["+"+nid];
-    else
-    if (nid < 0) {
-      nid = this.mode == "local"
-            ? this.dataSearchNextId(type)
-            : this.dbSearchNextId({type:type}); // TODO! Asynchronous database call
-      if ((!nid && nid !== 0) || nid < 0)
-        return null;
-      item[id].data[nid] = indata; // NOTE: Requires `indata` to be on a different format than when nid != -1!
-    }
-    else {
-      for (let idx in indata)
-        if (indata.hasOwnProperty(idx))
-          item[id].data[idx] = indata[idx];
-    }
+    // No id was specified, insert at top level
+    if (new_id)
+       if (!item[new_id])
+         item[new_id] = {};
+    if (new_id)
+      item = item[new_id];
+    for (let filter_id in indata)
+      if (indata.hasOwnProperty(filter_id))
+        item[filter_id] = indata[filter_id];
   }
   if (this.auto_callback)
     this.cbExecute();
@@ -758,7 +768,7 @@ anyDataModel.prototype.dataInsert = function (options)
  *                          indata = { user_name:        "Johhny B. Goode",
  *                                     user_description: "Musician",
  *                                   }
- *                          If an item with the given `id` is found in the structure `data`, it will
+ *                          If an item with the specified `id` is found in the structure `data`, it will
  *                          be updated with the values for `user_name` and `user_description`.
  *                          Mandatory.
  *
@@ -828,11 +838,11 @@ anyDataModel.prototype.dataUpdate = function (options)
  *
  *        {Object}  data:      The data structure to update. Optional. Default: `this.data`. TODO!
  *        {String}  type:      The type of the data to update. Mandatory.
- *        {Set}     del:       A list of ids of the items to be deleted. Optional. Default: null.
- *        {Set}     ins:       A list of ids of the items to be inserted. Optional. Default: null.
- *        {Object}  indata:    Contains the selected items to be inserted. Optional. Default: null. TODO!
+ *        {Object}  unselect:  Contains the unselected items to be removed. Optional. Default: null.
+ *        {Object}  select:    Contains the selected items to be inserted. Optional. Default: null.
  *        {integer} insert_id: The id of the item where the selected items should be inserted.
- *                             Mandatory if `ins` and `indata` are given.
+ *                             Mandatory if `indata` is specified.
+ *        {String}  name_key:
  *
  * @return true on success, false on error.
  *
@@ -844,8 +854,8 @@ anyDataModel.prototype.dataUpdateLinkList = function (options)
     console.error("anyDataModel.dataUpdateLinkList: "+i18n.error.OPTIONS_MISSING);
     return false;
   }
-  let link_type = options.link_type;
-  if (!link_type) {
+  let type = options.type;
+  if (!type) {
     console.error("anyDataModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
     return false;
   }
@@ -854,36 +864,44 @@ anyDataModel.prototype.dataUpdateLinkList = function (options)
     for (let id of options.unselect) {
       let obj = this.dataDelete({ data: this.data,
                                   id:   id,
-                                  type: link_type,
+                                  type: type,
                                });
     }
   }
   // Insert items
   if (options.select) {
-  //let indata = options.indata;
     let ins_id = options.insert_id;
+    if (!ins_id)
+      ins_id = "plugin-"+type; // TODO! Not general enough
     for (let id of options.select) {
+      // Insert item only if its not already in model
       if (!this.dataSearch({ data: this.data,
                              id:   id,
-                             type: link_type,
-                          })) { // Insert item only if its not already in model
+                             type: type,
+                          })) {
         // See if we got the new data
         let item = this.dataSearch({ data: options.data,
                                      id:   id,
-                                     type: link_type,
+                                     type: type,
                                   });
         if (item) {
-          if (!ins_id)
-            ins_id = "plugin-"+link_type; // TODO! Not general enough
+          let indata = {};
+          indata[ins_id] = {};
+          indata[ins_id].data = item;
+          indata[ins_id].head = type;
+          indata[ins_id][options.name_key] = type+"s";
+          indata.grouping = this.grouping ? this.grouping : "tabs";
+          indata.groupingForId   = this.id;
+          indata.groupingForType = this.type;
           let obj = this.dataInsert({ data:   this.data,
                                       id:     ins_id,
-                                      type:   link_type,
-                                      indata: item,
-                                      nid:    id,
+                                      type:   options.type,
+                                      indata: item[id] ? item[id] : item["+"+id],
+                                      new_id: id,
                                    });
         }
         else
-          console.warn("Couldn't add item for "+link_type+" "+id+" (not found in indata). "); // TODO i18n
+          console.warn("Couldn't add item for "+type+" "+id+" (not found in indata). "); // TODO i18n
       } // if
     } // for
   }
@@ -893,7 +911,7 @@ anyDataModel.prototype.dataUpdateLinkList = function (options)
 
 /**
  * @method dataDelete
- * @description Deletes an item with a given id from the data structure.
+ * @description Deletes an item with a specified id from the data structure.
  * @param {Object} options An object which may contain these elements:
  *
  *        {Object}  data:  The data structure to delete from.
@@ -925,16 +943,30 @@ anyDataModel.prototype.dataDelete = function (options)
     console.error("anyDataModel.dataDelete: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  let item = this.dataSearch({data:data,id:id,type:type});
+  let item = this.dataSearch({data:data,id:id,type:type,parent:true});
   if (!item)
     return null;
-  if (item[id])
-    delete item[id];
+  // When parent==true, dataSearch may return item indexed with [id]
+  // if id is found on top level of data, so guard agains that
+  let it_ptr = null;
+  let it_idx = null;
+  if (item.data)
+    it_ptr = item.data;
   else
-  if (item["+"+id])
-    delete item["+"+id];
+    it_ptr = item;
+  if (it_ptr[id])
+    it_idx = id;
   else
+  if (it_ptr["+"+id])
+    it_idx = "+"+id;
+  if (!it_idx || !it_ptr || !it_ptr[it_idx])
     return null;
+  delete it_ptr[it_idx];
+
+  if (Object.size(item.data) == 0) {
+    // No more data, clean up
+    delete item.data;
+  }
   if (this.auto_callback)
     this.cbExecute();
   return item; // Should be null/undefined
@@ -951,8 +983,8 @@ anyDataModel.prototype.dataDelete = function (options)
  *              or to this.dbSearchSuccess if no success handler is specified.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer}  id:         Item's id. If given, the database will be searched for this item.
-                                 If not given, a list of items of the given type will be searched for.
+ *        {integer}  id:         Item's id. If specified, the database will be searched for this item.
+                                 If not specified, a list of items of the specified type will be searched for.
  *                               Optional. Default: null.
  *        {integer}  type:       Item's type.
  *                               Optional. Default: `this.type`.
@@ -1015,7 +1047,7 @@ anyDataModel.prototype.dbSearch = function (options)
  * @param {Object} options An object which may contain these elements:
  *
  *        {integer} id:     Item's id. If specified, the server will search for an item with this id,
- *                          if not specified, the server will search for a list of items of the given type,
+ *                          if not specified, the server will search for a list of items of the specified type,
  *                          Optional. Default: null.
  *        {integer} type:   Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
  *                          be used as the id_key instead of the value in `this.id_key` when calling the server.
@@ -1092,7 +1124,7 @@ anyDataModel.prototype.dbSearchSuccess = function (context,serverdata,options)
 
 /**
  * @method dbSearchNextId
- * @description Gets the next available id for the given type from server.
+ * @description Gets the next available id for the specified type from server.
  *              The data will be handed to the success handler specified in options.success,
  *              or to this.dbSearchNextIdSuccess if no success handler is specified.
  * @param {Object} options An object which may contain these elements:
@@ -1278,7 +1310,7 @@ anyDataModel.prototype.dbUpdate = function (options)
   }
 
   // Data to update or insert
-  let item_to_send = options.is_new
+  let item_to_send = item[options.id].is_new
                      ? item[options.id]        // insert
                      : item[options.id].dirty; // update
 
@@ -1585,20 +1617,14 @@ anyDataModel.prototype._dbUpdateLinkListSuccess = function (context,serverdata,o
       console.log("anyDataModel._dbUpdateLinkListSuccess: "+self.message);
     if (self.error)
       console.error("anyDataModel._dbUpdateLinkListSuccess: "+self.error);
-    let item = self.dataSearch({ type: options.link_type,
-                                 id:   "plugin-"+options.link_type, // TODO! Not general enough
-                              });
-    if (!item) {
-      // Should never happen
-      console.error("anyDataModel._dbUpdateLinkListSuccess: "+options.type+" not found. "); // TODO! i18n
-    }
-    else {
-      self.dataUpdateLinkList({ data:      serverdata.data,
-                                link_type: options.link_type,
-                                unselect:  options.unselect,
-                                select:    options.select,
-                             });
-    }
+    self.dataUpdateLinkList({ data:      serverdata.data,
+                              type:      options.link_type,
+                              unselect:  options.unselect,
+                              select:    options.select,
+                              name_key:  options.name_key,
+                              link_id:   options.id,
+                              link_type: options.type,
+                           });
   }
   if (self.cbExecute)
     self.cbExecute();
