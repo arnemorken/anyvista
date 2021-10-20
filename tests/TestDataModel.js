@@ -326,55 +326,48 @@ function testModel()
 
   ///////////////////// dataInsert tests /////////////////////
 
-  test('DataModel.dataInsert', 15, function() {
-    // Test nid
+  test('DataModel.dataInsert', 13, function() {
     let mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                       12:{list:"faz",faz_name:"The faz"}}}};
     let dm = new anyDataModel({type:"foo",data:mdata});
-    deepEqual(dm.data[99].data[13] === undefined,
-              true, "dm.data[99].data[13] === undefined before dataInsert");
-    let idata = {13:{list:"barbar",barbar_name:"The barbar"}};
-    let res = dm.dataInsert({type:"bar",id:99,indata:idata,nid:13});
-    deepEqual(dm.data[99].data[13] !== undefined,
-              true, "dm.data[99].data[13] !== undefined after dataInsert");
+    let idata = {list:"barbar",barbar_name:"The barbar"};
+    let res = dm.dataInsert({type:"bar",id:99,indata:idata,new_id:13});
+    deepEqual(dm.data[99].data[12] !== undefined &&
+              dm.data[99].data[13] !== undefined,
+              true, "dm.data[99].data[12] != undefined and dm.data[99].data[13] !== undefined after dataInsert with new_id==13");
 
-    dm = new anyDataModel({type:"foo",data:null});
+    mdata = null;
+    dm = new anyDataModel({type:"foo",data:mdata});
     idata = {14:{list:"barbar",barbar_name:"The barbar"}};
     res = dm.dataInsert({type:"bar",indata:idata});
     deepEqual(dm.data[14] !== undefined,
-              true, "dm.data[14] !== undefined after dataInsert with to model with null data");
+              true, "dm.data[14] !== undefined after dataInsert of indexed data and without new_id to model with null data");
+
+    mdata = null;
+    dm = new anyDataModel({type:"foo",data:mdata});
+    idata = {list:"barbar",barbar_name:"The barbar"};
+    res = dm.dataInsert({type:"bar",indata:idata,new_id:77});
+    deepEqual(dm.data[77] !== undefined,
+              true, "dm.data[77] !== undefined after dataInsert of non-indexed data and with new_id==77 to model with null data");
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
     dm = new anyDataModel({type:"foo",data:mdata});
-    idata = {14:{list:"barbar",barbar_name:"The barbar"}};
-    res = dm.dataInsert({type:"bar",id:99,indata:idata,nid:13});
-    deepEqual(dm.data[99].data[13] === undefined,
-              true, "dm.data[99].data[13] === undefined after dataInsert with nid == 13 not found in input data");
-    idata = {14:{list:"barbar",barbar_name:"The barbar"}};
-    res = dm.dataInsert({type:"bar",id:99,indata:idata,nid:14});
-    deepEqual(dm.data[99].data[14] !== undefined,
-              true, "dm.data[99].data[14] !== undefined after dataInsert with nid == 14 found in input data");
-
-    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
-                                  12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
-    idata = {13:{list:"barbar",barbar_name:"The barbar"}};
+    idata = {list:"barbar",barbar_name:"The barbar"};
     res = dm.dataInsert({type:"bar",id:99,indata:idata});
     deepEqual(dm.data[99].data[11] !== undefined &&
               dm.data[99].data[12] !== undefined &&
-              dm.data[99].data[13] !== undefined,
+              dm.data[99]["barbar_name"] !== undefined,
               true, "dm.data[99].data[11] !== undefined and "+
-                    "dm.data[99].data[12] !== undefined and "+
-                    "dm.data[99].data[13] !== undefined "+
-                    "after dataInsert with id, but nid == undefined");
+                    "dm.data[99].data[12] !== undefined "+
+                    "dm.data[99]['barbar_name'] !== undefined "+
+                    "after dataInsert with id, but new_id == undefined");
 
-    // Test ptype
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
     dm = new anyDataModel({type:"foo",data:mdata});
-    idata = {13:{list:"barbar",barbar_name:"The barbar"}};
-    res = dm.dataInsert({type:null,id:99,indata:idata});
+    idata = {list:"barbar",barbar_name:"The barbar"};
+    res = dm.dataInsert({type:null,id:99,indata:idata,new_id:13});
     deepEqual(dm.data[99].data[11] !== undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[13] === undefined,
@@ -386,8 +379,8 @@ function testModel()
     mdata = {99:{list:"foo",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
     dm = new anyDataModel({type:"foo",data:mdata});
-    idata = {13:{list:"foo",foo_name:"The foo"}};
-    res = dm.dataInsert({type:null,id:99,indata:idata});
+    idata = {list:"foo",foo_name:"The foo"};
+    res = dm.dataInsert({type:null,id:99,indata:idata,new_id:13});
     deepEqual(dm.data[99].data[11] !== undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[13] !== undefined,
@@ -399,8 +392,8 @@ function testModel()
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
     dm = new anyDataModel({type:"foo",data:mdata});
-    idata = {13:{list:"barbar",barbar_name:"The barbar"}};
-    res = dm.dataInsert({type:"baz",id:99,indata:idata});
+    idata = {list:"barbar",barbar_name:"The barbar"};
+    res = dm.dataInsert({type:"baz",id:99,indata:idata,new_id:13});
     deepEqual(dm.data[99].data[11] !== undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[13] === undefined,
@@ -413,42 +406,42 @@ function testModel()
                                   12:{list:"faz",faz_name:"The faz"}}}};
     dm = new anyDataModel({type:"foo",data:mdata});
     idata = {list:"bar",bar_name:"The bar"};
-    res = dm.dataInsert({type:"bar",id:99,indata:idata,nid:-1});
+    res = dm.dataInsert({type:"bar",id:99,indata:idata,new_id:-1});
     deepEqual(dm.data[99].data[11]  !== undefined &&
               dm.data[99].data[12]  !== undefined &&
               dm.data[99].data[100] !== undefined,
               true, "dm.data[99].data[11] !== undefined and "+
                     "dm.data[99].data[12] !== undefined and "+
                     "dm.data[99].data[100] !== undefined "+
-                    "after dataInsert with type == bar and nid == -1");
+                    "after dataInsert with type == bar and new_id == -1");
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
     dm = new anyDataModel({type:"foo",data:mdata});
     idata = {list:"foo",foo_name:"The foo"};
-    res = dm.dataInsert({type:"foo",id:null,indata:idata,nid:null});
+    res = dm.dataInsert({type:"foo",id:null,indata:idata,new_id:null});
     deepEqual(dm.data[99] !== undefined &&
               dm.data.list === 'foo',
               true, "dm.data[99] !== undefined and "+
                     "dm.data.list === 'foo' "+
-                    "after dataInsert with type == foo, id == null and nid == null");
+                    "after dataInsert with type == foo, id == null and new_id == null");
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
     dm = new anyDataModel({type:"foo",data:mdata});
     idata = {list:"bar",bar_name:"The bar"};
-    res = dm.dataInsert({type:"bar",id:null,indata:idata,nid:61});
+    res = dm.dataInsert({type:"bar",id:null,indata:idata,new_id:61});
     deepEqual(dm.data[99] !== undefined &&
               dm.data[61] !== undefined,
               true, "dm.data[99] !== undefined and "+
                     "dm.data[61] !== undefined "+
-                    "after dataInsert with type == bar, id == null and nid == 61");
+                    "after dataInsert with type == bar, id == null and new_id == 61");
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
     dm = new anyDataModel({type:"foo",data:mdata});
     idata = {list:"bar",bar_name:"The bar"};
-    res = dm.dataInsert({type:"bar",id:99,indata:idata,nid:-1});
+    res = dm.dataInsert({type:"bar",id:99,indata:idata,new_id:-1});
     deepEqual(dm.data[99].data[11]  !== undefined &&
               dm.data[99].data[12]  !== undefined &&
               dm.data[99].data[100] !== undefined,
@@ -637,37 +630,38 @@ function testModel()
     let mdata = {99:{list:"bar",
                      data:{11:{list:"bar",bar_name:"The first bar"},
                            12:{list:"bar",bar_name:"The second bar"}}}};
-    let dm = new anyDataModel({list:"bar",data:mdata});
+    let dm = new anyDataModel({type:"bar",data:mdata});
     let del = new Set(); del.add(11);
     let ins = new Set(); ins.add(14);
-    let res = dm.dataUpdateLinkList({link_type: "bar",
+    let res = dm.dataUpdateLinkList({type: "bar",
                                      unselect:  del,
                                      select:    ins,
-                                     data:      {14:{list:"bar",foo_name:"Fourteen bar"}},
+                                     data:      {14:{list:"bar",foo_name:"INSERT 14"}},
                                      insert_id: 99});
     deepEqual(res &&
               dm.data[99].data[11] === undefined &&
+              dm.data[99].data[12] !== undefined &&
               dm.data[99].data[14] !== undefined &&
-              dm.data[99].data[14].foo_name == "Fourteen bar" ,
+              dm.data[99].data[14].foo_name == "INSERT 14" ,
               true, "dataUpdateLinkList with type, del, ins, indata and insert_id ok. ");
 
     // Insert point type differs from options type (1)
     mdata = {99:{list:"bar",
                  data:{11:{list:"bar",bar_name:"The first bar"},
                        12:{list:"bar",bar_name:"The second bar"}}}};
-    dm = new anyDataModel({list:"bar",data:mdata});
+    dm = new anyDataModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({link_type: "foo",
+    res = dm.dataUpdateLinkList({type: "foo",
                                  unselect:  del,
                                  select:    ins,
-                                 data:      {14:{list:"bar",foo_name:"Fourteen bar"}},
+                                 data:      {14:{list:"bar",foo_name:"INSERT 14"}},
                                  insert_id: 99});
     deepEqual(res !== null &&
               dm.data[99].data[11] !== undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[14] === undefined,
-              true, "dataUpdateLinkList with data type different from insert_id type (2). ");
+              true, "dataUpdateLinkList with data type different from insert_id type (1). ");
 
     // Insert point type differs from options type (2)
     mdata = {99:{list:"foo",
@@ -676,16 +670,16 @@ function testModel()
     dm = new anyDataModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({link_type: "bar",
+    res = dm.dataUpdateLinkList({type: "bar",
                                  unselect:  del,
                                  select:    ins,
-                                 data:      {14:{list:"bar",foo_name:"Fourteen bar"}},
+                                 data:      {14:{list:"bar",foo_name:"INSERT 14"}},
                                  insert_id: 99});
     deepEqual(res !== null &&
               dm.data[99].data[11] === undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[14] === undefined,
-              true, "dataUpdateLinkList with data type different from insert_id type (1). ");
+              true, "dataUpdateLinkList with data type different from insert_id type (2). ");
 
     // Insert point type differs from options type (3)
     mdata = {99:{list:"bar",
@@ -694,7 +688,7 @@ function testModel()
     dm = new anyDataModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({link_type: "bar",
+    res = dm.dataUpdateLinkList({type: "bar",
                                  unselect:  del,
                                  select:    ins,
                                  data:      {14:{list:"foo",foo_name:"Fourteen foo"}},
@@ -712,7 +706,7 @@ function testModel()
     dm = new anyDataModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({link_type: "foo",
+    res = dm.dataUpdateLinkList({type: "foo",
                                  unselect:  del,
                                  select:    ins,
                                  data:      {14:{list:"foo",foo_name:"Fourteen foo"}},
@@ -730,7 +724,7 @@ function testModel()
     dm = new anyDataModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({link_type: "bar",
+    res = dm.dataUpdateLinkList({type: "bar",
                                  unselect:  del,
                                  select:    ins,
                                  data:      {14:{list:"foo",foo_name:"Fourteen foo"}},
@@ -749,7 +743,7 @@ function testModel()
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     console.log(dm.data)
-    res = dm.dataUpdateLinkList({link_type: "foo",
+    res = dm.dataUpdateLinkList({type: "foo",
                                  unselect:  del,
                                  select:    ins,
                                  data:      {14:{list:"foo",foo_name:"Fourteen foo"}},
@@ -851,8 +845,8 @@ function testModel()
                 true, "dbSearch({type:'user',id:'max'}) no error:"+dm.error);
       deepEqual(dm.data  === null,
                 true, "dbSearch({type:'user',id:'max'}) returns item data for type given in search options:"+JSON.stringify(dm.data));
-      deepEqual(parseInt(dm.max) > 2, // Assuming that last user id==2 in the db table
-                true, "dbSearch({type:'user',id:'max'}) id > 2:"+dm.max);
+      deepEqual(parseInt(dm.max) > 3, // Assuming that last user id==3 in the db table
+                true, "dbSearch({type:'user',id:'max'}) id > 3:"+dm.max);
       start();
     }, millisec);
   });
@@ -866,8 +860,8 @@ function testModel()
                 true, "dbSearch({type:'user',id:'max'}) no error:"+dm.error);
       deepEqual(dm.data  === null,
                 true, "dbSearch({type:'user',id:'max'}) returns item data for type given in search options:"+JSON.stringify(dm.data));
-      deepEqual(parseInt(dm.max) > 2, // Assuming that last user id==2 in the db table
-                true, "dbSearch({type:'user',id:'max'}) id > 2:"+dm.max);
+      deepEqual(parseInt(dm.max) > 3, // Assuming that last user id==3 in the db table
+                true, "dbSearch({type:'user',id:'max'}) id > 3:"+dm.max);
       start();
     }, millisec);
   });
@@ -881,7 +875,7 @@ function testModel()
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      2:{list:"user",user_name:"The faz user",
                                          dirty:{list:"user",user_name:"The faz user",display_name:"The faz display"}}}}};
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data});
+    let dm = new anyDataModel({name_key:"user_name",type:"user",search:false,mode:"remote",data:data});
     let res = dm.dbUpdate({type:"user",id:2});
     deepEqual(res,
               true, "dbUpdate({type:'user',id:2}) returns true");
