@@ -876,7 +876,7 @@ function testModel()
 
   ///////////////////// dbUpdate tests /////////////////////
 
-  asyncTest('dbUpdate - item: normal case', 3, function() {
+  asyncTest('dbUpdate - item: normal case (user 2 must exist in database)', 3, function() {
     let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      2:{list:"user",user_name:"The faz user",
@@ -895,8 +895,7 @@ function testModel()
       dm2.dbSearch({type:"user",id:2});
       setTimeout(function() {
         deepEqual(dm2.data && dm2.data["+0"].data["+2"].user_name === "The faz user",
-                  true, "dbUpdate({type:'user',id:2}) returns with correct data in database:"+
-                        dm2.data["+0"].data["+2"].user_name);
+                  true, "dbUpdate({type:'user',id:2}) returns with correct data in database");
         start();
       }, millisec);
     }, millisec);
@@ -1035,7 +1034,7 @@ function testModel()
                     79:{list:"user",user_name:"us79",user_login:usrname,user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
     let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data7779});
     // insert
-    let res = dm.dbUpdate({id:79}); // insert data
+    let res = dm.dbUpdate({id:79,is_new:true}); // insert data
     deepEqual(res,
               true, "dbUpdate(data) returns true (insert1)");
     setTimeout(function() {
@@ -1053,7 +1052,7 @@ function testModel()
     let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data22});
     // insert
     let data23 = {23:{list:"user",user_name:"us23",is_new:true}};
-    let res = dm.dbUpdate({id:23,indata:data23}); // insert data
+    let res = dm.dbUpdate({id:23,indata:data23,is_new:true}); // insert data
     deepEqual(res,
               true, "dbUpdate(data) returns true (insert2)");
     setTimeout(function() {
@@ -1169,11 +1168,11 @@ function testModel()
 
   // insert, update, search and delete tests
   asyncTest('dbUpdate and dbDelete: Insert, update, search, view and delete user', 15, function() {
-    let data33 = {33:{list:"user",user_name:"us33",user_pass:"qqq",user_pass_again:"qqq"}};
+    let data33 = {33:{list:"user",user_name:"us33",user_login:"us33",user_pass:"qqq",user_pass_again:"qqq"}};
     let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data33});
     // insert
-    let data34 = {34:{list:"user",user_name:"us34",user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
-    let res = dm.dbUpdate({id:34,indata:data34}); // insert data
+    let data34 = {34:{list:"user",user_name:"us34",user_login:"us34",user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
+    let res = dm.dbUpdate({id:34,indata:data34,is_new:true}); // insert data
     deepEqual(res, true, "dbUpdate(data) returns true (insert)");
     setTimeout(function() {
       deepEqual(dm.data[34] === undefined, true, "dbUpdate(data) does not insert into memory when data is given as parameter to update only");
