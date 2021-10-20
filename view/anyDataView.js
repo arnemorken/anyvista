@@ -101,6 +101,7 @@ $.widget("any.DataView", {
     localSelect:           null,
     localEdit:             null,
     localUpdate:           null,
+    localRemove:           null,
     localDelete:           null,
     localCancel:           null,
     localNewItem:          null,
@@ -118,6 +119,7 @@ $.widget("any.DataView", {
     indent_level:          0,
     indent_amount:         20,
     cutoff:                100,
+    item_opening:          false,
   }, // options
 
   // Constructor
@@ -446,7 +448,7 @@ $.any.DataView.prototype.refreshToolbarTop = function (parent,data,id,type,kind,
   if (!parent)
     return null;
   // Create cancel/close button for item view
-  if (this.item_opening) {
+  if (this.options.item_opening) {
     let cls_opt = {
       type:     type,
       kind:     kind,
@@ -454,7 +456,7 @@ $.any.DataView.prototype.refreshToolbarTop = function (parent,data,id,type,kind,
       top_view: this.options.top_view,
     };
     this.refreshCloseItemButton(parent,cls_opt);
-    this.item_opening = false;
+    this.options.item_opening = false;
   }
 }; // refreshToolbarTop
 
@@ -1230,6 +1232,8 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
     parent = this.element;
   if (!parent)
     return null;
+  if (!data)
+    return null;
   type = type ? type : this._findType(data,null,id);
   kind = kind ? kind : this._findKind(data,null,id);
   if (!type || !kind)
@@ -1264,6 +1268,7 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
     id:               view_id,
     main_div:         parent,
     base_id:          this.base_id,
+    item_opening:     this.options.item_opening,
     top_view:         this.options.top_view,
     view:             this,
     data_level:       this.options.data_level,
@@ -2131,7 +2136,7 @@ $.any.DataView.prototype.dbUpdate = function (event)
         this.options.view.model.dataInsert({ type:   type,
                                              id:     pid,
                                              indata: dv,
-                                             nid:    id,
+                                             new_id: id,
                                           });
         }
     }
@@ -2307,9 +2312,9 @@ $.any.DataView.prototype.removeFromView = function (opt)
     if (!item || !item[id])
       return false;
     if (item[id].data) {
-      for (let nid in item[id].data) {
-        if (item[id].data.hasOwnProperty(nid)) {
-          let the_id = Number.isInteger(parseInt(nid)) ? parseInt(nid) : nid;
+      for (let new_id in item[id].data) {
+        if (item[id].data.hasOwnProperty(new_id)) {
+          let the_id = Number.isInteger(parseInt(new_id)) ? parseInt(new_id) : new_id;
           let elem_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+the_id+"_tr";
           let tr      = $("#"+elem_id);
           if (tr.length)
