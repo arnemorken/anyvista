@@ -78,7 +78,7 @@ $.widget("any.DataView", {
     isDeletable:           true,
   //isLinkable:            false, // TODO! NOT IMPLEMENTED
     isSelectable:          false,
-
+    confirmRemove:         true,
     confirmDelete:         true,
     showHeader:            true,
     showTableHeader:       true,
@@ -295,7 +295,7 @@ $.any.DataView.prototype._findKind = function (data,okind,id)
 
 /**
  * @method showMessages
- * @description Shows errors and/or messages in the field with id 'this.base_id+"_any_message"'.
+ * @description Shows errors and/or messages.
  * @param {Object} modelOrString If a string, the message/error to display.
  *                               If a model, the model from which to display a message/error.
  *                               If null, `this.model` is assumed.
@@ -878,7 +878,6 @@ $.any.DataView.prototype.refreshListTableDataRow = function (tbody,data,id,type,
   let row_has_data = this._rowHasData(d,filter);
   if (!row_has_data)
     return null; // Nothing to display
-
   let tr_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tr";
   let tr = $("#"+tr_id);
   if (tr.length) {
@@ -1111,6 +1110,8 @@ $.any.DataView.prototype.refreshTableDataLastCell = function (tr,data,id,type,ki
                      pid:        pid,
                    };
     last_opt.isEditable = isEditable;
+    if (this.options.showButtonRemove && (this.options.isRemovable) && id)
+      this.refreshRemoveButton(td,last_opt);
     if (this.options.showButtonDelete && this.options.isDeletable && id)
       this.refreshDeleteButton(td,last_opt);
     if (this.options.showButtonCancel && isEditable && edit)
@@ -1284,7 +1285,7 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
     itemLinkClicked:  this.options.itemLinkClicked,
   };
   let v_str = view_opt.grouping ? type+"DataView"+view_opt.grouping.capitalize() : type+"DataView";
-  if (!window[v_str] /*&& view_opt.grouping == "tabs"*/)
+  if (!window[v_str])
     v_str = type+"DataViewTabs";
   if (!window[v_str]) {
     let def_str = view_opt.grouping ? "anyDataView"+view_opt.grouping.capitalize() : "anyDataView";
@@ -1717,6 +1718,30 @@ $.any.DataView.prototype.refreshUpdateButton = function (parent,opt)
   return btn;
 }; // refreshUpdateButton
 
+// Remove-button in last list or item table cell
+// By default calls dbRemoveDialog
+$.any.DataView.prototype.refreshRemoveButton = function (parent,opt)
+{
+  let tit_str = i18n.button.buttonRemove;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_remove_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-remove-icon any-tool-button pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-times'></i>"+
+              btn_str+
+              "</div>");
+  let fun = this.option("localRemove")
+            ? this.option("localRemove")
+            : this.dbRemoveDialog;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  if (parent && parent.length)
+    parent.append(btn);
+  if (opt.edit)
+    btn.hide();
+  return btn;
+}; // refreshRemoveButton
+
 // Delete-button in last list or item table cell
 // By default calls dbDeleteDialog
 $.any.DataView.prototype.refreshDeleteButton = function (parent,opt)
@@ -1811,7 +1836,7 @@ $.any.DataView.prototype._processKeyup = function (event)
 // Default action when clicking on a name link.
 $.any.DataView.prototype.itemLinkClicked = function (event)
 {
-  this.item_opening = true;
+  this.options.item_opening = true;
   return this.showItem(event);
 }; // itemLinkClicked
 
@@ -2147,7 +2172,6 @@ $.any.DataView.prototype.dbUpdate = function (event)
                                   });
   if (item && item[id])
     delete item[id].is_new; // TODO! Neccessary?
-  //this.tabs_list = {}; // TODO! Belongs in Tabs class
   if (kind == "list" || kind == "select") {
     let tr_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tr";
     let tr    = $("#"+tr_id);
@@ -2170,8 +2194,72 @@ $.any.DataView.prototype.validateUpdate = function (data)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+$.any.DataView.prototype.dbRemoveDialog = function (event)
+{
+  if (!this.model)
+    throw i18n.error.MODEL_MISSING;
+  if (!event || !event.data)
+    throw i18n.error.DATA_MISSING;
+
+  let data      = event.data.data;
+  let id        = event.data.id;
+  let type      = event.data.type;
+  let kind      = event.data.kind;
+//let id_str    = event.data.id_str;
+  let pdata     = event.data.pdata;
+  let link_id   = pdata ? pdata.groupingForId   : null;
+  let link_type = pdata ? pdata.groupingForType : null;
+  if (!data || !data[id]) {
+    console.warn("Data not found ("+type+" id="+id+"). ");
+    return null;
+  }
+  if (!link_id || !link_type) {
+    console.warn("Link id/type missing ("+type+" id="+id+"): "+link_id+"/"+link_type);
+    return null;
+  }
+  if (this.options.confirmRemove) {
+    let linkdata = this.model.dataSearch({ type:   type,
+                                           id:     id,
+                                           parent: true,
+                                        });
+    let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
+    let the_name = data[id][name_key] ? data[id][name_key] : "";
+    let msgstr   = i18n.message.removeByName.replace("%%","'"+the_name+"'");
+    if (kind == "list") {
+      let lfname = linkdata && linkdata[this.model.name_key]
+                   ? "from the "+linkdata[this.model.name_key]+" list"
+                   : "from this list"; // TODO! i18n
+      msgstr += " "+lfname;
+    }
+    let msg = "<div class='any-confirm-remove-dialog' id='"+this.base_id+"_confirm_remove' style='padding:.8em;'>"+
+              msgstr+"?"+
+              "</div>";
+    let parent_id = this.main_div.attr("id");
+    if (!parent_id)
+      parent_id = this.current_div_id; // TODO! current_div_id belongs in tabs class!
+    w3_modaldialog({parentId:    parent_id,
+                    elementId:   "",
+                    heading:     kind == "item" ? i18n.button.buttonRemove : i18n.button.buttonRemoveFromList.replace("%%",type),
+                    contents:    msg,
+                    width:       "25em",
+                    ok:          true,
+                    cancel:      true,
+                    okFunction:  this.dbUpdateLinkList,
+                    context:     this,
+                    // Sent to okFunction:
+                    type:        link_type,
+                    id:          link_id,
+                    data:        data,
+                    link_type:   type,
+                    select:      new Set(),
+                    unselect:    new Set().add(id),
+                  });
+  }
+  return this;
+}; // dbRemoveDialog
 
 ///////////////////////////////////////////////////////////////////////////////
+
 /**
  * @method dbDeleteDialog
  * @description Deletes an item from memory and database and refreshes view.
@@ -2184,7 +2272,7 @@ $.any.DataView.prototype.validateUpdate = function (data)
  */
 $.any.DataView.prototype.dbDeleteDialog = function (event)
 {
-  if (!this.model/* || !this.model.permission*/)
+  if (!this.model)
     throw i18n.error.MODEL_MISSING;
   if (!event || !event.data)
     throw i18n.error.DATA_MISSING;
@@ -2194,12 +2282,6 @@ $.any.DataView.prototype.dbDeleteDialog = function (event)
   let type   = event.data.type;
   let kind   = event.data.kind;
   let id_str = event.data.id_str;
-/*
-  if (type == "user" && this.model.permission.is_admin && parseInt(id) == this.model.permission.current_user_id) {
-    alert("Cannot delete administrator user!");
-    return false;
-  }
-*/
   let item = this.model.dataSearch({ type: type,
                                      id:   id,
                                      data: data,

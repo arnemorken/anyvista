@@ -635,7 +635,7 @@ anyDataModel.prototype.dataSearchMaxId = function (type,data)
  *
  *        {Object}  indata: The values to insert into the data structure.
  *                          Must be on a format that can be recognized by the model.
- *                          See <a href="../modules/AnyList.html">`AnyList`</a>.
+ *                          See <a href="../modules/anyList.html">`anyList`</a>.
  *                          Mandatory.
  *        {Object}  data:   The data structure to insert into.
  *                          Optional. Default: The model's data (`this.data`).
@@ -664,7 +664,8 @@ anyDataModel.prototype.dataSearchMaxId = function (type,data)
  *                           `item[id].data = indata`.
  *                          Optional. Default: null.
  *
- * @return A pointer to the place where the indata item was inserted on success, or null if the place was not found or on error.
+ * @return A pointer to the place where the indata item was inserted on success, or null if the place
+ *         was not found or on error.
  *
  * @example
  *      mymodel.dataInsert({type:"user",id:"38",indata:{user_name:"Foo Bar"}});
@@ -1080,7 +1081,6 @@ anyDataModel.prototype.dbSearchGetURL = function (options)
   param_str += the_id
                ? "&"+id_key+"="+the_id // Item search
                : ""; // List search
-
   return this._getDataSourceName() + param_str;
 }; // dbSearchGetURL
 
@@ -1208,7 +1208,6 @@ anyDataModel.prototype.dbSearchNextIdGetURL = function (options)
   let param_str = "?echo=y"+
                   "&type="+type;
   param_str += "&"+id_key+"=max";
-
   return this._getDataSourceName() + param_str;
 }; // dbSearchNextIdGetURL
 
@@ -1239,7 +1238,6 @@ anyDataModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,opti
   }
   return context;
 }; // dbSearchNextIdSuccess
-
 
 /**
  * @method dbUpdate
@@ -1301,14 +1299,13 @@ anyDataModel.prototype.dbUpdate = function (options)
     console.error("anyDataModel.dbUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+options.id));
     return false;
   }
-  if (!options.is_new && !Object.size(item[options.id].dirty)) {
+  if (!item[options.id].is_new && !Object.size(item[options.id].dirty)) {
     this.message = i18n.error.NOTHING_TO_UPDATE;
-    console.warn("anyDataModel.dbUpdate: "+this.message);
+    console.log("anyDataModel.dbUpdate: "+this.message);
     if (this.cbExecute)
       this.cbExecute();
     return false;
   }
-
   // Data to update or insert
   let item_to_send = item[options.id].is_new
                      ? item[options.id]        // insert

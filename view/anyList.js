@@ -552,22 +552,22 @@
  * `gServer`:
  * The host on which the server is run.
  *
- * `gAnyListFolder`:
- * The anyList root directory. If anyList is run as a Wordpress plugin, `gAnyListFolder` should be something like
+ * `gHomeFolder`:
+ * The anyList root directory. If anyList is run as a Wordpress plugin, `gHomeFolder` should be something like
  * `my_wp_installation/wp-content/plugins/anyList/`.
  *
  * `gThirdpartyFolder`:
  * The location of the third party code for uploading files, for exporting tables to Excel, etc.
  *
  * `gDataScript`:
- * The location of a script, relative to `gAnyListFolder`, that delivers data on the correct JSON format. Default
+ * The location of a script, relative to `gHomeFolder`, that delivers data on the correct JSON format. Default
  * value is `data/anyGetData.php`, which is the default script that gets data from the PHP backend. It is used by
  * the db* methods of `anyListDataModel` and only when the `this.mode` variable is set to `remote`, otherwise the
  * setting is ignored. If a script is not specified in `gDataScript`, the data must be delivered to anyList by some
  * other method. Refer to the included examples.
  *
  * `gUploadFolder`:
- * The location of an upload folder, relative to gAnyListFolder. Used by the `document` plugin.
+ * The location of an upload folder, relative to gHomeFolder. Used by the `document` plugin.
  *
  * `gSkin`:
  * The skin (CSS) to use. Skins are found in the `view/skin/` folder.
@@ -580,10 +580,10 @@
  * Sample listing of the `anyList_defs.js` file:
  *
  *      let gServer           = "//localhost/";
- *      let gAnyListFolder    = "projects/anyList/testserver/wp-content/plugins/anyList/";
+ *      let gHomeFolder       = "projects/anyList/testserver/wp-content/plugins/anyList/";
  *      let gThirdpartyFolder = "projects/anyList/thirdparty/";
- *      let gDataScript       = "data/anyGetData.php"; // Relative to gAnyListFolder
- *      let gUploadFolder     = "wordpress/upload/";   // Relative to gAnyListFolder
+ *      let gDataScript       = "data/anyGetData.php"; // Relative to gHomeFolder
+ *      let gUploadFolder     = "wordpress/upload/";   // Relative to gHomeFolder
  *      let gSkin             = "default";
  *
  *      // Do not edit below unless you really know what you are doing.
@@ -591,9 +591,9 @@
  *      let gVersion = "1.0.0";
  *
  *      let anyList_defs = {
- *        dataScript:   gServer + gAnyListFolder + gDataScript,                            // URL of data source script
+ *        dataScript:   gServer + gHomeFolder + gDataScript,                               // URL of data source script
  *        uploadFolder: gUploadFolder,                                                     // Name of upload folder
- *        uploadURL:    gServer + gAnyListFolder + gUploadFolder,                          // URL of upload folder
+ *        uploadURL:    gServer + gHomeFolder + gUploadFolder,                             // URL of upload folder
  *        uploadScript: gServer + gThirdpartyFolder + "ajaxfileupload/ajaxfileupload.php", // URL of upload script
  *      };
  *
@@ -606,21 +606,21 @@
  *
  *      <?php
  *      define("gServer",           "//localhost/");
- *      define("gAnyListFolder",    "projects/anyList/testserver/wp-content/plugins/anyList/");
+ *      define("gHomeFolder",       "projects/anyList/testserver/wp-content/plugins/anyList/");
  *      define("gThirdpartyFolder", "projects/anyList/thirdparty/");
- *      define("gDataScript",       "data/anyGetData.php"); // Relative to gAnyListFolder
- *      define("gUploadFolder",     "wordpress/upload/");   // Relative to gAnyListFolder
+ *      define("gDataScript",       "data/anyGetData.php"); // Relative to gHomeFolder
+ *      define("gUploadFolder",     "wordpress/upload/");   // Relative to gHomeFolder
  *      define("gSkin",             "default");
  *
  *      // Do not edit below unless you really know what you are doing.
  *
  *      define("gVersion", "1.0.0");
  *
- *      define("gHomePath",   $_SERVER['DOCUMENT_ROOT']."/".gAnyListFolder);
- *      define("gAnyListURL", gServer.gAnyListFolder);
+ *      define("gHomePath",   $_SERVER['DOCUMENT_ROOT']."/".gHomeFolder);
+ *      define("gAnyListURL", gServer.gHomeFolder);
  *
- *      define("gDataSource", $_SERVER['DOCUMENT_ROOT']."/".gAnyListFolder.gDataScript);
- *      define("gUploadPath", $_SERVER['DOCUMENT_ROOT']."/".gAnyListFolder.gUploadFolder);
+ *      define("gDataSource", $_SERVER['DOCUMENT_ROOT']."/".gHomeFolder.gDataScript);
+ *      define("gUploadPath", $_SERVER['DOCUMENT_ROOT']."/".gHomeFolder.gUploadFolder);
  *
  *      define("gjQueryURL",        gServer.gThirdpartyFolder."jquery/");
  *      define("gjQueryWidgetURL",  gServer.gThirdpartyFolder."jquery/");

@@ -13,9 +13,9 @@
 // User-editable "constants" that define some basic properties of the server API.
 //
 let gServer           = "//localhost/";
-let gAnyListFolder    = "Prosjekter/testserver/wp-content/plugins/anylist/";
+let gHomeFolder       = "Prosjekter/testserver/wp-content/plugins/anylist/";
 let gThirdpartyFolder = "Prosjekter/testserver/javascript/";
-let gDataScript       = "data/anyGetData.php"; // Relative to gAnyListFolder
+let gDataScript       = "data/anyGetData.php"; // Relative to gHomeFolder
 
 //
 // Do not edit below unless you really know what you are doing
@@ -23,5 +23,5 @@ let gDataScript       = "data/anyGetData.php"; // Relative to gAnyListFolder
 let gVersion = "1.0.0";
 
 let any_defs = {
-  dataScript:   gServer + gAnyListFolder + gDataScript,                            // URL of the data source script
+  dataScript:   gServer + gHomeFolder + gDataScript,                               // URL of the data source script
 };

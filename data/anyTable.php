@@ -927,7 +927,8 @@ class anyTable extends dbTable
 
   //
   // Search database for a list of the items with ids as given in the ids array, including meta data.
-  // Returns true on success, false on error
+  // Returns true on success, false on error.
+  // TODO! Must LEFT JOIN link tables. Also, why not just use dbSearchList?
   //
   protected function dbSearchListFromIds(&$data,$ids,$skipOwnId=false,$flat=false,$simple=false)
   {
