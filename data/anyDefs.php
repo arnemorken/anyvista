@@ -13,7 +13,7 @@
 // User-editable "constants" that define some basic properties of the AnyList API.
 //
 define("gServer",           "//localhost/");
-define("gAnyListFolder",    "Prosjekter/testserver/wp-content/plugins/anylist/");
+define("gHomeFolder",       "Prosjekter/testserver/wp-content/plugins/anylist/");
 define("gThirdpartyFolder", "Prosjekter/testserver/javascript/");
 define("gSkin",             "default");
 
@@ -25,13 +25,13 @@ define("gSkin",             "default");
 define("gVersion", "0.1.0");
 
 // Data source
-define("gDataScript",       "data/anyGetData.php"); // Relative to gAnyListFolder
+define("gDataScript",       "data/anyGetData.php"); // Relative to gHomeFolder
 
 // Paths
-define("gHomePath",   $_SERVER['DOCUMENT_ROOT']."/".gAnyListFolder);
-define("gAnyListURL", gServer . gAnyListFolder);
+define("gHomePath",   $_SERVER['DOCUMENT_ROOT']."/".gHomeFolder);
+define("gAnyListURL", gServer . gHomeFolder);
 
-define("gDataSource", $_SERVER['DOCUMENT_ROOT'] . "/" . gAnyListFolder . "/" . gDataScript);
+define("gDataSource", $_SERVER['DOCUMENT_ROOT'] . "/" . gHomeFolder . "/" . gDataScript);
 
 //
 // Thirdparty stuff
