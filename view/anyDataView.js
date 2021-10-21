@@ -1209,8 +1209,8 @@ $.any.DataView.prototype.initTableDataCell = function (td_id,data,id,type,kind,i
   // Bind some keyboard events in edit mode
   if (edit && ["link","text","number","password","date"].indexOf(filter_key.HTML_TYPE) > -1) {
     // Bind enter key
-    inp_elem.off("keyup");
-    inp_elem.on("keyup", init_opt, $.proxy(this._processKeyup,this));
+    inp_elem.off("keyup").on("keyup",     init_opt, $.proxy(this._processKeyup,this));
+    inp_elem.off("keydown").on("keydown", init_opt, $.proxy(this._processKeyup,this)); // For catching the ESC key on Vivaldi
   }
   // Set focus to first editable text field
   if (this.options.isEditable && edit && n==1) {
@@ -1816,15 +1816,19 @@ $.any.DataView.prototype.refreshNewItemButton = function (parent,opt)
 ///////////////////////////////////////////////////////////////////////////////
 
 // Process Esc and Enter keys.
-// NOTE! Binding the Esc key does not work in the Vivaldi browser - must press Ctrl-E first!
 $.any.DataView.prototype._processKeyup = function (event)
 {
-  if (event.type != "keyup" || (event.which != 27 && event.which != 13)) // Only process ESC and Enter keyup
-    return false;
+  if ((event.type == "keyup"   && event.which != 13) ||
+      (event.type == "keydown" && event.which != 27)) // For catching the ESC key on Vivaldi
+    return true; // Only process ESC and Enter keys
 
   if (event.preventDefault)
     event.preventDefault();
 
+  if (event.which == 27) { // esc
+    event.data.edit = !event.data.edit;
+    this.doToggleEdit(event.data);
+  }
   return true;
 }; // _processKeyup
 
@@ -2052,8 +2056,8 @@ $.any.DataView.prototype.doToggleEdit = function (opt)
     let txt = $("#"+nameid);
     if (txt.length) {
       // Bind enter key
-      txt.off("keyup");
-      txt.on("keyup", this.current_edit, $.proxy(this._processKeyup,this));
+      txt.off("keyup").on("keyup",     this.current_edit, $.proxy(this._processKeyup,this));
+      txt.off("keydown").on("keydown", this.current_edit, $.proxy(this._processKeyup,this)); // For catching the ESC key on Vivaldi
     }
   }
   else {
