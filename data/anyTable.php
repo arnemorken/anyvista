@@ -1513,7 +1513,8 @@ class anyTable extends dbTable
           $data["data"]["+0"][$this->mNameKey] = $inData["+".$this->mId][$this->mNameKey]; // findDefaultItemHeader
         else {
           $data["data"]["+0"][$this->mNameKey] = "";
-          $this->setError($this->mNameKey." missing"); // TODO: i18n
+          if (isset($this->mListForId))
+            $this->setError($this->mNameKey." missing"); // TODO: i18n
         }
         $data["data"]["+0"]["data"]["+".$this->mId]["item"] = $this->mType;
         $data["data"]["+0"]["data"] = $inData;
@@ -1974,9 +1975,9 @@ class anyTable extends dbTable
     else { // Subitem with parent of same type
       if ($this->hasParentId()) {
         if ($dellist !== null) {
-          foreach ($dellist as $updval) {
+          foreach ($dellist as $delval) {
             if ($delval && $gid != $id) {
-              $stmt = "UPDATE ".$this->getTableName()." SET parent_id=null WHERE ".$id_key."='".intval($updval)."'";
+              $stmt = "UPDATE ".$this->getTableName()." SET parent_id=null WHERE ".$id_key."='".intval($delval)."'";
               //elog("dbUpdateLink(4):".$stmt);
               if (!$this->query($stmt))
                 return false;
