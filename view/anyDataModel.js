@@ -1096,6 +1096,7 @@ anyDataModel.prototype.dbSearchGetURL = function (options)
   param_str += the_id
                ? "&"+id_key+"="+the_id // Item search
                : ""; // List search
+  param_str += options.simple   ? "&lt="      + "simple"                   : "";
   return this._getDataSourceName() + param_str;
 }; // dbSearchGetURL
 

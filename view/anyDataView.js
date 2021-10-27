@@ -2075,6 +2075,79 @@ $.any.DataView.prototype.doToggleEdit = function (opt)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+
+/**
+ * @method dbSearchParents
+ * @description Search for the list of possible parent items for the item with the given id.
+ *              Called when processing plugin filters.
+ *              The success metod builds a dropdown menu.
+ * @param
+ * @return true on success, false on error.
+ */
+$.any.DataView.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
+{
+  if (!this.model)
+    return val;
+  let options = {
+   type:      type,
+   kind:      kind,
+   id:        null, // Search for all items of given type
+   parent_id: pid,
+   child_id:  id,
+   simple:    true,
+   success:   this.createParentDropdownMenu,
+   view:      this,
+  };
+  if (edit)
+    return this.model.dbSearch(options);
+  else {
+    options.id = id;
+    let item = this.model.dataSearch(options);
+    if (item)
+      return item[id].parent_name;
+    return "";
+  }
+}; // dbSearchParents
+
+// Create the dropdown menu to select parent from.
+$.any.DataView.prototype.createParentDropdownMenu = function (context,serverdata,options)
+{
+  let view = options.view ? options.view : this;
+  view.last_db_command = "sea";
+  if (serverdata) {
+    // Remove encapsulation, if it exists
+    if (serverdata.JSON_CODE)
+      serverdata = serverdata.JSON_CODE;
+    if (Object.size(serverdata.data) == 0)
+      serverdata.data = null;
+    view.message = serverdata.message;
+    view.error   = serverdata.error;
+    if (serverdata.data) {
+      let kind      = options.kind;
+      let type_name = options.type+"_name";
+      let the_id    = Number.isInteger(parseInt(options.child_id)) ? parseInt(options.child_id) : options.child_id;
+      let id_str    = view.id_stack.length ? view.id_stack.join("_")+"_"+the_id : "0_"+the_id;
+      let data      = serverdata.data["+0"].data;
+      let item_id = view.base_id+"_"+options.type+"_"+kind+"_"+id_str+"_parent_id .itemSelect";
+      let did_select = "selected='true'";
+      $.each(data,function (id,item) {
+        if (parseInt(id) != the_id) {
+          let sel = parseInt(id) == parseInt(options.parent_id) ? "selected='true'" : "";
+          let pname = data[id][type_name];
+          $("#"+item_id).append($("<option "+sel+">").attr("value",parseInt(id)).text(pname));
+          if (sel != "") {
+            $("#"+item_id+"-button .ui-selectmenu-text").text(item[type_name]);
+            did_select = "";
+          }
+        }
+      });
+      $("#"+item_id).prepend($("<option "+did_select+">").attr("value","null").text("[None]")); // TODO! i18n
+    }
+  }
+}; // createParentDropdownMenu
+
+///////////////////////////////////////////////////////////////////////////////
+
 $.any.DataView.prototype.dbUpdate = function (event)
 {
   if (!this.model)
