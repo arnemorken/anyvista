@@ -1524,7 +1524,7 @@ anyDataModel.prototype.dbUpdateLinkList = function (options)
   if (!options.timeoutSec)
     options.timeoutSec = 10;
   $.ajaxSetup({ timeout: options.timeoutSec*1000 });
-  this.success = options.success ? options.success : this._dbUpdateLinkListSuccess;
+  this.success = options.success ? options.success : this.dbUpdateLinkListSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
   this.message = "";
@@ -1603,7 +1603,7 @@ anyDataModel.prototype.dbUpdateLinkListGetURL = function (options)
 }; // dbUpdateLinkListGetURL
 
 // Default success callback method for dbUpdateLinkList
-anyDataModel.prototype._dbUpdateLinkListSuccess = function (context,serverdata,options)
+anyDataModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,options)
 {
   let self = context;
   self.last_db_command = "updlink";
@@ -1615,9 +1615,9 @@ anyDataModel.prototype._dbUpdateLinkListSuccess = function (context,serverdata,o
     self.message = serverdata.message;
     self.error   = serverdata.error;
     if (self.message)
-      console.log("anyDataModel._dbUpdateLinkListSuccess: "+self.message);
+      console.log("anyDataModel.dbUpdateLinkListSuccess: "+self.message);
     if (self.error)
-      console.error("anyDataModel._dbUpdateLinkListSuccess: "+self.error);
+      console.error("anyDataModel.dbUpdateLinkListSuccess: "+self.error);
     self.dataUpdateLinkList({ data:      serverdata.data,
                               type:      options.link_type,
                               unselect:  options.unselect,
@@ -1630,7 +1630,7 @@ anyDataModel.prototype._dbUpdateLinkListSuccess = function (context,serverdata,o
   if (self.cbExecute)
     self.cbExecute();
   return context;
-}; // _dbUpdateLinkListSuccess
+}; // dbUpdateLinkListSuccess
 
 /**
  * @method dbDelete
@@ -1645,7 +1645,7 @@ anyDataModel.prototype._dbUpdateLinkListSuccess = function (context,serverdata,o
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
  *        {Function} success:    Method to call on success.
- *                               Optional. Default: `this._dbDeleteSuccess`.
+ *                               Optional. Default: `this.dbDeleteSuccess`.
  *        {Function} fail:       Method to call on error or timeout.
  *                               Optional. Default: `this._dbFail`.
  *        {Function} context:    The context of the success and fail methods.
@@ -1679,7 +1679,7 @@ anyDataModel.prototype.dbDelete = function (options)
   if (!options.timeoutSec)
     options.timeoutSec = 10;
   $.ajaxSetup({ timeout: options.timeoutSec*1000 });
-  this.success = options.success ? options.success : this._dbDeleteSuccess;
+  this.success = options.success ? options.success : this.dbDeleteSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
   this.message = "";
@@ -1748,7 +1748,7 @@ anyDataModel.prototype.dbDeleteGetURL = function (options)
 }; // dbDeleteGetURL
 
 // Default success callback method for dbDelete
-anyDataModel.prototype._dbDeleteSuccess = function (context,serverdata,options)
+anyDataModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
 {
   let self = context;
   self.last_db_command = "del";
@@ -1761,14 +1761,14 @@ anyDataModel.prototype._dbDeleteSuccess = function (context,serverdata,options)
     self.message = serverdata.message;
     self.error   = serverdata.error;
     if (self.message)
-      console.log("anyDataModel._dbDeleteSuccess: "+self.message);
+      console.log("anyDataModel.dbDeleteSuccess: "+self.message);
     if (self.error)
-      console.error("anyDataModel._dbDeleteSuccess: "+self.error);
+      console.error("anyDataModel.dbDeleteSuccess: "+self.error);
   }
   if (self.cbExecute)
     self.cbExecute();
   return context;
-}; // _dbDeleteSuccess
+}; // dbDeleteSuccess
 
 // Default fail callback for all db* methods
 anyDataModel.prototype._dbFail = function (context,jqXHR)

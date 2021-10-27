@@ -2350,7 +2350,7 @@ $.any.DataView.prototype.dbDelete = function (opt)
     this.model.data = null;
     if (this.options.top_view && this.options.top_view.model) {
       let top_model = this.options.top_view.model;
-      opt.success = top_model._dbDeleteSuccess;
+      opt.success = top_model.dbDeleteSuccess;
       opt.context = top_model;
       top_model.dataDelete({id:opt.id,type:opt.type});
     }
