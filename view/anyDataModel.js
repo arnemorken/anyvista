@@ -860,56 +860,28 @@ anyDataModel.prototype.dataUpdateLinkList = function (options)
     console.error("anyDataModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
     return false;
   }
-  // Delete items
-  if (options.unselect) {
-    for (let id of options.unselect) {
-      if (parseInt(id) != parseInt(options.link_id)) {
-        let obj = this.dataDelete({ data: this.data,
-                                    id:   id,
-                                    type: type,
-                                 });
-      }
-    }
+  if (!options.data) {
+    console.error("anyDataModel.dataUpdateLinkList: "+"Data missing, please refresh the view. "); // TODO! i18n
+    return false;
   }
-  // Insert items
-  if (options.select) {
-    let ins_id = options.insert_id;
-    if (!ins_id)
-      ins_id = "plugin-"+type; // TODO! Not general enough
-    for (let id of options.select) {
-      if (parseInt(id) != parseInt(options.link_id)) {
-        // Insert item only if its not already in model
-        if (!this.dataSearch({ data: this.data,
-                               id:   id,
-                               type: type,
-                            })) {
-          // See if we got the new data
-          let item = this.dataSearch({ data: options.data,
-                                       id:   id,
-                                       type: type,
-                                    });
-          if (item) {
-            let indata = {};
-            indata[ins_id] = {};
-            indata[ins_id].data = item;
-            indata[ins_id].head = type;
-            indata[ins_id][options.name_key] = type+"s";
-            indata.grouping = this.grouping ? this.grouping : "tabs";
-            indata.groupingForId   = this.id;
-            indata.groupingForType = this.type;
-            let obj = this.dataInsert({ data:   this.data,
-                                        id:     ins_id,
-                                        type:   options.type,
-                                        indata: item[id] ? item[id] : item["+"+id],
-                                        new_id: id,
-                                     });
-          }
-          else
-            console.warn("Couldn't add item for "+type+" "+id+" (not found in indata). "); // TODO i18n
-        } // if
-      } // if
-    } // for
-  }
+  if (parseInt(this.id) == parseInt(options.link_id))
+    this.data = options.data;
+  else {
+    // Delete items
+    if (options.unselect) {
+      for (let id of options.unselect) {
+        if (parseInt(id) != parseInt(options.link_id)) {
+          this.dataDelete({ data: this.data,
+                            id:   id,
+                            type: type,
+                         });
+          // TODO! When deleting the last entry in a list, the tab is not removed
+          //if (this.data[this.id] && !this.data[this.id].data)
+          //  delete this.data[this.id];
+        }
+      } // for
+    } // if
+  } // else
   this._dataInitSelect(); // Reset
   return true;
 }; // dataUpdateLinkList

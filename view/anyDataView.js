@@ -2211,8 +2211,9 @@ $.any.DataView.prototype.dbRemoveDialog = function (event)
   let kind      = event.data.kind;
 //let id_str    = event.data.id_str;
   let pdata     = event.data.pdata;
-  let link_id   = pdata ? pdata.groupingForId   : null;
-  let link_type = pdata ? pdata.groupingForType : null;
+  let pid       = event.data.pid;
+  let link_id   = pdata && pdata.groupingForId   ? pdata.groupingForId   : pid && pdata[pid] ? pid : null;
+  let link_type = pdata && pdata.groupingForType ? pdata.groupingForType : pid && pdata[pid] ? pdata[pid].list : null;
   if (!data || !data[id]) {
     console.warn("Data not found ("+type+" id="+id+"). ");
     return null;
