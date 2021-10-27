@@ -882,6 +882,45 @@ anyDataModel.prototype.dataUpdateLinkList = function (options)
       } // for
     } // if
   } // else
+  // Insert items
+  if (options.select) {
+    for (let id of options.select) {
+      if (parseInt(id) != parseInt(options.link_id)) {
+        // Insert item only if its not already in model
+        if (!this.dataSearch({ data: this.data,
+                               id:   id,
+                               type: type,
+                            })) {
+          // See if we got the new data
+          let item = this.dataSearch({ data: options.data,
+                                       id:   id,
+                                       type: type,
+                                    });
+          if (item) {
+            let ins_id = options.insert_id;
+            if (!ins_id)
+              ins_id = "plugin-"+type; // TODO! Not general enough
+            let indata = {};
+            indata[ins_id] = {};
+            indata[ins_id].data = item;
+            indata[ins_id].head = type;
+            indata[ins_id][options.name_key] = type+"s";
+            indata.grouping = this.grouping ? this.grouping : "tabs";
+            indata.groupingForId   = this.id;
+            indata.groupingForType = this.type;
+            let obj = this.dataInsert({ data:   this.data,
+                                        id:     ins_id,
+                                        type:   options.type,
+                                        indata: item[id] ? item[id] : item["+"+id],
+                                        new_id: id,
+                                     });
+          }
+          else
+            console.warn("Couldn't add item for "+type+" "+id+" (not found in indata). "); // TODO i18n
+        } // if
+      } // if
+    } // for
+  }
   this._dataInitSelect(); // Reset
   return true;
 }; // dataUpdateLinkList
