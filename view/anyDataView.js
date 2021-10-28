@@ -2312,7 +2312,9 @@ $.any.DataView.prototype.dbRemoveDialog = function (event)
     let msg = "<div class='any-confirm-remove-dialog' id='"+this.base_id+"_confirm_remove' style='padding:.8em;'>"+
               msgstr+"?"+
               "</div>";
-    let parent_id = this.main_div.attr("id");
+    let parent_id = this.options.top_view.element.attr("id");
+    if (!parent_id)
+      parent_id = this.options.main_div.attr("id")
     if (!parent_id)
       parent_id = this.current_div_id; // TODO! current_div_id belongs in tabs class!
     w3_modaldialog({parentId:    parent_id,
