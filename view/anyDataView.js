@@ -1278,7 +1278,7 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
     // Give same permissions to new view as the current one.
     // TODO! May NOT always be the desired behaviour!
     isEditable:       this.options.isEditable,
-    isRemovable:      this.options.isRemovable,
+    isRemovable:      this.options.isRemovable || kind == "item", // TODO! Not a good solution
     isDeletable:      this.options.isDeletable,
   //isLinkable:       this.options.isLinkable,
     isSelectable:     this.options.isSelectable, // TODO!
@@ -1480,7 +1480,7 @@ $.any.DataView.prototype.getSelectStr = function (type,kind,id,val,edit,filter_k
   let fval = filter_key.OBJ_SELECT;
   if (fval) {
     if (isFunction(this[fval]))
-      fval = this[fval](type,kind,id,val,edit,pid);
+      val = this[fval](type,kind,id,val,edit,pid);
     else
     if (typeof fval != "object")
       fval = "";
@@ -1504,7 +1504,7 @@ $.any.DataView.prototype.getSelectStr = function (type,kind,id,val,edit,filter_k
     str += "</select>";
   }
   else {
-    str = fval && val != "" && fval[val] ? fval[val] : ""; //pname;
+    str = fval && val != "" && fval[val] ? fval[val] : val ? val : ""; //pname;
     if (!str)
       str = "";
   }
@@ -1840,7 +1840,6 @@ $.any.DataView.prototype._processKeyup = function (event)
 // Default action when clicking on a name link.
 $.any.DataView.prototype.itemLinkClicked = function (event)
 {
-  this.options.item_opening = true;
   return this.showItem(event);
 }; // itemLinkClicked
 
@@ -1937,6 +1936,7 @@ $.any.DataView.prototype._doShowItem = function (opt)
     console.warn("View missing. "); // Should never happen TODO! i18n
    return false;
   }
+  view.options.item_opening = true; // To make top right close icon appear
   let filter = view.getFilter(type,kind);
   if (!filter) {
     this.model.message = i18n.error.FILTER_NOT_FOUND.replace("%%", type+" "+kind+"");
@@ -1950,7 +1950,7 @@ $.any.DataView.prototype._doShowItem = function (opt)
     con_div = view.element;
   con_div.empty(); // TODO! This should perhaps be done elsewhere
   view.element  = con_div;
-  view.main_div = null;
+  view.main_div = null; // TODO! Why?
   view.options.data_level = 0;
   view.id_stack     = [...view.root_id_stack];
   if (is_new) {
