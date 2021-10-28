@@ -738,7 +738,7 @@ class anyTable extends dbTable
   protected function dbSearchList(&$data,$skipOwnId=false,$flat=false,$simple=false)
   {
     if ($this->mType == "user" && $this->mListForType == "user")
-      return true; // We do not have subusers (user table does not have parent_id field)
+      return true; // We do not have subusers (user table does not have parent_id field) TODO! Neccessary?
 
     // Build and execute the full statement
     $stmt = $this->dbPrepareSearchListStmt($skipOwnId);
@@ -886,7 +886,7 @@ class anyTable extends dbTable
       $where_id = $link_table.".".$this->mListForType."_id='".$this->mListForId."' ";
       $where = "WHERE ".$where_id;
     }
-    if ($this->mType!="user" && // user table has no parent_id field
+    if ($this->hasParentId() &&
         (isset($this->mListForType) || (isset($this->mId) && $this->mId != ""))) {
       if (isset($this->mId) && $this->mId != "" && is_numeric($this->mId) &&
           (!isset($this->mListForType) || (isset($this->mListForType) && $this->mListForType == $this->mType))) {
@@ -928,7 +928,7 @@ class anyTable extends dbTable
   //
   // Search database for a list of the items with ids as given in the ids array, including meta data.
   // Returns true on success, false on error.
-  // TODO! Must LEFT JOIN link tables. Also, why not just use dbSearchList?
+  // TODO! Should LEFT JOIN link tables.
   //
   protected function dbSearchListFromIds(&$data,$ids,$skipOwnId=false,$flat=false,$simple=false)
   {
@@ -1743,20 +1743,10 @@ class anyTable extends dbTable
         return null;
     }
     else
-    if ($upd_what == "link") { // TODO
-      $res = $this->dbUpdateLink();
-      if (!$res)
+    if ($upd_what == "link") {
+      if (!$this->dbUpdateLink())
         return null;
-      if (!empty(Parameters::get("add")) && Parameters::get("sea") == "y") {
-        // Search data for the links that were added and return it to the client
-        $updlist = explode(",",Parameters::get("add"));
-        $link_type = Parameters::get("link_type");
-        $table = anyTableFactory::create($link_type,$this);
-        if ($table->dbSearchListFromIds($table->mData,$updlist))
-          return $table->prepareData($table->mData);
-        $this->setError($table->getError());
-        return null;
-      }
+      return $this->dbSearch(); // Return the complete data set to client
     }
     else {
       $this->setError("Illegal parameter value: $upd_what. ");
@@ -1986,7 +1976,7 @@ class anyTable extends dbTable
         }
         if ($updlist !== null) {
           foreach ($updlist as $updval) {
-            if ($updval && $gid != $id) {
+            if ($updval && $gid != $id && intval($id) != intval($updval)) {
               $stmt = "UPDATE ".$this->getTableName()." SET parent_id='".intval($id)."' WHERE ".$id_key."='".intval($updval)."'";
               //elog("dbUpdateLink(5):".$stmt);
               if (!$this->query($stmt))
