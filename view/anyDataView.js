@@ -809,13 +809,28 @@ $.any.DataView.prototype.refreshThead = function (thead,data,id,type,kind,edit,i
     console.warn(this.model.message);
     return null;
   }
+  let add_opt = null;
+  if (this.options.showButtonAdd && !this.options.isSelectable && (this.model.data && !this.model.data.groupingForId))
+    add_opt = { data:       data,
+                id:         "new", // Find a new id
+                type:       type,
+                kind:       kind,
+                pid:        id,
+                group_id:   this.current_group_id,
+                id_str:     id_str,
+                filter:     filter,
+                isEditable: true,
+                is_new:     true,
+                edit:       true,
+              };
   let tr = $("<tr></tr>");
   thead.append(tr);
   // First tool cell for editable list
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
       (this.options.isEditable && (this.options.showButtonAdd || this.options.showButtonEdit || this.options.showButtonUpdate))) {
     let th = $("<th class='any-th any-list-th any-tools-first-th'></th>");
-
+    if (add_opt && this.options.showButtonAdd == 1)
+      this.refreshAddButton(th,add_opt);
     tr.append(th);
   }
   // Table header cells
@@ -838,7 +853,8 @@ $.any.DataView.prototype.refreshThead = function (thead,data,id,type,kind,edit,i
   // Last tool cell for editable list
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) || this.options.isEditable) {
     let th  = $("<th class='any-th any-list-th any-tools-last-th'></th>");
-
+    if (add_opt && this.options.showButtonAdd == 2)
+      this.refreshAddButton(th,add_opt);
     tr.append(th);
   }
   // Clean up
@@ -1675,6 +1691,27 @@ $.any.DataView.prototype.refreshCloseItemButton = function (parent,opt)
   return btn;
 }; // refreshCloseItemButton
 
+// Add-button in list table header
+// By default calls addListEntry
+$.any.DataView.prototype.refreshAddButton = function (parent,opt)
+{
+  let tit_str = i18n.button.buttonAddToList.replace("%%",opt.type);
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_new_line_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-button pointer' title='"+tit_str+"'>"+
+              "<i class='fa fa-plus'></i>"+
+              btn_str+
+              "</div>");
+  let fun = this.option("localAddListEntry")
+            ? this.option("localAddListEntry")
+            : this.addListEntry;
+  btn.off("click").on("click", opt, $.proxy(fun,this));
+  if (parent && parent.length)
+    parent.append(btn);
+  return btn;
+}; // refreshAddButton
 
 // Edit-button in first list or item table cell
 // By default calls toggleEdit
@@ -1842,6 +1879,106 @@ $.any.DataView.prototype._processKeyup = function (event)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+$.any.DataView.prototype.addListEntry = function (event)
+{
+  let id   = event.data.id;
+  let pid  = event.data.pid;
+  let type = event.data.type;
+  if (event.data.edit && event.data.new_id) {
+    this.model.dataDelete({id:event.data.new_id});
+    this.refreshData(this.element,this.model.data,pid,type);
+  }
+  // Get a new id (from database, if we use that) and add a new empty item to the data model.
+  event.data.data = this.model.dataSearch({ type: type,
+                                            id:   pid,
+                                            data: this.model.data,
+                                         }); // Find the place to add the new item
+  if (event.data.data  || id == "new") {
+    if (this.model.mode != "remote") {
+      event.data.kind = "list";
+      event.data.new_id = this.model.dataSearchNextId(type,event.data.data);
+      if (event.data.new_id >= 0) {
+        this._addListEntry(event.data);
+      }
+      else {
+        this.model.error = "Next id not found. "; // TODO! i18n
+        console.error(this.model.error);
+        return false;
+      }
+    }
+    else // remote
+      this.model.dbSearchNextId({ type:    type,
+                                  id_str:  event.data.id_str,
+                                  success: this._addListEntryFromDB,
+                                  context: this,
+                               });
+  }
+  else
+    console.error("Item "+id+" not found. ");
+  return true;
+}; // addListEntry
+
+$.any.DataView.prototype._addListEntryFromDB = function (context,serverdata,options)
+{
+  if (serverdata && serverdata.JSON_CODE)
+    serverdata = serverdata.JSON_CODE;
+  if (options) {
+    let view = options.context;
+    if (view) {
+      serverdata.kind = "list";
+      serverdata.type = options.type;
+      serverdata.new_id = serverdata.id;
+      serverdata.group_id = this.current_group_id;
+      if (typeof serverdata.new_id == "string")
+        if (serverdata.new_id.length && serverdata.new_id[0] != "+")
+          serverdata.new_id = "+"+serverdata.new_id;
+      serverdata.data   = view.model.data;
+      serverdata.filter = view.getFilter(serverdata.type,serverdata.kind);
+      view._addListEntry(serverdata);
+    }
+  }
+}; // _addListEntryFromDB
+
+$.any.DataView.prototype._addListEntry = function (opt)
+{
+  let data     = opt.data;
+//let id       = opt.id;
+  let pid      = opt.pid;
+  let new_id   = opt.new_id;
+  let id_str   = opt.id_str;
+  let type     = opt.type;
+  let kind     = opt.kind;
+  let filter   = opt.filter;
+//let edit     = opt.edit;
+
+  // TODO! Direct manipulation of data model below:
+  if (!data)
+    data = this.model.data;
+  if (pid && data[pid] && data[pid].data)
+    data = data[pid].data;
+  if ((new_id || new_id===0) && !data[new_id])  { // New row
+    data[new_id] = {};
+    data[new_id][kind] = type;
+    data[new_id].data = {};
+  }
+  if (data[new_id]) {
+    let id_key = this.model.id_key
+                 ? this.model.id_key
+                 : type+"_id";
+    for (let filter_id in filter) {
+      if (filter_id == id_key)
+        data[new_id][filter_id] = new_id;
+      else
+        data[new_id][filter_id] = "";
+    }
+    data[new_id].type   = type;
+    data[new_id].kind   = kind;
+    data[new_id].is_new = true;
+  }
+
+  this.refreshOne(this.element,data,new_id,type,kind,true,id_str);
+
+}; // _addListEntry
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2082,7 +2219,6 @@ $.any.DataView.prototype.doToggleEdit = function (opt)
 }; // doToggleEdit
 
 ///////////////////////////////////////////////////////////////////////////////
-
 
 /**
  * @method dbSearchParents
