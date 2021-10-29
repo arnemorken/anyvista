@@ -15,14 +15,19 @@ var i18n = {
 
   button: {
     buttonNew:            "New",
+    buttonAdd:            "Add",
     buttonEdit:           "Edit",
     buttonUpdate:         "Save",
     buttonDelete:         "Delete",
+    buttonAddToList:      "Add %% to list",
+    buttonRemove:         "Remove",
+    buttonRemoveFromList: "Remove %% from list",
     buttonCancel:         "Cancel",
   },
 
   message: {
     newType:        "New %%",
+    removeByName:   "Do you want to remove %%",
     deleteByName:   "Do you want to delete '%%'?\n\n<br/>You can not undo this action.",
   },
 
@@ -35,6 +40,7 @@ var i18n = {
     OPTIONS_MISSING:     "Options missing. ",
     DATA_MISSING:        "Data missing. ",
     TYPE_MISSING:        "Type missing. ",
+    ID_KEY_MISSING:      "Id key missing. ",
     ID_MISSING:          "Id missing. ",
     ID_ILLEGAL:          "Id must be a positive integer or a string. ",
     UPDATE_DATA_MISSING: "No data for update. ",
@@ -43,6 +49,7 @@ var i18n = {
     VIEW_AREA_MISSING:   "View area missing. ",
     FILTERS_MISSING:     "filter missing. ",
     FILTER_NOT_FOUND:    "Filter for %% not found. ",
+    TOO_MUCH_RECURSION:  "Too much recursion. ",
     NOTHING_TO_UPDATE:   "Nothing to update. ",
   },
 };

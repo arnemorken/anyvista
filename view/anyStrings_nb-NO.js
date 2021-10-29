@@ -15,14 +15,19 @@ var i18n = {
 
   button: {
     buttonNew:            "Ny",
+    buttonAdd:            "Legg til",
     buttonEdit:           "Rediger",
     buttonUpdate:         "Lagre",
     buttonDelete:         "Slett",
+    buttonAddToList:      "Legg til %% i liste",
+    buttonRemove:         "Fjern",
+    buttonRemoveFromList: "Fjern %% fra liste",
     buttonCancel:         "Avbryt",
   },
 
   message: {
     newType:        "Ny %%",
+    removeByName:   "Vil du fjerne %%",
     deleteByName:   "Vil du slette '%%'?\n\n<br/>Du kan ikke angre denne handlingen.",
   },
 
@@ -35,6 +40,7 @@ var i18n = {
     OPTIONS_MISSING:     "Mangler options. ",
     DATA_MISSING:        "Mangler data. ",
     TYPE_MISSING:        "Mangler type. ",
+    ID_KEY_MISSING:      "Mangler id key. ",
     ID_MISSING:          "Mangler id. ",
     ID_ILLEGAL:          "Id må være et positivt heltall eller en streng. ",
     UPDATE_DATA_MISSING: "Mangler data for oppdatering. ",
@@ -43,6 +49,7 @@ var i18n = {
     VIEW_AREA_MISSING:   "Mangler view area. ",
     FILTERS_MISSING:     "filter mangler. ",
     FILTER_NOT_FOUND:    "Filter for %% finnes ikke. ",
+    TOO_MUCH_RECURSION:  "For mye rekursjon. ",
     NOTHING_TO_UPDATE:   "Ingenting å oppdatere. ",
   },
 };
