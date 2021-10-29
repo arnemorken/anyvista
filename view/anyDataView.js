@@ -63,6 +63,7 @@
  *      new anyDataView({filters:my_filters,id:"my_content"});
  */
 let ANY_LOCALE_NOT_FOUND = "No locale found. ";
+let ANY_MAX_REF_REC = 30;
 (function($) {
 
 $.widget("any.DataView", {
@@ -120,6 +121,7 @@ $.widget("any.DataView", {
     indent_amount:         20,
     cutoff:                100,
     item_opening:          false,
+    ref_rec:               0, // Used to prevent (theoretical) infinite recursion
   }, // options
 
   // Constructor
@@ -384,6 +386,10 @@ $.any.DataView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,p
     parent = this.element;
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
+
+  ++this.options.ref_rec;
+  if (this.options.ref_rec > ANY_MAX_REF_REC)
+    throw i18n.error.TOO_MUCH_RECURSION;
 
   if (!data && this.model)
     data = this.model.data;
