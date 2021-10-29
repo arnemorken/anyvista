@@ -905,7 +905,7 @@ class anyTable extends dbTable
     if ($this->mType == "group") { // TODO! Return this fragment from groupTable class
       $group_type = Parameters::get("group_type");
       if ($group_type) {
-        $gstr = "(psi_group.group_type='".$group_type."') ";
+        $gstr = "(any_group.group_type='".$group_type."') ";
         if ($where === null)
           $where  = "WHERE ".$gstr;
         else
