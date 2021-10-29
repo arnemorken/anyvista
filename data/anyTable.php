@@ -902,6 +902,16 @@ class anyTable extends dbTable
           $where .= " OR (".$gstr.") ";
       }
     }
+    if ($this->mType == "group") { // TODO! Return this fragment from groupTable class
+      $group_type = Parameters::get("group_type");
+      if ($group_type) {
+        $gstr = "(psi_group.group_type='".$group_type."') ";
+        if ($where === null)
+          $where  = "WHERE ".$gstr;
+        else
+          $where .= " AND ".$gstr;
+      }
+    }
     if ($skipOwnId) {
       $skip_str = $this->getTableName().".".$this->mIdKeyTable." != '".$this->mId."'";
       if ($where === null)
