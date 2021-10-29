@@ -1329,6 +1329,8 @@ $.any.DataView.prototype.createCellEntry = function (id,type,kind,id_str,filter_
   let pid = data_item["parent_id"];
   if (typeof val != "object")
     val = $("<textarea />").html(val).text(); // Convert html entities to real html
+  if (filter_key.EDITABLE===0 || filter_key.EDITABLE===false)
+    edit = false;
   switch (filter_key.HTML_TYPE) {
     case "label":    return this.getLabelStr   (type,kind,id,val); // Always noneditable
     case "html":     return this.getHtmlStr    (type,kind,id,val,edit);
