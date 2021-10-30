@@ -71,10 +71,13 @@
   width:        800px;
   margin-top:   1em;
   border-top:   1px solid #333;
-  background:   #e8e8e8;
+  height:       2.5em;
+  background:   #ccc;
 }
 .any-message {
   margin-left:  0.7em;
+  display:      inline-block;
+  padding-top:  .6em;
 }
 
 /**************************
@@ -167,17 +170,18 @@
   padding-right:    0;
   display:          inline-block;
   position:         relative;
-  bottom:           0;
+  bottom:           .3em;
   float:            right;
-  right:            30px;
+  right:            1em;
 }
 .any-icon {
 }
 .any-new-icon {
   float:            right;
   padding:          1em;
-  padding-right:    .2em;
   padding-left:     0;
+  padding-right:    .4em;
+  padding-top:      .65em;
 }
 .any-edit-icon {
   display:          inline-block;
@@ -191,7 +195,7 @@
 }
 .any-cancel-icon {
   display:          inline-block;
-  padding-right:    .2em;
+  padding-right:    .3em;
 }
 
 /**************************
