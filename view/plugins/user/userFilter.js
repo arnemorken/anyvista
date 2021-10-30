@@ -75,10 +75,9 @@ var userFilter = function (options)
       },
       select: {
         user_id:         { HEADER:"User id",          DISPLAY:0, HTML_TYPE:"label" },
-        display_name:    { HEADER:"Disp name",        DISPLAY:1, HTML_TYPE:"link"},
         user_name:       { HEADER:"User name",        DISPLAY:1, HTML_TYPE:"link"},
-        first_name:      { HEADER:"First name",       DISPLAY:1, HTML_TYPE:"text"},
-        last_name:       { HEADER:"Last name",        DISPLAY:1, HTML_TYPE:"text"},
+        first_name:      { HEADER:"First name",       DISPLAY:0, HTML_TYPE:"text"},
+        last_name:       { HEADER:"Last name",        DISPLAY:0, HTML_TYPE:"text"},
       },
     },
   };

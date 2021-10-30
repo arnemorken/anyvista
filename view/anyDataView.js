@@ -97,6 +97,7 @@ $.widget("any.DataView", {
     showButtonAddLink:     true,
     showButtonLabels:      false,
     useOddEven:            true,
+    linkIcons:             null,
 
     // Local methods
     localSelect:           null,
@@ -107,6 +108,7 @@ $.widget("any.DataView", {
     localCancel:           null,
     localNewItem:          null,
     localCloseItem:        null,
+    localAddListEntry:     null,
 
     // "Private" and undocumented options:
     subscribe_default:     true, // The default onModelChange method will be subscribed to.
@@ -420,7 +422,7 @@ $.any.DataView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,p
           }
           let curr_type = view._findType(data,prev_type,idc);
           let curr_kind = view._findKind(data,prev_kind,idc);
-          if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type || (prev_type == "group" && view.model.type == "group")))
+          if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type /*|| (prev_type == "group" && view.model.type == "group")*/))
             view = view.createDataView(parent,data,idc,curr_type,curr_kind); // New type to display, create new view
           if (view)
             view.refreshOne(parent,data,idc,curr_type,curr_kind,edit,"",pdata,pid);
@@ -431,7 +433,7 @@ $.any.DataView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,p
     }
     // Refresh bottom toolbar
     if (!this.options.isSelectable && kind && this.id_stack && this.id_stack.length==1 &&
-        (this.options.showMessages || this.options.showButtonNew)) {
+        (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
       this.refreshToolbarBottom(parent,data,this.model.id,type,kind,edit);
     }
     if (kind == "head")
@@ -473,8 +475,7 @@ $.any.DataView.prototype.refreshToolbarBottom = function (parent,data,id,type,ki
 {
   if (!parent || !type || !kind)
     return null;
-  if (!this.options.showMessages &&
-      !this.options.showButtonNew)
+  if (!this.options.showMessages && !this.options.showButtonNew && !this.options.showButtonAddLink)
     return null;
 
   // Create container
@@ -504,6 +505,18 @@ $.any.DataView.prototype.refreshToolbarBottom = function (parent,data,id,type,ki
                 is_new: true,
               };
     this.refreshNewItemButton(bardiv,opt);
+  }
+  if (this.options.showButtonAddLink && this.model.id) {
+    // Create an "add link" button
+    let opt = {
+      data:   data,
+      id:     id,
+      type:   type,
+      kind:   "item",
+      id_str: id,
+      edit:   true,
+    };
+    this.refreshAddLinkButton(bardiv,opt);
   }
   return bardiv;
 }; // refreshToolbarBottom
@@ -1079,6 +1092,22 @@ $.any.DataView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,k
     $("#"+td_id).remove();
   let td = $("<td id='"+td_id+"' class='any-td any-"+kind+"-td any-td-first'></td>");
   tr.append(td);
+  if (this.options.isSelectable && (kind == "list" || kind == "select")) {
+    let checked = this.model.select.has(parseInt(id));
+    let sel_opt = { data:       data,
+                    id:         id,
+                    type:       type,
+                    kind:       kind,
+                    id_str:     id_str,
+                    filter:     filter,
+                    isEditable: isEditable,
+                    checked:    checked,
+                    pdata:      pdata,
+                    pid:        pid,
+                  };
+    this.refreshSelectButton(td,sel_opt);
+  }
+  else
   if (this.options.isEditable || edit || isEditable) {
     if (this.options.showButtonEdit) {
       let edt_opt = { data:       data,
@@ -1132,7 +1161,7 @@ $.any.DataView.prototype.refreshTableDataLastCell = function (tr,data,id,type,ki
                      pid:        pid,
                    };
     last_opt.isEditable = isEditable;
-    if (this.options.showButtonRemove && (this.options.isRemovable) && id)
+    if (this.options.showButtonRemove && this.options.isRemovable && id && kind == "list")
       this.refreshRemoveButton(td,last_opt);
     if (this.options.showButtonDelete && this.options.isDeletable && id)
       this.refreshDeleteButton(td,last_opt);
@@ -1305,6 +1334,7 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
   //isLinkable:       this.options.isLinkable,
     isSelectable:     this.options.isSelectable, // TODO!
     itemLinkClicked:  this.options.itemLinkClicked,
+    preselected:      this.options.isSelectable ? this.options.preselected : null,
   };
   let v_str = view_opt.grouping ? type+"DataView"+view_opt.grouping.capitalize() : type+"DataView";
   if (!window[v_str])
@@ -1700,7 +1730,7 @@ $.any.DataView.prototype.refreshAddButton = function (parent,opt)
   let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_new_line_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
-  let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-button pointer' title='"+tit_str+"'>"+
+  let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-add any-tool-button pointer' title='"+tit_str+"'>"+
               "<i class='fa fa-plus'></i>"+
               btn_str+
               "</div>");
@@ -1712,6 +1742,31 @@ $.any.DataView.prototype.refreshAddButton = function (parent,opt)
     parent.append(btn);
   return btn;
 }; // refreshAddButton
+
+// Select-button in first list table cell
+// By default calls _toggleChecked
+$.any.DataView.prototype.refreshSelectButton = function (parent,opt)
+{
+  let tit_str = i18n.button.buttonSelect;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_select_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let check_str = opt.checked
+                  ? "<i class='far fa-check-square'></i>"
+                  : "<i class='far fa-square'></i>";
+  let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-select-icon any-icon pointer' title='"+tit_str+"'>"+
+              "<span class='check'>"+check_str+"</span>"+
+              btn_str+
+              "</div>");
+  if (parent && parent.length)
+    parent.append(btn);
+  let fun = this.option("localSelect")
+            ? this.option("localSelect")
+            : this._toggleChecked;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  return btn;
+}; // refreshSelectButton
 
 // Edit-button in first list or item table cell
 // By default calls toggleEdit
@@ -1857,6 +1912,105 @@ $.any.DataView.prototype.refreshNewItemButton = function (parent,opt)
     parent.append(btn);
   return btn;
 }; // refreshNewItemButton
+
+// Button in bottom toolbar for displaying a menu for adding links
+// By default calls showLinkMenu
+$.any.DataView.prototype.refreshAddLinkButton = function (parent,opt)
+{
+  if (!this.model.plugins || !this.options.linkIcons)
+    return;
+
+  let tit_str = i18n.button.buttonAddLink+"...";
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.base_id+"_"+opt.type+"_add_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn     = $("<div id='"+btn_id+"' class='any-tool-addremove any-tool-button pointer' title='"+tit_str+"'>"+
+                  "<i class='fa fa-plus'></i>&nbsp;"+i18n.message.addRemove+
+                  btn_str+
+                  "</div>");
+  let fun = this.option("localShowLinkMenu")
+            ? this.option("localShowLinkMenu")
+            : this.showLinkMenu;
+  btn.off("click").on("click", opt, $.proxy(fun,this));
+  if (parent && parent.length)
+    parent.append(btn);
+  if (!opt.edit)
+    btn.hide();
+
+  let menu_id = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_link_dropdown";
+  opt.element_id = menu_id;
+  if ($("#"+menu_id).length)
+    $("#"+menu_id).remove();
+  let dd_menu = $("<div "+
+                  "class='w3-dropdown-content w3-bar-block w3-border' "+
+                  "style='min-width:120px;bottom:20px;' "+
+                  "id='"+menu_id+"'>"+
+                  "</div>");
+  btn.append(dd_menu);
+  dd_menu.hide();
+
+  // Clicking off the menu will hide it
+  let opt2 = {...opt};
+  opt2.edit = false;
+  $(document).off("click").on("click", opt2, fun);
+
+  // Add the clickable menu entries
+  for (let plugin_type in this.options.linkIcons) {
+    if (this.options.linkIcons.hasOwnProperty(plugin_type)) {
+      let plugin_opt = { data:      opt.data,
+                         id:        opt.id,
+                         type:      opt.type,
+                         link_type: plugin_type,
+                         link_icon: this.options.linkIcons[plugin_type],
+                       };
+      let link_btn = this.refreshLinkButton(plugin_opt,this.dbSearchLinks);
+      dd_menu.append(link_btn); // Subevents
+    }
+  }
+  return btn;
+}; // refreshAddLinkButton
+
+// Button in menu for adding a link
+// By default calls dbSearchLinks
+$.any.DataView.prototype.refreshLinkButton = function (options,onClickMethod)
+{
+  if (!this.model)
+    throw i18n.error.MODEL_MISSING;
+  let sub     = options.type == options.link_type ? "sub"+options.type : options.link_type;
+  let tit_str = sub; //i18n.button.buttonAdd+" "+sub;
+  let btn_str = tit_str; //this.option("showButtonLabels") ? tit_str : "";
+  let btn_id  = this.base_id+"_"+options.type+"_"+options.link_type+"_link_icon";
+  let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-button pointer' title='"+tit_str+"'>"+
+              "<div style='display:inline-block;width:20px;'><i class='"+options.link_icon+"'></i></div>..."+
+              btn_str+
+              "</div><br/>");
+  let fun = onClickMethod
+            ? onClickMethod
+            : this.dbSearchLinks;
+  btn.unbind("click");
+  btn.bind("click", options, $.proxy(fun,this));
+  return btn;
+}; // refreshLinkButton
+
+// Display or hide the link menu
+$.any.DataView.prototype.showLinkMenu = function (event)
+{
+  let dd_menu = $("#"+event.data.element_id);
+  let elem = document.getElementById(event.data.element_id);
+  if (elem) {
+    if (elem.className.indexOf("w3-show") == -1 && event.data.edit !== false) { // TODO! w3-show should not be hardcoded
+      elem.className += " w3-show";
+      dd_menu.show();
+    }
+    else {
+      elem.className = elem.className.replace(" w3-show", "");
+      dd_menu.hide();
+    }
+  }
+  event.preventDefault();
+  return false;
+}; // showLinkMenu
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2034,7 +2188,7 @@ $.any.DataView.prototype._doShowItem = function (opt)
 {
   let data   = opt.data;
   let id     = opt.id;
-  let type   = opt.head ? opt.head : opt.item ? opt.item : opt.list ? opt.list : "";
+  let type   = opt.head ? opt.head : opt.item ? opt.item : opt.list ? opt.list : opt.type ? opt.type : "";
   let kind   = "item";
   let is_new = opt.is_new != undefined ? opt.is_new : false;
   let item   = null;
@@ -2217,6 +2371,29 @@ $.any.DataView.prototype.doToggleEdit = function (opt)
   }
   return this;
 }; // doToggleEdit
+
+///////////////////////////////////////////////////////////////////////////////
+
+$.any.DataView.prototype._toggleChecked = function (event)
+{
+  let opt = event.data;
+  let chk_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_select_icon .check";
+  let check_str = (opt.checked)
+                  ? "<i class='far fa-square'></i>"
+                  : "<i class='far fa-check-square'></i>";
+  let chk = $("#"+chk_id);
+  if (chk.length)
+    chk.html(check_str);
+  opt.checked = !opt.checked;
+  if (opt.checked) {
+    this.model.select.add(parseInt(opt.id));
+    this.model.unselect.delete(parseInt(opt.id));
+  }
+  else {
+    this.model.select.delete(parseInt(opt.id));
+    this.model.unselect.add(parseInt(opt.id));
+  }
+}; // _toggleChecked
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2412,6 +2589,123 @@ $.any.DataView.prototype.validateUpdate = function (data)
 {
   return "";
 }; // validateUpdate
+
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @method dbSearchLinks
+ * @description Search for the list of items to select from.
+ *              Called when selecting in the "Add..." menu in bottom toolbar of an item.
+ *              The success metod builds a list of selectable items in a dialog.
+ * @param  {Object} event
+ * @return true on success, false on error.
+ */
+$.any.DataView.prototype.dbSearchLinks = function (event)
+{
+  if (!this.model)
+    return false;
+  let options = {
+   type:        event.data.link_type, // Switch types
+   id:          null,
+   link_type:   event.data.type,      // Switch types
+   simple:      true,
+   success:     this.dbUpdateLinkListDialog, // Call the view success handler
+   parent_view: this,
+  };
+  return this.model.dbSearch(options);
+}; // dbSearchLinks
+
+// Create a list of selectable items and display in a modal dialog.
+// Note: The 'this' context is here the calling model! Use options.parent_view for view methods!
+$.any.DataView.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
+{
+  let self = context; // context is the model
+  self.last_db_command = "sea";
+  if (serverdata) {
+    if (serverdata.JSON_CODE)
+      serverdata = serverdata.JSON_CODE;
+    if (Object.size(serverdata.data) == 0)
+      serverdata.data = null;
+    self.message = serverdata.message;
+    self.error   = serverdata.error;
+    if (self.message)
+      console.log("anyDataView.dbUpdateLinkListDialog: "+self.message);
+    if (self.error)
+      console.error("anyDataView.dbUpdateLinkListDialog: "+self.error);
+    else
+    if (serverdata.data && options.parent_view) {
+      let list_type   = options.type;
+    //let parent_id   = isInt(options.parent_id) ? parseInt(options.parent_id) : "";
+      let parent_view = options.parent_view;
+    //let id_str      = parent_view.id_stack.length ? parent_view.id_stack.join("_")+"_"+parent_id : "0_"+parent_id;
+      let new_base_id = parent_view._createBaseId();
+      let ll_id       = new_base_id+"_"+list_type+"_link_list";
+      let ll_contents = $("<div id='"+ll_id+"'></div>");
+      let select_list_view = parent_view.createDataView(ll_contents,serverdata.data,null,list_type,"list");
+      if (select_list_view) {
+        select_list_view.base_id = new_base_id;
+        select_list_view.options.showHeader      = false;
+        select_list_view.options.showTableHeader = false;
+        select_list_view.options.isSelectable    = true; // Use the select filter, if available
+        select_list_view.options.preselected     = parent_view.model.dataSearch({ type:list_type });
+        let mod_opt = { select: new Set() };
+        if (select_list_view.options && select_list_view.options.preselected)
+          for (var val of select_list_view.options.preselected) {
+            let sel_id = val[select_list_view.model.id_key];
+            if (sel_id && sel_id != self.id && (self.type != val.list || !val.parent_id || val.parent_id == self.id))
+              mod_opt.select.add(parseInt(val[select_list_view.model.id_key]));
+          }
+        select_list_view.model.dataInit(mod_opt);
+        let par_view_id = parent_view.base_id+"_"+self.type+"_head_0_data";
+        let dia_id = w3_modaldialog({
+                       parentId:    par_view_id,
+                       elementId:   "",
+                       heading:     "Select "+list_type+"s to add / remove", // TODO! i18n
+                       contents:    select_list_view.main_div,
+                       width:       "25em", // TODO! css
+                       ok:          true,
+                       cancel:      true,
+                       okFunction:  parent_view.dbUpdateLinkList,
+                       context:     parent_view,
+                       // Sent to okFunction:
+                       type:        self.type,
+                       id:          self.id,
+                       data:        self.data,
+                       link_type:   select_list_view.model.type,
+                       select:      select_list_view.model.select,
+                       unselect:    select_list_view.model.unselect,
+                       name_key:    select_list_view.model.name_key,
+                     });
+        select_list_view.refresh(ll_contents,serverdata.data,null,list_type,"list",false,"");
+      }
+    }
+  }
+}; // dbUpdateLinkListDialog
+
+$.any.DataView.prototype.dbUpdateLinkList = function (opt)
+{
+  // Close dialog
+  w3_modaldialog_close(opt);
+
+  if (!this.model)
+    throw i18n.error.MODEL_MISSING;
+
+  // Update database
+  let mod_opt = {
+    type:      opt.type,
+    id:        opt.id,
+    data:      opt.data,
+    link_type: opt.link_type,
+    select:    opt.select,
+    unselect:  opt.unselect,
+    name_key:  opt.name_key,
+    view:      opt.view, // Refresh only this view
+  };
+  if (!this.model.dbUpdateLinkList(mod_opt))
+    return false;
+
+  return true;
+}; // dbUpdateLinkList
 
 ///////////////////////////////////////////////////////////////////////////////
 

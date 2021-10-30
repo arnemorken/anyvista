@@ -72,12 +72,12 @@ function w3_modaldialog(options)
                       "&nbsp;"+
                       can_btn_str+
                       "</div>";
-  let con = (typeof contents == "string") ? contents : "<div id='"+parentId+"_dialog'></div>";
-  let str = "<div class='w3-modal' style='z-index:9999;margin-bottom:1em;' id='"+dia_id+"'>"+
+  let con = (typeof contents == "string") ? contents : "<div id='"+parentId+"_dialog' style='padding-top:.7em;padding-bottom:.7em;border-top:1px solid #aaa;border-bottom:1px solid #aaa;'></div>";
+  let str = "<div class='w3-modal' style='z-index:9999;padding-bottom:1em;' id='"+dia_id+"'>"+
             "<div class='w3-modal-content' style='width:"+width+";border:1px solid #555;overflow-x:auto;'>"+
             // Header
             "<header class='w3-container'>"+
-            "<div class='w3-modaldialog-header' style='font-weight:bold;'>"+heading+"&nbsp;"+
+            "<div class='w3-modaldialog-header' style='font-weight:bold;background:#eeeeee;padding-top:.5em;'>"+heading+"&nbsp;"+
             "<span onclick='$(\"#"+dia_id+"\").remove()' class='w3-button w3-display-topright'>&times;</span>"+
             "</div>"+
             "</header>"+
@@ -96,7 +96,7 @@ function w3_modaldialog(options)
   if (typeof contents != "string") {
     let dia_con = $("#"+parentId+"_dialog");
     if (dia_con.length) {
-      dia_con.append(context.element);
+      dia_con.append(contents);
       dia_con.css("display","block");
     }
   }

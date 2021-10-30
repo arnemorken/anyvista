@@ -45,6 +45,9 @@ var groupFilter = function (options)
         group_name:        { HEADER:"Group name",  DISPLAY:1, HTML_TYPE:"link" },
         group_description: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"textspan" },
       },
+      select: {
+        group_name:        { HEADER:"Group name",  DISPLAY:1, HTML_TYPE:"link" },
+      },
     },
   };
 }; // constructor

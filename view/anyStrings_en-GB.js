@@ -23,12 +23,15 @@ var i18n = {
     buttonRemove:         "Remove",
     buttonRemoveFromList: "Remove %% from list",
     buttonCancel:         "Cancel",
+    buttonSelect:         "Select",
+    buttonAddLink:        "Add",
   },
 
   message: {
     newType:        "New %%",
     removeByName:   "Do you want to remove %%",
     deleteByName:   "Do you want to delete '%%'?\n\n<br/>You can not undo this action.",
+    addRemove:      "Add / remove...",
   },
 
   // Error codes

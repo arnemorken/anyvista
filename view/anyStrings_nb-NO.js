@@ -23,12 +23,15 @@ var i18n = {
     buttonRemove:         "Fjern",
     buttonRemoveFromList: "Fjern %% fra liste",
     buttonCancel:         "Avbryt",
+    buttonSelect:         "Velg",
+    buttonAddLink:        "Legg til",
   },
 
   message: {
     newType:        "Ny %%",
     removeByName:   "Vil du fjerne %%",
     deleteByName:   "Vil du slette '%%'?\n\n<br/>Du kan ikke angre denne handlingen.",
+    addRemove:      "Legg til / fjern...",
   },
 
   // Error codes
