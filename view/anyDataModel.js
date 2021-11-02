@@ -7,7 +7,7 @@
  *
  * anyList is copyright (C) 2011-2021 Arne D. Morken and Balanse Software.
  *
- * @license AGPLv3.0 for open source use or anyList Commercial License for commercial use.
+ * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
  * Get licences here: http://balanse.info/anylist/license/ (coming soon).
  *
  ****************************************************************************************
@@ -26,8 +26,8 @@
  * if of the item and either `this.data[id]` or `this.data[hdr_id].data[id]` should exist (where hdr_id
  * is the id of a single `head` entry).
  *
- * If used in connection with a database, then `mode` should be set to "remote" (see below). `type` will
- * then correspond to a database table and `id_key` to an id column in that table.
+ * If used in connection with a database `mode` should be set to "remote" (see below). `type` will then
+ * correspond to a database table and `id_key` to an id column in that table.
  *
  * See <a href="../modules/anyList.html">anyList`</a> for a full description of the format of the data structure
  * that the model works with.
@@ -651,14 +651,14 @@ anyDataModel.prototype.dataSearchMaxId = function (type,data)
  *                            `data[new_id] = indata[new_id]`
  *                          Optional. Default: undefined.
  *        {integer} new_id: If specified, indicates a new id that will be used when inserting the item:
- *                          - If `new_id` is specified, it is used as the id for the
+ *                          - If `new_id` is specified and >= 0, it is used as the id for the
  *                            inserted data item. Data that may already exist at the position specified
  *                            by new_id is overwritten. In this case `indata` will be inserted like this:
  *                            `item[id].data[new_id] = indata[new_id]`.
- *                          - If `new_id` is < 0, a new id is created by `dataSearchNextId` the indata will
- *                            be inserted like this:
+ *                          - If `new_id` is < 0, a new id is created by `dataSearchNextId` and the indata
+ *                            will be inserted like this:
  *                            `item[id].data[new_id] = indata`.
- *                            Note that in this case the indata must not be indexed (i.e. use {type:"foo"}
+ *                            Note! In this case the indata must *not* be indexed (i.e. use {type:"foo"}
  *                            rather than {38:{type:"foo"}}.
  *                          - If `new_id` is not specified, the indata will be inserted like this:
  *                           `item[id].data = indata`.
@@ -1002,7 +1002,7 @@ anyDataModel.prototype.dataDelete = function (options)
  *        {integer}  id:         Item's id. If specified, the database will be searched for this item.
                                  If not specified, a list of items of the specified type will be searched for.
  *                               Optional. Default: null.
- *        {integer}  type:       Item's type.
+ *        {string}   type:       Item's type.
  *                               Optional. Default: `this.type`.
  *        {boolean}  simple:
  *

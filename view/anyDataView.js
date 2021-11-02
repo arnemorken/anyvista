@@ -7,7 +7,7 @@
  *
  * anyList is copyright (C) 2011-2021 Arne D. Morken and Balanse Software.
  *
- * @license AGPLv3.0 for open source use or anyList Commercial License for commercial use.
+ * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
  * Get licences here: http://balanse.info/anylist/license/ (coming soon).
  *
  ****************************************************************************************
@@ -2402,7 +2402,12 @@ $.any.DataView.prototype._toggleChecked = function (event)
  * @description Search for the list of possible parent items for the item with the given id.
  *              Called when processing plugin filters.
  *              The success metod builds a dropdown menu.
- * @param
+ * @param  type
+ * @param  kind
+ * @param  id
+ * @param  val
+ * @param  edit
+ * @param  pid
  * @return true on success, false on error.
  */
 $.any.DataView.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)

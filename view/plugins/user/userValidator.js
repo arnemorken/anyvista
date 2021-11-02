@@ -1,14 +1,12 @@
 "use strict";
-/**
- ****************************************************************************************
+/****************************************************************************************
  *
  * anyList is copyright (C) 2011-2021 Arne D. Morken and Balanse Software.
  *
- * @license AGPLv3.0 for open source use or anyList Commercial License for commercial use.
+ * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
  * Get licences here: http://balanse.info/anylist/license/ (coming soon).
  *
- ****************************************************************************************
- */
+ ****************************************************************************************/
 /**
  * __user validator class.__
  *
