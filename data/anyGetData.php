@@ -30,6 +30,7 @@ function anyGetData($doEcho=false)
     $table = anyTableFactory::create($type,null);
     if ($table != null) {
       switch ($cmd) {
+        case "cre": $data = $table->dbCreate();     break;
         case "ins": $data = $table->dbInsert();     break;
         case "upd": $data = $table->dbUpdate();     break;
         case "add": $data = $table->dbAddLink();    break;

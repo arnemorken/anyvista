@@ -492,6 +492,37 @@ class anyTable extends dbTable
   } // findPluginTableName
 
   /////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////// Create /////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+
+  public function dbCreate()
+  {
+    try {
+      // sql to create table
+      $type = Parameters::get("type");
+      if (!$type)
+        $type = $this->mType;
+      $table = Parameters::get("table");
+      $tableName = "any_".$type;
+      $sql = "CREATE TABLE $tableName (";
+      foreach ($table as $name => $val)
+        $sql .= $name." ".$val.",";
+      $unique = Parameters::get("unique");
+      if (isset($unique))
+        $sql .= "UNIQUE KEY(".$unique.")";
+      else
+        $sql[strlen($sql)-1] = " "; // Replace last "," with " "
+      $sql .= ")";
+      //elog("dbCreate,sql:$sql");
+      $this->getConnection()->mDBHandle->exec($sql); // TODO! Delegate this to dbTable class
+      elog("Table $tableName created successfully"); // TODO! Check for non-catchable errors!
+    }
+    catch(PDOException $e) {
+      elog("dbCreate error:".$sql."\n".$e->getMessage());
+    }
+  } // dbCreate
+
+  /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Searches ////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 

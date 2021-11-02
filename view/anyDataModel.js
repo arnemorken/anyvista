@@ -187,7 +187,6 @@ var anyDataModel = function (options)
   */
   this.auto_search_init = true;
 
-
   /**
   * @property {Boolean} auto_callback
   * @default false
@@ -991,6 +990,100 @@ anyDataModel.prototype.dataDelete = function (options)
 /////////////////////////////////////////////////
 //////// Methods that work with database ////////
 /////////////////////////////////////////////////
+
+/**
+ * @method dbCreate
+ * @description
+ * @param {Object} options An object which may contain these elements:
+ *
+ *        {string}   type:       The table type, this will be the basis for the table name.
+ *                               Optional. Default: `this.type`.
+ *        {Object}   table:      The fields of the table.
+ *                               Optional. If not specified, only the id and name fields will be created.
+ *        {integer}  timeoutSec: Number of seconds before timing out.
+ *                               Optional. Default: 10.
+ *        {Function} success:    Method to call on success.
+ *                               Optional. Default: `this.dbCreateSuccess`.
+ *        {Function} fail:       Method to call on error or timeout.
+ *                               Optional. Default: `this._dbFail`.
+ *        {Function} context:    The context of the success and fail methods.
+ *                               Optional. Default: `this`.
+ *
+ * @return true if
+ */
+anyDataModel.prototype.dbCreate = function (options)
+{
+  let type  = options.type ? options.type : type;
+
+  if (!options.timeoutSec)
+    options.timeoutSec = 10;
+  $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  this.success = options.success ? options.success : this.dbCreateSuccess;
+  this.fail    = options.fail    ? options.fail    : this._dbFail;
+  this.context = options.context ? options.context : this;
+  this.message = "";
+  this.error   = "";
+  let self = this;
+  if (this.mode == "remote") { // Remote server call
+    let url = this._getDataSourceName()+
+              "?echo=y"+
+              "&cmd=cre"+
+              "&type="+type;
+    if (options.unique)
+      url += "&unique="+options.unique;
+    if (!url)
+      return false;
+    let tab = {};
+    tab.table = options.table;
+    $.getJSON(url,tab) // Call server
+    .done(function(serverdata,textStatus,jqXHR) {
+      return self.success ? self.success(self,serverdata,options) : false;
+    })
+    .fail(function(jqXHR,textStatus,error) {
+      return self.fail    ? self.fail   (self,jqXHR) : false;
+    });
+    return true;
+  }
+  else { // Local method call
+    if (!self.success) {
+      this.message = i18n.error.SUCCCESS_CB_MISSING;
+      console.warn("anyDataModel.dbCreate: "+this.message);
+      return false;
+    }
+    return self.success(this,this,options);
+  }
+
+}; // dbCreate
+
+/**
+ * @method dbCreateSuccess
+ * @description Default success callback method for dbSearch.
+ * @param {Object} context
+ *        {Object} serverdata
+ *        {Object} options
+ *
+ * @return context
+ */
+anyDataModel.prototype.dbCreateSuccess = function (context,serverdata,options)
+{
+  let self = context;
+  self.last_db_command = "cre";
+  if (serverdata) {
+    if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
+      serverdata = serverdata.JSON_CODE;
+    if (Object.size(serverdata.data) == 0)
+      serverdata.data = null;
+    self.message = serverdata.message;
+    self.error   = serverdata.error;
+    if (self.message)
+      console.log("anyDataModel.dbCreateSuccess: "+self.message);
+    if (self.error)
+      console.error("anyDataModel.dbCreateSuccess: "+self.error);
+  }
+  if (self.cbExecute)
+    self.cbExecute();
+  return context;
+}; // dbCreateSuccess
 
 /**
  * @method dbSearch
