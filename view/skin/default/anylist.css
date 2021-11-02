@@ -127,7 +127,6 @@
 .itemText,
 .itemNumber,
 .itemDate {
-  width:            90px;
 }
 
 /*** Input fields ***/
@@ -168,7 +167,6 @@
 .any-tool-addremove {
   padding:          1em;
   padding-right:    0;
-  display:          inline-block;
   position:         relative;
   bottom:           .3em;
   float:            right;
