@@ -1,14 +1,12 @@
 <?php
-/**
- ****************************************************************************************
+/****************************************************************************************
  *
  * anyList is copyright (C) 2011-2021 Arne D. Morken and Balanse Software.
  *
- * @license AGPLv3.0 for open source use or anyList Commercial License for commercial use.
+ * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
  * Get licences here: http://balanse.info/anylist/license/ (coming soon).
  *
- ****************************************************************************************
- */
+ ****************************************************************************************/
 require_once "anyTable.php";
 /**
  * __Class for interacting with an anyList group database table.__
