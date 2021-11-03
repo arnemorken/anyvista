@@ -1379,6 +1379,10 @@ anyDataModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,opti
  *                               rather than updated. Note: If set, an insert operation will be performed
  *                               even if `options.id` has a value.
  *                               Optional. Default: false.
+ *        {Object}   fields:     An array of strings to be sent to the server, indicating which columns
+ *                               of the table should be used in the update/insert. These fields are only
+ *                               applied if the server fails to find a filter corresponding to `type`.
+ *                               Optional. Default: `undefined`.
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
  *        {Function} success:    Method to call on success.
@@ -1450,6 +1454,8 @@ anyDataModel.prototype.dbUpdate = function (options)
     let url = this.dbUpdateGetURL(options);
     if (!url)
       return false;
+    if (options.fields)
+      item_to_send.fields = options.fields;
     $.getJSON(url,item_to_send) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
       return self.success ? self.success(self,serverdata,options) : false;
