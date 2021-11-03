@@ -73,6 +73,9 @@
  *      {boolean}  auto_callback:    If true, cbExecute will be called after calling dataInsert, dataUpdate
  *                                   and dataDelete.
  *                                   Default: false.
+ *      {boolean}  auto_refresh:     If true, cbExecute will be called after calling dbSearch, dbUpdate,
+ *                                   dbUpdateLinkList and dbDelete.
+ *                                   Default: true.
  *      {Array}    page_links:       Pagination links. Not used yet.
  *                                   Default: null.
  *      {Object}   permission:       Permissions (normally obtained from server). The object may contain:
@@ -194,6 +197,14 @@ var anyDataModel = function (options)
   *              dataInsert, dataUpdate and dataDelete.
   */
   this.auto_callback = false;
+
+  /**
+  * @property {Boolean} auto_refresh
+  * @default true
+  * @description If auto_refresh is true, cbExecute will be called after calling
+  *              dataInsert, dataUpdate and dataDelete.
+  */
+  this.auto_refresh = true;
 
   /**
   * @property {Object} permission
@@ -1228,7 +1239,7 @@ anyDataModel.prototype.dbSearchSuccess = function (context,serverdata,options)
     if (self.auto_search_init && self.dataInit)
       self.dataInit(serverdata);
   }
-  if (self.auto_search_init && self.cbExecute)
+  if (self.cbExecute && self.auto_search_init && self.auto_refresh && options.auto_refresh !== false)
     self.cbExecute();
   return context;
 }; // dbSearchSuccess
@@ -1588,7 +1599,7 @@ anyDataModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
       delete options.client_id; // Delete property set by dbUpdate
     }
   }
-  if (self.cbExecute)
+  if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
     self.cbExecute();
   return context;
 }; // dbUpdateSuccess
@@ -1734,7 +1745,7 @@ anyDataModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,op
                               link_type: options.type,
                            });
   }
-  if (self.cbExecute)
+  if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
     self.cbExecute();
   return context;
 }; // dbUpdateLinkListSuccess
@@ -1872,7 +1883,7 @@ anyDataModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
     if (self.error)
       console.error("anyDataModel.dbDeleteSuccess: "+self.error);
   }
-  if (self.cbExecute)
+  if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
     self.cbExecute();
   return context;
 }; // dbDeleteSuccess
