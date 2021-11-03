@@ -1,14 +1,12 @@
 <?php
-/**
- ****************************************************************************************
+/****************************************************************************************
  *
  * anyList is copyright (C) 2011-2021 Arne D. Morken and Balanse Software.
  *
- * @license AGPLv3.0 for open source use or anyList Commercial License for commercial use.
+ * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
  * Get licences here: http://balanse.info/anylist/license/ (coming soon).
  *
- ****************************************************************************************
- */
+ ****************************************************************************************/
 require_once "anyTable.php";
 /**
  * __Class for interacting with an anyList user database table.__
@@ -249,8 +247,8 @@ class userTable extends anyTable
           Parameters::deset(ANY_DB_USER_LOGIN); // Changing user login is not allowed
       }
     }
-    if ($cmd == "ins" && $validatePassword) {
-      if ($this->dbSearchUserByLogin($login_val))
+    if ($cmd == "ins" && $validatePassword && $login_val) {
+      if (!$this->dbSearchUserByLogin($login_val))
         $err .= "Login name '".$login_val."' is already in use. ";
       $password = Parameters::get("user_pass");
       if (!$password)
@@ -285,7 +283,7 @@ class userTable extends anyTable
   {
     $id_name = $this->emailAsLogin ? "user_email" : ANY_DB_USER_LOGIN;
     $res = $this->dbSearchItem($this->mData,$id_name,$userLogin,true);
-    return empty($res);
+    return !empty($res);
   } // dbSearchUserByLogin
 
   /////////////////////////////////////////////////////////////////////////////
