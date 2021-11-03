@@ -1,14 +1,12 @@
 <?php
-/**
- ****************************************************************************************
+/****************************************************************************************
  *
  * anyList is copyright (C) 2011-2021 Arne D. Morken and Balanse Software.
  *
  * @license AGPLv3.0 for open source use or anyList Commercial License for commercial use.
  * Get licences here: http://balanse.info/anylist/license/ (coming soon).
  *
- ****************************************************************************************
- */
+ ****************************************************************************************/
 if (defined("WP_PLUGIN")) {
   define('ANY_DB_USER_TABLE',    'wp_users');     // Name of user table
   define('ANY_DB_USERMETA_TABLE','wp_usermeta');  // Name of user meta table
@@ -1728,7 +1726,7 @@ class anyTable extends dbTable
   {
     // TODO Check for all fields empty
     $unique_table_fields = array_unique($this->mTableFields);
-    $stmt = "INSERT INTO ".$this->getTableName()." (";
+    $stmt = "INSERT IGNORE INTO ".$this->getTableName()." (";
     $n = 0;
     foreach ($unique_table_fields as $key) {
       if ($key != $this->mIdKeyTable) { // Do not update the id key field
