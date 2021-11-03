@@ -1633,6 +1633,14 @@ class anyTable extends dbTable
     return null;
   } // prepareSetting
 
+  private function initFieldsFromParam()
+  {
+    $fields = Parameters::get("fields");
+    if ($fields) {
+      $this->mTableFields = $fields;
+    }
+  } // initFieldsFromParam
+
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Insert //////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
@@ -1653,6 +1661,8 @@ class anyTable extends dbTable
     $this->mError = "";
     $this->mData = null;
     $this->mNumRowsChanged = 0;
+
+    $this->initFieldsFromParam();
 
     $res = $this->dbInsertItem();
     if (!$res)
@@ -1771,6 +1781,8 @@ class anyTable extends dbTable
     $this->mError = "";
     $this->mData = null;
     $this->mNumRowsChanged = 0;
+
+    $this->initFieldsFromParam();
 
     if (!isset($this->mId) || $this->mId == "") {
       // No id, assume it is a new item
