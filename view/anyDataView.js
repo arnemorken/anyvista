@@ -858,7 +858,7 @@ $.any.DataView.prototype.refreshThead = function (thead,data,id,type,kind,edit,i
         let pl        = this.options.indent_level * this.options.indent_amount;
         let pl_str    = pl > 0 && filter_id == name_key ? "padding-left:"+pl+"px;" : "";
         let style_str = disp_str || pl_str ? "style='"+disp_str+pl_str+"'" : "";
-        let th = $("<th class='any-th any-list-th' "+style_str+">"+filter_key.HEADER+"</th>");
+        let th = $("<th class='any-th any-list-th "+filter_id+"-th' "+style_str+">"+filter_key.HEADER+"</th>");
         tr.append(th);
       }
     }
