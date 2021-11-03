@@ -2,16 +2,15 @@
 /* jshint esversion: 9 */
 /* globals $,i18n,isFunction,w3_modaldialog,w3_modaldialog_close,tinyMCE,tinymce,isInt */
 "use strict";
-/**
- ****************************************************************************************
+/****************************************************************************************
  *
  * anyList is copyright (C) 2011-2021 Arne D. Morken and Balanse Software.
  *
  * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
  * Get licences here: http://balanse.info/anylist/license/ (coming soon).
  *
- ****************************************************************************************
- *
+ ***************************************************************************************/
+/**
  * __View for the anyList data model.__
  *
  * See <a href="../classes/anyDataModel.html">`anyDataModel`</a> for a description of the data model class.

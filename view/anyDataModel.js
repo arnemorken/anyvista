@@ -11,7 +11,6 @@
  *
  ***************************************************************************************/
 /**
- *
  * __anyDataModel: Tree structure data model that can manipulate data as lists and items
  * and optionally synchronize with a database.__
  *
