@@ -280,14 +280,14 @@ class anyTable extends dbTable
       $this->mNameKey            = $this->mType."_name";
       $this->mOrderBy            = $this->mIdKeyTable;
       $this->mMetaId = "meta_id";
-      // Set table fields
+      // Set default table fields
       $this->mTableFields = [
         $this->mIdKey,
         $this->mNameKey,
       ];
-      // Set table meta fields
+      // Set default table meta fields
       $this->mTableFieldsMeta = null;
-      // Set table filters
+      // Set default table filters
       $this->mFilters = [
         "list" => [
           $this->mIdKey   => 1,
@@ -520,6 +520,18 @@ class anyTable extends dbTable
     }
   } // dbCreate
 
+  private function initFiltersFromParam()
+  {
+    $fields = Parameters::get("fields");
+    if ($fields) {
+      $this->mFilters = array();
+      foreach ($fields as $name => $val) {
+        $this->mFilters["list"][$val] = "1";
+        $this->mFilters["item"][$val] = "1";
+      }
+    }
+  } // initFiltersFromParam
+
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Searches ////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
@@ -539,6 +551,10 @@ class anyTable extends dbTable
     }
     $this->mError = "";
     $this->mData = null;
+
+    $this->initFieldsFromParam();
+    $this->initFiltersFromParam();
+
     if ($this->mId == "max")
       $res = $this->dbSearchMaxId();
     else
