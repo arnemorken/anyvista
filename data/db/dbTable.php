@@ -154,7 +154,7 @@ class dbTable
         $this->mDBResult = $this->mDBConnection->mDBHandle->query($stmt);
         if (!$this->mDBResult) {
           $this->mError = "dbTable::query3: ".$this->mDBConnection->getError();
-          $this->mError .= "\nQuery was: ".$stmt;
+          $this->mError .= "<br/>\nQuery was: ".$stmt;
           error_log($this->mError);
         }
       }
