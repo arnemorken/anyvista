@@ -614,9 +614,6 @@ $.any.DataView.prototype.refreshHeader = function (parent,data,id,type,kind,edit
   if (!data || !this.options.showHeader)
     return null;
 
-  // Create or get container for header
-  let have_data = Object.size(data) > 0;
-  let header_div = this.getOrCreateHeaderContainer(parent,type,kind,id_str,have_data,doNotEmpty);
   // Get the correct filter
   if (!this.options.filters) {
     this.model.error = type.capitalize()+" "+kind+" "+i18n.error.FILTERS_MISSING;
@@ -630,6 +627,9 @@ $.any.DataView.prototype.refreshHeader = function (parent,data,id,type,kind,edit
     console.warn(this.model.message);
     return null;
   }
+  // Create or get container for header
+  let have_data = Object.size(data) > 0;
+  let header_div = this.getOrCreateHeaderContainer(parent,type,kind,id_str,have_data,doNotEmpty);
   // Create the header "cells"
   header_div.empty();
   let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null; // TODO! Do this other places in the code too
