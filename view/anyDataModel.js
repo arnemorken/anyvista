@@ -66,6 +66,10 @@
  *                                   Default: false.
  *      {String}   search_term:      The string to search for when `search == true`.
  *                                   Default: "".
+ *      {Array}    fields:           An array of strings to be sent to the server, indicating which columns of
+ *                                   the table should be used in a search or update/insert. These fields are
+ *                                   only applied if the server fails to find a filter corresponding to `type`.
+ *                                   Default: null.
  *      {boolean}  auto_search_init: If true, the model will be initiated with the result of a search, and
  *                                   cbExecute will be called.
  *                                   Default: true.
@@ -180,6 +184,15 @@ var anyDataModel = function (options)
   * @description The string to search for when this.search == true. Optional.
   */
   this.search_term = "";
+
+  /**
+  * @property {Boolean} fields
+  * @default true
+  * @description An array of strings to be sent to the server, indicating which columns of
+ *               the table should be used in in a search or update/insert. These fields are
+ *               only applied if the server fails to find a filter corresponding to `type`.
+  */
+  this.fields = null;
 
   /**
   * @property {Boolean} auto_search_init
@@ -1109,6 +1122,10 @@ anyDataModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                               Optional. Default: `this.type`.
  *        {boolean}  simple:
  *
+ *        {Object}   fields:     An array of strings to be sent to the server, indicating which columns
+ *                               of the table should be used in the search. These fields are only
+ *                               applied if the server fails to find a filter corresponding to `type`.
+ *                               Optional. Default: `undefined`.
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
  *        {Function} success:    Method to call on success.
@@ -1141,7 +1158,15 @@ anyDataModel.prototype.dbSearch = function (options)
     let url = this.dbSearchGetURL(options);
     if (!url)
       return false;
-    $.getJSON(url) // Call server
+    let item_to_send = {};
+    if (options.fields)
+      item_to_send.fields = options.fields;
+    else
+    if (this.fields)
+      item_to_send.fields = this.fields;
+    else
+      item_to_send = null;
+    $.getJSON(url,item_to_send) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
       return self.success ? self.success(self,serverdata,options) : false;
     })
@@ -1455,6 +1480,9 @@ anyDataModel.prototype.dbUpdate = function (options)
       return false;
     if (options.fields)
       item_to_send.fields = options.fields;
+    else
+    if (this.fields)
+      item_to_send.fields = this.fields;
     $.getJSON(url,item_to_send) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
       return self.success ? self.success(self,serverdata,options) : false;
