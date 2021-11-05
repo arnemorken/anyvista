@@ -1553,27 +1553,34 @@ class anyTable extends dbTable
   public function prepareData(&$inData)
   {
     //vlog("inData before prepare:",$inData);
-    $data = array();
+    $data = [];
     $this->prepareTypeKindId($data);
     if (!$inData)
       return $data;
-    $data["data"]["+0"]["head"] = $this->mType;
+    $h = Parameters::get("head");
+    $use_head = !$h || ($h != "0" && $h != "false");
+    if ($use_head)
+      $data["data"]["+0"]["head"] = $this->mType;
     if ($inData) {
+      if ($use_head)
         $d = &$data["data"]["+0"];
+      else
+        $d = &$data;
       if (!isset($this->mId) || $this->mId == "") {
-        $data["data"]["+0"][$this->mNameKey] = $this->findDefaultListHeader($this->mType);
-        $data["data"]["+0"]["data"]          = $inData;
+        $d[$this->mNameKey] = $this->findDefaultListHeader($this->mType);
+        $d["data"]          = $inData;
       }
       else {
-        if (isset($inData["+".$this->mId][$this->mNameKey]))
-          $data["data"]["+0"][$this->mNameKey] = $inData["+".$this->mId][$this->mNameKey]; // findDefaultItemHeader
+        if (isset($inData["+".$this->mId][$this->mNameKey])) {
+          $d[$this->mNameKey] = $inData["+".$this->mId][$this->mNameKey]; // findDefaultItemHeader
+        }
         else {
-          $data["data"]["+0"][$this->mNameKey] = "";
+          $d[$this->mNameKey] = "";
           if (isset($this->mListForId))
             $this->setError($this->mNameKey." missing"); // TODO: i18n
         }
-        $data["data"]["+0"]["data"]["+".$this->mId]["item"] = $this->mType;
-        $data["data"]["+0"]["data"] = $inData;
+        $d["data"]["+".$this->mId]["item"] = $this->mType;
+        $d["data"] = $inData;
       }
     }
     $data["plugins"] = $this->mPlugins;
