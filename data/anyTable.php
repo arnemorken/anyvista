@@ -1559,6 +1559,7 @@ class anyTable extends dbTable
       return $data;
     $data["data"]["+0"]["head"] = $this->mType;
     if ($inData) {
+        $d = &$data["data"]["+0"];
       if (!isset($this->mId) || $this->mId == "") {
         $data["data"]["+0"][$this->mNameKey] = $this->findDefaultListHeader($this->mType);
         $data["data"]["+0"]["data"]          = $inData;
