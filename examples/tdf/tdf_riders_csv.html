@@ -1,0 +1,351 @@
+<!--
+ ****************************************************************************************
+ *
+ * anyList is copyright (C) 2011-2021 Arne D. Morken and Balanse Software.
+ *
+ * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
+ * Get licences here: http://balanse.info/anylist/license/ (coming soon).
+ *
+ ****************************************************************************************
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<script src="../../../../../../testserver/javascript/jquery/jquery-3.6.0.min.js"></script>
+<script src="../../../../../../testserver/javascript/jquery/jquery-widget-1.12.1.min.js"></script>
+<link  href="../../../../../../testserver/javascript/w3css/w3.css"           rel="stylesheet"/>
+<link  href="../../../../../../testserver/javascript/fontawesome/fa.min.css" rel="stylesheet"/>
+<link  href="../../view/skin/default/anylist.css"                            rel="stylesheet"/>
+<script src="../../view/functions.js"></script>
+<script src="../../view/anyDefs.js"></script>
+<script src="../../view/anyStrings_en-GB.js"></script>
+<script src="../../view/anyDataModel.js"></script>
+<script src="../../view/anyDataView.js"></script>
+<script src="../../../../../../testserver/javascript/jquery.csv.js"></script>
+<style>
+#any_content {
+  font-family:  Arial, Helvetica, sans-serif;
+  font-size:    .9em;
+}
+#any_ex {
+  padding:        5px;
+  border-bottom:  1px solid #555;
+  background:     #eee;
+  font-size:      9pt;
+  text-align:     right;"
+}
+.any-th {
+  background:   #666;
+  color:        #eee;
+}
+.any-item-td {
+  width: 202px;
+}
+.any-table {
+  padding-left:  0;
+}
+.any-tool-td {
+  width: 25px;
+}
+.rider_name-th {
+  width: 150px;
+}
+body {
+  margin-top: 0;
+}
+</style>
+<title>anyList test - TDF participants 2021</title>
+</head>
+
+<body>
+<div id="any_content">
+  <div id="any_ex"><i>anyList examples&nbsp;</i></div>
+  <h2 style="margin:5px;margin-left:0;">Tour de France 2021 riders</h2>
+  <div><p>This example can:</p>
+    <li>read a CSV file from remote server and store the data in an anyList database table</li>
+    <li>read data from an anyList database table and display the data in an anyList list</li>
+    <li>read a CSV file from remote server and display the data in an anyList list</li>
+  </div>
+  <div style="margin-top:10px;">
+    <input type="button" value="Read CSV file, store in table" onclick="csv2table()">
+    <input type="button" value="Read table, display data"      onclick="table2display()">
+    <input type="button" value="Read CSV file, display data"   onclick="csv2display()">
+    <span style="font-size:10pt;">
+      <label><input type="checkbox" value="" onclick="toggleShowHeader()">Show header and toolbar</input></label>
+    </span>
+  </div>
+  <p><i>The CSV file containing data of all TdF riders from 1903 to 2021 is provided by
+     <b><a href="https://github.com/camminady/LeTourDataSet" target="_blank">camminady</a></b> under the
+     <a href="https://raw.githubusercontent.com/camminady/LeTourDataSet/master/LICENSE.md" target="_blank">MIT License</a>.</i>
+  </p>
+  <p><i>The CSV parser that converts CSV entries to objects is provided by
+     <b><a href="https://github.com/evanplaice/jquery-csv">evanplaic</a></b>, again under the
+     <a href="https://raw.githubusercontent.com/evanplaice/jquery-csv/main/LICENSE" target="_blank">MIT License</a>.</i>
+  </p>
+  <div id="any_result"></div>
+</div>
+
+<script>
+//let csv_url = "https://balanse.info/wp-content/csv/getfile.php?f=TDF_Riders_History.csv";
+let csv_url = "./TDF_Riders_History.csv";
+
+let show_header = false;
+
+let all_filters = {
+  rider: {
+    list: {
+      r_id:        { HEADER:"Id",          DISPLAY:0, HTML_TYPE:"label" },
+      rank:        { HEADER:"Rank",        DISPLAY:1, HTML_TYPE:"text" },
+      rider_name:  { HEADER:"Rider",       DISPLAY:1, HTML_TYPE:"link" },
+      rider_no:    { HEADER:"Rider no.",   DISPLAY:1, HTML_TYPE:"text" },
+      team:        { HEADER:"Team",        DISPLAY:1, HTML_TYPE:"text" },
+      times:       { HEADER:"Time",        DISPLAY:1, HTML_TYPE:"text" },
+      gap:         { HEADER:"GAP",         DISPLAY:1, HTML_TYPE:"text" },
+      year:        { HEADER:"Year",        DISPLAY:1, HTML_TYPE:"text" },
+      distance:    { HEADER:"Distance",    DISPLAY:1, HTML_TYPE:"text" },
+      num_stages:  { HEADER:"# stages",    DISPLAY:1, HTML_TYPE:"text" },
+    },
+    item: {
+      r_id:        { HEADER:"Id",          DISPLAY:0, HTML_TYPE:"label" },
+      rank:        { HEADER:"Rank",        DISPLAY:1, HTML_TYPE:"text" },
+      rider_name:  { HEADER:"Rider",       DISPLAY:1, HTML_TYPE:"text" },
+      rider_no:    { HEADER:"Rider no.",   DISPLAY:1, HTML_TYPE:"text" },
+      team:        { HEADER:"Team",        DISPLAY:1, HTML_TYPE:"text" },
+      times:       { HEADER:"Time",        DISPLAY:1, HTML_TYPE:"text" },
+      gap:         { HEADER:"GAP",         DISPLAY:1, HTML_TYPE:"text" },
+      year:        { HEADER:"Year",        DISPLAY:1, HTML_TYPE:"text" },
+      distance:    { HEADER:"Distance",    DISPLAY:1, HTML_TYPE:"text" },
+      num_stages:  { HEADER:"# stages",    DISPLAY:1, HTML_TYPE:"text" },
+      total_sec:   { HEADER:"Total sec",   DISPLAY:1, HTML_TYPE:"text" },
+      gap_sec:     { HEADER:"GAP sec",     DISPLAY:1, HTML_TYPE:"text" },
+      result_type: { HEADER:"Result type", DISPLAY:1, HTML_TYPE:"text" },
+    },
+  },
+}; // all_filters
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+function csv2table()
+{
+  //
+  // Read CSV file from server (960Kb)
+  //
+  doLog("Reading CSV file...");
+  $( document ).ready(function() {
+    $.ajax({
+      crossOrigin: true,
+      url: csv_url,
+    })
+    .done(function( input ) {
+      //
+      // Convert CSV to objects
+      //
+      doLog("Converting CSV file...");
+      let result = $.csv.toObjects(input);
+      //
+      // Create data model
+      //
+      let data_model = new anyDataModel({type:"rider",mode:"remote",search:false});
+      //
+      // Create table
+      //
+      doLog("Creating table...");
+      let table = {
+        rider_id:   "INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY",
+        r_id:       "INT(6) UNSIGNED",
+        rank:       "INT(6) UNSIGNED",
+        rider_name: "VARCHAR(30) NOT NULL",
+        rider_no:   "VARCHAR(4)",
+        times:      "VARCHAR(12)",
+        gap:        "VARCHAR(12)",
+        team:       "VARCHAR(50)",
+        year:       "VARCHAR(4)",
+        distance:   "VARCHAR(4)",
+        num_stages: "VARCHAR(4)",
+        total_sec:  "VARCHAR(8)",
+        gap_sec:    "VARCHAR(8)",
+        result_type:"VARCHAR(8)",
+      };
+      data_model.dbCreate({
+        type:   "rider",
+        table:  table,
+        unique: "rider_name,year",
+        success: function() {
+          //
+          // Insert in table
+          //
+          doLog("Inserting data in table...");
+          let n_obj = 0;
+          result.forEach(function (obj) {
+            if (obj.Year == "2021") {
+              ++n_obj;
+              let indata = {};
+              indata[obj.Id] = getIndata(obj);
+              data_model.dbUpdate({ id:     obj.Id,
+                                    indata: indata,
+                                    is_new: true, // insert
+                                    table:  "rider",
+                                    auto_refresh: false,
+                                    sync:         true, // Note!
+                                    fields: ["rider_id","r_id","rank","rider_name","rider_no",
+                                             "times","gap","team","year","distance","num_stages","total_sec",
+                                             "gap_sec","result_type"],
+                                    success: function() {
+                                      doLog("Insertion of "+n_obj+" records complete",true);
+                                    }
+                                  });
+            }
+          }); // forEach
+        } // function
+      }); // dbCreate
+    }); // done
+  });
+} // csv2table
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+function table2display()
+{
+  //
+  // Create data model and search data
+  //
+  doLog("Reading data from table...");
+  $( document ).ready(function() {
+    let data_model = new anyDataModel({type:   "rider",
+                                       mode:   "remote",
+                                       fields: ["rider_id","r_id","rank","rider_name","rider_no",
+                                                "times","gap","team","year","distance","num_stages","total_sec",
+                                                "gap_sec","result_type"],
+                                     });
+    //
+    // Create data view.
+    // The view should always be created before any calls to model methods are made,
+    // otherwise the models listener will not have been initialized and results from
+    // a database search, for example, will not be automatically displayed.
+    //
+    let data_view  = new anyDataView({ model:      data_model,
+                                       filters:    all_filters,
+                                       id:         "any_result",
+                                       isEditable: false,
+                                    });
+    //
+    // Get data from table
+    //
+    let self = data_model;
+    data_model.dbSearch({
+      head: show_header ? "TDF 2021 riders" : null,  // Add a header to the list
+      grouping: false,
+      success: function(context,serverdata,options) {
+        self.dbSearchSuccess(context,serverdata,options);
+        //
+        // Display data
+        //
+        doLog("Displaying...");
+        if (self.error)
+          $("#any_result").html("<span style='color:red'>"+self.error+"</span>");
+        else
+          data_view.refresh();
+        console.log("Done.");
+      },
+      fail: function(context,jqXHR) {
+        if (self.error)
+          $("#any_result").html("<span style='color:red'>"+self.error+"</span>");
+      },
+    });
+  });
+} // table2display
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+function csv2display()
+{
+  //
+  // Read CSV file from server (960Kb)
+  //
+  doLog("Reading CSV file...");
+  $( document ).ready(function() {
+    $.ajax({
+      crossOrigin: true,
+      url: csv_url,
+    })
+    .done(function( input ) {
+      //
+      // Convert CSV to objects
+      //
+      doLog("Converting CSV file...");
+      let result = $.csv.toObjects(input);
+      //
+      // Create data model
+      //
+       let data_model = new anyDataModel({type:"rider",mode:"local",search:false});
+      //
+      // Create data view
+      //
+      let data_view  = new anyDataView({ model:   data_model,
+                                         filters: all_filters,
+                                         id:      "any_result",
+                                         isEditable: false,
+                                      });
+      //
+      // Insert in data model
+      //
+      doLog("Updating data model...");
+      if (show_header)
+        data_model.dataInsertHeader("rider","TdF 2021 riders"); // Add a header to the list
+      result.forEach(function (obj) {
+        if (obj.Year == "2021") {
+          let indata = getIndata(obj);
+          data_model.dataInsert({ indata: indata,
+                                  id:     show_header ? "+0" : null, // Index of header, if applicable
+                                  new_id: obj.Id, // Note: Not a database id, just an entry from the CSV file!
+                               });
+        }
+      }); // forEach
+      //
+      // Display data
+      //
+      doLog("Displaying...");
+      data_view.refresh();
+      console.log("Done.");
+    }); // done
+  });
+} // csv2display
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+function getIndata(obj)
+{
+  return {
+    r_id:        obj.Id,
+    rank:        obj.Rank,
+    rider_name:  obj.Rider,
+    rider_no:    obj["Rider No."],
+    team:        obj.Team,
+    times:       obj.Times,
+    gap:         obj.Gap,
+    year:        obj.Year,
+    distance:    obj["Distance (km)"],
+    num_stages:  obj["Number of stages"],
+    total_sec:   obj.TotalSeconds,
+    gap_sec:     obj.GapSeconds,
+    result_type: obj.ResultType,
+  };
+} // getIndata
+
+function toggleShowHeader()
+{
+  show_header = !show_header;
+} // toggleShowHeader
+
+function doLog(str,skipImg)
+{
+  let msg = str;
+  if (!skipImg)
+    msg += ' <img src="./working.gif" alt="Working..."/>';
+  $("#any_result").html(msg);
+  console.log(str);
+}
+</script>
+</body>
+</html>
