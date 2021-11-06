@@ -1567,7 +1567,7 @@ class anyTable extends dbTable
     if (!$inData)
       return $data;
     $h = Parameters::get("head");
-    $use_head = !$h || ($h != "0" && $h != "false");
+    $use_head = $h && $h != "0" && $h != "false"; // Must explicitly specify that a header should be generated
     if ($use_head)
       $data["data"]["+0"]["head"] = $this->mType;
     if ($inData) {
