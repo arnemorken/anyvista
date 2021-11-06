@@ -479,8 +479,8 @@ $.any.DataView.prototype.refreshToolbarBottom = function (parent,data,id,type,ki
 
   // Create container
   let con_id_str = this.id_stack.join("_");
-  let div_id     = this.base_id+"_"+type+"_"+kind+"_"+con_id_str+"_toolbar";
-  let class_id   = "any-toolbar-bottom any-"+kind+"-toolbar any-toolbar-"+this.options.data_level;
+  let div_id     = this.base_id+"_"+type+"_"+con_id_str+"_toolbar";
+  let class_id   = "any-toolbar-bottom any-toolbar any-toolbar-"+this.options.data_level;
   if ($("#"+div_id).length)
     $("#"+div_id).remove();
   let bardiv   = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
@@ -493,7 +493,7 @@ $.any.DataView.prototype.refreshToolbarBottom = function (parent,data,id,type,ki
               };
     this.refreshMessageArea(bardiv,opt);
   }
-  if (this.options.isEditable && this.options.showButtonNew) {
+  if (this.options.showButtonNew) {
     // Create a "new item" button
     let opt = { data:   data,
                 id:     id, // Find a new id
