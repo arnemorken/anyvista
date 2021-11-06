@@ -921,7 +921,7 @@ class anyTable extends dbTable
       }
     }
     else
-      $this->mMessage .= "Table '$linktable' does not exist.";
+      $this->mError .= "Table '$linktable' does not exist.";
     return $lj;
   } // findListLeftJoinOne
 
