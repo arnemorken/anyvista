@@ -1472,7 +1472,7 @@ anyDataModel.prototype.dbUpdate = function (options)
     console.error("anyDataModel.dbUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+options.id));
     return false;
   }
-  if (!item[options.id].is_new && !Object.size(item[options.id].dirty)) {
+  if (!options.is_new && !item[options.id].is_new && !Object.size(item[options.id].dirty)) {
     this.message = i18n.error.NOTHING_TO_UPDATE;
     console.log("anyDataModel.dbUpdate: "+this.message);
     if (this.cbExecute)
@@ -1482,8 +1482,11 @@ anyDataModel.prototype.dbUpdate = function (options)
   // Data to update or insert
   let item_to_send = item[options.id].is_new
                      ? item[options.id]        // insert
-                     : item[options.id].dirty; // update
-
+                     : item[options.id].dirty
+                       ? item[options.id].dirty
+                       : options.is_new
+                         ? item[options.id]
+                         : {}; // update
   // Data used in dbUpdateSuccess method
   options.client_id = options.id;     // Update this id in existing data structure with new id from server
   options.data      = the_data;       // Clean up this data structure after server returns successfully
