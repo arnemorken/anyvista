@@ -1469,6 +1469,8 @@ anyDataModel.prototype.dbUpdate = function (options)
   if (!options.timeoutSec)
     options.timeoutSec = 10;
   $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  if (options.sync)
+    $.ajaxSetup({ async: false });
   this.success = options.success ? options.success : this.dbUpdateSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
