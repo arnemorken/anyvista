@@ -344,7 +344,8 @@ anyDataModel.prototype._dataInitSelect = function ()
     if (options.id)                                    { this.id               = options.id; }
     if (this.id && this.data) {
       let hdr_id = Object.keys(this.data)[0];
-      if (!this.data[this.id] && (hdr_id && !this.data[hdr_id].data && this.data[hdr_id].data[this.id])) {
+      let the_id = this.data[this.id] ? this.id : this.data["+"+this.id] ? "+"+this.id : null
+      if (!the_id && !this.data[hdr_id] && (!this.data[hdr_id].data || !this.data[hdr_id].data[this.id])) {
         console.warn("Id "+this.id+" given to constructor, but not found in data. Resetting id to null.");
         this.id = null;
       }
