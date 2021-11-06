@@ -1127,6 +1127,10 @@ anyDataModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                               of the table should be used in the search. These fields are only
  *                               applied if the server fails to find a filter corresponding to `type`.
  *                               Optional. Default: `undefined`.
+ *        [boolean}  grouping:   If specified, tells the server to group the data before returning.
+ *                               If false, 0, null or undefined, data will not be grouped. Any other
+ *                               value will specify grouping.
+ *                               Optional. Default: `undefined`.
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
  *        {Function} success:    Method to call on success.
@@ -1225,9 +1229,11 @@ anyDataModel.prototype.dbSearchGetURL = function (options)
   param_str += the_id
                ? "&"+id_key+"="+the_id // Item search
                : ""; // List search
-  param_str += options.simple   ? "&lt="      + "simple"                   : "";
-  if (type == "group" && options.link_type)
-    param_str += "&group_type="+options.link_type;
+  param_str += options.simple ? "&lt=" + "simple" : "";
+  param_str += type == "group" && options.link_type ? "&group_type="+options.link_type : "";
+  param_str += options.head != undefined ? "&head="+options.head : "";
+  if (options.grouping)
+    param_str += "&grouping="+options.grouping;
   return this._getDataSourceName() + param_str;
 }; // dbSearchGetURL
 

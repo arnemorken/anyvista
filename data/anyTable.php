@@ -726,6 +726,7 @@ class anyTable extends dbTable
     // Prepare the data structure
     $idx = "+".$this->mId;
     // Loop through all registered plugins (link tables)
+    $grouping = Parameters::get("grouping");
     foreach ($this->mPlugins as $i => $plugin) {
       $table = anyTableFactory::create($plugin,$this);
       if ($table) {
@@ -742,7 +743,8 @@ class anyTable extends dbTable
             $data[$idx] = array();
           if (!isset($data[$idx]["data"]))
             $data[$idx]["data"] = array();
-          $data[$idx]["data"]['grouping']        = "tabs";
+          if (isset($grouping) && $grouping)
+            $data[$idx]["data"]['grouping']      = $grouping;
           $data[$idx]["data"]['groupingForType'] = $table->mListForType;
           $data[$idx]["data"]['groupingForId']   = $table->mListForId;
           $data[$idx]["data"]['groupingForName'] = $table->mListForName;
@@ -1328,6 +1330,7 @@ class anyTable extends dbTable
     //
     // Build data tree for all groups
     //
+    $grouping = Parameters::get("grouping");
     $this->mRecDepth = 0;
     if ($kind == "item") {
       if ($data)
@@ -1341,49 +1344,54 @@ class anyTable extends dbTable
       $data_tree = array();
       foreach ($data as $gidx => $grp) {
         if (!empty($data[$gidx])) {
-          $num = 0;
+          $num = 0; // Used by page links
           $ngidx = is_int($gidx) ? "+".$gidx : $gidx;
           $data_tree[$ngidx] = array();
-          $k = isset($this->mId) && $this->mId != ""
-               ? "item"
-               : (isset($data_tree[$ngidx]["list"]) && $data_tree[$ngidx]["list"] != "group"
-                  ? "list"
-                  : "head");
-          $data_tree[$ngidx][$k] = isset($this->mId) && $this->mId != "" ? $this->mType : "group";
-          if (!isset($this->mId) || $this->mId == "") {
-            $gname = isset($gdata) && isset($gdata["group"][$gidx])
-                     ? $gdata["group"][$gidx]["group_name"]
-                     : ucfirst($gidx)." groups";
-            if ($this->mType != "group") {
-              if (!$gname)
-                $gname = "Other ".$this->mType."s"; // TODO i18n
+          if ($grouping) {
+            $k = isset($this->mId) && $this->mId != ""
+                 ? "item"
+                 : (isset($data_tree[$ngidx]["list"]) && $data_tree[$ngidx]["list"] != "group"
+                    ? "list"
+                    : "head");
+            $data_tree[$ngidx][$k] = isset($this->mId) && $this->mId != "" ? $this->mType : "group";
+            if (!isset($this->mId) || $this->mId == "") {
+              $gname = isset($gdata) && isset($gdata["group"][$gidx])
+                       ? $gdata["group"][$gidx]["group_name"]
+                       : ucfirst($gidx)." groups";
+              if ($this->mType != "group") {
+                if (!$gname)
+                  $gname = "Other ".$this->mType."s"; // TODO i18n
+              }
+              else {
+                if (!$gname)
+                  if ($gidx != "group")
+                    $gname = ucfirst($gidx)." groups"; // TODO i18n
+                  else
+                    $gname = "Other groups"; // TODO i18n
+              }
+              if ($this->mType != "group")
+                $data_tree[$ngidx]["group_type"] = $this->mType;
+              else
+                $data_tree[$ngidx]["group_type"] = $gidx;
+              if (isset($grouping) && $grouping)
+                $data_tree['grouping'] = $grouping;
+              $data_tree[$ngidx]["group_name"] = $gname;
+              $data_tree[$ngidx]["group_id"] = $ngidx;
             }
             else {
-              if (!$gname)
-                if ($gidx != "group")
-                  $gname = ucfirst($gidx)." groups"; // TODO i18n
-                else
-                  $gname = "Other groups"; // TODO i18n
+              $idx = isset($data[$gidx][$this->mId]) ? $this->mId : "+".$this->mId;
+              $data_tree[$ngidx][$this->mNameKey] = $data[$gidx][$idx][$this->mNameKey];
             }
-            if ($this->mType != "group")
-              $data_tree[$ngidx]["group_type"] = $this->mType;
-            else
-              $data_tree[$ngidx]["group_type"] = $gidx;
-            $data_tree['grouping'] = "tabs"; // TODO! Should be able to set this via Parameter
-            $data_tree[$ngidx]["group_name"] = $gname;
-            $data_tree[$ngidx]["group_id"] = $ngidx;
-          }
-          else {
-            $idx = isset($data[$gidx][$this->mId]) ? $this->mId : "+".$this->mId;
-            $data_tree[$ngidx][$this->mNameKey] = $data[$gidx][$idx][$this->mNameKey];
-          }
-          $data_tree[$ngidx]["data"] = $this->buildDataTree($data[$gidx],null,false,$num);
-          if ($data_tree[$ngidx]["data"] === null)
-            unset($data_tree[$ngidx]);
+          } // if grouping
+          $data_tree[$ngidx]["data"] = array();
+          $dt = &$data_tree[$ngidx]["data"];
+          $dt = $this->buildDataTree($data[$gidx],null,false,$num);
+          if ($dt === null)
+            unset($dt);
           /* TODO! Page links not implemented yet
-          $data_tree[$ngidx]["page_links"]["from"] = $data[$gidx]["page_links"]["from"];
-          $data_tree[$ngidx]["page_links"]["to"]   = $data[$gidx]["page_links"]["to"];
-          $data_tree[$ngidx]["page_links"]["num"]  = $num-1;
+          $dt["page_links"]["from"] = $data[$gidx]["page_links"]["from"];
+          $dt["page_links"]["to"]   = $data[$gidx]["page_links"]["to"];
+          $dt["page_links"]["num"]  = $num-1;
           */
         }
       }
@@ -1395,9 +1403,10 @@ class anyTable extends dbTable
     // Build group tree and stick data tree to it
     //
     if ($this->mType != "group") {
-      if ((!isset($this->mId) || $this->mId == "") && !isset($this->mListForId) && $group_table) {
+      if (isset($grouping) && $grouping && (!isset($this->mId) || $this->mId == "") && !isset($this->mListForId) && $group_table) {
         $this->dbAttachToGroups($group_table->tdata["group"],$data_tree);
-        $group_table->tdata["group"]['grouping'] = "tabs";
+        if (isset($grouping) && $grouping)
+          $group_table->tdata["group"]['grouping'] = $grouping;
         //vlog("buildGroupTreeAndAttach,tdata:",$group_table->tdata);
         $data = $group_table->tdata["group"];
       }
