@@ -362,6 +362,7 @@ anyDataModel.prototype._dataInitSelect = function ()
     if (options.mode)                                  { this.mode             = options.mode; }
     if (options.search)                                { this.search           = options.search; }
     if (options.search_term)                           { this.search_term      = options.search_term; }
+    if (options.fields)                                { this.fields           = options.fields; }
     if (options.auto_search_init)                      { this.auto_search_init = options.auto_search_init; }
     if (options.auto_callback)                         { this.auto_callback    = options.auto_callback; }
     if (options.permission)                            { this.permission       = options.permission; }
