@@ -1576,7 +1576,11 @@ class anyTable extends dbTable
       else
         $d = &$data;
       if (!isset($this->mId) || $this->mId == "") {
-        $d[$this->mNameKey] = $this->findDefaultListHeader($this->mType);
+        if ($use_head && $h != "true" && $h != "1")
+          $hdr = $h;
+        else
+          $hdr = $this->findDefaultListHeader($this->mType);
+        $d[$this->mNameKey] = $hdr;
         $d["data"]          = $inData;
       }
       else {
