@@ -2259,10 +2259,11 @@ $.any.DataView.prototype._doShowItem = function (opt)
   }
   if (view.model.mode == "remote" && !is_new) {
     // Remote search, will (normally) call refresh via onModelChange
-    let mod_opt = { context: view.model,
-                    id:      the_id,
-                    type:    type,
-                    head:    true,
+    let mod_opt = { context:  view.model,
+                    id:       the_id,
+                    type:     type,
+                    head:     true,
+                    grouping: "tabs",
                   };
     view.model.dbSearch(mod_opt);
   }
@@ -2621,6 +2622,8 @@ $.any.DataView.prototype.dbSearchLinks = function (event)
    simple:      true,
    success:     this.dbUpdateLinkListDialog, // Call the view success handler
    parent_view: this,
+   head:        true,
+   grouping:    "tabs",
   };
   return this.model.dbSearch(options);
 }; // dbSearchLinks
@@ -2710,6 +2713,8 @@ $.any.DataView.prototype.dbUpdateLinkList = function (opt)
     unselect:  opt.unselect,
     name_key:  opt.name_key,
     view:      opt.view, // Refresh only this view
+    head:      true,
+    grouping:  "tabs",
   };
   if (!this.model.dbUpdateLinkList(mod_opt))
     return false;
