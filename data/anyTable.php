@@ -658,7 +658,7 @@ class anyTable extends dbTable
     $left_join = $this->findItemLeftJoin();
     $where     = $this->findItemWhere($key,$val);
 
-    if ($this->mError != "") {
+    if ($this->isError()) {
       error_log($this->mError);
       return false;
     }
@@ -825,7 +825,7 @@ class anyTable extends dbTable
     $where     = $this->findListWhere($skipOwnId);
     $order_by  = $this->findListOrderBy();
 
-    if ($this->mError != "") {
+    if ($this->isError()) {
       error_log($this->mError);
       return null;
     }
@@ -921,7 +921,7 @@ class anyTable extends dbTable
       }
     }
     else
-      $this->mError .= "Table '$linktable' does not exist.";
+      $this->mMessage .= "Table '$linktable' does not exist.";
     return $lj;
   } // findListLeftJoinOne
 
