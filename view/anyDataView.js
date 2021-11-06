@@ -2191,46 +2191,46 @@ $.any.DataView.prototype._doShowItem = function (opt)
   let type   = opt.head ? opt.head : opt.item ? opt.item : opt.list ? opt.list : opt.type ? opt.type : "";
   let kind   = "item";
   let is_new = opt.is_new != undefined ? opt.is_new : false;
-  let item   = null;
+  let name_key = this.model.name_key ? this.model.name_key : type+"_name";
+  let the_item = null;
   if (!is_new)
-    item = this.model.dataSearch({ type: type,
-                                   id:   id,
-                                  });
-  else {
-    // Prepare new item data for display
-    let name_key  = this.model.name_key ? this.model.name_key : type+"_name";
-    let item_name = data && data[id] && data[id][name_key]
-                    ? data[id][name_key]                       // Edit existing
-                    : i18n.message.newType.replace("%%",type); // Edit new
-    item = {
-      "+0": { // Header
-        head: type,
-        [name_key]: item_name,
-        data: {},
-      },
-    };
-    if (is_new) {
-      // Create a new item with empty data for displayable entries
-      item["+0"].data[id] = {};
-      let filter = this.getFilter(type,"item");
-      for (let filter_id in filter)
-        if (filter[filter_id].DISPLAY)
-          item["+0"].data[id][filter_id] = "";
-    }
-    else {
-      // Create a new item filled with data copied from original data structure
-      item["+0"].data[id] = data && data[id] ? $.extend(true, {}, data[id]) : null;
-    }
-    if (item["+0"].data[id]) {
-      if (item["+0"].data[id].list)
-        delete item["+0"].data[id].list;
-      if (item["+0"].data[id].head)
-        delete item["+0"].data[id].head;
-      item["+0"].data[id].item   = type;
-      item["+0"].data[id].is_new = true;
-    }
+    the_item = this.model.dataSearch({ type: type,
+                                       id:   id,
+                                    });
+  else
+    the_item = data;
+  let the_id    = the_item ? the_item[id] ? id : the_item["+"+id] ? "+"+id : null : null;
+  let item_name = null;
+  if (the_id)
+    item_name = the_item[the_id][name_key];
+  else
+    item_name = i18n.message.newType.replace("%%",type); // Edit new
+  let item = {
+    "+0": { // Header
+      head: type,
+      [name_key]: item_name,
+      data: {},
+    },
+  };
+  if (!is_new) {
+    // Create a new item filled with data copied from original data structure
+    item["+0"].data[the_id] = data && data[the_id] ? $.extend(true, {}, data[the_id]) : null;
+    if (item["+0"].data[the_id].head)
+      delete item["+0"].data[the_id].head;
+    if (item["+0"].data[the_id].list)
+      delete item["+0"].data[the_id].list;
   }
-  let view = this.createDataView(opt.view,item,id,type,kind); // New type to display, create new view
+  else {
+    // Create a new item with empty data for displayable entries
+    item["+0"].data[the_id] = {};
+    let filter = this.getFilter(type,"item");
+    for (let filter_id in filter)
+      if (filter[filter_id].DISPLAY)
+        item["+0"].data[the_id][filter_id] = "";
+  }
+  item["+0"].data[the_id].item   = type;
+  item["+0"].data[the_id].is_new = is_new;
+  let view = this.createDataView(opt.view,item,the_id,type,kind); // New type to display, create new view
   if (!view || !view.options || !view.options.top_view) {
     console.warn("View missing. "); // Should never happen TODO! i18n
    return false;
@@ -2253,20 +2253,25 @@ $.any.DataView.prototype._doShowItem = function (opt)
   view.options.data_level = 0;
   view.id_stack     = [...view.root_id_stack];
   if (is_new) {
+    view.options.isEditable  = true;
     view.options.isDeletable = false;
     view.options.isRemovable = false;
   }
   if (view.model.mode == "remote" && !is_new) {
     // Remote search, will (normally) call refresh via onModelChange
     let mod_opt = { context: view.model,
-                    id:      id,
+                    id:      the_id,
                     type:    type,
+                    head:    true,
                   };
     view.model.dbSearch(mod_opt);
   }
   else {
     // Local refresh
-    view.refreshLoop(con_div,item,"+0",type,"item");
+    if (is_new)
+      view.refreshLoop(con_div,item,"+0",type,"item");
+    else
+      view.refreshLoop(con_div,item,the_id,type,"item");
   } // else
   return true;
 }; // _doShowItem
