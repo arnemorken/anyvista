@@ -82,7 +82,7 @@ $.widget("any.DataView", {
     confirmDelete:         true,
     showHeader:            true,
     showTableHeader:       true,
-    showMessages:          true,
+    showMessages:          false,
     showEmptyRows:         false,
   //showSelectAll:         false, // TODO! NOT IMPLEMENTED
     showButtonAdd:         1, // 0 == do not show, 1 == first cell, 2 == last cell
@@ -93,7 +93,7 @@ $.widget("any.DataView", {
     showButtonDelete:      true,
     showButtonCancel:      true,
     showButtonNew:         true,
-    showButtonAddLink:     true,
+    showButtonAddLink:     false,
     showButtonLabels:      false,
     useOddEven:            true,
     linkIcons:             null,
