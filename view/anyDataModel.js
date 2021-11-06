@@ -1247,9 +1247,8 @@ anyDataModel.prototype.dbSearchGetURL = function (options)
                : ""; // List search
   param_str += options.simple ? "&lt=" + "simple" : "";
   param_str += type == "group" && options.link_type ? "&group_type="+options.link_type : "";
-  param_str += options.head != undefined ? "&head="+options.head : "";
-  if (options.grouping)
-    param_str += "&grouping="+options.grouping;
+  param_str += options.head     ? "&head="+options.head : "";
+  param_str += options.grouping ? "&grouping="+options.grouping : "";
   return this._getDataSourceName() + param_str;
 }; // dbSearchGetURL
 
@@ -1763,6 +1762,8 @@ anyDataModel.prototype.dbUpdateLinkListGetURL = function (options)
   if (options.link_type)
     param_str += "&link_type="+options.link_type;
   param_str += "&sea=y";
+  param_str += options.head     ? "&head="+options.head : "";
+  param_str += options.grouping ? "&grouping="+options.grouping : "";
   let has_add_or_del = false;
   if (options.select) {
     let sel = [...options.select];
