@@ -1089,7 +1089,7 @@ $.any.DataView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,k
   let td_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_edit"; // First tool cell
   if ($("#"+td_id).length)
     $("#"+td_id).remove();
-  let td = $("<td id='"+td_id+"' class='any-td any-"+kind+"-td any-td-first'></td>");
+  let td = $("<td id='"+td_id+"' class='any-td any-td-first'></td>");
   tr.append(td);
   if (this.options.isSelectable && (kind == "list" || kind == "select")) {
     let checked = this.model.select.has(parseInt(id));
@@ -1145,7 +1145,7 @@ $.any.DataView.prototype.refreshTableDataLastCell = function (tr,data,id,type,ki
   let td_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_unedit"; // Last tool cell
   if ($("#"+td_id).length)
     $("#"+td_id).remove();
-  let td = $("<td id='"+td_id+"' class='any-td any-"+kind+"-td any-td-last'></td>");
+  let td = $("<td id='"+td_id+"' class='any-td any-td-last'></td>");
   tr.append(td);
   if (this.options.isEditable || edit || isEditable) {
     let last_opt = { data:       data,
