@@ -1140,6 +1140,9 @@ anyDataModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                               of the table should be used in the search. These fields are only
  *                               applied if the server fails to find a filter corresponding to `type`.
  *                               Optional. Default: `undefined`.
+ *        [boolean}  head:       A parameter sent to the server to indicate whether a header should be
+ *                               auto-generated.
+ *                               Optional. Default: `undefined`.
  *        [boolean}  grouping:   If specified, tells the server to group the data before returning.
  *                               If false, 0, null or undefined, data will not be grouped. Any other
  *                               value will specify grouping.
