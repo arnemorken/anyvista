@@ -776,6 +776,18 @@ anyDataModel.prototype.dataInsert = function (options)
   return item;
 }; // dataInsert
 
+anyDataModel.prototype.dataInsertHeader = function (type,headerStr)
+{
+  let top_data = {
+    "+0": {
+      head:           type,
+      [type+"_name"]: headerStr,
+      data:           {},
+    },
+  };
+  this.dataInsert({ indata: top_data });
+}; // dataInsertHeader
+
 /**
  * @method dataUpdate
  * @description Updates data structure at a place specified by `type` and `id` with data in `indata`.
