@@ -3,6 +3,7 @@
  **************************/
 
 .any-container {
+  font-family:  Arial, Helvetica, sans-serif;
 }
 .any-head-container {
 }
@@ -18,10 +19,9 @@
  **************************/
 
 .any-header {
-  font-family:  Arial, Helvetica, sans-serif;
 }
 .any-head-header {
-  width:     787px;
+  width:     789px;
   font-size: 1em;
 }
 .any-list-header {
@@ -32,10 +32,10 @@
   padding-left:     0.7em;
   padding-top:      .4em;
   padding-bottom:   .2em;
-  font-size:        1.4em;
+  border-bottom:    1px solid #333;
+  font-size:        1.2em;
   background:       #777;
   color:            #eee;
-  border-bottom:    1px solid #333;
 }
 .any-header-1 {
   padding-left:     0.9em;
