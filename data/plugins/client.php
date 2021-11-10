@@ -28,8 +28,8 @@
 <script src="<?php print gAnyListURL;?>view/anyDefs.js"></script>
 <script src="<?php print gAnyListURL;?>view/anyStrings_en-GB.js"></script>
 
-<script src="<?php print gAnyListURL;?>view/anyDataModel.js"></script>
-<script src="<?php print gAnyListURL;?>view/anyDataView.js"></script>
+<script src="<?php print gAnyListURL;?>view/anyModel.js"></script>
+<script src="<?php print gAnyListURL;?>view/anyView.js"></script>
 <script src="<?php print gAnyListURL;?>view/anyFilter.js"></script>
 
 <style>

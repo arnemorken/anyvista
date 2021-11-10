@@ -31,8 +31,8 @@
 <body>
 <script src="../view/functions.js"></script>
 <script src="../view/anyStrings_en-GB.js"></script>
-<script src="../view/anyDataModel.js"></script>
-<script src="../view/anyDataView.js"></script>
+<script src="../view/anyModel.js"></script>
+<script src="../view/anyView.js"></script>
 <div id="any_content" title="Grouped lists"></div>
 
 <script>
@@ -103,8 +103,8 @@ let my_data = {
      },
    },
  };
- var data_model = new anyDataModel({ data:my_data });
- var data_view  = new anyDataView({ model:   data_model,
+ var data_model = new anyModel({ data:my_data });
+ var data_view  = new anyView({ model:   data_model,
                                     filters: all_filters,
                                     id:      "any_content",
                                  });

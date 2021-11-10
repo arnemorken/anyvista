@@ -18,10 +18,10 @@ var userDataModel = function (options)
   this.type     = "user";
   this.id_key   = "user_id";
   this.name_key = "user_name";
-  anyDataModel.call(this,options);
+  anyModel.call(this,options);
 };
 
-userDataModel.prototype = new anyDataModel(null);
+userDataModel.prototype = new anyModel(null);
 userDataModel.prototype.constructor = userDataModel;
 
 // Example method

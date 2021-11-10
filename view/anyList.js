@@ -695,9 +695,9 @@
  *          this.type     = "document";
  *          this.id_key   = "document_id";
  *          this.name_key = "document_name";
- *          anyDataModel.call(this,options);
+ *          anyModel.call(this,options);
  *        };
- *        documentDataModel.prototype = new anyDataModel(null);
+ *        documentDataModel.prototype = new anyModel(null);
  *        documentDataModel.prototype.constructor = documentDataModel;
  *
  * 3) Create the document view class in documentDataView.js:
@@ -745,7 +745,7 @@
  *          return $.any.documentDataView(options);
  *        };
  *
- *        documentDataView.prototype = new anyDataView(null);
+ *        documentDataView.prototype = new anyView(null);
  *        documentDataView.prototype.constructor = documentDataView;
  *
  * 4) Create the document filter class in documentFilter.js:

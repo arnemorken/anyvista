@@ -61,5 +61,5 @@ var documentDataView = function (options)
   return $.any.documentDataView(options);
 };
 
-documentDataView.prototype = new anyDataView(null);
+documentDataView.prototype = new anyView(null);
 documentDataView.prototype.constructor = documentDataView;

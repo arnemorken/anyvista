@@ -18,8 +18,8 @@ var groupDataModel = function (options)
   this.type     = "group";
   this.id_key   = "group_id";
   this.name_key = "group_name";
-  anyDataModel.call(this,options);
+  anyModel.call(this,options);
 };
 
-groupDataModel.prototype = new anyDataModel(null);
+groupDataModel.prototype = new anyModel(null);
 groupDataModel.prototype.constructor = groupDataModel;

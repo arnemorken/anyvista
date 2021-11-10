@@ -13,11 +13,11 @@
 /**
  * __View for the anyList data model.__
  *
- * See <a href="../classes/anyDataModel.html">`anyDataModel`</a> for a description of the data model class.
+ * See <a href="../classes/anyModel.html">`anyModel`</a> for a description of the data model class.
  *
  * Note: All jQuery id's in anyList are on the format [base_id]\_[type]\_[kind]\_[id]\_[html_name].
  *
- * @class anyDataView
+ * @class anyView
  * @constructor Sets the view's variables according to `options`, or to default values.
  * @param {Object}  options An object which may contain these elements:
  *
@@ -53,7 +53,7 @@
  *        {boolean} useOddEven:            If true, tags for odd and even columns will be generated for list entries. Default: false.
  *
  * @example
- *      new anyDataView({filters:my_filters,id:"my_content"});
+ *      new anyView({filters:my_filters,id:"my_content"});
  */
 (function($) {
 var ANY_LOCALE_NOT_FOUND = "No locale found. ";
@@ -1303,7 +1303,7 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
   };
   let m_str = type+"DataModel";
   if (!window[m_str]) {
-    let def_str = "anyDataModel";
+    let def_str = "anyModel";
     console.warn("Model class "+m_str+" not found, using "+def_str+". ");
     m_str = def_str;
   }
@@ -1337,7 +1337,7 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
   if (!window[v_str])
     v_str = type+"DataViewTabs";
   if (!window[v_str]) {
-    let def_str = view_opt.grouping ? "anyDataView"+view_opt.grouping.capitalize() : "anyDataView";
+    let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
     console.warn("View class "+v_str+" not found, using "+def_str+". "); // TODO! i18n
     v_str = def_str;
   }
@@ -1626,7 +1626,7 @@ $.any.DataView.prototype.getListView = function (type,kind,id,val,edit,filter_ke
   let model_opt = this.getListModelOptions(type,list_type,val);
   let m_str     = list_type.capitalize()+"DataModel";
   if (!window[m_str]) {
-    let def_str = "anyDataModel";
+    let def_str = "anyModel";
     console.warn(m_str+" is not a valid list model, using "+def_str+". ");
     m_str = def_str;
   }
@@ -1637,7 +1637,7 @@ $.any.DataView.prototype.getListView = function (type,kind,id,val,edit,filter_ke
   let view_opt     = this.getListViewOptions(list_model,list_view_id,this);
   let v_str = view_opt.grouping ? list_type.capitalize()+"DataView"+view_opt.grouping.capitalize() : list_type.capitalize()+"DataView";
   if (!window[v_str]) {
-    let def_str = view_opt.grouping ? "anyDataView"+view_opt.grouping.capitalize() : "anyDataView";
+    let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
     console.warn(v_str+" is not a valid view, using "+def_str+". ");
     v_str = def_str;
   }
@@ -2639,9 +2639,9 @@ $.any.DataView.prototype.dbUpdateLinkListDialog = function (context,serverdata,o
     self.message = serverdata.message;
     self.error   = serverdata.error;
     if (self.message)
-      console.log("anyDataView.dbUpdateLinkListDialog: "+self.message);
+      console.log("anyView.dbUpdateLinkListDialog: "+self.message);
     if (self.error)
-      console.error("anyDataView.dbUpdateLinkListDialog: "+self.error);
+      console.error("anyView.dbUpdateLinkListDialog: "+self.error);
     else
     if (serverdata.data && options.parent_view) {
       let list_type   = options.type;
@@ -2949,9 +2949,9 @@ $.any.DataView.prototype.removeFromView = function (opt)
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// This can be used to instantiate anyDataView:
+// This can be used to instantiate anyView:
 //
-var anyDataView = function (options)
+var anyView = function (options)
 {
   if (!options)
     return null;

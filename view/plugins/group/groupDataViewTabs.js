@@ -71,5 +71,5 @@ var groupDataViewTabs = function (options)
   return $.any.groupDataViewTabs(options);
 };
 
-groupDataViewTabs.prototype = new anyDataView/*Tabs*/(null);
+groupDataViewTabs.prototype = new anyView/*Tabs*/(null);
 groupDataViewTabs.prototype.constructor = groupDataViewTabs;

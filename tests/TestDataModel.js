@@ -42,7 +42,7 @@ function testModel()
 
   test('constructor and dataInit', function() {
 
-    let dm1 = new anyDataModel();
+    let dm1 = new anyModel();
     deepEqual(dm1.type                       === "" &&
               dm1.id_key                     === "" &&
               dm1.name_key                   === "" &&
@@ -63,12 +63,12 @@ function testModel()
               dm1.page_links                 === null,
               true, "Constructor sets correct defaults with no options.");
 
-    dm1 = new anyDataModel({ type: "foo" });
+    dm1 = new anyModel({ type: "foo" });
     deepEqual(dm1.type             === "foo" &&
               dm1.id_key           === "foo_id" &&
               dm1.name_key         === "foo_name",
               true, "Constructor sets correct defaults for id_key and name_key when type is given in options.");
-    dm1 = new anyDataModel({
+    dm1 = new anyModel({
                 type:             "fooobj",
                 id_key:           "fooobj_id",
                 name_key:         "fooobj_name",
@@ -94,7 +94,7 @@ function testModel()
               dm1.error            === "",
               true, "Constructor sets correct defaults when options is given.");
 
-    let dm2 = new anyDataModel(null);
+    let dm2 = new anyModel(null);
     let opt = { type:             "barobj",
                 id_key:           "barobj_id",
                 name_key:         "barobj_name",
@@ -135,7 +135,7 @@ function testModel()
 
   test('_getDataSourceName', function() {
 
-    let dm1 = new anyDataModel({type:"foo",mode:"remote"});
+    let dm1 = new anyModel({type:"foo",mode:"remote"});
     deepEqual(dm1._getDataSourceName() === any_defs.dataScript,
               true, "_getDataSourceName ok");
   });
@@ -146,7 +146,7 @@ function testModel()
 
   test('dataSearchNextId and dataSearchMaxId', function() {
 
-    let dm1 = new anyDataModel({type:"foo",mode:"remote"});
+    let dm1 = new anyModel({type:"foo",mode:"remote"});
     var data1 = {
       6: {
         head: "group",
@@ -184,7 +184,7 @@ function testModel()
         },
       },
     };
-    let dm2 = new anyDataModel({
+    let dm2 = new anyModel({
                     type: "user",
                     data: data1,
                   });
@@ -209,7 +209,7 @@ function testModel()
 
   test('DataModel.dataSearch on model created with missing type, id and data', 1, function() {
 
-    let dm = new anyDataModel();
+    let dm = new anyModel();
     deepEqual(dm.dataSearch()                === null &&
               dm.dataSearch(null)            === null &&
               dm.dataSearch({})              === null &&
@@ -228,7 +228,7 @@ function testModel()
 
   test('DataModel.dataSearch on model created with type, id and data with conflicting type', 1, function() {
 
-    let dm = new anyDataModel({type:"foo",data:{99:{list:"bar"}}});
+    let dm = new anyModel({type:"foo",data:{99:{list:"bar"}}});
     deepEqual(dm.dataSearch()                === null &&
               dm.dataSearch({type:null,id:null,data:null})  === null &&
               dm.dataSearch({type:"foo",id:null,data:null}) === null &&
@@ -245,7 +245,7 @@ function testModel()
 
   test('DataModel.dataSearch on model created with type, id and data with correct type', 3, function() {
 
-    let dm = new anyDataModel({type:"foo",data:{99:{list:"foo"}}});
+    let dm = new anyModel({type:"foo",data:{99:{list:"foo"}}});
     let res = dm.dataSearch({type:"bar",id:"99"});
     deepEqual(res === null,
               true, "dm.dataSearch('bar','99')) return null");
@@ -260,7 +260,7 @@ function testModel()
 
   test('DataModel.dataSearch on model created with type, id and deep data', 3, function() {
 
-    let dm = new anyDataModel({type:"foo",data:{99:{list:"bar",data:{11:{list:"foo"}}}}});
+    let dm = new anyModel({type:"foo",data:{99:{list:"bar",data:{11:{list:"foo"}}}}});
     let res = dm.dataSearch({type:"bar",id:"11"});
     deepEqual(res === null,
               true, "dm.dataSearch('bar','11')) return null");
@@ -277,7 +277,7 @@ function testModel()
     let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      13:{list:"faz",faz_name:"The faz faz"}}}};
-    let dm = new anyDataModel({type:"foo",data:data});
+    let dm = new anyModel({type:"foo",data:data});
     let res = dm.dataSearch({type:null,id:"11"});
     deepEqual(res     !== null &&
               res[11] !== undefined,
@@ -312,7 +312,7 @@ function testModel()
   test('DataModel.dataSearch with parent == true', 1, function() {
     let data = {99:{type:"bar",data:{11:{type:"foo",foo_name:"The foo foz"},
                                     }}};
-    let dm = new anyDataModel({type:"foo",data:data});
+    let dm = new anyModel({type:"foo",data:data});
     let res = dm.dataSearch({type:"foo",id:"11",parent:true});
     deepEqual(res     !== null &&
               res[11] === undefined &&
@@ -329,7 +329,7 @@ function testModel()
   test('DataModel.dataInsert', 13, function() {
     let mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                       12:{list:"faz",faz_name:"The faz"}}}};
-    let dm = new anyDataModel({type:"foo",data:mdata});
+    let dm = new anyModel({type:"foo",data:mdata});
     let idata = {list:"barbar",barbar_name:"The barbar"};
     let res = dm.dataInsert({type:"bar",id:99,indata:idata,new_id:13});
     deepEqual(dm.data[99].data[12] !== undefined &&
@@ -337,14 +337,14 @@ function testModel()
               true, "dm.data[99].data[12] != undefined and dm.data[99].data[13] !== undefined after dataInsert with new_id==13");
 
     mdata = null;
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     idata = {14:{list:"barbar",barbar_name:"The barbar"}};
     res = dm.dataInsert({type:"bar",indata:idata});
     deepEqual(dm.data[14] !== undefined,
               true, "dm.data[14] !== undefined after dataInsert of indexed data and without new_id to model with null data");
 
     mdata = null;
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     idata = {list:"barbar",barbar_name:"The barbar"};
     res = dm.dataInsert({type:"bar",indata:idata,new_id:77});
     deepEqual(dm.data[77] !== undefined,
@@ -352,7 +352,7 @@ function testModel()
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     idata = {list:"barbar",barbar_name:"The barbar"};
     res = dm.dataInsert({type:"bar",id:99,indata:idata});
     deepEqual(dm.data[99].data[11] !== undefined &&
@@ -365,7 +365,7 @@ function testModel()
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     idata = {list:"barbar",barbar_name:"The barbar"};
     res = dm.dataInsert({type:null,id:99,indata:idata,new_id:13});
     deepEqual(dm.data[99].data[11] !== undefined &&
@@ -378,7 +378,7 @@ function testModel()
 
     mdata = {99:{list:"foo",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     idata = {list:"foo",foo_name:"The foo"};
     res = dm.dataInsert({type:null,id:99,indata:idata,new_id:13});
     deepEqual(dm.data[99].data[11] !== undefined &&
@@ -391,7 +391,7 @@ function testModel()
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     idata = {list:"barbar",barbar_name:"The barbar"};
     res = dm.dataInsert({type:"baz",id:99,indata:idata,new_id:13});
     deepEqual(dm.data[99].data[11] !== undefined &&
@@ -404,7 +404,7 @@ function testModel()
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     idata = {list:"bar",bar_name:"The bar"};
     res = dm.dataInsert({type:"bar",id:99,indata:idata,new_id:-1});
     deepEqual(dm.data[99].data[11]  !== undefined &&
@@ -417,7 +417,7 @@ function testModel()
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     idata = {list:"foo",foo_name:"The foo"};
     res = dm.dataInsert({type:"foo",id:null,indata:idata,new_id:null});
     deepEqual(dm.data[99] !== undefined &&
@@ -428,7 +428,7 @@ function testModel()
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     idata = {list:"bar",bar_name:"The bar"};
     res = dm.dataInsert({type:"bar",id:null,indata:idata,new_id:61});
     deepEqual(dm.data[99] !== undefined &&
@@ -439,7 +439,7 @@ function testModel()
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     idata = {list:"bar",bar_name:"The bar"};
     res = dm.dataInsert({type:"bar",id:99,indata:idata,new_id:-1});
     deepEqual(dm.data[99].data[11]  !== undefined &&
@@ -453,7 +453,7 @@ function testModel()
     // Test id
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     idata = {list:"bar",bar_name:"The bar"};
     res = dm.dataInsert({type:"bar",id:-1,indata:idata});
     deepEqual(res === null,
@@ -474,7 +474,7 @@ function testModel()
     // Normal case
     let mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                       12:{list:"faz",faz_name:"The faz"}}}};
-    let dm = new anyDataModel({type:"foo",data:mdata});
+    let dm = new anyModel({type:"foo",data:mdata});
     let res = dm.dataUpdate({type:"foo",id:"11",indata:{foo_name:"Foz Baz"}});
     deepEqual(res !== null &&
               dm.data[99].data[11].foo_name === "Foz Baz" &&
@@ -484,7 +484,7 @@ function testModel()
     // Unexisting type
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     res = dm.dataUpdate({type:"fiz",id:"11",indata:{foo_name:"Foz Baz"}});
     deepEqual(res === null &&
               dm.data[99].data[11].foo_name === "The foo" &&
@@ -494,7 +494,7 @@ function testModel()
     // Missing / unmatching type
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"biz",data:mdata});
+    dm = new anyModel({type:"biz",data:mdata});
     res = dm.dataUpdate({id:"11",indata:{foo_name:"Foz Baz"}});
     deepEqual(res === null &&
               dm.data[99].data[11].foo_name === "The foo" &&
@@ -504,7 +504,7 @@ function testModel()
     // Missing id
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"biz",data:mdata});
+    dm = new anyModel({type:"biz",data:mdata});
     res = dm.dataUpdate({type:"foo",indata:{foo_name:"Foz Baz"}});
     deepEqual(res === null &&
               dm.data[99].data[11].foo_name === "The foo" &&
@@ -514,7 +514,7 @@ function testModel()
     // Negative id
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"biz",data:mdata});
+    dm = new anyModel({type:"biz",data:mdata});
     res = dm.dataUpdate({type:"foo",id:-1,indata:{foo_name:"Foz Baz"}});
     deepEqual(res === null &&
               dm.data[99].data[11].foo_name === "The foo" &&
@@ -524,7 +524,7 @@ function testModel()
     // Missing indata
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"biz",data:mdata});
+    dm = new anyModel({type:"biz",data:mdata});
     res = dm.dataUpdate({type:"foo",id:"11"});
     deepEqual(res === null &&
               dm.data[99].data[11].foo_name === "The foo" &&
@@ -542,7 +542,7 @@ function testModel()
     // Normal case
     let mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                       12:{list:"faz",faz_name:"The faz"}}}};
-    let dm = new anyDataModel({type:"foo",data:mdata});
+    let dm = new anyModel({type:"foo",data:mdata});
     let res = dm.dataDelete({type:"foo",id:"11"});
     deepEqual(res !== null &&
               dm.data[99].data[11] === undefined &&
@@ -552,7 +552,7 @@ function testModel()
     // Subdata is deleted
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     res = dm.dataDelete({type:"bar",id:"99"});
     deepEqual(res !== null &&
               dm.data[99] === undefined,
@@ -561,7 +561,7 @@ function testModel()
     // Non-existing type
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     res = dm.dataDelete({type:"biz",id:"99"});
     deepEqual(res === null &&
               dm.data[99].data[11] !== undefined &&
@@ -571,7 +571,7 @@ function testModel()
     // Missing type
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     res = dm.dataDelete({id:"99"});
     deepEqual(res === null &&
               dm.data[99].data[11] !== undefined &&
@@ -581,7 +581,7 @@ function testModel()
     // Non-existing id
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     res = dm.dataDelete({type:"bar",id:"999"});
     deepEqual(res === null &&
               dm.data[99].data[11] !== undefined &&
@@ -591,7 +591,7 @@ function testModel()
     // Missing id
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     res = dm.dataDelete({type:"bar"});
     deepEqual(res === null &&
               dm.data[99].data[11] !== undefined &&
@@ -601,7 +601,7 @@ function testModel()
     // Type and id does not match, 1 of 2
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     res = dm.dataDelete({type:"faz",id:"11"});
     deepEqual(res === null &&
               dm.data[99].data[11] !== undefined &&
@@ -611,7 +611,7 @@ function testModel()
     // Type and id does not match, 2 of 2
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyDataModel({type:"foo",data:mdata});
+    dm = new anyModel({type:"foo",data:mdata});
     res = dm.dataDelete({type:"foo",id:"12"});
     deepEqual(res === null &&
               dm.data[99].data[11] !== undefined &&
@@ -630,7 +630,7 @@ function testModel()
     let mdata = {99:{list:"bar",
                      data:{11:{list:"bar",bar_name:"The first bar"},
                            12:{list:"bar",bar_name:"The second bar"}}}};
-    let dm = new anyDataModel({type:"bar",data:mdata});
+    let dm = new anyModel({type:"bar",data:mdata});
     let del = new Set(); del.add(11);
     let ins = new Set(); ins.add(14);
     let res = dm.dataUpdateLinkList({type: "bar",
@@ -649,7 +649,7 @@ function testModel()
     mdata = {99:{list:"bar",
                  data:{11:{list:"bar",bar_name:"The first bar"},
                        12:{list:"bar",bar_name:"The second bar"}}}};
-    dm = new anyDataModel({type:"bar",data:mdata});
+    dm = new anyModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     res = dm.dataUpdateLinkList({type: "foo",
@@ -667,7 +667,7 @@ function testModel()
     mdata = {99:{list:"foo",
                  data:{11:{list:"bar",bar_name:"The first bar"},
                        12:{list:"bar",bar_name:"The second bar"}}}};
-    dm = new anyDataModel({type:"bar",data:mdata});
+    dm = new anyModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     res = dm.dataUpdateLinkList({type: "bar",
@@ -685,7 +685,7 @@ function testModel()
     mdata = {99:{list:"bar",
                  data:{11:{list:"bar",bar_name:"The first bar"},
                        12:{list:"bar",bar_name:"The second bar"}}}};
-    dm = new anyDataModel({type:"bar",data:mdata});
+    dm = new anyModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     res = dm.dataUpdateLinkList({type: "bar",
@@ -703,7 +703,7 @@ function testModel()
     mdata = {99:{list:"bar",
                  data:{11:{list:"bar",bar_name:"The first bar"},
                        12:{list:"bar",bar_name:"The second bar"}}}};
-    dm = new anyDataModel({type:"bar",data:mdata});
+    dm = new anyModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     res = dm.dataUpdateLinkList({type: "foo",
@@ -721,7 +721,7 @@ function testModel()
     mdata = {99:{list:"foo",
                  data:{11:{list:"bar",bar_name:"The first bar"},
                        12:{list:"bar",bar_name:"The second bar"}}}};
-    dm = new anyDataModel({type:"bar",data:mdata});
+    dm = new anyModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     res = dm.dataUpdateLinkList({type: "bar",
@@ -739,7 +739,7 @@ function testModel()
     mdata = {99:{list:"foo",
                  data:{11:{list:"bar",bar_name:"The first bar"},
                        12:{list:"bar",bar_name:"The second bar"}}}};
-    dm = new anyDataModel({type:"bar",data:mdata});
+    dm = new anyModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     console.log(dm.data)
@@ -762,7 +762,7 @@ function testModel()
   ///////////////////// dbSearch tests /////////////////////
 
   asyncTest('dbSearch normal case - item, with header', 4, function() {
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote"});
+    let dm = new anyModel({type:"user",search:false,mode:"remote"});
     let res = dm.dbSearch({id:"1",head:true});
     deepEqual(res,
               true, "dbSearch({id:'1'}) returns true");
@@ -780,7 +780,7 @@ function testModel()
   });
 
   asyncTest('dbSearch normal case - item, without header', 4, function() {
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote"});
+    let dm = new anyModel({type:"user",search:false,mode:"remote"});
     let res = dm.dbSearch({id:"1"});
     deepEqual(res,
               true, "dbSearch({id:'1'}) returns true");
@@ -798,7 +798,7 @@ function testModel()
   });
 
   asyncTest('dbSearch normal case - list', 4, function() {
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote"});
+    let dm = new anyModel({type:"user",search:false,mode:"remote"});
     deepEqual(dm.dbSearch({type:"user"}),
               true, "dbSearch() returns true");
     setTimeout(function() {
@@ -816,7 +816,7 @@ function testModel()
   });
 
   asyncTest('dbSearch with non-existing model type and id_key', 3, function() {
-    let dm = new anyDataModel({type:"foobar",id_key:"foobar_name",search:false,mode:"remote"});
+    let dm = new anyModel({type:"foobar",id_key:"foobar_name",search:false,mode:"remote"});
     deepEqual(dm.dbSearch({id:"3"}),
               true, "dbSearch({id:'3'}) returns true");
     setTimeout(function() {
@@ -829,7 +829,7 @@ function testModel()
   });
 
   asyncTest('dbSearch with existing model type but non-existing id_key', 3, function() {
-    let dm = new anyDataModel({type:"user",id_key:"foo",search:false,mode:"remote"});
+    let dm = new anyModel({type:"user",id_key:"foo",search:false,mode:"remote"});
     deepEqual(dm.dbSearch({id:"1"}),
               true, "dbSearch({id:'1'}) returns true");
     setTimeout(function() {
@@ -842,7 +842,7 @@ function testModel()
   });
 
   asyncTest('dbSearch with non-existing model type but existing type in search options', 3, function() {
-    let dm = new anyDataModel({type:"foo",search:false,mode:"remote"});
+    let dm = new anyModel({type:"foo",search:false,mode:"remote"});
     deepEqual(dm.dbSearch({type:"user",id:"1"}),
               true, "dbSearch({type:'user',id:'1'}) returns true");
     setTimeout(function() {
@@ -855,7 +855,7 @@ function testModel()
   });
 
   asyncTest('dbSearch for next id through dbSearch with id==max', 4, function() {
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote"});
+    let dm = new anyModel({type:"user",search:false,mode:"remote"});
     deepEqual(dm.dbSearch({type:"user",id:"max"}),
               true, "dbSearch({type:'user',id:'max'}) returns true");
     setTimeout(function() {
@@ -870,7 +870,7 @@ function testModel()
   });
 
   asyncTest('dbSearch for next id through dbSearchNextId', 4, function() {
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote"});
+    let dm = new anyModel({type:"user",search:false,mode:"remote"});
     deepEqual(dm.dbSearchNextId({type:"user",id:"max"}),
               true, "dbSearch({type:'user',id:'max'}) returns true");
     setTimeout(function() {
@@ -893,7 +893,7 @@ function testModel()
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      2:{list:"user",user_name:"The faz user",
                                          dirty:{list:"user",user_name:"The faz user",user_name:"The faz user name"}}}}};
-    let dm = new anyDataModel({name_key:"user_name",type:"user",search:false,mode:"remote",data:data});
+    let dm = new anyModel({name_key:"user_name",type:"user",search:false,mode:"remote",data:data});
     let res = dm.dbUpdate({type:"user",id:2});
     deepEqual(res,
               true, "dbUpdate({type:'user',id:2}) returns true");
@@ -903,7 +903,7 @@ function testModel()
                 item[2].dirty === undefined,
                 true, "dbUpdate({type:'user',id:2}) returns with correct data in memory:"+
                       item[2].user_name+","+item[2].dirty);
-      let dm2 = new anyDataModel({type:"user",search:false,mode:"remote",data:null});
+      let dm2 = new anyModel({type:"user",search:false,mode:"remote",data:null});
       dm2.dbSearch({type:"user",id:2});
       setTimeout(function() {
         deepEqual(dm2.data && dm2.data["+2"].user_name === "The faz user",
@@ -918,7 +918,7 @@ function testModel()
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      50:{list:"event",event_name:"The faz event",
                                          dirty:{list:"event",event_name:"The faz event"}}}}};
-    let dm = new anyDataModel({type:"event",search:false,mode:"remote",data:data});
+    let dm = new anyModel({type:"event",search:false,mode:"remote",data:data});
     let res = dm.dbUpdate();
     deepEqual(res,
               false, "dbUpdate({type:'event',id:50}) with empty input returns false");
@@ -928,7 +928,7 @@ function testModel()
                 item[50].dirty !== undefined,
                 true, "dbUpdate({type:'event',id:50}) with empty input returns returns unchanged memory data:"+
                       item[50].event_name+","+item[50].dirty);
-      let dm2 = new anyDataModel({type:"event",search:false,mode:"remote",data:null});
+      let dm2 = new anyModel({type:"event",search:false,mode:"remote",data:null});
       dm2.dbSearch({type:"baz",id:50});
       setTimeout(function() {
         deepEqual(dm2.data=== null,
@@ -944,7 +944,7 @@ function testModel()
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      555:{list:"event",event_name:"The faz event",
                                          dirty:{list:"event",event_name:"The faz event"}}}}};
-    let dm = new anyDataModel({type:"event",search:false,mode:"remote",data:data});
+    let dm = new anyModel({type:"event",search:false,mode:"remote",data:data});
     let res = dm.dbUpdate({type:"event",id:555});
     deepEqual(res,
               true, "dbUpdate({type:'event',id:555}) returns true");
@@ -954,7 +954,7 @@ function testModel()
                 item[555].dirty !== undefined,
                 true, "dbUpdate({type:'event',id:555}) returns with correct data in memory:"+
                       item[555].event_name+","+item[555].dirty);
-      let dm2 = new anyDataModel({type:"event",search:false,mode:"remote",data:null});
+      let dm2 = new anyModel({type:"event",search:false,mode:"remote",data:null});
       dm2.dbSearch({type:"event",id:555});
       setTimeout(function() {
         deepEqual(dm2.data === null,
@@ -969,7 +969,7 @@ function testModel()
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      50:{list:"baz",event_name:"The faz event",
                                          dirty:{list:"event",event_name:"The faz event"}}}}};
-    let dm = new anyDataModel({type:"event",search:false,mode:"remote",data:data});
+    let dm = new anyModel({type:"event",search:false,mode:"remote",data:data});
     let res = dm.dbUpdate({type:"event",id:6346});
     deepEqual(res,
               false, "dbUpdate({type:'baz',id:6346}) item with nonexisting id returns false");
@@ -977,7 +977,7 @@ function testModel()
       let item = dm.dataSearch({type:"baz",id:6346});
       deepEqual(item === null,
                 true, "dbUpdate({type:'baz',id:6346}) item with nonexisting id returns returns null from dataSearch");
-      let dm2 = new anyDataModel({type:"biz",search:false,mode:"remote",data:null});
+      let dm2 = new anyModel({type:"biz",search:false,mode:"remote",data:null});
       dm2.dbSearch({type:"baz",id:6346});
       setTimeout(function() {
         deepEqual(dm2.data=== null,
@@ -993,7 +993,7 @@ function testModel()
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      2:{list:"user",user_name:"The faz user",
                                          dirty:{list:"user",user_name:"The faz user"}}}}};
-    let dm = new anyDataModel({type:"baz",search:false,mode:"remote",data:data});
+    let dm = new anyModel({type:"baz",search:false,mode:"remote",data:data});
     let res = dm.dbUpdate({type:"user",id:2});
     deepEqual(res,
               true, "dbUpdate({type:'user',id:2}) with different model type returns true");
@@ -1003,7 +1003,7 @@ function testModel()
                 item[2].dirty === undefined,
                 true, "dbUpdate({type:'user',id:2}) with different model type returns with correct data in memory:"+
                       item[2].user_name+","+item[2].dirty);
-      let dm2 = new anyDataModel({type:"user",search:false,mode:"remote",data:null});
+      let dm2 = new anyModel({type:"user",search:false,mode:"remote",data:null});
       dm2.dbSearch({type:"user",id:2});
       setTimeout(function() {
         deepEqual(dm2.data["+2"].user_name === "The faz user",
@@ -1019,7 +1019,7 @@ function testModel()
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      2:{list:"baz",user_name:"The faz user",
                                          dirty:{list:"user",user_name:"The faz user"}}}}};
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data});
+    let dm = new anyModel({type:"user",search:false,mode:"remote",data:data});
     let res = dm.dbUpdate({type:"biz",id:2});
     deepEqual(res,
               false, "dbUpdate({type:'baz',id:2}) with input type that does not match model type returns false");
@@ -1029,7 +1029,7 @@ function testModel()
                 item[2].dirty !== undefined,
                 true, "dbUpdate({type:'baz',id:2}) with input type that does not match model type returns returns unchanged memory data:"+
                       item[2].user_name+","+item[2].dirty);
-      let dm2 = new anyDataModel({type:"biz",search:false,mode:"remote",data:null});
+      let dm2 = new anyModel({type:"biz",search:false,mode:"remote",data:null});
       dm2.dbSearch({type:"baz",id:2});
       setTimeout(function() {
         deepEqual(dm2.data=== null,
@@ -1044,7 +1044,7 @@ function testModel()
     let usrname = "user"+Math.floor(Math.random()*100000);
     let data7779 = {77:{list:"user",user_name:"us77"},
                     79:{list:"user",user_name:"us79",user_login:usrname,user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data7779});
+    let dm = new anyModel({type:"user",search:false,mode:"remote",data:data7779});
     // insert
     let res = dm.dbUpdate({id:79,is_new:true}); // insert data
     deepEqual(res,
@@ -1061,7 +1061,7 @@ function testModel()
 
   asyncTest('dbUpdate insert data that is not in memory', 2, function() {
     let data22 = {22:{list:"user",user_name:"us22"}};
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data22});
+    let dm = new anyModel({type:"user",search:false,mode:"remote",data:data22});
     // insert
     let data23 = {23:{list:"user",user_name:"us23",is_new:true}};
     let res = dm.dbUpdate({id:23,indata:data23,is_new:true}); // insert data
@@ -1083,7 +1083,7 @@ function testModel()
   ///////////////////// dbDelete
 
   asyncTest('dbDelete: normal case (user with id 55 must exist in db user table)', 3, function() {
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:null});
+    let dm = new anyModel({type:"user",search:false,mode:"remote",data:null});
     let res = dm.dbDelete({type:"user",id:55});
     deepEqual(res,
               true, "dbDelete() returns true");
@@ -1097,7 +1097,7 @@ function testModel()
   });
 
   asyncTest('dbDelete: deleting non-existing id (user with id 56 must NOT exist in db user table)', 3, function() {
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:null});
+    let dm = new anyModel({type:"user",search:false,mode:"remote",data:null});
     let res = dm.dbDelete({type:"user",id:56});
     deepEqual(res,
               true, "dbDelete() returns true");
@@ -1111,13 +1111,13 @@ function testModel()
   });
 
   test('dbDelete: model with no type or id_key', 1, function() {
-    let dm = new anyDataModel({search:false,mode:"remote"});
+    let dm = new anyModel({search:false,mode:"remote"});
     deepEqual(dm.dbDelete({}),
              false, "dbDelete() returns false");
   });
 
   asyncTest('dbDelete: model with type not in database', 3, function() {
-    let dm = new anyDataModel({type:"foox",search:false,mode:"remote",data:null});
+    let dm = new anyModel({type:"foox",search:false,mode:"remote",data:null});
     let res = dm.dbDelete({id:99});
     deepEqual(res,
               true, "dbDelete() returns true");
@@ -1131,7 +1131,7 @@ function testModel()
   });
 
   asyncTest('dbDelete: model with existing type, calling delete with existing id but non-existing type', 3, function() {
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:null});
+    let dm = new anyModel({type:"user",search:false,mode:"remote",data:null});
     let res = dm.dbDelete({type:"foox",id:50}); // user 50 must exist in db user table
     deepEqual(res,
               true, "dbDelete() returns true");
@@ -1148,7 +1148,7 @@ function testModel()
     let data = {99:{list:"bar",data:{11:{list:"foox",foz_name:"The foox foz"},
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      66:{list:"user",user_name:"The faz user"}}}};
-    let dm = new anyDataModel({type:"foox",search:false,mode:"remote",data:data});
+    let dm = new anyModel({type:"foox",search:false,mode:"remote",data:data});
     let res = dm.dbDelete({id:66});
     deepEqual(res,
               true, "dbDelete() returns true");
@@ -1165,7 +1165,7 @@ function testModel()
     let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      67:{list:"user",user_name:"delme"}}}};
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data});
+    let dm = new anyModel({type:"user",search:false,mode:"remote",data:data});
     let res = dm.dbDelete({type:"user",id:67});
     deepEqual(res,
               true, "dbDelete() returns true");
@@ -1181,7 +1181,7 @@ function testModel()
   // insert, update, search and delete tests
   asyncTest('dbUpdate and dbDelete: Insert, update, search, view and delete user', 15, function() {
     let data33 = {33:{list:"user",user_name:"us33",user_login:"us33",user_pass:"qqq",user_pass_again:"qqq"}};
-    let dm = new anyDataModel({type:"user",search:false,mode:"remote",data:data33});
+    let dm = new anyModel({type:"user",search:false,mode:"remote",data:data33});
     // insert
     let data34 = {34:{list:"user",user_name:"us34",user_login:"us34",user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
     let res = dm.dbUpdate({id:34,indata:data34,is_new:true}); // insert data

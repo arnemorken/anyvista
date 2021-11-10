@@ -10,7 +10,7 @@
 /**
  * __Tab view for the anyList data model.__
  *
- * @class anyDataViewTabs
- * @extends anyDataView
+ * @class anyViewTabs
+ * @extends anyView
  * @constructor
  */

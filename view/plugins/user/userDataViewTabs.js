@@ -71,5 +71,5 @@ var userDataViewTabs = function (options)
   return $.any.userDataViewTabs(options);
 };
 
-userDataViewTabs.prototype = new anyDataView/*Tabs*/(null);
+userDataViewTabs.prototype = new anyView/*Tabs*/(null);
 userDataViewTabs.prototype.constructor = userDataViewTabs;

@@ -11,10 +11,10 @@
  *
  ***************************************************************************************/
 /**
- * __anyDataModel: Tree structure data model that can manipulate data as lists and items
+ * __anyModel: Tree structure data model that can manipulate data as lists and items
  * and optionally synchronize with a database.__
  *
- * See <a href="../classes/anyDataView.html">`anyDataView`</a> for a description of a data
+ * See <a href="../classes/anyView.html">`anyView`</a> for a description of a data
  * view class.
  *
  * The model should have a type (e.g. `type = "user"`), an id key (e.g. `id_key = "user_id"`) and a name
@@ -38,7 +38,7 @@
  * - `db*` methods for working with data in the database,
  * - subscribe/callback methods (`cb*` methods).
  *
- * @class anyDataModel
+ * @class anyModel
  * @constructor
  * @param {Object} options An object which may contain the following properties, all of which are optional unless stated otherwise:
  *
@@ -92,9 +92,9 @@
  *                                   Default: "".
  *
  * @example
- *      new anyDataModel({ type:"user",id_key:"user_id",id:"38",data:{user_name:"Aretha Franklin"} });
+ *      new anyModel({ type:"user",id_key:"user_id",id:"38",data:{user_name:"Aretha Franklin"} });
  */
-var anyDataModel = function (options)
+var anyModel = function (options)
 {
   /**
   * @property {Object} data
@@ -266,9 +266,9 @@ var anyDataModel = function (options)
   if (options && !this.name_key)
     this.message += "name_key missing. ";
   if (this.message !== "")
-    console.log("anyDataModel constructor: "+this.message);
+    console.log("anyModel constructor: "+this.message);
   if (this.error !== "")
-    console.error("anyDataModel constructor: "+this.error);
+    console.error("anyModel constructor: "+this.error);
 
   // Search
   if (options && options.search)
@@ -279,7 +279,7 @@ var anyDataModel = function (options)
 // _dataInitDefault: "Private" method.
 // Does not init type, id_key or name_key.
 //
-anyDataModel.prototype._dataInitDefault = function ()
+anyModel.prototype._dataInitDefault = function ()
 {
   this.data             = null;
   this.id               = null;
@@ -299,7 +299,7 @@ anyDataModel.prototype._dataInitDefault = function ()
   this.last_db_command  = null; // Used by dataInit
 }; // _dataInitDefault
 
-anyDataModel.prototype._dataInitSelect = function ()
+anyModel.prototype._dataInitSelect = function ()
 {
   this.select   = new Set();
   this.unselect = new Set();
@@ -329,7 +329,7 @@ anyDataModel.prototype._dataInitSelect = function ()
  *
  * @return options
  */
- anyDataModel.prototype.dataInit = function (options)
+ anyModel.prototype.dataInit = function (options)
 {
   // Remove encapsulation which may have been set by server
   if (options && options.JSON_CODE)
@@ -338,7 +338,7 @@ anyDataModel.prototype._dataInitSelect = function ()
     this._dataInitDefault();
   else
   if (options) {
-    //console.log("anyDataModel.dataInit options:\n"+JSON.stringify(options,2,2));
+    //console.log("anyModel.dataInit options:\n"+JSON.stringify(options,2,2));
     if (options.data || this.last_db_command == "sea") { this.data             = options.data; }
     if (options.type)                                  { this.type             = options.type; }
     if (options.id)                                    { this.id               = options.id; }
@@ -393,7 +393,7 @@ anyDataModel.prototype._dataInitSelect = function ()
  *
  * @throws {CALLBACK_MISSING} If `cbFunction` or `cbContext` are missing.
  */
- anyDataModel.prototype.cbSubscribe = function (cbFunction,cbContext)
+ anyModel.prototype.cbSubscribe = function (cbFunction,cbContext)
 {
   if (!cbFunction || !cbContext)
     throw i18n.error.CALLBACK_MISSING;
@@ -409,7 +409,7 @@ anyDataModel.prototype._dataInitSelect = function ()
  * @param {Function} cbFunction A method to remove from the list.
  *                              Mandatory.
  */
-anyDataModel.prototype.cbUnsubscribe = function (cbFunction)
+anyModel.prototype.cbUnsubscribe = function (cbFunction)
 {
   if (this._listeners) {
     for (let i=0; i<this._listeners.length; ++i) {
@@ -424,7 +424,7 @@ anyDataModel.prototype.cbUnsubscribe = function (cbFunction)
  * @method cbResetListeners
  * @description Empties the list of methods to be called by cbExecute.
  */
-anyDataModel.prototype.cbResetListeners = function ()
+anyModel.prototype.cbResetListeners = function ()
 {
   this._listeners = [];
 }; // cbResetListeners
@@ -434,7 +434,7 @@ anyDataModel.prototype.cbResetListeners = function ()
  * @description Calls all callback methods registered with `cbSubscribe`.
  *              This method is called by the default success/fail methods if `auto_callback == true`.
  */
-anyDataModel.prototype.cbExecute = function ()
+anyModel.prototype.cbExecute = function ()
 {
   if (this._listeners) {
     for (let i=0; i<this._listeners.length; ++i) {
@@ -457,12 +457,12 @@ anyDataModel.prototype.cbExecute = function ()
 // _getDataSourceName: "Private" method.
 // Returns the complete path to the data source (a script communicating with a database/server backend).
 //
-anyDataModel.prototype._getDataSourceName = function ()
+anyModel.prototype._getDataSourceName = function ()
 {
   if (this.mode == "remote")
     return any_defs.dataScript;
   this.message = "No local data source. "; // TODO i18n
-  console.warn("anyDataModel._getDataSourceName: "+this.message);
+  console.warn("anyModel._getDataSourceName: "+this.message);
   return "";
 }; // _getDataSourceName
 
@@ -490,10 +490,10 @@ anyDataModel.prototype._getDataSourceName = function ()
  *      mymodel.dataSearch({type:"user",id:"38"});
 */
 // TODO: Not tested with non-numerical indexes
-anyDataModel.prototype.dataSearch = function (options,parent_data,parent_id)
+anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
 {
   if (!options || typeof options != "object") {
-    console.error("anyDataModel.dataSearch: "+i18n.error.OPTIONS_MISSING);
+    console.error("anyModel.dataSearch: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
   let data = options.data                  ? options.data : this.data;
@@ -501,11 +501,11 @@ anyDataModel.prototype.dataSearch = function (options,parent_data,parent_id)
   let type = options.type                  ? options.type : this.type;
 
   if (!type) {
-    console.error("anyDataModel.dataSearch: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dataSearch: "+i18n.error.TYPE_MISSING);
     return null;
   }
   if (id !== null && ((!id && id !== 0) || (Number.isInteger(parseInt(id)) && id < 0))) {
-    console.error("anyDataModel.dataSearch: "+i18n.error.ID_MISSING+" ("+id+") ");
+    console.error("anyModel.dataSearch: "+i18n.error.ID_MISSING+" ("+id+") ");
     return null;
   }
   if (!data)
@@ -578,7 +578,7 @@ anyDataModel.prototype.dataSearch = function (options,parent_data,parent_id)
  *
  * @return The next available id. If none can be found, -1 is returned and `this.max == -1`.
  */
-anyDataModel.prototype.dataSearchNextId = function (type,data)
+anyModel.prototype.dataSearchNextId = function (type,data)
 {
   this.max = -1;
   let res = this.dataSearchMaxId(type,data);
@@ -599,7 +599,7 @@ anyDataModel.prototype.dataSearchNextId = function (type,data)
  *
  * @return The largest id found. If none can be found, -1 is returned and `this.max` is not changed.
  */
-anyDataModel.prototype.dataSearchMaxId = function (type,data)
+anyModel.prototype.dataSearchMaxId = function (type,data)
 {
   if (!type)
     type = this.type;
@@ -695,10 +695,10 @@ anyDataModel.prototype.dataSearchMaxId = function (type,data)
  *      mymodel.dataInsert({type:"user",id:"38",indata:{user_name:"Foo Bar"}});
  */
 // TODO: Not tested with non-numerical indexes
-anyDataModel.prototype.dataInsert = function (options)
+anyModel.prototype.dataInsert = function (options)
 {
   if (!options || typeof options != "object") {
-    console.error("anyDataModel.dataInsert: "+i18n.error.OPTIONS_MISSING);
+    console.error("anyModel.dataInsert: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
   let indata   = options.indata;
@@ -708,7 +708,7 @@ anyDataModel.prototype.dataInsert = function (options)
   let new_id   = options.new_id;
 
   if (!indata) {
-    console.error("anyDataModel.dataInsert: "+"Nothing to insert. "); // TODO! i18n
+    console.error("anyModel.dataInsert: "+"Nothing to insert. "); // TODO! i18n
     return null; // Nothing to insert
   }
   if (!the_data) {
@@ -716,13 +716,13 @@ anyDataModel.prototype.dataInsert = function (options)
     the_data = this.data;
   }
   if (!the_type) {
-    console.error("anyDataModel.dataInsert: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dataInsert: "+i18n.error.TYPE_MISSING);
     return null;
   }
   if ((the_id || the_id === 0) &&
       ((Number.isInteger(parseInt(the_id)) && the_id < 0) ||
        (!Number.isInteger(parseInt(the_id)) && typeof the_id != "string"))) {
-    console.error("anyDataModel.dataInsert: "+i18n.error.ID_ILLEGAL);
+    console.error("anyModel.dataInsert: "+i18n.error.ID_ILLEGAL);
     return null;
   }
   let item = the_id || the_id === 0
@@ -739,7 +739,7 @@ anyDataModel.prototype.dataInsert = function (options)
       if (new_id < 0)
         new_id = this.dataSearchNextId(the_type); // Auto-generate new id
       if (new_id < 0) {
-        console.error("anyDataModel.dataInsert: "+"New id not found for "+the_type+". "); // TODO! i18n
+        console.error("anyModel.dataInsert: "+"New id not found for "+the_type+". "); // TODO! i18n
         return null;
       }
       if (!item[the_id].data)
@@ -776,7 +776,7 @@ anyDataModel.prototype.dataInsert = function (options)
   return item;
 }; // dataInsert
 
-anyDataModel.prototype.dataInsertHeader = function (type,headerStr)
+anyModel.prototype.dataInsertHeader = function (type,headerStr)
 {
   let top_data = {
     "+0": {
@@ -817,10 +817,10 @@ anyDataModel.prototype.dataInsertHeader = function (type,headerStr)
  */
 // TODO! Not tested with non-numerical indexes
 // TODO! What if type/id combination exists several places in data structure?
-anyDataModel.prototype.dataUpdate = function (options)
+anyModel.prototype.dataUpdate = function (options)
 {
   if (!options || typeof options != "object") {
-    console.error("anyDataModel.dataUpdate: "+i18n.error.OPTIONS_MISSING);
+    console.error("anyModel.dataUpdate: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
   let data   = options.data ? options.data : this.data;
@@ -828,17 +828,17 @@ anyDataModel.prototype.dataUpdate = function (options)
   let type   = options.type ? options.type : this.type;
   let indata = options.indata;
   if (!type) {
-    console.error("anyDataModel.dataUpdate: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dataUpdate: "+i18n.error.TYPE_MISSING);
     return null;
   }
   if ((!id && id !== 0) ||
       (Number.isInteger(parseInt(id)) && id < 0) ||
       (!Number.isInteger(parseInt(id)) && typeof id != "string")) {
-    console.error("anyDataModel.dataUpdate: "+i18n.error.ID_ILLEGAL);
+    console.error("anyModel.dataUpdate: "+i18n.error.ID_ILLEGAL);
     return null;
   }
   if (!indata) {
-    console.error("anyDataModel.dataUpdate: "+i18n.error.UPDATE_DATA_MISSING);
+    console.error("anyModel.dataUpdate: "+i18n.error.UPDATE_DATA_MISSING);
     return null;
   }
   if (!data)
@@ -846,7 +846,7 @@ anyDataModel.prototype.dataUpdate = function (options)
 
   let item = this.dataSearch({data:data,id:id,type:type});
   if (!item || !item[id]) {
-    console.error("anyDataModel.dataUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+id));
+    console.error("anyModel.dataUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+id));
     return null;
   }
   if (!item[id].dirty)
@@ -885,19 +885,19 @@ anyDataModel.prototype.dataUpdate = function (options)
  *
  * @example
  */
-anyDataModel.prototype.dataUpdateLinkList = function (options)
+anyModel.prototype.dataUpdateLinkList = function (options)
 {
   if (!options || typeof options != "object") {
-    console.error("anyDataModel.dataUpdateLinkList: "+i18n.error.OPTIONS_MISSING);
+    console.error("anyModel.dataUpdateLinkList: "+i18n.error.OPTIONS_MISSING);
     return false;
   }
   let type = options.type;
   if (!type) {
-    console.error("anyDataModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
     return false;
   }
   if (!options.data) {
-    console.error("anyDataModel.dataUpdateLinkList: "+"Data missing, please refresh the view. "); // TODO! i18n
+    console.error("anyModel.dataUpdateLinkList: "+"Data missing, please refresh the view. "); // TODO! i18n
     return false;
   }
   if (parseInt(this.id) == parseInt(options.link_id))
@@ -976,10 +976,10 @@ anyDataModel.prototype.dataUpdateLinkList = function (options)
  * @return A pointer to the place where the data was deleted on success, or null if the place was not found or on error.
  */
 // TODO What if type/id combination exists several places in data structure?
-anyDataModel.prototype.dataDelete = function (options)
+anyModel.prototype.dataDelete = function (options)
 {
   if (!options || typeof options != "object") {
-    console.error("anyDataModel.dataDelete: "+i18n.error.OPTIONS_MISSING);
+    console.error("anyModel.dataDelete: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
   let data = options.data ? options.data : this.data;
@@ -988,11 +988,11 @@ anyDataModel.prototype.dataDelete = function (options)
   if (!data)
     return null; // Nowhere to insert
   if ((!id && id !== 0) || (Number.isInteger(parseInt(id)) && id < 0)) {
-    console.error("anyDataModel.dataDelete: "+i18n.error.ID_MISSING);
+    console.error("anyModel.dataDelete: "+i18n.error.ID_MISSING);
     return null;
   }
   if (!type) {
-    console.error("anyDataModel.dataDelete: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dataDelete: "+i18n.error.TYPE_MISSING);
     return null;
   }
   let item = this.dataSearch({data:data,id:id,type:type,parent:true});
@@ -1048,7 +1048,7 @@ anyDataModel.prototype.dataDelete = function (options)
  *
  * @return true if
  */
-anyDataModel.prototype.dbCreate = function (options)
+anyModel.prototype.dbCreate = function (options)
 {
   let type  = options.type ? options.type : type;
 
@@ -1084,7 +1084,7 @@ anyDataModel.prototype.dbCreate = function (options)
   else { // Local method call
     if (!self.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyDataModel.dbCreate: "+this.message);
+      console.warn("anyModel.dbCreate: "+this.message);
       return false;
     }
     return self.success(this,this,options);
@@ -1101,7 +1101,7 @@ anyDataModel.prototype.dbCreate = function (options)
  *
  * @return context
  */
-anyDataModel.prototype.dbCreateSuccess = function (context,serverdata,options)
+anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
 {
   let self = context;
   self.last_db_command = "cre";
@@ -1113,9 +1113,9 @@ anyDataModel.prototype.dbCreateSuccess = function (context,serverdata,options)
     self.message = serverdata.message;
     self.error   = serverdata.error;
     if (self.message)
-      console.log("anyDataModel.dbCreateSuccess: "+self.message);
+      console.log("anyModel.dbCreateSuccess: "+self.message);
     if (self.error)
-      console.error("anyDataModel.dbCreateSuccess: "+self.error);
+      console.error("anyModel.dbCreateSuccess: "+self.error);
   }
   if (self.cbExecute)
     self.cbExecute();
@@ -1158,7 +1158,7 @@ anyDataModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *
  * @return true if the database call was made, false otherwise.
  */
-anyDataModel.prototype.dbSearch = function (options)
+anyModel.prototype.dbSearch = function (options)
 {
   if (!options || typeof options != "object")
     options = {};
@@ -1199,7 +1199,7 @@ anyDataModel.prototype.dbSearch = function (options)
   else { // Local method call
     if (!self.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyDataModel.dbSearch: "+this.message);
+      console.warn("anyModel.dbSearch: "+this.message);
       return false;
     }
     return self.success(this,this,options);
@@ -1221,18 +1221,18 @@ anyDataModel.prototype.dbSearch = function (options)
  *
  * @return The complete URL for dbSearch or null on error (missing type or id_key).
  */
-anyDataModel.prototype.dbSearchGetURL = function (options)
+anyModel.prototype.dbSearchGetURL = function (options)
 {
   let type = options.type ? options.type : this.type;
   if (!type) {
-    console.error("anyDataModel.dbSearchGetURL: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dbSearchGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
   let id_key = options.type && options.type != this.type
                ? type+"_id"
                : this.id_key;
   if (!id_key) {
-    console.error("anyDataModel.dbSearchGetURL: "+i18n.error.ID_KEY_MISSING);
+    console.error("anyModel.dbSearchGetURL: "+i18n.error.ID_KEY_MISSING);
     return null;
   }
   let param_str = "?echo=y"+
@@ -1261,7 +1261,7 @@ anyDataModel.prototype.dbSearchGetURL = function (options)
  *
  * @return context
  */
-anyDataModel.prototype.dbSearchSuccess = function (context,serverdata,options)
+anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
 {
   let self = context;
   self.last_db_command = "sea";
@@ -1279,9 +1279,9 @@ anyDataModel.prototype.dbSearchSuccess = function (context,serverdata,options)
         self.message = "No "+self.type+"s found. "; // TODO! i18n
     }
     if (self.message)
-      console.log("anyDataModel.dbSearchSuccess: "+self.message);
+      console.log("anyModel.dbSearchSuccess: "+self.message);
     if (self.error)
-      console.error("anyDataModel.dbSearchSuccess: "+self.error);
+      console.error("anyModel.dbSearchSuccess: "+self.error);
     if (self.auto_search_init && self.dataInit)
       self.dataInit(serverdata);
   }
@@ -1310,7 +1310,7 @@ anyDataModel.prototype.dbSearchSuccess = function (context,serverdata,options)
  *
  * @return true if the database call was made, false otherwise.
  */
-anyDataModel.prototype.dbSearchNextId = function (options)
+anyModel.prototype.dbSearchNextId = function (options)
 {
   if (!options || typeof options != "object")
     options = {};
@@ -1341,7 +1341,7 @@ anyDataModel.prototype.dbSearchNextId = function (options)
   else { // Local method call
     if (!self.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyDataModel.dbSearchNextId: "+this.message);
+      console.warn("anyModel.dbSearchNextId: "+this.message);
       return false;
     }
     return self.success(this,this,options);
@@ -1359,18 +1359,18 @@ anyDataModel.prototype.dbSearchNextId = function (options)
  *
  * @return The complete URL for dbSearchNextId or null on error (missing type or id_key).
  */
-anyDataModel.prototype.dbSearchNextIdGetURL = function (options)
+anyModel.prototype.dbSearchNextIdGetURL = function (options)
 {
   let type = options.type ? options.type : this.type;
   if (!type) {
-    console.error("anyDataModel.dbSearchNextIdGetURL: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dbSearchNextIdGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
   let id_key = options.type && options.type != this.type
                ? type+"_id"
                : this.id_key;
   if (!id_key) {
-    console.error("anyDataModel.dbSearchNextIdGetURL: "+i18n.error.ID_KEY_MISSING);
+    console.error("anyModel.dbSearchNextIdGetURL: "+i18n.error.ID_KEY_MISSING);
     return null;
   }
   let param_str = "?echo=y"+
@@ -1388,7 +1388,7 @@ anyDataModel.prototype.dbSearchNextIdGetURL = function (options)
  *
  * @return context
  */
-anyDataModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
+anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
 {
   let self = context;
   self.last_db_command = "sea";
@@ -1400,9 +1400,9 @@ anyDataModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,opti
     self.message = serverdata.message;
     self.error   = serverdata.error;
     if (self.message)
-      console.log("anyDataModel.dbSearchNextIdSuccess: "+self.message);
+      console.log("anyModel.dbSearchNextIdSuccess: "+self.message);
     if (self.error)
-      console.error("anyDataModel.dbSearchNextIdSuccess: "+self.error);
+      console.error("anyModel.dbSearchNextIdSuccess: "+self.error);
   }
   return context;
 }; // dbSearchNextIdSuccess
@@ -1440,14 +1440,14 @@ anyDataModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,opti
  *
  * @return true if the database call was made, false otherwise.
  */
-anyDataModel.prototype.dbUpdate = function (options)
+anyModel.prototype.dbUpdate = function (options)
 {
   if (!options || typeof options != "object")
     options = {};
 
   let the_type = options.type ? options.type : this.type;
   if (!the_type) {
-    console.error("anyDataModel.dbUpdate: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dbUpdate: "+i18n.error.TYPE_MISSING);
     return false;
   }
   let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
@@ -1456,7 +1456,7 @@ anyDataModel.prototype.dbUpdate = function (options)
                  ? options.id
                  : null;
   if (!the_id && typeof options.id !== "string") {
-    console.error("anyDataModel.dbUpdate: "+i18n.error.ID_ILLEGAL);
+    console.error("anyModel.dbUpdate: "+i18n.error.ID_ILLEGAL);
     return false;
   }
   // Check that we have new or dirty data
@@ -1468,12 +1468,12 @@ anyDataModel.prototype.dbUpdate = function (options)
                                data: the_data,
                             });
   if (!item || !item[options.id]) {
-    console.error("anyDataModel.dbUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+options.id));
+    console.error("anyModel.dbUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+options.id));
     return false;
   }
   if (!options.is_new && !item[options.id].is_new && !Object.size(item[options.id].dirty)) {
     this.message = i18n.error.NOTHING_TO_UPDATE;
-    console.log("anyDataModel.dbUpdate: "+this.message);
+    console.log("anyModel.dbUpdate: "+this.message);
     if (this.cbExecute)
       this.cbExecute();
     return false;
@@ -1522,7 +1522,7 @@ anyDataModel.prototype.dbUpdate = function (options)
   else {
     if (!self.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyDataModel.dbUpdate: "+this.message);
+      console.warn("anyModel.dbUpdate: "+this.message);
       return false;
     }
     return self.success(this,this,options);
@@ -1547,18 +1547,18 @@ anyDataModel.prototype.dbUpdate = function (options)
  *
  * @return The complete URL for dbUpdate or null on error.
  */
-anyDataModel.prototype.dbUpdateGetURL = function (options)
+anyModel.prototype.dbUpdateGetURL = function (options)
 {
   let type = options.type ? options.type : this.type;
   if (!type) {
-    console.error("anyDataModel.dbUpdateGetURL: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dbUpdateGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
   let id_key = options.type && options.type != this.type
                ? type+"_id"
                : this.id_key;
   if (!id_key) {
-    console.error("anyDataModel.dbUpdateGetURL: "+i18n.error.ID_KEY_MISSING);
+    console.error("anyModel.dbUpdateGetURL: "+i18n.error.ID_KEY_MISSING);
     return null;
   }
   let param_str = "?echo=y"+
@@ -1603,7 +1603,7 @@ anyDataModel.prototype.dbUpdateGetURL = function (options)
  *
  * @return context
  */
-anyDataModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
+anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
 {
   let self = context;
   self.last_db_command = "upd";
@@ -1615,9 +1615,9 @@ anyDataModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
     self.message = serverdata.message;
     self.error   = serverdata.error;
     if (self.message)
-      console.log("anyDataModel.dbUpdateSuccess: "+self.message);
+      console.log("anyModel.dbUpdateSuccess: "+self.message);
     if (self.error)
-      console.error("anyDataModel.dbUpdateSuccess: "+self.error);
+      console.error("anyModel.dbUpdateSuccess: "+self.error);
     else {
       // If item is in model's data structure, we must update model after successful insert/update
       let type = options.type ? options.type : self.type;
@@ -1628,7 +1628,7 @@ anyDataModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
       if (item) {
         if (options.id == options.client_id && (!item || (!item[options.client_id] && !item["+"+options.client_id]))) {
           // Should never happen
-          console.error("anyDataModel.dbUpdateSuccess: System error: Could not find item with id "+options.client_id);
+          console.error("anyModel.dbUpdateSuccess: System error: Could not find item with id "+options.client_id);
           return false;
         }
         self.last_insert_id = serverdata.id; // Id of the item inserted/updated, as provided by server
@@ -1679,14 +1679,14 @@ anyDataModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *
  * @return true if the database call was made, false on error.
  */
-anyDataModel.prototype.dbUpdateLinkList = function (options)
+anyModel.prototype.dbUpdateLinkList = function (options)
 {
   if (!options || typeof options != "object")
     options = {};
 
   let the_type = options.type ? options.type : this.type;
   if (!the_type) {
-    console.error("anyDataModel.dbUpdateLinkList: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dbUpdateLinkList: "+i18n.error.TYPE_MISSING);
     return false;
   }
   let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
@@ -1695,7 +1695,7 @@ anyDataModel.prototype.dbUpdateLinkList = function (options)
                  ? options.id
                  : null;
   if (!the_id && typeof options.id !== "string") {
-    console.error("anyDataModel.dbUpdateLinkList: "+i18n.error.ID_ILLEGAL);
+    console.error("anyModel.dbUpdateLinkList: "+i18n.error.ID_ILLEGAL);
     return false;
   }
 
@@ -1723,7 +1723,7 @@ anyDataModel.prototype.dbUpdateLinkList = function (options)
   else {
     if (!self.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyDataModel.dbUpdateLinkList: "+this.message);
+      console.warn("anyModel.dbUpdateLinkList: "+this.message);
       return false;
     }
     return options.success(this,options);
@@ -1738,11 +1738,11 @@ anyDataModel.prototype.dbUpdateLinkList = function (options)
  *
  * @return The complete URL for dbUpdateLinkList or null on error.
  */
-anyDataModel.prototype.dbUpdateLinkListGetURL = function (options)
+anyModel.prototype.dbUpdateLinkListGetURL = function (options)
 {
   let the_type = options.type ? options.type : this.type;
   if (!the_type) {
-    console.error("anyDataModel.dbUpdateLinkListGetURL: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
   let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
@@ -1751,7 +1751,7 @@ anyDataModel.prototype.dbUpdateLinkListGetURL = function (options)
                  ? options.id
                  : null;
   if (!the_id && typeof options.id !== "string") {
-    console.error("anyDataModel.dbUpdateLinkListGetURL: "+i18n.error.ID_ILLEGAL);
+    console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.ID_ILLEGAL);
     return null;
   }
   let param_str = "?echo=y"+
@@ -1776,14 +1776,14 @@ anyDataModel.prototype.dbUpdateLinkListGetURL = function (options)
     has_add_or_del = true;
   }
   if (!has_add_or_del) {
-    console.error("anyDataModel.dbUpdateLinkListGetURL: "+"No items selected. "); // TODO! i18n
+    console.error("anyModel.dbUpdateLinkListGetURL: "+"No items selected. "); // TODO! i18n
     return null;
   }
   return this._getDataSourceName() + param_str;
 }; // dbUpdateLinkListGetURL
 
 // Default success callback method for dbUpdateLinkList
-anyDataModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,options)
+anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,options)
 {
   let self = context;
   self.last_db_command = "updlink";
@@ -1795,9 +1795,9 @@ anyDataModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,op
     self.message = serverdata.message;
     self.error   = serverdata.error;
     if (self.message)
-      console.log("anyDataModel.dbUpdateLinkListSuccess: "+self.message);
+      console.log("anyModel.dbUpdateLinkListSuccess: "+self.message);
     if (self.error)
-      console.error("anyDataModel.dbUpdateLinkListSuccess: "+self.error);
+      console.error("anyModel.dbUpdateLinkListSuccess: "+self.error);
     self.dataUpdateLinkList({ data:      serverdata.data,
                               type:      options.link_type,
                               unselect:  options.unselect,
@@ -1833,7 +1833,7 @@ anyDataModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,op
  *
  * @return true if the database call was made, false otherwise.
  */
-anyDataModel.prototype.dbDelete = function (options)
+anyModel.prototype.dbDelete = function (options)
 {
   if (!options || typeof options != "object")
     options = {};
@@ -1843,7 +1843,7 @@ anyDataModel.prototype.dbDelete = function (options)
 
   let the_type = options.type ? options.type : this.type;
   if (!the_type) {
-    console.error("anyDataModel.dbDelete: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dbDelete: "+i18n.error.TYPE_MISSING);
     return false;
   }
   let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
@@ -1852,7 +1852,7 @@ anyDataModel.prototype.dbDelete = function (options)
                  ? options.id
                  : null;
   if (!the_id && typeof options.id !== "string") {
-    console.error("anyDataModel.dbDelete: "+i18n.error.ID_ILLEGAL);
+    console.error("anyModel.dbDelete: "+i18n.error.ID_ILLEGAL);
     return false;
   }
 
@@ -1881,7 +1881,7 @@ anyDataModel.prototype.dbDelete = function (options)
   else {
     if (!this.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyDataModel.dbDelete: "+this.message);
+      console.warn("anyModel.dbDelete: "+this.message);
       return false;
     }
     return this.success(this,this,options);
@@ -1895,18 +1895,18 @@ anyDataModel.prototype.dbDelete = function (options)
  *
  * @return The complete URL for dbDelete or null on error.
  */
-anyDataModel.prototype.dbDeleteGetURL = function (options)
+anyModel.prototype.dbDeleteGetURL = function (options)
 {
   let type = options.type ? options.type : this.type;
   if (!type) {
-    console.error("anyDataModel.dbDeleteGetURL: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dbDeleteGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
   let id_key = options.type && options.type != this.type
                ? type+"_id"
                : this.id_key;
   if (!id_key) {
-    console.error("anyDataModel.dbDeleteGetURL: "+i18n.error.ID_KEY_MISSING);
+    console.error("anyModel.dbDeleteGetURL: "+i18n.error.ID_KEY_MISSING);
     return null;
   }
   let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
@@ -1915,7 +1915,7 @@ anyDataModel.prototype.dbDeleteGetURL = function (options)
                  ? options.id
                  : null;
   if (!the_id && typeof options.id !== "string") {
-    console.error("anyDataModel.dbDeleteGetURL: "+i18n.error.ID_ILLEGAL);
+    console.error("anyModel.dbDeleteGetURL: "+i18n.error.ID_ILLEGAL);
     return false;
   }
   let param_str = "?echo=y"+
@@ -1928,7 +1928,7 @@ anyDataModel.prototype.dbDeleteGetURL = function (options)
 }; // dbDeleteGetURL
 
 // Default success callback method for dbDelete
-anyDataModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
+anyModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
 {
   let self = context;
   self.last_db_command = "del";
@@ -1941,9 +1941,9 @@ anyDataModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
     self.message = serverdata.message;
     self.error   = serverdata.error;
     if (self.message)
-      console.log("anyDataModel.dbDeleteSuccess: "+self.message);
+      console.log("anyModel.dbDeleteSuccess: "+self.message);
     if (self.error)
-      console.error("anyDataModel.dbDeleteSuccess: "+self.error);
+      console.error("anyModel.dbDeleteSuccess: "+self.error);
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
     self.cbExecute();
@@ -1951,7 +1951,7 @@ anyDataModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
 }; // dbDeleteSuccess
 
 // Default fail callback for all db* methods
-anyDataModel.prototype._dbFail = function (context,jqXHR)
+anyModel.prototype._dbFail = function (context,jqXHR)
 {
   let self = context;
   if (!self)
@@ -1960,7 +1960,7 @@ anyDataModel.prototype._dbFail = function (context,jqXHR)
     self.error = jqXHR.statusText+" ("+jqXHR.status+"). ";
     if (jqXHR.responseText)
       self.error_extra += jqXHR.responseText;
-    console.error("anyDataModel._dbFail: "+self.error+"\n"+self.error_extra);
+    console.error("anyModel._dbFail: "+self.error+"\n"+self.error_extra);
     if (self.cbExecute)
       self.cbExecute();
   }

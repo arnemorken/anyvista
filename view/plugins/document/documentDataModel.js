@@ -18,8 +18,8 @@ var documentDataModel = function (options)
   this.type     = "document";
   this.id_key   = "document_id";
   this.name_key = "document_name";
-  anyDataModel.call(this,options);
+  anyModel.call(this,options);
 };
 
-documentDataModel.prototype = new anyDataModel(null);
+documentDataModel.prototype = new anyModel(null);
 documentDataModel.prototype.constructor = documentDataModel;
