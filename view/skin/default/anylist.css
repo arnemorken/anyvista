@@ -234,6 +234,10 @@
   background:   #ccc;
 }
 
+.w3-button:hover {
+  background-color: #aaa !important;
+}
+
 .w3-display-topright {
   background:   #eee;
 }
