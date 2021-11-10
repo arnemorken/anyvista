@@ -138,7 +138,7 @@ class userTable extends anyTable
         "user_role"        => 1,
       ],
     ],
-    "plugins" => ["group","user"],
+    "plugins" => ["document","group","user"],
   ];
 
   protected $mInsertSuccessMsg  = "User created. ",
@@ -163,6 +163,8 @@ class userTable extends anyTable
 
   protected function initFilters($filters)
   {
+    if (!$this->mFilters)
+      return false;
     $has_perm = is_object($this->mPermission) && $this->mPermission;
     $user_id         = Parameters::get("user_id");
     $current_user_id = $has_perm ? $this->mPermission->current_user_id : null;
@@ -177,6 +179,7 @@ class userTable extends anyTable
     $this->mFilters["list"]["user_pass"]       = $is_me || $is_admin ? 1 : 0;
     $this->mFilters["list"]["user_pass_again"] = $is_me || $is_admin ? 1 : 0;
     $this->mFilters["list"]["_HIDEEND_"]       = $is_me || $is_admin ? 1 : 0;
+    return true;
   } // initFilters
 
   public static function prepareGender()

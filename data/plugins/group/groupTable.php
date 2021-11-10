@@ -84,7 +84,7 @@ class groupTable extends anyTable
         "membership"        => 1,
       ],
     ],
-    "plugins" => ["group","user"],
+    "plugins" => ["document","group","user"],
   ];
 
   protected $mInsertSuccessMsg  = "Group created. ",
@@ -102,6 +102,11 @@ class groupTable extends anyTable
     parent::__construct($connection,$this->mTableDefs);
   }
 
+  public function hasParentId()
+  {
+    return true;
+  } // hasParentId
+
   /////////////////////////////////////////////////////////////////////////////
   //////////////////////////////// Filter /////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
@@ -112,11 +117,6 @@ class groupTable extends anyTable
     $status  = $this->prepareSetting("GROUP_STATUS");
     $privacy = $this->prepareSetting("GROUP_PRIVACY");
   } // initFilters
-
-  public function hasParentId()
-  {
-    return true;
-  } // hasParentId
 
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////// Database query fragments ////////////////////////////
