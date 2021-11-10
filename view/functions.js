@@ -16,7 +16,7 @@ Object.size = function (obj)
   return objsize;
 };
 
-let isInt = function (obj)
+var isInt = function (obj)
 {
   return !isNaN(obj) && parseInt(Number(obj)) == obj && !isNaN(parseInt(obj,10));
 };
@@ -26,7 +26,7 @@ String.prototype.capitalize = function ()
   return this.charAt(0).toUpperCase() + this.slice(1);
 };
 
-let isFunction = function (functionToCheck)
+var isFunction = function (functionToCheck)
 {
   if (functionToCheck === undefined)
     return false;
