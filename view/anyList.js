@@ -660,13 +660,17 @@
  * <a name="api_plugin_classes"></a>
  * <h3>Plugins</h3>
  *
- * <h4>Writing anyList plugins</h4>
- *
  * Each plugin on the client side corresponds to a plugin on the server side (e.g. "event", "user",
  * "document", "group", etc.). A plugin also corresponds to a `type` in the data model and a table
  * in the database.
  *
- * <h5>Client side</h5>
+ * Below we will use the "document" plugin a an example. Follow the naming convention outlined.
+ * To keep things simple, the code below does not actually contain any useful methods, just the
+ * scaffolding for setting up the plugin. See the included document plugin code for full details.
+ *
+ * <h4>Writing new plugins</h4>
+ *
+ * **A) Client side code**
  *
  * It should be noted that it is not absolutely neccessary to create a client side plugin in order to
  * interact with a server side plugin - the default `anyListDataModel` and `anyListDataView` (or `anyListDataViewTabs`)
@@ -674,38 +678,334 @@
  * and `anyListDataView` (or `anyListDataViewTabs`) and should set the `type` (and optionally the `id_key` and
  * `name_key`) variable(s).
  *
- * More info coming soon.
+ * 1) Create the folder "document" under view/plugins/.
  *
- * <h5>Server side</h5>
+ * 2) Create empty files for model, view, filter, validator and css:
+ *
+ *        document/documentDataModel.js
+ *        document/documentDataView.js
+ *        document/documentFilter.js
+ *        document/documentValidator.js
+ *        document/document.css
+ *
+ * 3) Create the document model class in documentDataModel.js:
+ *
+ *        var documentDataModel = function (options)
+ *        {
+ *          this.type     = "document";
+ *          this.id_key   = "document_id";
+ *          this.name_key = "document_name";
+ *          anyDataModel.call(this,options);
+ *        };
+ *        documentDataModel.prototype = new anyDataModel(null);
+ *        documentDataModel.prototype.constructor = documentDataModel;
+ *
+ * 3) Create the document view class in documentDataView.js:
+ *
+ *        (function($) {
+ *
+ *          $.widget("any.documentDataView", $.any.DataView, {
+ *            options: {
+ *              filters: null,
+ *              linkIcons: {
+ *                "document": "fa fa-book",
+ *                "user":     "fa fa-user",
+ *                "group":    "fa fa-users",
+ *              },
+ *            },
+ *            _create: function() {
+ *              this._super();
+ *              this.element.addClass("documentDataView");
+ *              if (!this.options.filters) {
+ *                let f = new documentFilter(this.options);
+ *                this.options.filters = f.filters;
+ *              }
+ *              this.validator = new documentValidator();
+ *            },
+ *            _destroy: function() {
+ *              this.options = null;
+ *              this.element.removeClass("documentDataView");
+ *              this._super();
+ *            }
+ *          });
+ *
+ *          $.any.documentDataView.prototype.validateUpdate = function (options)
+ *          {
+ *            if (!this.validator)
+ *              return null;
+ *            return this.validator.validateUpdate(options,this);
+ *          };
+ *
+ *        })($);
+ *
+ *        var documentDataView = function (options)
+ *        {
+ *          if (!options)
+ *            return null;
+ *          return $.any.documentDataView(options);
+ *        };
+ *
+ *        documentDataView.prototype = new anyDataView(null);
+ *        documentDataView.prototype.constructor = documentDataView;
+ *
+ * 4) Create the document filter class in documentFilter.js:
+ *
+ *        var documentFilter = function (options)
+ *        {
+ *          this.filters = {
+ *            document: {
+ *              item: {
+ *                document_id:          { HEADER:"Document id",    DISPLAY:0, HTML_TYPE:"label"},
+ *                document_name:        { HEADER:"Document name:", DISPLAY:1, HTML_TYPE:"link"},
+ *                document_description: { HEADER:"Description:",   DISPLAY:1, HTML_TYPE:"label"},
+ *                document_owner:       { HEADER:"Owner:",         DISPLAY:1, HTML_TYPE:"link"},
+ *              },
+ *              list: {
+ *                document_id:          { HEADER:"Document id",    DISPLAY:0, HTML_TYPE:"label"},
+ *                document_name:        { HEADER:"Document name",  DISPLAY:1, HTML_TYPE:"link"},
+ *                document_owner:       { HEADER:"Owner",          DISPLAY:1, HTML_TYPE:"link"},
+ *              },
+ *              head: {
+ *                document_id:         { HEADER:"Document id",     DISPLAY:0, HTML_TYPE:"label"},
+ *                document_name:       { HEADER:"Document name",   DISPLAY:1, HTML_TYPE:"link"},
+ *              },
+ *              select: {
+ *                document_id:         { HEADER:"Document id",     DISPLAY:0, HTML_TYPE:"label"},
+ *                document_name:       { HEADER:"Document name",   DISPLAY:1, HTML_TYPE:"label"},
+ *              },
+ *            },
+ *          };
+ *        }; // constructor
+ *
+ * 5) Create the document validator class in documentValidator.js:
+ *
+ *        var documentValidator = function ()
+ *        {
+ *        }
+ *
+ *        documentValidator.prototype.validateUpdate = function (opt,view)
+ *        {
+ *          let err = "";
+ *          if (!opt.id && opt.id != 0)
+ *            err += "Document id missing. ";
+ *          let elem_id_base = view.getBaseId()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
+ *          let nameid1 = elem_id_base+"_document_name .itemEdit";
+ *          let nameid2 = elem_id_base+"_document_name .itemUnedit";
+ *          if (($("#"+nameid1).length != 0 && !$("#"+nameid1).val()) &&
+ *              ($("#"+nameid2).length != 0 && !$("#"+nameid2).val()))
+ *              err += "Document name missing. ";
+ *          return err;
+ *        }; // validateUpdate
+ *
+ * 6) Create the CSS code in document.css:
+ *
+ *        document_name {
+ *          font-face: Arial;
+ *          color:     red;
+ *        }
+ *
+ * **B) Server side code**
+ *
+ * Note that this step is only neccessary if you want to use the server side database connection.
  *
  * On the server side a plugin corresponds to a table (and optionally a meta table) and inherits from `anyListTable`.
- * Each plugin class defines the following:
+ * Each plugin table class defines the following:
  * - a number of defining characteristica of the plugin table and meta table,
  * - the plugin's specific table (and optionally meta table) fields,
  * - the plugin's filter that describes which fields are used in database operations and which information
  *   is transferred to and from the client,
  * - how the plugin interacts with other plugins (link table fields).
  *
- * A server side plugin should have 4 files placed in a folder below the `plugins` folder.
- * Using "foo" as an example, a folder named `foo` would be created, containing the files:
- * - foo.php: Should include `anyList_defs.php`, the common `client.php` file, the `foo`-specific
- *            `client.php` file and the `fooBasic.php` file. It may also include the `client.php`
- *            file(s) for any other plugins with which to interact.
+ * A server side plugin should have three files placed in a folder below the `plugins` folder.
  *
- *       <?php
- *       require_once dirname(__FILE__)."/../../anyList_defs.php"; // Common definitions
- *       require_once dirname(__FILE__)."/../client.php";      // Common client files
- *       require_once dirname(__FILE__)."/../bar/client.php";  // Client files for a "bar" plugin that "foo" might interact with
- *       require_once dirname(__FILE__)."/client.php";         // Client files for the "foo" plugin
- *       require_once dirname(__FILE__)."/fooBasic.php";       // Gets "foo" data from database, creates a data model and displays it in a view
- *       ?>
+ * 1) Create the folder "document" under data/plugins/.
  *
- * - fooBasic.php: Should contain code that gets "foo" data from the database, creates a data model and displays it
- *                 in a view. A mix of PHP and Javascript code.
+ * 2) Create empty files for the database table file (documentTable.php), the file for accessing the
+ *    document server directly (document.php) and the file for interacting with other plugins (client.php):
  *
- * More info coming soon.
+ *      document/documentTable.php
+ *      document/document.php
+ *      document/client.php
  *
- * <h4>Included plugins</h4>
+ * 3) Create the document database table class in documentTable.php:
+ *
+        <?php
+          require_once "anyTable.php";
+          class documentTable extends anyTable
+          {
+            protected $mTableDefs = [
+              "tableName"          => "any_document",
+              "tableNameMeta"      => "any_documentmeta",
+              "tableNameGroupLink" => "any_document_group",
+              "tableNameUserLink"  => "any_document_user",
+              "type"               => "document",
+              "idKey"              => "document_id",
+              "idKeyTable"         => "document_id",
+              "idKeyMetaTable"     => "document_id",
+              "nameKey"            => "document_name",
+              "orderBy"            => "document_registered",
+              "metaId"             => "meta_id",
+              "fields" => [
+                "document_id",
+                "document_name",
+                "document_description",
+                "document_registered",
+                "parent_id",
+                "parent_name",
+              ],
+              "fieldsMeta" => [
+              ],
+              "fieldsGroup" => [
+                "group_type",
+                "group_id",
+                "group_name",
+                "group_description",
+                "group_sort_order",
+                "group_status",
+                "group_privacy",
+              ],
+              "fieldsLeftJoin" => [
+                "group" => [
+                  "group_id",
+                ],
+                "user" => [
+                  "user_id",
+                  ],
+              ],
+              "filters" => [
+                "list" => [
+                  "document_id"          => 1,
+                  "document_name"        => 1,
+                  "document_description" => 1,
+                  "document_registered"  => 1,
+                  "parent_id"            => 1,
+                  "parent_name"          => 1,
+                ],
+                "item" => [
+                  "document_id"          => 1,
+                  "document_name"        => 1,
+                  "document_description" => 1,
+                  "document_registered"  => 1,
+                  "parent_id"            => 1,
+                  "parent_name"          => 1,
+                ],
+              ],
+              "plugins" => ["document","group","user"],
+            ];
+
+            protected $mInsertSuccessMsg = "Document created. ",
+                      $mUpdateSuccessMsg = "Document updated. ",
+                      $mDeleteSuccessMsg = "Document deleted. ";
+
+            public function __construct($connection)
+            {
+              parent::__construct($connection,$this->mTableDefs);
+            }
+
+            public function hasParentId()
+            {
+              return true;
+            }
+
+            protected function initFilters($filters)
+            {
+              if (!hasValue($this->mFilters))
+                return false;
+              return true;
+            }
+
+            protected function findListWhere($skipOwnId=false)
+            {
+              $where = parent::findListWhere($skipOwnId);
+              return $where;
+            }
+
+            protected function dbUpdateItem()
+            {
+              if (!anyTable::dbUpdateItem())
+                return false;
+              return true;
+            }
+
+            protected function dbUpdateExtra()
+            {
+            }
+
+          } // class documentTable
+        ?>
+ *
+ * 4) Create the file for accessing the document server directly (document.php):
+ *
+        <?php
+          require_once dirname(__FILE__)."/../../anyDefs.php";
+          require_once dirname(__FILE__)."/../client.php";
+          require_once dirname(__FILE__)."/../document/client.php";
+          require_once dirname(__FILE__)."/../group/client.php";
+          require_once dirname(__FILE__)."/../user/client.php";
+          require_once gDataSource;
+          $gViewArea = "any_content";
+          Parameters::set("type","document");
+          $the_data = anyGetData();
+        ?>
+        <div id="<?php print $gViewArea;?>"/>
+
+        <script>
+        var serverdata = <?php echo $the_data;?>;
+        if (serverdata && serverdata.JSON_CODE)
+          serverdata = serverdata.JSON_CODE;
+        var model = new documentDataModel({ data:       serverdata ? serverdata.data : null,
+                                            permission: serverdata ? serverdata.permission : null,
+                                            plugins:    serverdata ? serverdata.plugins : null,
+                                            mode:       "remote",
+                                         });
+        var data_id = "<?php echo Parameters::get("document_id");?>";
+        var is_new  = (data_id == "new" || parseInt(data_id) == -1);
+
+        var view = new documentDataView({ id:          "<?php print $gViewArea;?>",
+                                          model:       model,
+                                          isEditable:  true,
+                                          isDeletable: true,
+                                          edit:        is_new,
+                                       });
+        view.refresh(null,null,null,"document");
+        </script>
+ *
+ * 5) Create the file for letting other plugins interact with the document plugin (client.php):
+ *
+        <link  href="<?php print gAnyListURL;?>view/plugins/document/document.css" rel="stylesheet"/>
+        <script src="<?php print gAnyListURL;?>view/plugins/document/documentDataModel.js"></script>
+        <script src="<?php print gAnyListURL;?>view/plugins/document/documentFilter.js"></script>
+        <script src="<?php print gAnyListURL;?>view/plugins/document/documentDataView.js"></script>
+        <script src="<?php print gAnyListURL;?>view/plugins/document/documentValidator.js"></script>
+ *
+ * 6) Create the database table:
+ *
+        CREATE TABLE `any_document` (
+          `document_id` bigint(20) NOT NULL,
+          `document_name` varchar(250) CHARACTER SET utf8 DEFAULT '',
+          `document_description` varchar(250) CHARACTER SET utf8 DEFAULT '',
+          `parent_id` bigint(20) DEFAULT NULL,
+          `document_type` varchar(20) CHARACTER SET utf8 DEFAULT '',
+          `document_registered` datetime DEFAULT NULL,
+          `document_status` int(20) DEFAULT 0,
+          `document_privacy` varchar(20) CHARACTER SET utf8 DEFAULT '',
+          PRIMARY KEY (`document_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        INSERT INTO `any_document` VALUES ('1', 'Test.doc', 'blah', null, '', null, '0', '');
+ *
+ * **C) Wordpress integration**
+ *
+ * Edit the file wordpress/index.php and insert the following row in the "tooltab" table:
+ *
+        <td class="tooltd"
+            onclick="javascript:loadPage('<?php print $gAdmViewArea;?>',
+                                         '<?php print gAnyListURL;?>data/plugins/document/document.php?head=true&grouping=tabs',
+                                          '<?php print $gAdmURL;?>');"
+            title="Documents">
+          <i class="fas fa-file-alt fa-2x"></i><br/>Documents
+        </td>
+ *
+ * <h4>Included pre-defined plugins</h4>
  *
  * A number of useful plugins are included with anyList. They may be modified to suit the user's need.
  * Currently, anyList includes the following plugins:
@@ -716,9 +1016,9 @@
  *   means the `wp_users` table. It does not have methods for handling login, as this is done better
  *   and more securely by other Wordpress plugins.
  *
- * - <b>Event</b>: Contains methods for handling events for users.
- *
  * - <b>Document</b>: Handles collections of documents, images, etc.
+ *
+ * - <b>Event</b>: Contains methods for handling events for users.
  *
  * <hr/>
  *
