@@ -24,14 +24,12 @@
  *        {Object}  model:                 The model with data to be displayed. Default: null.
  *        {Object}  filters:               The filters define how the data will be displayed. Default: null.
  *        {string}  id:                    The jQuery id of a container element in which to display the view. Default: null.
- *        {string}  grouping:              How to group data: Empty string for no grouping, "tabs" for using anyDataViewTabs to group data into tabs. Default: "".
  *        {boolean} refresh:               If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
  *        {boolean} isEditable:            Icons for edit, update and cancel will be displayed. Ignored if isSelectable is set. Default: false.
  *        {boolean} isRemovable:           An icon for removing will be displayed. Ignored if isSelectable is set. Default: false.
  *        {boolean} isDeletable:           An icon for deleting will be displayed. Ignored if isSelectable is set. Default: false.
- *        {boolean} isLinkable:            NOT IMPLEMENTED. An icon for linking will be displayed. Ignored if isSelectable is set. Default: false.
  *        {boolean} isSelectable:          An icon for selecting a list row will be displayed. Ignored for items. If isSelectable is set,
- *                                         isEditable, isRemovable, isDeletable and isLinkable will be ignored. Default: false.
+ *                                         isEditable, isRemovable and isDeletable will be ignored. Default: false.
  *        {boolean} confirmRemove:         A remove confirmation dialog will be displayed. Default: true.
  *        {boolean} confirmDelete:         A delete confirmation dialog will be displayed. Default: true.
  *        (boolean) showHeader:            If false, all headers will be suppressed. Default: true.
@@ -44,15 +42,11 @@
  *        (boolean) showButtonEdit:        If isEditable is true, will show an edit button in front of each list table row. Default: true.
  *        (boolean) showButtonUpdate:      If isEditable is true, will show an update button in front of each list table row in edit-mode. Default: true.
  *        (boolean) showButtonRemove:      If isEditable is true, will show a remove button after each list table row. Default: false.
- *        (boolean) showButtonLink:        If isEditable is true, will show a link button after each list table row in edit-mode. Default: true.
  *        (boolean) showButtonDelete:      If isEditable is true, will show a delete button after each list table row in edit-mode. Default: false.
  *        (boolean) showButtonCancel:      If isEditable is true, will show a cancel button after each list table row in edit-mode. Default: true.
  *        (boolean) showButtonNew:         If isEditable is true, will show a button for adding a new item. Default: false.
  *        (boolean) showButtonAddLink:     Will show a button for adding links to an item. Default: true.
  *        {boolean} showButtonLabels:      Will show labels for buttons on the button panel. Default: false.
- *        {boolean} onEnterCallDatabase:   Pressing enter will update the database with the value of the row being edited. Default: true.
- *        {boolean} onEnterInsertNew:      A new row will be inserted when pressing enter while editing a list. Default: false.
- *        {boolean} onEnterMoveFocus:      Pressing enter will move the focus to the next input element if editing an item. Default: True.
  *        {boolean} onEscRemoveEmpty:      The current row being edited in a list will be removed when pressing the Esc key if the row is empty. Default: true.
  *        {boolean} onFocusoutRemoveEmpty: The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
  *        {boolean} onUpdateEndEdit:       NOT IMPLEMENTED. Pressing the update button will close the element currently being edited for editing. Default: true.
@@ -76,25 +70,26 @@ $.widget("any.DataView", {
     isEditable:            true,
     isRemovable:           true,
     isDeletable:           true,
-  //isLinkable:            false, // TODO! NOT IMPLEMENTED
     isSelectable:          false,
     confirmRemove:         true,
     confirmDelete:         true,
     showHeader:            true,
     showTableHeader:       true,
-    showMessages:          false,
+    showMessages:          true,
     showEmptyRows:         false,
   //showSelectAll:         false, // TODO! NOT IMPLEMENTED
     showButtonAdd:         1, // 0 == do not show, 1 == first cell, 2 == last cell
     showButtonEdit:        true,
     showButtonUpdate:      true,
     showButtonRemove:      true,
-    showButtonLink:        false,
     showButtonDelete:      true,
     showButtonCancel:      true,
     showButtonNew:         true,
     showButtonAddLink:     true,
     showButtonLabels:      false,
+    onEscRemoveEmpty:      true,
+    onFocusoutRemoveEmpty: true,
+  //onUpdateEndEdit:       true, // TODO! NOT IMPLEMENTED
     useOddEven:            true,
     linkIcons:             null,
 
@@ -375,6 +370,9 @@ $.any.DataView.prototype.refresh = function (parent,data,id,type,kind,edit,pdata
   this.element.empty();
 
   this.refreshLoop(parent,data,id,type,kind,edit,pdata,pid);
+
+  // Bind key-back on tablets. TODO! Untested
+  //document.addEventListener("backbutton", $.proxy(this._processKeyup,this), false);
 
 }; // refresh
 
@@ -929,7 +927,7 @@ $.any.DataView.prototype.refreshListTableDataRow = function (tbody,data,id,type,
   this.refreshListTableDataCells(tr,data,id,type,kind,filter,edit,id_str);
 
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
-      (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonLink || this.options.showButtonDelete || this.options.showButtonCancel)))
+      (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonDelete || this.options.showButtonCancel)))
     this.refreshTableDataLastCell(tr,data,id,type,kind,filter,edit,id_str,true,pdata,pid);
 
   // Clean up
@@ -1056,7 +1054,7 @@ $.any.DataView.prototype.refreshItemTableDataRow = function (tbody,data,id,type,
         }
         this.refreshItemTableDataCells(tr,data,id,type,kind,filter,filter_id,filter_key,id_str,pl_str,n,edit);
         if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
-            (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonLink || this.options.showButtonDelete || this.options.showButtonCancel))) {
+            (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonDelete || this.options.showButtonCancel))) {
           if (n == 1)
             this.refreshTableDataLastCell(tr,data,id,type,kind,filter,edit,id_str,true,pdata,pid);
           else
@@ -1331,7 +1329,6 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
     isEditable:       this.options.isEditable,
     isRemovable:      this.options.isRemovable || kind == "item", // TODO! Not a good solution
     isDeletable:      this.options.isDeletable,
-  //isLinkable:       this.options.isLinkable,
     isSelectable:     this.options.isSelectable, // TODO!
     itemLinkClicked:  this.options.itemLinkClicked,
     preselected:      this.options.isSelectable ? this.options.preselected : null,
