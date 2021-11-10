@@ -10,12 +10,12 @@
 /**
  * __group tabs view class.__
  *
- * @class groupDataViewTabs
+ * @class groupViewTabs
  * @constructor
  */
 (function($) {
 
-$.widget("any.groupDataViewTabs", $.any.DataView/*Tabs*/, {
+$.widget("any.groupViewTabs", $.any.View/*Tabs*/, {
   // Default options
   options: {
     filters: null, // Must be set by the calling method or will be set to default values in the constructor
@@ -27,7 +27,7 @@ $.widget("any.groupDataViewTabs", $.any.DataView/*Tabs*/, {
 
   // "Constructor"
   _create: function() {
-    this.element.addClass("groupDataViewTabs");
+    this.element.addClass("groupViewTabs");
     this._super();
 
     if (!this.options.filters) {
@@ -50,13 +50,13 @@ $.widget("any.groupDataViewTabs", $.any.DataView/*Tabs*/, {
   },
 
   _destroy: function() {
-    this.element.removeClass("groupDataViewTabs");
+    this.element.removeClass("groupViewTabs");
     this.options = null;
     this._super();
   }
 });
 
-$.any.groupDataViewTabs.prototype.validateUpdate = function (options)
+$.any.groupViewTabs.prototype.validateUpdate = function (options)
 {
   if (this.validator)
     return this.validator.validateUpdate(options,this);
@@ -64,12 +64,12 @@ $.any.groupDataViewTabs.prototype.validateUpdate = function (options)
 
 })($);
 
-var groupDataViewTabs = function (options)
+var groupViewTabs = function (options)
 {
   if (!options)
     return null;
-  return $.any.groupDataViewTabs(options);
+  return $.any.groupViewTabs(options);
 };
 
-groupDataViewTabs.prototype = new anyView/*Tabs*/(null);
-groupDataViewTabs.prototype.constructor = groupDataViewTabs;
+groupViewTabs.prototype = new anyView/*Tabs*/(null);
+groupViewTabs.prototype.constructor = groupViewTabs;

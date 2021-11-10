@@ -12,7 +12,7 @@
  */
 ?>
 <link  href="<?php print gAnyListURL;?>view/plugins/group/skin/<?php print gSkin;?>/group.css" rel="stylesheet"/>
-<script src="<?php print gAnyListURL;?>view/plugins/group/groupDataModel.js"></script>
+<script src="<?php print gAnyListURL;?>view/plugins/group/groupModel.js"></script>
 <script src="<?php print gAnyListURL;?>view/plugins/group/groupFilter.js"></script>
-<script src="<?php print gAnyListURL;?>view/plugins/group/groupDataViewTabs.js"></script>
+<script src="<?php print gAnyListURL;?>view/plugins/group/groupViewTabs.js"></script>
 <script src="<?php print gAnyListURL;?>view/plugins/group/groupValidator.js"></script>

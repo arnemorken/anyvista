@@ -10,12 +10,12 @@
 /**
  * __user tabs view class.__
  *
- * @class userDataViewTabs
+ * @class userViewTabs
  * @constructor
  */
 (function($) {
 
-$.widget("any.userDataViewTabs", $.any.DataView/*Tabs*/, {
+$.widget("any.userViewTabs", $.any.View/*Tabs*/, {
   // Default options
   options: {
     filters: null, // Must be set by the calling method or will be set to default values in the constructor
@@ -27,7 +27,7 @@ $.widget("any.userDataViewTabs", $.any.DataView/*Tabs*/, {
 
   // "Constructor"
   _create: function() {
-    this.element.addClass("userDataViewTabs");
+    this.element.addClass("userViewTabs");
     this._super();
 
     if (!this.options.filters) {
@@ -50,13 +50,13 @@ $.widget("any.userDataViewTabs", $.any.DataView/*Tabs*/, {
   },
 
   _destroy: function() {
-    this.element.removeClass("userDataViewTabs");
+    this.element.removeClass("userViewTabs");
     this.options = null;
     this._super();
   }
 });
 
-$.any.userDataViewTabs.prototype.validateUpdate = function (options)
+$.any.userViewTabs.prototype.validateUpdate = function (options)
 {
   if (this.validator)
     return this.validator.validateUpdate(options,this);
@@ -64,12 +64,12 @@ $.any.userDataViewTabs.prototype.validateUpdate = function (options)
 
 })($);
 
-var userDataViewTabs = function (options)
+var userViewTabs = function (options)
 {
   if (!options)
     return null;
-  return $.any.userDataViewTabs(options);
+  return $.any.userViewTabs(options);
 };
 
-userDataViewTabs.prototype = new anyView/*Tabs*/(null);
-userDataViewTabs.prototype.constructor = userDataViewTabs;
+userViewTabs.prototype = new anyView/*Tabs*/(null);
+userViewTabs.prototype.constructor = userViewTabs;

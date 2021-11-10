@@ -59,7 +59,7 @@
 var ANY_LOCALE_NOT_FOUND = "No locale found. ";
 var ANY_MAX_REF_REC = 30;
 
-$.widget("any.DataView", {
+$.widget("any.View", {
   // Default options
   options: {
     model:                 null,
@@ -176,7 +176,7 @@ $.widget("any.DataView", {
     this.options             = null;
     this.element.removeClass("any-data-view");
   },
-}); // DataView widget constructor
+}); // View widget constructor
 
 /////////////////////////
 // Getters
@@ -187,7 +187,7 @@ $.widget("any.DataView", {
  * @description
  * @return this.baseId
  */
-$.any.DataView.prototype.getBaseId = function ()
+$.any.View.prototype.getBaseId = function ()
 {
   return this.base_id;
 }; // getBaseId
@@ -204,7 +204,7 @@ $.any.DataView.prototype.getBaseId = function ()
  * @param {String} type Object type (e.g. "event"). Optional, but mandatory if `kind` is given.
  * @param {String} kind "item", "list", "head" or "select". Ignored if `type` is not given.
  */
-$.any.DataView.prototype.getFilter = function (type,kind)
+$.any.View.prototype.getFilter = function (type,kind)
 {
   if (!this.options.filters)
     return null;
@@ -220,12 +220,12 @@ $.any.DataView.prototype.getFilter = function (type,kind)
 // Internal methods
 /////////////////////////
 
-$.any.DataView.prototype._createBaseId = function ()
+$.any.View.prototype._createBaseId = function ()
 {
   return "baseId" + 1 + Math.floor(Math.random()*10000000); // Pseudo-unique id
 }; // _createBaseId
 
-$.any.DataView.prototype._createFilters = function (model)
+$.any.View.prototype._createFilters = function (model)
 {
   let type = model ? model.type : null;
   let f = this.options.filters;
@@ -255,7 +255,7 @@ $.any.DataView.prototype._createFilters = function (model)
   return f;
 }; // _createFilters
 
-$.any.DataView.prototype._findType = function (data,otype,id)
+$.any.View.prototype._findType = function (data,otype,id)
 {
   let type = null;
   if (data && (id || id === 0)) {
@@ -272,7 +272,7 @@ $.any.DataView.prototype._findType = function (data,otype,id)
   return type;
 }; // _findType
 
-$.any.DataView.prototype._findKind = function (data,okind,id)
+$.any.View.prototype._findKind = function (data,okind,id)
 {
   let kind = null;
   if (data && (id || id === 0)) {
@@ -299,7 +299,7 @@ $.any.DataView.prototype._findKind = function (data,okind,id)
  *                               If null, `this.model` is assumed.
  * @return `this`.
  */
-$.any.DataView.prototype.showMessages = function (modelOrString)
+$.any.View.prototype.showMessages = function (modelOrString)
 {
   let div_id = this.base_id+"_any_message";
   let msgdiv = $("#"+div_id);
@@ -330,7 +330,7 @@ $.any.DataView.prototype.showMessages = function (modelOrString)
  *                 If specified, `this.model` will be set to `model`, before calling `this.refresh`.
  * @return `this`.
  */
-$.any.DataView.prototype.onModelChange = function (model)
+$.any.View.prototype.onModelChange = function (model)
 {
   if (model) {
     this.model = model;
@@ -361,7 +361,7 @@ $.any.DataView.prototype.onModelChange = function (model)
  *
  * @throws {VIEW_AREA_MISSING} If both `parent` and `this.element` are null or undefined.
  */
-$.any.DataView.prototype.refresh = function (parent,data,id,type,kind,edit,pdata,pid)
+$.any.View.prototype.refresh = function (parent,data,id,type,kind,edit,pdata,pid)
 {
   this.options.filters = this._createFilters(this.model); // Create filters if they dont exist yet
   this.options.data_level = 0;
@@ -379,7 +379,7 @@ $.any.DataView.prototype.refresh = function (parent,data,id,type,kind,edit,pdata
 //
 // Main refresh loop
 //
-$.any.DataView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata,pid)
+$.any.View.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata,pid)
 {
   if (!parent)
     parent = this.element;
@@ -420,7 +420,7 @@ $.any.DataView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,p
           let curr_type = view._findType(data,prev_type,idc);
           let curr_kind = view._findKind(data,prev_kind,idc);
           if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type /*|| (prev_type == "group" && view.model.type == "group")*/))
-            view = view.createDataView(parent,data,idc,curr_type,curr_kind); // New type to display, create new view
+            view = view.createView(parent,data,idc,curr_type,curr_kind); // New type to display, create new view
           if (view)
             view.refreshOne(parent,data,idc,curr_type,curr_kind,edit,"",pdata,pid);
           prev_type = curr_type;
@@ -448,7 +448,7 @@ $.any.DataView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,p
 //
 // Display a "close item" button
 //
-$.any.DataView.prototype.refreshToolbarTop = function (parent,data,id,type,kind,edit)
+$.any.View.prototype.refreshToolbarTop = function (parent,data,id,type,kind,edit)
 {
   if (!parent)
     return null;
@@ -468,7 +468,7 @@ $.any.DataView.prototype.refreshToolbarTop = function (parent,data,id,type,kind,
 //
 // Display a toolbar for messages and a "new item" button
 //
-$.any.DataView.prototype.refreshToolbarBottom = function (parent,data,id,type,kind,edit)
+$.any.View.prototype.refreshToolbarBottom = function (parent,data,id,type,kind,edit)
 {
   if (!parent || !type || !kind)
     return null;
@@ -521,7 +521,7 @@ $.any.DataView.prototype.refreshToolbarBottom = function (parent,data,id,type,ki
 //
 // A message area
 //
-$.any.DataView.prototype.refreshMessageArea = function (parent,opt)
+$.any.View.prototype.refreshMessageArea = function (parent,opt)
 {
   let div_id   = this.base_id+"_any_message";
   let class_id = "any-message any-"+opt.kind+"-message any-message-"+this.options.data_level;
@@ -537,7 +537,7 @@ $.any.DataView.prototype.refreshMessageArea = function (parent,opt)
 //
 // Refresh header and data for one list entry or one item
 //
-$.any.DataView.prototype.refreshOne = function (parent,data,id,last_type,last_kind,edit,id_str,pdata,pid)
+$.any.View.prototype.refreshOne = function (parent,data,id,last_type,last_kind,edit,id_str,pdata,pid)
 {
   if (!data || (!id && id !== 0) || (typeof id == "string" && id.startsWith("grouping")))
     return null;
@@ -588,7 +588,7 @@ $.any.DataView.prototype.refreshOne = function (parent,data,id,last_type,last_ki
 //
 // Get the current main div, or create a new one if it does not exist
 //
-$.any.DataView.prototype.getOrCreateMainContainer = function (parent,type,kind,id_str)
+$.any.View.prototype.getOrCreateMainContainer = function (parent,type,kind,id_str)
 {
   let con_id_str = (kind == "list" || kind == "select" ? this.id_stack.join("_") : id_str);
   let div_id = this.base_id+"_"+type+"_"+kind+"_"+con_id_str+"_container";
@@ -607,7 +607,7 @@ $.any.DataView.prototype.getOrCreateMainContainer = function (parent,type,kind,i
 //
 // Refresh the header for an object.
 //
-$.any.DataView.prototype.refreshHeader = function (parent,data,id,type,kind,edit,id_str,doNotEmpty)
+$.any.View.prototype.refreshHeader = function (parent,data,id,type,kind,edit,id_str,doNotEmpty)
 {
   if (!data || !this.options.showHeader)
     return null;
@@ -648,7 +648,7 @@ $.any.DataView.prototype.refreshHeader = function (parent,data,id,type,kind,edit
 //
 // Get the current header div, or create a new one if it does not exist
 //
-$.any.DataView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,id_str,haveData,doNotEmpty)
+$.any.View.prototype.getOrCreateHeaderContainer = function (parent,type,kind,id_str,haveData,doNotEmpty)
 {
   let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_header";
   let header_div = $("#"+div_id);
@@ -668,7 +668,7 @@ $.any.DataView.prototype.getOrCreateHeaderContainer = function (parent,type,kind
   return header_div;
 }; // getOrCreateHeaderContainer
 
-$.any.DataView.prototype._emptyHeaderDiv = function (div)
+$.any.View.prototype._emptyHeaderDiv = function (div)
 {
   return div && div.length ? div.empty() : null;
 }; // _emptyHeaderDiv
@@ -676,7 +676,7 @@ $.any.DataView.prototype._emptyHeaderDiv = function (div)
 //
 // Refresh a single header entry
 //
-$.any.DataView.prototype.refreshHeaderEntry = function (header_div,data,id,filter_id,n)
+$.any.View.prototype.refreshHeaderEntry = function (header_div,data,id,filter_id,n)
 {
   let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null; // TODO! Do this other places in the code too
   if (!header_div || !d)
@@ -690,7 +690,7 @@ $.any.DataView.prototype.refreshHeaderEntry = function (header_div,data,id,filte
 //
 // Refresh the data for an object.
 //
-$.any.DataView.prototype.refreshData = function (parent,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.View.prototype.refreshData = function (parent,data,id,type,kind,edit,id_str,pdata,pid)
 {
   // Create or get container for data
   let have_data = Object.size(data) > 0;
@@ -723,7 +723,7 @@ $.any.DataView.prototype.refreshData = function (parent,data,id,type,kind,edit,i
 //
 // Get the current data div, or create a new one if it does not exist
 //
-$.any.DataView.prototype.getOrCreateDataContainer = function (parent,type,kind,id_str,haveData)
+$.any.View.prototype.getOrCreateDataContainer = function (parent,type,kind,id_str,haveData)
 {
   let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_data";
   let data_div = $("#"+div_id);
@@ -745,7 +745,7 @@ $.any.DataView.prototype.getOrCreateDataContainer = function (parent,type,kind,i
   return data_div;
 }; // getOrCreateDataContainer
 
-$.any.DataView.prototype._emptyDataDiv = function (div)
+$.any.View.prototype._emptyDataDiv = function (div)
 {
   return div && div.length ? div.empty() : null;
 }; // _emptyDataDiv
@@ -753,7 +753,7 @@ $.any.DataView.prototype._emptyDataDiv = function (div)
 //
 // Create a table, or find a table created previously
 //
-$.any.DataView.prototype.getOrCreateTable = function (parent,type,kind,id_str)
+$.any.View.prototype.getOrCreateTable = function (parent,type,kind,id_str)
 {
   if (!parent)
     return null;
@@ -771,7 +771,7 @@ $.any.DataView.prototype.getOrCreateTable = function (parent,type,kind,id_str)
 //
 // Create a tbody, or find a tbody created previously
 //
-$.any.DataView.prototype.getOrCreateTbody = function (table,type,kind,id_str)
+$.any.View.prototype.getOrCreateTbody = function (table,type,kind,id_str)
 {
   if (!table)
     return null;
@@ -788,7 +788,7 @@ $.any.DataView.prototype.getOrCreateTbody = function (table,type,kind,id_str)
 //
 // Create a thead, or find a thead created previously
 //
-$.any.DataView.prototype.getOrCreateThead = function (table,type,kind,id_str)
+$.any.View.prototype.getOrCreateThead = function (table,type,kind,id_str)
 {
   if (!this.options.showTableHeader || !table)
     return null;
@@ -805,7 +805,7 @@ $.any.DataView.prototype.getOrCreateThead = function (table,type,kind,id_str)
 //
 // Refresh a table header
 //
-$.any.DataView.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_str)
+$.any.View.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_str)
 {
   if (!this.options.filters) {
     this.model.error = type.capitalize()+" "+kind+" "+i18n.error.FILTERS_MISSING;
@@ -877,7 +877,7 @@ $.any.DataView.prototype.refreshThead = function (thead,data,id,type,kind,edit,i
 //
 // Refresh a single table row
 //
-$.any.DataView.prototype.refreshTbody = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.View.prototype.refreshTbody = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
 {
   if (kind == "list" || kind == "select")
     this.refreshListTableDataRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
@@ -886,7 +886,7 @@ $.any.DataView.prototype.refreshTbody = function (tbody,data,id,type,kind,edit,i
       this.refreshItemTableDataRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
 }; // refreshTbody
 
-$.any.DataView.prototype.refreshListTableDataRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.View.prototype.refreshListTableDataRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
 {
   if (!tbody || !data || !data[id])
     return null;
@@ -936,7 +936,7 @@ $.any.DataView.prototype.refreshListTableDataRow = function (tbody,data,id,type,
   return tr;
 }; // refreshListTableDataRow
 
-$.any.DataView.prototype.refreshListTableDataCells = function (tr,data,id,type,kind,filter,edit,id_str)
+$.any.View.prototype.refreshListTableDataCells = function (tr,data,id,type,kind,filter,edit,id_str)
 {
   if (!filter || !tr|| !data || !data[id])
     return false;
@@ -967,7 +967,7 @@ $.any.DataView.prototype.refreshListTableDataCells = function (tr,data,id,type,k
   return true;
 }; // refreshListTableDataCells
 
-$.any.DataView.prototype.refreshItemTableDataRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.View.prototype.refreshItemTableDataRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
 {
   if (!tbody || !data || !data[id])
     return null;
@@ -1068,7 +1068,7 @@ $.any.DataView.prototype.refreshItemTableDataRow = function (tbody,data,id,type,
   return tbody;
 }; // refreshItemTableDataRow
 
-$.any.DataView.prototype.refreshItemTableDataCells = function (tr,data,id,type,kind,filter,filter_id,filter_key,id_str,pl_str,n,edit)
+$.any.View.prototype.refreshItemTableDataCells = function (tr,data,id,type,kind,filter,filter_id,filter_key,id_str,pl_str,n,edit)
 {
   let class_id_name = "any-item-name-"+filter_id;
   let class_id_val  = "any-item-val-"+filter_id;
@@ -1082,7 +1082,7 @@ $.any.DataView.prototype.refreshItemTableDataCells = function (tr,data,id,type,k
   this.initTableDataCell(td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n);
 }; // refreshItemTableDataCells
 
-$.any.DataView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
+$.any.View.prototype.refreshTableDataFirstCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
 {
   let td_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_edit"; // First tool cell
   if ($("#"+td_id).length)
@@ -1138,7 +1138,7 @@ $.any.DataView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,k
   }
 }; // refreshTableDataFirstCell
 
-$.any.DataView.prototype.refreshTableDataLastCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
+$.any.View.prototype.refreshTableDataLastCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
 {
   let td_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_unedit"; // Last tool cell
   if ($("#"+td_id).length)
@@ -1167,7 +1167,7 @@ $.any.DataView.prototype.refreshTableDataLastCell = function (tr,data,id,type,ki
   }
 }; // refreshTableDataLastCell
 
-$.any.DataView.prototype._rowHasData = function (data,filter)
+$.any.View.prototype._rowHasData = function (data,filter)
 {
   let row_has_data = false;
   for (let filter_id in filter) {
@@ -1185,7 +1185,7 @@ $.any.DataView.prototype._rowHasData = function (data,filter)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.DataView.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n)
+$.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n)
 {
   if (!filter_key || !td_id)
     return;
@@ -1275,7 +1275,7 @@ $.any.DataView.prototype.initTableDataCell = function (td_id,data,id,type,kind,i
 //
 // Create a new model in a new view and return the view
 //
-$.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
+$.any.View.prototype.createView = function (parent,data,id,type,kind)
 {
   if (!parent)
     parent = this.element;
@@ -1301,7 +1301,7 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
     select:     this.model.select,
     unselect:   this.model.unselect,
   };
-  let m_str = type+"DataModel";
+  let m_str = type+"Model";
   if (!window[m_str]) {
     let def_str = "anyModel";
     console.warn("Model class "+m_str+" not found, using "+def_str+". ");
@@ -1333,9 +1333,9 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
     itemLinkClicked:  this.options.itemLinkClicked,
     preselected:      this.options.isSelectable ? this.options.preselected : null,
   };
-  let v_str = view_opt.grouping ? type+"DataView"+view_opt.grouping.capitalize() : type+"DataView";
+  let v_str = view_opt.grouping ? type+"View"+view_opt.grouping.capitalize() : type+"View";
   if (!window[v_str])
-    v_str = type+"DataViewTabs";
+    v_str = type+"ViewTabs";
   if (!window[v_str]) {
     let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
     console.warn("View class "+v_str+" not found, using "+def_str+". "); // TODO! i18n
@@ -1356,7 +1356,7 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
     console.error("Couldn't create view "+v_str+": "+err);
   }
   return view;
-}; // createDataView
+}; // createView
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1364,7 +1364,7 @@ $.any.DataView.prototype.createDataView = function (parent,data,id,type,kind)
 // Methods that create cell items
 //
 
-$.any.DataView.prototype.createCellEntry = function (id,type,kind,id_str,filter_id,filter_key,data_item,edit)
+$.any.View.prototype.createCellEntry = function (id,type,kind,id_str,filter_id,filter_key,data_item,edit)
 {
   if (!filter_id || !filter_key)
     return "";
@@ -1404,12 +1404,12 @@ $.any.DataView.prototype.createCellEntry = function (id,type,kind,id_str,filter_
   return val;
 }; // createCellEntry
 
-$.any.DataView.prototype.getHtmlStr = function (type,kind,id,val,edit)
+$.any.View.prototype.getHtmlStr = function (type,kind,id,val,edit)
 {
   return val;
 }; // getHtmlStr
 
-$.any.DataView.prototype.getLabelStr = function (type,kind,id,val)
+$.any.View.prototype.getLabelStr = function (type,kind,id,val)
 {
   //val = (val.replace(/<(?:.|\n)*?>/gm,''));
   let val_cleaned = typeof val == "string" ? val.substring(0,this.options.cutoff) : ""+val;
@@ -1420,7 +1420,7 @@ $.any.DataView.prototype.getLabelStr = function (type,kind,id,val)
   return "<div class='itemUnedit itemLabel'>"+val+"</div>";
 }; // getLabelStr
 
-$.any.DataView.prototype.getTextAreaStr = function (type,kind,id,val,edit,filter_id,id_str)
+$.any.View.prototype.getTextAreaStr = function (type,kind,id,val,edit,filter_id,id_str)
 {
   if (edit) {
     let nameid = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;
@@ -1434,7 +1434,7 @@ $.any.DataView.prototype.getTextAreaStr = function (type,kind,id,val,edit,filter
     return this.getLabelStr(type,kind,id,val);
 }; // getTextAreaStr
 
-$.any.DataView.prototype.getTextStr = function (type,kind,id,val,edit)
+$.any.View.prototype.getTextStr = function (type,kind,id,val,edit)
 {
   if (edit)
     return "<input class='itemEdit itemText' type='text' value='"+val+"'/>";
@@ -1442,7 +1442,7 @@ $.any.DataView.prototype.getTextStr = function (type,kind,id,val,edit)
     return this.getLabelStr(type,kind,id,val);
 }; // getTextStr
 
-$.any.DataView.prototype.getPasswordStr = function (type,kind,id,val,edit)
+$.any.View.prototype.getPasswordStr = function (type,kind,id,val,edit)
 {
   if (edit)
     return "<input class='itemEdit itemText password' type='password' value='"+val+"'/>";
@@ -1450,7 +1450,7 @@ $.any.DataView.prototype.getPasswordStr = function (type,kind,id,val,edit)
     return this.getLabelStr(type,kind,id,"");
 }; // getLabelStr
 
-$.any.DataView.prototype.getLinkStr = function (type,kind,id,val,edit)
+$.any.View.prototype.getLinkStr = function (type,kind,id,val,edit)
 {
   if (edit)
     return this.getTextStr(type,kind,id,val,edit);
@@ -1458,7 +1458,7 @@ $.any.DataView.prototype.getLinkStr = function (type,kind,id,val,edit)
     return "<div class='itemUnedit itemText pointer underline' attr='link'>"+val+"</div>";
 }; // getLinkStr
 
-$.any.DataView.prototype.getEmailStr = function (type,kind,id,val,edit)
+$.any.View.prototype.getEmailStr = function (type,kind,id,val,edit)
 {
   if (edit)
     return this.getTextStr(type,kind,id,val,edit);
@@ -1468,7 +1468,7 @@ $.any.DataView.prototype.getEmailStr = function (type,kind,id,val,edit)
 
 // In edit mode, the input field is modified with a filter
 // in append methods to allow only numerals and '.'
-$.any.DataView.prototype.getNumberStr = function (type,kind,id,val,edit)
+$.any.View.prototype.getNumberStr = function (type,kind,id,val,edit)
 {
   if (edit)
     return "<input class='itemEdit itemNumber' type='text' value='"+val+"'/>";
@@ -1481,7 +1481,7 @@ $.any.DataView.prototype.getNumberStr = function (type,kind,id,val,edit)
 }; // getNumberStr
 
 // In edit mode, a date selector will be shown.
-$.any.DataView.prototype.getDateStr = function (type,kind,id,val,edit)
+$.any.View.prototype.getDateStr = function (type,kind,id,val,edit)
 {
   let str = "";
   if (edit) {
@@ -1505,7 +1505,7 @@ $.any.DataView.prototype.getDateStr = function (type,kind,id,val,edit)
 }; // getDateStr
 
 // Execute a function which should return an html string
-$.any.DataView.prototype.getFunctionStr = function (type,kind,id,val,edit,filter_key,pid,pname)
+$.any.View.prototype.getFunctionStr = function (type,kind,id,val,edit,filter_key,pid,pname)
 {
   let func_name = filter_key.OBJ_FUNCTION;
   if (isFunction(this[func_name])) // Method in view class
@@ -1515,7 +1515,7 @@ $.any.DataView.prototype.getFunctionStr = function (type,kind,id,val,edit,filter
   return ""; // Function not found
 }; // getFunctionStr
 
-$.any.DataView.prototype.getImageStr = function (type,kind,id,val,edit,filter_key,id_str)
+$.any.View.prototype.getImageStr = function (type,kind,id,val,edit,filter_key,id_str)
 {
   let image_src = filter_key.OBJ_IMAGE;
   if (!image_src && filter_key.OBJ_FUNCTION && typeof window[filter_key.OBJ_FUNCTION] == "function")
@@ -1525,7 +1525,7 @@ $.any.DataView.prototype.getImageStr = function (type,kind,id,val,edit,filter_ke
          "</div>";
 }; // getImageStr
 
-$.any.DataView.prototype.getSelectStr = function (type,kind,id,val,edit,filter_key,pid,pname)
+$.any.View.prototype.getSelectStr = function (type,kind,id,val,edit,filter_key,pid,pname)
 {
   let str = "";
   let fval = filter_key.OBJ_SELECT;
@@ -1562,7 +1562,7 @@ $.any.DataView.prototype.getSelectStr = function (type,kind,id,val,edit,filter_k
   return str;
 }; // getSelectStr
 
-$.any.DataView.prototype.getRadioStr = function (type,kind,id,val,edit,filter_key,filter_id)
+$.any.View.prototype.getRadioStr = function (type,kind,id,val,edit,filter_key,filter_id)
 {
   let str = "";
   let fval = filter_key.OBJ_RADIO;
@@ -1591,7 +1591,7 @@ $.any.DataView.prototype.getRadioStr = function (type,kind,id,val,edit,filter_ke
   return str;
 }; // getRadioStr
 
-$.any.DataView.prototype.getCheckStr = function (type,kind,id,val,edit,filter_key,filter_id)
+$.any.View.prototype.getCheckStr = function (type,kind,id,val,edit,filter_key,filter_id)
 {
   let str = "";
   if (edit) {
@@ -1614,7 +1614,7 @@ $.any.DataView.prototype.getCheckStr = function (type,kind,id,val,edit,filter_ke
 }; // getCheckStr
 
 // Return a view containing a list
-$.any.DataView.prototype.getListView = function (type,kind,id,val,edit,filter_key,id_str)
+$.any.View.prototype.getListView = function (type,kind,id,val,edit,filter_key,id_str)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -1624,7 +1624,7 @@ $.any.DataView.prototype.getListView = function (type,kind,id,val,edit,filter_ke
   // Create the list model
   let list_type = filter_key.OBJ_LIST;
   let model_opt = this.getListModelOptions(type,list_type,val);
-  let m_str     = list_type.capitalize()+"DataModel";
+  let m_str     = list_type.capitalize()+"Model";
   if (!window[m_str]) {
     let def_str = "anyModel";
     console.warn(m_str+" is not a valid list model, using "+def_str+". ");
@@ -1635,7 +1635,7 @@ $.any.DataView.prototype.getListView = function (type,kind,id,val,edit,filter_ke
   // Create the list view
   let list_view_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+list_type+"_list";
   let view_opt     = this.getListViewOptions(list_model,list_view_id,this);
-  let v_str = view_opt.grouping ? list_type.capitalize()+"DataView"+view_opt.grouping.capitalize() : list_type.capitalize()+"DataView";
+  let v_str = view_opt.grouping ? list_type.capitalize()+"View"+view_opt.grouping.capitalize() : list_type.capitalize()+"View";
   if (!window[v_str]) {
     let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
     console.warn(v_str+" is not a valid view, using "+def_str+". ");
@@ -1659,7 +1659,7 @@ $.any.DataView.prototype.getListView = function (type,kind,id,val,edit,filter_ke
 }; // getListView
 
 // May be overidden by derived classes
-$.any.DataView.prototype.getListModelOptions = function (type,list_type,data)
+$.any.View.prototype.getListModelOptions = function (type,list_type,data)
 {
   return {
     type:       list_type,
@@ -1673,7 +1673,7 @@ $.any.DataView.prototype.getListModelOptions = function (type,list_type,data)
 }; // getListModelOptions
 
 // May be overidden by derived classes
-$.any.DataView.prototype.getListViewOptions = function (model,view_id,view)
+$.any.View.prototype.getListViewOptions = function (model,view_id,view)
 {
   return {
     model:           model,
@@ -1697,7 +1697,7 @@ $.any.DataView.prototype.getListViewOptions = function (model,view_id,view)
 
 // Button in top toolbar for closing item view
 // By default calls closeItem
-$.any.DataView.prototype.refreshCloseItemButton = function (parent,opt)
+$.any.View.prototype.refreshCloseItemButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonCancel;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -1720,7 +1720,7 @@ $.any.DataView.prototype.refreshCloseItemButton = function (parent,opt)
 
 // Add-button in list table header
 // By default calls addListEntry
-$.any.DataView.prototype.refreshAddButton = function (parent,opt)
+$.any.View.prototype.refreshAddButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonAddToList.replace("%%",opt.type);
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -1742,7 +1742,7 @@ $.any.DataView.prototype.refreshAddButton = function (parent,opt)
 
 // Select-button in first list table cell
 // By default calls _toggleChecked
-$.any.DataView.prototype.refreshSelectButton = function (parent,opt)
+$.any.View.prototype.refreshSelectButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonSelect;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -1767,7 +1767,7 @@ $.any.DataView.prototype.refreshSelectButton = function (parent,opt)
 
 // Edit-button in first list or item table cell
 // By default calls toggleEdit
-$.any.DataView.prototype.refreshEditButton = function (parent,opt)
+$.any.View.prototype.refreshEditButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonEdit;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -1792,7 +1792,7 @@ $.any.DataView.prototype.refreshEditButton = function (parent,opt)
 
 // Update-button in first list or item table cell
 // By default calls dbUpdate
-$.any.DataView.prototype.refreshUpdateButton = function (parent,opt)
+$.any.View.prototype.refreshUpdateButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonUpdate;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -1817,7 +1817,7 @@ $.any.DataView.prototype.refreshUpdateButton = function (parent,opt)
 
 // Remove-button in last list or item table cell
 // By default calls dbRemoveDialog
-$.any.DataView.prototype.refreshRemoveButton = function (parent,opt)
+$.any.View.prototype.refreshRemoveButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonRemove;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -1841,7 +1841,7 @@ $.any.DataView.prototype.refreshRemoveButton = function (parent,opt)
 
 // Delete-button in last list or item table cell
 // By default calls dbDeleteDialog
-$.any.DataView.prototype.refreshDeleteButton = function (parent,opt)
+$.any.View.prototype.refreshDeleteButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonDelete;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -1865,7 +1865,7 @@ $.any.DataView.prototype.refreshDeleteButton = function (parent,opt)
 
 // Cancel-button in last list or item table cell
 // By default calls toggleEdit
-$.any.DataView.prototype.refreshCancelButton = function (parent,opt)
+$.any.View.prototype.refreshCancelButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonCancel;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -1890,7 +1890,7 @@ $.any.DataView.prototype.refreshCancelButton = function (parent,opt)
 
 // Button in bottom toolbar for opening a new empty item view
 // By default calls showItem
-$.any.DataView.prototype.refreshNewItemButton = function (parent,opt)
+$.any.View.prototype.refreshNewItemButton = function (parent,opt)
 {
   let tit_str = this.options.newButtonLabel ? this.options.newButtonLabel : i18n.button.buttonNew+" "+opt.type;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'> "+/*tit_str+*/"</span>" : "";
@@ -1912,7 +1912,7 @@ $.any.DataView.prototype.refreshNewItemButton = function (parent,opt)
 
 // Button in bottom toolbar for displaying a menu for adding links
 // By default calls showLinkMenu
-$.any.DataView.prototype.refreshAddLinkButton = function (parent,opt)
+$.any.View.prototype.refreshAddLinkButton = function (parent,opt)
 {
   if (!this.model.plugins || !this.options.linkIcons)
     return;
@@ -1970,7 +1970,7 @@ $.any.DataView.prototype.refreshAddLinkButton = function (parent,opt)
 
 // Button in menu for adding a link
 // By default calls dbSearchLinks
-$.any.DataView.prototype.refreshLinkButton = function (options,onClickMethod)
+$.any.View.prototype.refreshLinkButton = function (options,onClickMethod)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -1991,7 +1991,7 @@ $.any.DataView.prototype.refreshLinkButton = function (options,onClickMethod)
 }; // refreshLinkButton
 
 // Display or hide the link menu
-$.any.DataView.prototype.showLinkMenu = function (event)
+$.any.View.prototype.showLinkMenu = function (event)
 {
   let dd_menu = $("#"+event.data.element_id);
   let elem = document.getElementById(event.data.element_id);
@@ -2012,7 +2012,7 @@ $.any.DataView.prototype.showLinkMenu = function (event)
 ///////////////////////////////////////////////////////////////////////////////
 
 // Process Esc and Enter keys.
-$.any.DataView.prototype._processKeyup = function (event)
+$.any.View.prototype._processKeyup = function (event)
 {
   if ((event.type == "keyup"   && event.which != 13) ||
       (event.type == "keydown" && event.which != 27)) // For catching the ESC key on Vivaldi
@@ -2030,7 +2030,7 @@ $.any.DataView.prototype._processKeyup = function (event)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.DataView.prototype.addListEntry = function (event)
+$.any.View.prototype.addListEntry = function (event)
 {
   let id   = event.data.id;
   let pid  = event.data.pid;
@@ -2069,7 +2069,7 @@ $.any.DataView.prototype.addListEntry = function (event)
   return true;
 }; // addListEntry
 
-$.any.DataView.prototype._addListEntryFromDB = function (context,serverdata,options)
+$.any.View.prototype._addListEntryFromDB = function (context,serverdata,options)
 {
   if (serverdata && serverdata.JSON_CODE)
     serverdata = serverdata.JSON_CODE;
@@ -2090,7 +2090,7 @@ $.any.DataView.prototype._addListEntryFromDB = function (context,serverdata,opti
   }
 }; // _addListEntryFromDB
 
-$.any.DataView.prototype._addListEntry = function (opt)
+$.any.View.prototype._addListEntry = function (opt)
 {
   let data     = opt.data;
 //let id       = opt.id;
@@ -2134,13 +2134,13 @@ $.any.DataView.prototype._addListEntry = function (opt)
 ///////////////////////////////////////////////////////////////////////////////
 
 // Default action when clicking on a name link.
-$.any.DataView.prototype.itemLinkClicked = function (event)
+$.any.View.prototype.itemLinkClicked = function (event)
 {
   return this.showItem(event);
 }; // itemLinkClicked
 
 // Open a (possibly new and empty) item view.
-$.any.DataView.prototype.showItem = function (event)
+$.any.View.prototype.showItem = function (event)
 {
   event.data.view = this;
 //let data   = event.data.data;
@@ -2172,7 +2172,7 @@ $.any.DataView.prototype.showItem = function (event)
     return this._doShowItem(event.data);
 }; // showItem
 
-$.any.DataView.prototype._foundNextIdFromDB = function (context,serverdata,options)
+$.any.View.prototype._foundNextIdFromDB = function (context,serverdata,options)
 {
   let view = options.context ? options.context : this;
   view.model.dbSearchNextIdSuccess(this,serverdata,options);
@@ -2181,7 +2181,7 @@ $.any.DataView.prototype._foundNextIdFromDB = function (context,serverdata,optio
   view._doShowItem(opt);
 }; // _foundNextIdFromDB
 
-$.any.DataView.prototype._doShowItem = function (opt)
+$.any.View.prototype._doShowItem = function (opt)
 {
   let data   = opt.data;
   let id     = opt.id;
@@ -2227,7 +2227,7 @@ $.any.DataView.prototype._doShowItem = function (opt)
   }
   item["+0"].data[the_id].item   = type;
   item["+0"].data[the_id].is_new = is_new;
-  let view = this.createDataView(opt.view,item,the_id,type,kind); // New type to display, create new view
+  let view = this.createView(opt.view,item,the_id,type,kind); // New type to display, create new view
   if (!view || !view.options || !view.options.top_view) {
     console.warn("View missing. "); // Should never happen TODO! i18n
    return false;
@@ -2274,7 +2274,7 @@ $.any.DataView.prototype._doShowItem = function (opt)
   return true;
 }; // _doShowItem
 
-$.any.DataView.prototype.closeItem = function (event)
+$.any.View.prototype.closeItem = function (event)
 {
   // TODO! Should check for changed values and give warning before closing
   if (this.options.top_view)
@@ -2283,14 +2283,14 @@ $.any.DataView.prototype.closeItem = function (event)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.DataView.prototype.toggleEdit = function (event)
+$.any.View.prototype.toggleEdit = function (event)
 {
   if (!event || !event.data)
     return null;
   return this.doToggleEdit(event.data);
 }; // toggleEdit
 
-$.any.DataView.prototype.doToggleEdit = function (opt)
+$.any.View.prototype.doToggleEdit = function (opt)
 {
   if (!opt)
     return null;
@@ -2377,7 +2377,7 @@ $.any.DataView.prototype.doToggleEdit = function (opt)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.DataView.prototype._toggleChecked = function (event)
+$.any.View.prototype._toggleChecked = function (event)
 {
   let opt = event.data;
   let chk_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_select_icon .check";
@@ -2413,7 +2413,7 @@ $.any.DataView.prototype._toggleChecked = function (event)
  * @param  pid
  * @return true on success, false on error.
  */
-$.any.DataView.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
+$.any.View.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
 {
   if (!this.model)
     return val;
@@ -2439,7 +2439,7 @@ $.any.DataView.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
 }; // dbSearchParents
 
 // Create the dropdown menu to select parent from.
-$.any.DataView.prototype.createParentDropdownMenu = function (context,serverdata,options)
+$.any.View.prototype.createParentDropdownMenu = function (context,serverdata,options)
 {
   let view = options.view ? options.view : this;
   view.last_db_command = "sea";
@@ -2477,7 +2477,7 @@ $.any.DataView.prototype.createParentDropdownMenu = function (context,serverdata
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.DataView.prototype.dbUpdate = function (event)
+$.any.View.prototype.dbUpdate = function (event)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -2593,7 +2593,7 @@ $.any.DataView.prototype.dbUpdate = function (event)
 }; // dbUpdate
 
 // Override this in derived classes
-$.any.DataView.prototype.validateUpdate = function (data)
+$.any.View.prototype.validateUpdate = function (data)
 {
   return "";
 }; // validateUpdate
@@ -2608,7 +2608,7 @@ $.any.DataView.prototype.validateUpdate = function (data)
  * @param  {Object} event
  * @return true on success, false on error.
  */
-$.any.DataView.prototype.dbSearchLinks = function (event)
+$.any.View.prototype.dbSearchLinks = function (event)
 {
   if (!this.model)
     return false;
@@ -2627,7 +2627,7 @@ $.any.DataView.prototype.dbSearchLinks = function (event)
 
 // Create a list of selectable items and display in a modal dialog.
 // Note: The 'this' context is here the calling model! Use options.parent_view for view methods!
-$.any.DataView.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
+$.any.View.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
 {
   let self = context; // context is the model
   self.last_db_command = "sea";
@@ -2651,7 +2651,7 @@ $.any.DataView.prototype.dbUpdateLinkListDialog = function (context,serverdata,o
       let new_base_id = parent_view._createBaseId();
       let ll_id       = new_base_id+"_"+list_type+"_link_list";
       let ll_contents = $("<div id='"+ll_id+"'></div>");
-      let select_list_view = parent_view.createDataView(ll_contents,serverdata.data,null,list_type,"list");
+      let select_list_view = parent_view.createView(ll_contents,serverdata.data,null,list_type,"list");
       if (select_list_view) {
         select_list_view.base_id = new_base_id;
         select_list_view.options.showHeader      = false;
@@ -2692,7 +2692,7 @@ $.any.DataView.prototype.dbUpdateLinkListDialog = function (context,serverdata,o
   }
 }; // dbUpdateLinkListDialog
 
-$.any.DataView.prototype.dbUpdateLinkList = function (opt)
+$.any.View.prototype.dbUpdateLinkList = function (opt)
 {
   // Close dialog
   w3_modaldialog_close(opt);
@@ -2721,7 +2721,7 @@ $.any.DataView.prototype.dbUpdateLinkList = function (opt)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.DataView.prototype.dbRemoveDialog = function (event)
+$.any.View.prototype.dbRemoveDialog = function (event)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -2800,7 +2800,7 @@ $.any.DataView.prototype.dbRemoveDialog = function (event)
  * @throws {MODEL_MISSING} If `this.model` or `this.model.permission` are null or undefined.
  * @throws {DATA_MISSING}
  */
-$.any.DataView.prototype.dbDeleteDialog = function (event)
+$.any.View.prototype.dbDeleteDialog = function (event)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -2856,7 +2856,7 @@ $.any.DataView.prototype.dbDeleteDialog = function (event)
   return true;
 }; // dbDeleteDialog
 
-$.any.DataView.prototype.dbDelete = function (opt)
+$.any.View.prototype.dbDelete = function (opt)
 {
   // Close dialog
   w3_modaldialog_close(opt);
@@ -2903,7 +2903,7 @@ $.any.DataView.prototype.dbDelete = function (opt)
 
 // Remove a row (and subrows, id any) from a list, or the main container of an item
 // Must be called after deleting or removing data.
-$.any.DataView.prototype.removeFromView = function (opt)
+$.any.View.prototype.removeFromView = function (opt)
 {
   let data   = opt.data;
   let id     = opt.id;
@@ -2955,6 +2955,6 @@ var anyView = function (options)
 {
   if (!options)
     return null;
-  return $.any.DataView(options);
+  return $.any.View(options);
 };
 /////////////////////////////////////////////////////////////////////////////

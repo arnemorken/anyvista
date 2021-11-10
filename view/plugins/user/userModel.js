@@ -10,10 +10,10 @@
 /**
  * __user model class.__
  *
- * @class userDataModel
+ * @class userModel
  * @constructor
  */
-var userDataModel = function (options)
+var userModel = function (options)
 {
   this.type     = "user";
   this.id_key   = "user_id";
@@ -21,11 +21,11 @@ var userDataModel = function (options)
   anyModel.call(this,options);
 };
 
-userDataModel.prototype = new anyModel(null);
-userDataModel.prototype.constructor = userDataModel;
+userModel.prototype = new anyModel(null);
+userModel.prototype.constructor = userModel;
 
 // Example method
-userDataModel.prototype.dataSetAttended = function (type,kind,id,val)
+userModel.prototype.dataSetAttended = function (type,kind,id,val)
 {
   let item = (id || id === 0) ? this.dataSearch({type:type,id:id}) : null;
   if (!item)

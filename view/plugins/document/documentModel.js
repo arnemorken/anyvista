@@ -10,10 +10,10 @@
 /**
  * __document model class.__
  *
- * @class documentDataModel
+ * @class documentModel
  * @constructor
  */
-var documentDataModel = function (options)
+var documentModel = function (options)
 {
   this.type     = "document";
   this.id_key   = "document_id";
@@ -21,5 +21,5 @@ var documentDataModel = function (options)
   anyModel.call(this,options);
 };
 
-documentDataModel.prototype = new anyModel(null);
-documentDataModel.prototype.constructor = documentDataModel;
+documentModel.prototype = new anyModel(null);
+documentModel.prototype.constructor = documentModel;

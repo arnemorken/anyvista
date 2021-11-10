@@ -10,10 +10,10 @@
 /**
  * __group model class.__
  *
- * @class groupDataModel
+ * @class groupModel
  * @constructor
  */
-var groupDataModel = function (options)
+var groupModel = function (options)
 {
   this.type     = "group";
   this.id_key   = "group_id";
@@ -21,5 +21,5 @@ var groupDataModel = function (options)
   anyModel.call(this,options);
 };
 
-groupDataModel.prototype = new anyModel(null);
-groupDataModel.prototype.constructor = groupDataModel;
+groupModel.prototype = new anyModel(null);
+groupModel.prototype.constructor = groupModel;

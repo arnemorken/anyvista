@@ -67,25 +67,24 @@
  * <a name="client_api_anyList_classes"></a>
  * <h3>Basic classes</h3>
  *
- * anyList currently contains three basic classes: `anyListDataModel`, `anyListDataView` and `anyListDataViewTabs`.
+ * anyList currently contains three basic classes: `anyModel`, `anyView` and `anyViewTabs`.
  *
- * Plugins, such as `event` or `user`, inherits from `anyListDataModel` and either `anyListDataView` or
- * `anyListDataViewTabs`.
+ * Plugins, such as `event` or `user`, inherits from `anyModel` and either `anyView` or `anyViewTabs`.
  *
- * __<a href="../classes/anyListDataModel.html">`anyListDataModel`</a>__: Keeps data in a tree structure in memory and optionally synchronizes it
+ * __<a href="../classes/anyModel.html">`anyModel`</a>__: Keeps data in a tree structure in memory and optionally synchronizes it
  * with a database.
  *
- * __<a href="../classes/anyListDataView.html">`anyListDataView`</a>__: Contains methods to display and optionally edit the data structure contained
- * in `anyListDataModel`.
+ * __<a href="../classes/anyView.html">`anyView`</a>__: Contains methods to display and optionally edit the data structure contained
+ * in `anyModel`.
  *
- * __<a href="../classes/anyListDataViewTabs.html">`anyListDataViewTabs`</a>__: Groups a data view using tabs. Inherits from `anyListDataView`.
+ * __<a href="../classes/anyViewTabs.html">`anyViewTabs`</a>__: Groups a data view using tabs. Inherits from `anyView`.
  *
  * <hr style="color:#eee;"/>
  *
  * <a name="client_api_data_format"></a>
  * <h3>Data format</h3>
  *
- * The data of <a href="../classes/anyListDataModel.html">`anyListDataModel`</a> is stored in a tree structure with
+ * The data of <a href="../classes/anyModel.html">`anyModel`</a> is stored in a tree structure with
  * associated methods for searching, inserting, updating and deleting items or lists in memory, as well as
  * methods for synchronizing the data structure with database tables. Methods whose name begins with `data`
  * work on the in-memory data tree, methods whose name begins with `db` communicate with the database.
@@ -96,12 +95,12 @@
  * a Javascript-only database such as AlaSQL could also be used. Client filters that determine which data are
  * displayed and how, are described below.
  *
- * An `anyListDataModel` object can hold item and/or list data. The data structure, a JSON object internally kept
- * in the `this.data` variable of `anyListDataModel`, is the same for both items and lists and is organized into
+ * An `anyModel` object can hold item and/or list data. The data structure, a JSON object internally kept
+ * in the `this.data` variable of `anyModel`, is the same for both items and lists and is organized into
  * hierarchical groups (even for a single item) for each data type (where a type can be for example `"user"`,
  * `"event"`, `"group"`, `"document"` etc.).
  *
- * Below is a description of the data structure with which `anyListDataModel` can be initialized. Items in square
+ * Below is a description of the data structure with which `anyModel` can be initialized. Items in square
  * brackets are not verbatim. The data structure is a collection of objects where each object may have these
  * entries:
  *
@@ -430,12 +429,12 @@
  * Each class that derives from `anyListTable` corresponds to a type/plugin/database table.
  * A `anyListTable` may set an id in which case it contains data for a single item. If id is not set, `anyListTable` is assumed
  * to contain data for a list. Note that an item may contain lists as subdata.
- * `anyListTable` uses an id key and a name key which must correspond to the `id_key` and `name_key` in the `anyListDataModel`
+ * `anyListTable` uses an id key and a name key which must correspond to the `id_key` and `name_key` in the `anyModel`
  * class on the client side. These values must be set by the plugin classes deriving from `anyListTable` (see
  * <a href="#api_plugin_classes">anyList plugins</a> below).
  *
  * Data returned from the server is formatted by the `anyListTable` class into a hierarchical tree structure
- * that can be displayed by the `anyListDataView` class on the client. This structure is exactly the same
+ * that can be displayed by the `anyView` class on the client. This structure is exactly the same
  * as for the client <a href="#client_api_data_format">described above</a> (except that it is encoded
  * in PHP of course).
  *
@@ -562,7 +561,7 @@
  * `gDataScript`:
  * The location of a script, relative to `gHomeFolder`, that delivers data on the correct JSON format. Default
  * value is `data/anyGetData.php`, which is the default script that gets data from the PHP backend. It is used by
- * the db* methods of `anyListDataModel` and only when the `this.mode` variable is set to `remote`, otherwise the
+ * the db* methods of `anyModel` and only when the `this.mode` variable is set to `remote`, otherwise the
  * setting is ignored. If a script is not specified in `gDataScript`, the data must be delivered to anyList by some
  * other method. Refer to the included examples.
  *
@@ -673,38 +672,38 @@
  * **A) Client side code**
  *
  * It should be noted that it is not absolutely neccessary to create a client side plugin in order to
- * interact with a server side plugin - the default `anyListDataModel` and `anyListDataView` (or `anyListDataViewTabs`)
- * classes might be used. If a client side plugin <i>is</i> created, it should inherit from `anyListDataModel`
- * and `anyListDataView` (or `anyListDataViewTabs`) and should set the `type` (and optionally the `id_key` and
+ * interact with a server side plugin - the default `anyModel` and `anyView` (or `anyViewTabs`)
+ * classes might be used. If a client side plugin <i>is</i> created, it should inherit from `anyModelanyModel`
+ * and `anyView` (or `anyViewTabs`) and should set the `type` (and optionally the `id_key` and
  * `name_key`) variable(s).
  *
  * 1) Create the folder "document" under view/plugins/.
  *
  * 2) Create empty files for model, view, filter, validator and css:
  *
- *        document/documentDataModel.js
- *        document/documentDataView.js
+ *        document/documentModel.js
+ *        document/documentView.js
  *        document/documentFilter.js
  *        document/documentValidator.js
  *        document/document.css
  *
- * 3) Create the document model class in documentDataModel.js:
+ * 3) Create the document model class in documentModel.js:
  *
- *        var documentDataModel = function (options)
+ *        var documentModel = function (options)
  *        {
  *          this.type     = "document";
  *          this.id_key   = "document_id";
  *          this.name_key = "document_name";
  *          anyModel.call(this,options);
  *        };
- *        documentDataModel.prototype = new anyModel(null);
- *        documentDataModel.prototype.constructor = documentDataModel;
+ *        documentModel.prototype = new anyModel(null);
+ *        documentModel.prototype.constructor = documentModel;
  *
- * 3) Create the document view class in documentDataView.js:
+ * 3) Create the document view class in documentView.js:
  *
  *        (function($) {
  *
- *          $.widget("any.documentDataView", $.any.DataView, {
+ *          $.widget("any.documentView", $.any.View, {
  *            options: {
  *              filters: null,
  *              linkIcons: {
@@ -715,7 +714,7 @@
  *            },
  *            _create: function() {
  *              this._super();
- *              this.element.addClass("documentDataView");
+ *              this.element.addClass("documentView");
  *              if (!this.options.filters) {
  *                let f = new documentFilter(this.options);
  *                this.options.filters = f.filters;
@@ -724,12 +723,12 @@
  *            },
  *            _destroy: function() {
  *              this.options = null;
- *              this.element.removeClass("documentDataView");
+ *              this.element.removeClass("documentView");
  *              this._super();
  *            }
  *          });
  *
- *          $.any.documentDataView.prototype.validateUpdate = function (options)
+ *          $.any.documentView.prototype.validateUpdate = function (options)
  *          {
  *            if (!this.validator)
  *              return null;
@@ -738,15 +737,15 @@
  *
  *        })($);
  *
- *        var documentDataView = function (options)
+ *        var documentView = function (options)
  *        {
  *          if (!options)
  *            return null;
- *          return $.any.documentDataView(options);
+ *          return $.any.documentView(options);
  *        };
  *
- *        documentDataView.prototype = new anyView(null);
- *        documentDataView.prototype.constructor = documentDataView;
+ *        documentView.prototype = new anyView(null);
+ *        documentView.prototype.constructor = documentView;
  *
  * 4) Create the document filter class in documentFilter.js:
  *
@@ -953,7 +952,7 @@
         var serverdata = <?php echo $the_data;?>;
         if (serverdata && serverdata.JSON_CODE)
           serverdata = serverdata.JSON_CODE;
-        var model = new documentDataModel({ data:       serverdata ? serverdata.data : null,
+        var model = new documentModel({ data:       serverdata ? serverdata.data : null,
                                             permission: serverdata ? serverdata.permission : null,
                                             plugins:    serverdata ? serverdata.plugins : null,
                                             mode:       "remote",
@@ -961,7 +960,7 @@
         var data_id = "<?php echo Parameters::get("document_id");?>";
         var is_new  = (data_id == "new" || parseInt(data_id) == -1);
 
-        var view = new documentDataView({ id:          "<?php print $gViewArea;?>",
+        var view = new documentView({ id:          "<?php print $gViewArea;?>",
                                           model:       model,
                                           isEditable:  true,
                                           isDeletable: true,
@@ -973,9 +972,9 @@
  * 5) Create the file for letting other plugins interact with the document plugin (client.php):
  *
         <link  href="<?php print gAnyListURL;?>view/plugins/document/document.css" rel="stylesheet"/>
-        <script src="<?php print gAnyListURL;?>view/plugins/document/documentDataModel.js"></script>
+        <script src="<?php print gAnyListURL;?>view/plugins/document/documentModel.js"></script>
         <script src="<?php print gAnyListURL;?>view/plugins/document/documentFilter.js"></script>
-        <script src="<?php print gAnyListURL;?>view/plugins/document/documentDataView.js"></script>
+        <script src="<?php print gAnyListURL;?>view/plugins/document/documentView.js"></script>
         <script src="<?php print gAnyListURL;?>view/plugins/document/documentValidator.js"></script>
  *
  * 6) Create the database table:

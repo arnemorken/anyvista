@@ -26,11 +26,11 @@
 var serverdata = <?php echo $the_data;?>;
 if (serverdata && serverdata.JSON_CODE)
   serverdata = serverdata.JSON_CODE;
-var model = new documentDataModel({ data:       serverdata ? serverdata.data : null,
-                                    permission: serverdata ? serverdata.permission : null,
-                                    plugins:    serverdata ? serverdata.plugins : null,
-                                    mode:       "remote",
-                                 });
+var model = new documentModel({ data:       serverdata ? serverdata.data : null,
+                                permission: serverdata ? serverdata.permission : null,
+                                plugins:    serverdata ? serverdata.plugins : null,
+                                mode:       "remote",
+                             });
 var data_id      = "<?php echo Parameters::get("document_id");?>";
 var is_admin     = model.permission && model.permission.is_admin;
 var is_logged_in = model.permission && model.permission.is_logged_in && parseInt(model.permission.current_user_id) > 0;
@@ -38,7 +38,7 @@ var is_new       = (data_id == "new" || parseInt(data_id) == -1);
 
 var hide_result  = !is_logged_in || "<?php echo Parameters::get("hide_result_column");?>";
 
-var view = new documentDataView({ id:            "<?php print $gViewArea;?>",
+var view = new documentView({ id:            "<?php print $gViewArea;?>",
                                   model:         model,
                                   isEditable:    true,
                                   isDeletable:   true, //is_admin || is_new,

@@ -10,12 +10,12 @@
 /**
  * __document view class.__
  *
- * @class documentDataView
+ * @class documentView
  * @constructor
  */
 (function($) {
 
-$.widget("any.documentDataView", $.any.DataView, {
+$.widget("any.documentView", $.any.View, {
   // Default options
   options: {
     filters: null, // If not set by the calling method, it will be set to default values
@@ -29,7 +29,7 @@ $.widget("any.documentDataView", $.any.DataView, {
   // "Constructor"
   _create: function() {
     this._super();
-    this.element.addClass("documentDataView");
+    this.element.addClass("documentView");
 
     if (!this.options.filters) {
       let f = new documentFilter(this.options);
@@ -40,12 +40,12 @@ $.widget("any.documentDataView", $.any.DataView, {
 
   _destroy: function() {
     this.options = null;
-    this.element.removeClass("documentDataView");
+    this.element.removeClass("documentView");
     this._super();
   }
 });
 
-$.any.documentDataView.prototype.validateUpdate = function (options)
+$.any.documentView.prototype.validateUpdate = function (options)
 {
   if (!this.validator)
     return null;
@@ -54,12 +54,12 @@ $.any.documentDataView.prototype.validateUpdate = function (options)
 
 })($);
 
-var documentDataView = function (options)
+var documentView = function (options)
 {
   if (!options)
     return null;
-  return $.any.documentDataView(options);
+  return $.any.documentView(options);
 };
 
-documentDataView.prototype = new anyView(null);
-documentDataView.prototype.constructor = documentDataView;
+documentView.prototype = new anyView(null);
+documentView.prototype.constructor = documentView;
