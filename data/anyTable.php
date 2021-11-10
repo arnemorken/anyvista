@@ -679,11 +679,9 @@ class anyTable extends dbTable
         isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin["user"]) && $this->tableExists($this->mTableNameUserLink)) {
       foreach ($this->mTableFieldsLeftJoin["user"] as $field)
         $si .= ", ".$this->mTableNameUserLink.".".$field;
-      if ($this->hasParentId())
-        $si .= ",";
     }
     if ($this->hasParentId())
-      $si .= " temp.".$this->mNameKey." AS parent_name";
+      $si .= ", temp.".$this->mNameKey." AS parent_name";
     $si .= " ";
     return $si;
   } // findItemSelect
@@ -730,34 +728,37 @@ class anyTable extends dbTable
     foreach ($this->mPlugins as $i => $plugin) {
       $table = anyTableFactory::create($plugin,$this);
       if ($table) {
-        $table->mListForType = $this->mType;
-        $table->mListForId   = $this->mId;
-        $table->mListForName = isset($data[$idx]) && isset($data[$idx][$this->mNameKey]) ? $data[$idx][$this->mNameKey] : "";
-        $table_data = null;
-        $skipOwnId = $plugin == $this->mType;
-        if (!$table->dbSearchList($table_data,$skipOwnId,true,false)) // TODO! Searching for "simple" list does not work here
-          $this->mError .= $table->getError();
-        // We found some data, insert it in the data structure
-        if ($table_data) {
-          if (!isset($data[$idx]))
-            $data[$idx] = array();
-          if (!isset($data[$idx]["data"]))
-            $data[$idx]["data"] = array();
-          if (isset($grouping) && $grouping)
-            $data[$idx]["data"]['grouping']      = $grouping;
-          $data[$idx]["data"]['groupingForType'] = $table->mListForType;
-          $data[$idx]["data"]['groupingForId']   = $table->mListForId;
-          $data[$idx]["data"]['groupingForName'] = $table->mListForName;
-          $data[$idx]["data"]["plugin-".$plugin] = array();
-          $data[$idx]["data"]["plugin-".$plugin]["head"] = $plugin;
-          $data[$idx]["data"]["plugin-".$plugin][$table->getNameKey()] = $this->findDefaultHeader($plugin,$data[$idx]["data"]["plugin-".$plugin],true);
-          if (isset($table_data[$plugin]))
-            $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data[$plugin]["data"];
-          else
-          if ($plugin == $this->mType)
-            $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data;
-          else
-            $data[$idx]["data"]["plugin-".$plugin]["data"] = "empty"; // So that the view can create an empty container
+        $link_table = $this->findLinkTableName($plugin);
+        if ($this->tableExists($link_table)) {
+          $table->mListForType = $this->mType;
+          $table->mListForId   = $this->mId;
+          $table->mListForName = isset($data[$idx]) && isset($data[$idx][$this->mNameKey]) ? $data[$idx][$this->mNameKey] : "";
+          $table_data = null;
+          $skipOwnId = $plugin == $this->mType;
+          if (!$table->dbSearchList($table_data,$skipOwnId,true,false)) // TODO! Searching for "simple" list does not work here
+            $this->mError .= $table->getError();
+          // We found some data, insert it in the data structure
+          if ($table_data) {
+            if (!isset($data[$idx]))
+              $data[$idx] = array();
+            if (!isset($data[$idx]["data"]))
+              $data[$idx]["data"] = array();
+            if (isset($grouping) && $grouping)
+              $data[$idx]["data"]['grouping']      = $grouping;
+            $data[$idx]["data"]['groupingForType'] = $table->mListForType;
+            $data[$idx]["data"]['groupingForId']   = $table->mListForId;
+            $data[$idx]["data"]['groupingForName'] = $table->mListForName;
+            $data[$idx]["data"]["plugin-".$plugin] = array();
+            $data[$idx]["data"]["plugin-".$plugin]["head"] = $plugin;
+            $data[$idx]["data"]["plugin-".$plugin][$table->getNameKey()] = $this->findDefaultHeader($plugin,$data[$idx]["data"]["plugin-".$plugin],true);
+            if (isset($table_data[$plugin]))
+              $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data[$plugin]["data"];
+            else
+            if ($plugin == $this->mType)
+              $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data;
+            else
+              $data[$idx]["data"]["plugin-".$plugin]["data"] = "empty"; // So that the view can create an empty container
+          }
         }
       }
     } // foreach
@@ -929,7 +930,7 @@ class anyTable extends dbTable
   {
     $where = null;
     $link_table = $this->findLinkTableName($this->mListForType);
-    if (isset($this->mListForType) && isset($this->mListForId) && $link_table !== null && !$skipOwnId) {
+    if (!$skipOwnId && isset($this->mListForType) && isset($this->mListForId) && $link_table !== null && $this->tableExists($link_table)) {
       $where_id = $link_table.".".$this->mListForType."_id='".$this->mListForId."' ";
       $where = "WHERE ".$where_id;
     }
@@ -1039,7 +1040,7 @@ class anyTable extends dbTable
       }
     }
     */
-    if ($this->tableExists($this->mTableNameGroupLink)) {
+    if (isset($this->mTableNameGroupLink) && $this->tableExists($this->mTableNameGroupLink)) {
       $group_id_sel   = $is_list || isset($this->mListForType) ? ",".$this->mTableNameGroupLink.".group_id " : " ";
       $group_type_sel = /*$this->mType == "group" ? ",any_group.group_type" :*/ "";
       $stmt = "SELECT ".$this->mTableNameMeta.".* ".
@@ -1735,7 +1736,7 @@ class anyTable extends dbTable
 
     // Insert in group table, if group id is given and we have a group table
     // TODO! Untested
-    if (isset($this->mTableNameGroupLink)) {
+    if (isset($this->mTableNameGroupLink) && $this->tableExists($this->mTableNameGroupLink)) {
       $gid = Parameters::get("group_id");
       if ($gid && $gid != ""  && $gid != "nogroup" && $this->mType != "group") {
         $stmt = "INSERT INTO ".$this->mTableNameGroupLink." (group_id,".$this->mType."_id) ".
