@@ -61,9 +61,9 @@
  * @example
  *      new anyDataView({filters:my_filters,id:"my_content"});
  */
-let ANY_LOCALE_NOT_FOUND = "No locale found. ";
-let ANY_MAX_REF_REC = 30;
 (function($) {
+var ANY_LOCALE_NOT_FOUND = "No locale found. ";
+var ANY_MAX_REF_REC = 30;
 
 $.widget("any.DataView", {
   // Default options
@@ -93,7 +93,7 @@ $.widget("any.DataView", {
     showButtonDelete:      true,
     showButtonCancel:      true,
     showButtonNew:         true,
-    showButtonAddLink:     false,
+    showButtonAddLink:     true,
     showButtonLabels:      false,
     useOddEven:            true,
     linkIcons:             null,
