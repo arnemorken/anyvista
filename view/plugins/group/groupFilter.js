@@ -20,7 +20,7 @@ var groupFilter = function (options)
       item: {
         group_id:          { HEADER:"Group id",    DISPLAY:0, HTML_TYPE:"label" },
         group_name:        { HEADER:"Group name",  DISPLAY:1, HTML_TYPE:"link" },
-        group_type:        { HEADER:"Group type",  DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT: {"group":"Group","user":"User"} },
+        group_type:        { HEADER:"Group type",  DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT: {"group":"Group","user":"User","document":"Document"} },
         group_description: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"textarea" },
         parent_id:         { HEADER:"Parent group",DISPLAY:0, HTML_TYPE:"select", OBJ_SELECT: "dbSearchParents" },
         group_sort_order:  { HEADER:"Sort order",  DISPLAY:1, HTML_TYPE:"text" },
@@ -31,7 +31,7 @@ var groupFilter = function (options)
       list: {
         group_id:          { HEADER:"Group id",    DISPLAY:0, HTML_TYPE:"label" },
         group_name:        { HEADER:"Group name",  DISPLAY:1, HTML_TYPE:"link" },
-        group_type:        { HEADER:"Group type",  DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT: {"group":"Group","user":"User"} },
+        group_type:        { HEADER:"Group type",  DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT: {"group":"Group","user":"User","document":"Document"} },
         group_description: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"textspan" },
         parent_id:         { HEADER:"Parent group",DISPLAY:0, HTML_TYPE:"select", OBJ_SELECT: "dbSearchParents" },
         group_sort_order:  { HEADER:"Sort order",  DISPLAY:1, HTML_TYPE:"text" },
