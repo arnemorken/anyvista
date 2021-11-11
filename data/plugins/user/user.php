@@ -13,6 +13,7 @@
   require_once dirname(__FILE__)."/../../anyDefs.php";
   require_once dirname(__FILE__)."/../client.php";
   require_once dirname(__FILE__)."/../document/client.php";
+  require_once dirname(__FILE__)."/../event/client.php";
   require_once dirname(__FILE__)."/../group/client.php";
   require_once dirname(__FILE__)."/../user/client.php";
   require_once gDataSource;
@@ -26,10 +27,12 @@
 var serverdata = <?php echo $the_data;?>;
 if (serverdata && serverdata.JSON_CODE)
   serverdata = serverdata.JSON_CODE;
-var model = new userModel({ data:       serverdata ? serverdata.data : null,
-                            permission: serverdata ? serverdata.permission : null,
-                            plugins:    serverdata ? serverdata.plugins : null,
-                            mode:       "remote",
+var model = new userModel({ mode:         "remote",
+                            data:         serverdata ? serverdata.data : null,
+                            message:      serverdata ? serverdata.message: null,
+                            error_server: serverdata ? serverdata.error: null,
+                            permission:   serverdata ? serverdata.permission : null,
+                            plugins:      serverdata ? serverdata.plugins : null,
                          });
 var data_id      = "<?php echo Parameters::get("user_id");?>";
 var is_admin     = model.permission && model.permission.is_admin;

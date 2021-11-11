@@ -15,12 +15,14 @@
  */
 (function($) {
 
-$.widget("any.groupViewTabs", $.any.View/*Tabs*/, {
+$.widget("any.groupViewTabs", $.any.View, {
   // Default options
   options: {
     filters: null, // Must be set by the calling method or will be set to default values in the constructor
     linkIcons: {
+      "event":    "fa fa-calendar",
       "user":     "fa fa-user",
+      "document": "fa fa-book",
       "group":    "fa fa-users",
     },
   },
@@ -58,8 +60,9 @@ $.widget("any.groupViewTabs", $.any.View/*Tabs*/, {
 
 $.any.groupViewTabs.prototype.validateUpdate = function (options)
 {
-  if (this.validator)
-    return this.validator.validateUpdate(options,this);
+  if (!this.validator)
+    return null;
+  return this.validator.validateUpdate(options,this);
 }; // validateUpdate
 
 })($);
@@ -71,5 +74,5 @@ var groupViewTabs = function (options)
   return $.any.groupViewTabs(options);
 };
 
-groupViewTabs.prototype = new anyView/*Tabs*/(null);
+groupViewTabs.prototype = new anyView(null);
 groupViewTabs.prototype.constructor = groupViewTabs;

@@ -57,6 +57,9 @@ class groupTable extends anyTable
         "user_joined_date",
         "user_role",
       ],
+      "event" => [
+        "event_id",
+      ],
     ],
     "filters" => [
       "list" => [
@@ -84,7 +87,7 @@ class groupTable extends anyTable
         "membership"        => 1,
       ],
     ],
-    "plugins" => ["document","group","user"],
+    "plugins" => ["document","event","group","user"],
   ];
 
   protected $mInsertSuccessMsg  = "Group created. ",

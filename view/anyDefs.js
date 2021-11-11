@@ -14,6 +14,7 @@ var gServer           = "//localhost/";
 var gHomeFolder       = "Prosjekter/testserver/wp-content/plugins/anylist/";
 var gThirdpartyFolder = "Prosjekter/testserver/javascript/";
 var gDataScript       = "data/anyGetData.php"; // Relative to gHomeFolder
+var gSkin             = "default";
 
 //
 // Do not edit below unless you really know what you are doing

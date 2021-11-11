@@ -81,6 +81,18 @@ class userTable extends anyTable
         "user_joined_date",
         "user_role",
       ],
+      "document" => [
+        "user_role",
+      ],
+      "event" => [
+        "user_paid",
+        "user_paid_date",
+        "user_joined_date",
+        "user_result",
+        "user_feedback",
+        "user_discount",
+        "user_attended",
+      ],
     ],
     "filters" => [
       "list" => [
@@ -138,7 +150,7 @@ class userTable extends anyTable
         "user_role"        => 1,
       ],
     ],
-    "plugins" => ["document","group","user"],
+    "plugins" => ["document","event","group","user"],
   ];
 
   protected $mInsertSuccessMsg  = "User created. ",

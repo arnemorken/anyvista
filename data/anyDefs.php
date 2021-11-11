@@ -8,7 +8,7 @@
  *
  ****************************************************************************************/
 //
-// User-editable "constants" that define some basic properties of the AnyList API.
+// User-editable "constants" that define some basic properties of the anyList API.
 //
 define("gServer",           "//localhost/");
 define("gHomeFolder",       "Prosjekter/testserver/wp-content/plugins/anylist/");
@@ -48,4 +48,10 @@ define("gW3CSS_css",        gW3CSSURL          . "w3.css");
 // Font Awesome
 define("gFontAwesomeURL",   gServer            . gThirdpartyFolder . "fontawesome/");
 define("gFontAwesome_css",  gFontAwesomeURL    . "fa.min.css");
+
+// Wordpress stuff
+define("gWordpressURL",     gServer            . "Prosjekter/testserver/");
+//define("WP_PLUGIN",""); // Comment out if using the server API, but not as a Wordpress plugin
+define("gWProot", dirname(dirname(dirname(dirname(dirname(__FILE__)))))); // Path to wp-load.php
+define("gWPLoad", gWProot . "/wp-load.php"); // Wordpress functions
 ?>

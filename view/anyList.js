@@ -682,7 +682,7 @@
  * 2) Create empty files for model, view, filter, validator and css:
  *
  *        document/documentModel.js
- *        document/documentView.js
+ *        document/documentViewTabs.js
  *        document/documentFilter.js
  *        document/documentValidator.js
  *        document/document.css
@@ -699,7 +699,7 @@
  *        documentModel.prototype = new anyModel(null);
  *        documentModel.prototype.constructor = documentModel;
  *
- * 3) Create the document view class in documentView.js:
+ * 3) Create the document view class in documentViewTabs.js:
  *
  *        (function($) {
  *
@@ -908,7 +908,7 @@
 
             protected function initFilters($filters)
             {
-              if (!hasValue($this->mFilters))
+              if (!$this->mFilters)
                 return false;
               return true;
             }
@@ -974,7 +974,7 @@
         <link  href="<?php print gAnyListURL;?>view/plugins/document/document.css" rel="stylesheet"/>
         <script src="<?php print gAnyListURL;?>view/plugins/document/documentModel.js"></script>
         <script src="<?php print gAnyListURL;?>view/plugins/document/documentFilter.js"></script>
-        <script src="<?php print gAnyListURL;?>view/plugins/document/documentView.js"></script>
+        <script src="<?php print gAnyListURL;?>view/plugins/document/documentViewTabs.js"></script>
         <script src="<?php print gAnyListURL;?>view/plugins/document/documentValidator.js"></script>
  *
  * 6) Create the database table:
