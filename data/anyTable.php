@@ -225,6 +225,7 @@ class anyTable extends dbTable
   private function initProperties($defsOrType)
   {
     $this->mError = "";
+    $this->mErrorListLeftJoin = "";
     if (!$defsOrType || (gettype($defsOrType) != "array" && gettype($defsOrType) != "string")) {
       $this->mError = "Unknown or missing parameter to initProperties. ";
       return false;
@@ -550,6 +551,7 @@ class anyTable extends dbTable
       return null;
     }
     $this->mError = "";
+    $this->mErrorListLeftJoin = "";
     $this->mData = null;
 
     $this->initFieldsFromParam();
@@ -654,6 +656,7 @@ class anyTable extends dbTable
   {
     // Get query fragments
     $this->mError = "";
+    $this->mErrorListLeftJoin = "";
     $select    = $this->findItemSelect();
     $left_join = $this->findItemLeftJoin();
     $where     = $this->findItemWhere($key,$val);
@@ -821,6 +824,7 @@ class anyTable extends dbTable
   {
     // Get query fragments
     $this->mError = "";
+    $this->mErrorListLeftJoin = "";
     $select    = $this->findListSelect();
     $left_join = $this->findListLeftJoin();
     $where     = $this->findListWhere($skipOwnId);
@@ -922,7 +926,7 @@ class anyTable extends dbTable
       }
     }
     else
-      $this->mMessage .= "Table '$linktable' does not exist.";
+      $this->mErrorListLeftJoin .= "Table '$linktable' does not exist.";
     return $lj;
   } // findListLeftJoinOne
 
@@ -1695,6 +1699,7 @@ class anyTable extends dbTable
       return null;
     }
     $this->mError = "";
+    $this->mErrorListLeftJoin = "";
     $this->mData = null;
     $this->mNumRowsChanged = 0;
 
@@ -1815,6 +1820,7 @@ class anyTable extends dbTable
       return null;
     }
     $this->mError = "";
+    $this->mErrorListLeftJoin = "";
     $this->mData = null;
     $this->mNumRowsChanged = 0;
 
@@ -2198,6 +2204,7 @@ class anyTable extends dbTable
   public function dbDelete()
   {
     $this->mError = "";
+    $this->mErrorListLeftJoin = "";
     $this->mData  = null;
 
     // Delete item(s) from table or file from disk

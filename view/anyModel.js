@@ -11,11 +11,10 @@
  *
  ***************************************************************************************/
 /**
- * __anyModel: Tree structure data model that can manipulate data as lists and items
- * and optionally synchronize with a database.__
+ * __anyModel: Tree structure data model that can manipulate data as lists and items and optionally
+ * synchronize with a database.__
  *
- * See <a href="../classes/anyView.html">`anyView`</a> for a description of a data
- * view class.
+ * See <a href="../classes/anyView.html">`anyView`</a> for a description of a data view class.
  *
  * The model should have a type (e.g. `type = "user"`), an id key (e.g. `id_key = "user_id"`) and a name
  * key (e.g. `name_key = "user_name"`). If `id_key` or `name_key` is omitted, they are constructed from
@@ -40,7 +39,8 @@
  *
  * @class anyModel
  * @constructor
- * @param {Object} options An object which may contain the following properties, all of which are optional unless stated otherwise:
+ * @param {Object} options An object which may contain the following properties, all of which are optional
+ *                         unless stated otherwise:
  *
  *      {Object}   data:             The data with which to initialize the model.
  *                                   Default: null.
@@ -89,6 +89,8 @@
  *      {String}   message:          Messages.
  *                                   Default: "".
  *      {String}   error:            Errors.
+ *                                   Default: "".
+ *      {String}   error_server:     Errors from server.
  *                                   Default: "".
  *
  * @example
@@ -247,6 +249,13 @@ var anyModel = function (options)
   this.error = "";
 
   /**
+  * @property {String} error_server
+  * @default ""
+  * @description Optional.
+  */
+  this.error_server = "";
+
+  /**
   * @property {Object} page_links
   * @default null
   * @description Page links when displaying a list. Optional.
@@ -269,6 +278,8 @@ var anyModel = function (options)
     console.log("anyModel constructor: "+this.message);
   if (this.error !== "")
     console.error("anyModel constructor: "+this.error);
+  if (this.error_server !== "")
+    console.error("anyModel constructor: "+this.error_server);
 
   // Search
   if (options && options.search)
@@ -291,6 +302,7 @@ anyModel.prototype._dataInitDefault = function ()
   this.auto_callback    = false;
   this.message          = "";
   this.error            = "";
+  this.error_server     = "";
   this._dataInitSelect();
   this.page_links       = null;
   // "Private" variables:
@@ -314,18 +326,19 @@ anyModel.prototype._dataInitSelect = function ()
  *                         from `options`. If `options == null`, default values will be set.
  *                         The object may contain these elements:
  *
- *        {String}   type:        Type, e.g. "user". Optional.
- *        {String}   id:          Item id, if the top level data represents an item, e.g. "42". Optional.
- *        {String}   id_key:      Id key, e.g. "user_id". Optional. Default: "[type]_id".
- *        {String}   name_key:    Name key, e.g. "user_name". Optional. Default: "[type]_name".
- *        {Object}   data:        Data. Will only be initialised if `dataInit` is called after a search
- *                                (indicated by `this.last_db_command == "sea"`). Optional.
- *        {String}   mode:        "local" or "remote". Optional.
- *        {boolean}  search:      Whether to call the search method. Optional.
- *        {String}   search_term: The string to search for. Optional.
- *        {Object}   permission:  Permissions. Optional.
- *        {String}   message:     Messages. Optional.
- *        {String}   error:       Errors. Optional.
+ *        {String}   type:         Type, e.g. "user". Optional.
+ *        {String}   id:           Item id, if the top level data represents an item, e.g. "42". Optional.
+ *        {String}   id_key:       Id key, e.g. "user_id". Optional. Default: "[type]_id".
+ *        {String}   name_key:     Name key, e.g. "user_name". Optional. Default: "[type]_name".
+ *        {Object}   data:         Data. Will only be initialised if `dataInit` is called after a search
+ *                                 (indicated by `this.last_db_command == "sea"`). Optional.
+ *        {String}   mode:         "local" or "remote". Optional.
+ *        {boolean}  search:       Whether to call the search method. Optional.
+ *        {String}   search_term:  The string to search for. Optional.
+ *        {Object}   permission:   Permissions. Optional.
+ *        {String}   message:      Messages. Optional.
+ *        {String}   error:        Errors. Optional.
+ *        {String}   error_server: Errors from server. Optional.
  *
  * @return options
  */
@@ -368,6 +381,14 @@ anyModel.prototype._dataInitSelect = function ()
     if (options.permission)                            { this.permission       = options.permission; }
     if (options.message)                               { this.message          = options.message; }
     if (options.error)                                 { this.error            = options.error; }
+    if (options.error) {
+      this.error_server = options.error;
+      this.error        = i18n.error.SERVER_ERROR;
+    }
+    if (options.error_server) {
+      this.error_server = options.error_server;
+      this.error        = i18n.error.SERVER_ERROR;
+    }
     if (options.page_links)                            { this.page_links       = options.page_links; }
 
     if (!this.error) {
@@ -1058,8 +1079,9 @@ anyModel.prototype.dbCreate = function (options)
   this.success = options.success ? options.success : this.dbCreateSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
-  this.message = "";
-  this.error   = "";
+  this.message      = "";
+  this.error        = "";
+  this.error_server = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
     let url = this._getDataSourceName()+
@@ -1111,11 +1133,14 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
     if (Object.size(serverdata.data) == 0)
       serverdata.data = null;
     self.message = serverdata.message;
-    self.error   = serverdata.error;
+    if (serverdata.error) {
+      self.error_server = serverdata.error;
+      self.error        = i18n.error.SERVER_ERROR;
+    }
     if (self.message)
       console.log("anyModel.dbCreateSuccess: "+self.message);
-    if (self.error)
-      console.error("anyModel.dbCreateSuccess: "+self.error);
+    if (self.server_error)
+      console.error("anyModel.dbCreateSuccess: "+self.server_error);
   }
   if (self.cbExecute)
     self.cbExecute();
@@ -1172,8 +1197,9 @@ anyModel.prototype.dbSearch = function (options)
   this.success = options.success ? options.success : this.dbSearchSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
-  this.message = "";
-  this.error   = "";
+  this.message      = "";
+  this.error        = "";
+  this.error_server = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
     let url = this.dbSearchGetURL(options);
@@ -1265,13 +1291,17 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
 {
   let self = context;
   self.last_db_command = "sea";
+
   if (serverdata) {
-    if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
+    if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
     if (Object.size(serverdata.data) == 0)
       serverdata.data = null;
     self.message = serverdata.message;
-    self.error   = serverdata.error;
+    if (serverdata.error) {
+      self.error_server = serverdata.error;
+      self.error        = i18n.error.SERVER_ERROR;
+    }
     if (!serverdata.data) {
       if (serverdata.id || serverdata.id === 0)
         self.message = self.type.capitalize()+" not found. "; // TODO! i18n
@@ -1280,8 +1310,8 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
     }
     if (self.message)
       console.log("anyModel.dbSearchSuccess: "+self.message);
-    if (self.error)
-      console.error("anyModel.dbSearchSuccess: "+self.error);
+    if (self.error_server)
+      console.error("anyModel.dbSearchSuccess: "+self.error_server);
     if (self.auto_search_init && self.dataInit)
       self.dataInit(serverdata);
   }
@@ -1322,8 +1352,9 @@ anyModel.prototype.dbSearchNextId = function (options)
   this.success = options.success ? options.success : this.dbSearchNextIdSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
-  this.message = "";
-  this.error   = "";
+  this.message      = "";
+  this.error        = "";
+  this.error_server = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
     let url = this.dbSearchNextIdGetURL(options);
@@ -1398,11 +1429,14 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
     serverdata.is_new = options.is_new;
     self.max     = parseInt(serverdata.id);
     self.message = serverdata.message;
-    self.error   = serverdata.error;
+    if (serverdata.error) {
+      self.error_server = serverdata.error;
+      self.error        = i18n.error.SERVER_ERROR;
+    }
     if (self.message)
       console.log("anyModel.dbSearchNextIdSuccess: "+self.message);
-    if (self.error)
-      console.error("anyModel.dbSearchNextIdSuccess: "+self.error);
+    if (self.error_server)
+      console.error("anyModel.dbSearchNextIdSuccess: "+self.error_server);
   }
   return context;
 }; // dbSearchNextIdSuccess
@@ -1474,8 +1508,7 @@ anyModel.prototype.dbUpdate = function (options)
   if (!options.is_new && !item[options.id].is_new && !Object.size(item[options.id].dirty)) {
     this.message = i18n.error.NOTHING_TO_UPDATE;
     console.log("anyModel.dbUpdate: "+this.message);
-    if (this.cbExecute)
-      this.cbExecute();
+    this.cbExecute();
     return false;
   }
   // Data to update or insert
@@ -1498,8 +1531,9 @@ anyModel.prototype.dbUpdate = function (options)
   this.success = options.success ? options.success : this.dbUpdateSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
-  this.message = "";
-  this.error   = "";
+  this.message      = "";
+  this.error        = "";
+  this.error_server = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
     let url = this.dbUpdateGetURL(options);
@@ -1613,11 +1647,14 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
     if (Object.size(serverdata.data) == 0)
       serverdata.data = null;
     self.message = serverdata.message;
-    self.error   = serverdata.error;
+    if (serverdata.error) {
+      self.error_server = serverdata.error;
+      self.error        = i18n.error.SERVER_ERROR;
+    }
     if (self.message)
       console.log("anyModel.dbUpdateSuccess: "+self.message);
-    if (self.error)
-      console.error("anyModel.dbUpdateSuccess: "+self.error);
+    if (self.error_server)
+      console.error("anyModel.dbUpdateSuccess: "+self.error_server);
     else {
       // If item is in model's data structure, we must update model after successful insert/update
       let type = options.type ? options.type : self.type;
@@ -1705,8 +1742,9 @@ anyModel.prototype.dbUpdateLinkList = function (options)
   this.success = options.success ? options.success : this.dbUpdateLinkListSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
-  this.message = "";
-  this.error   = "";
+  this.message      = "";
+  this.error        = "";
+  this.error_server = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
     let url = this.dbUpdateLinkListGetURL(options);
@@ -1793,11 +1831,14 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
     if (Object.size(serverdata.data) == 0)
       serverdata.data = null;
     self.message = serverdata.message;
-    self.error   = serverdata.error;
+    if (serverdata.error) {
+      self.error_server = serverdata.error;
+      self.error        = i18n.error.SERVER_ERROR;
+    }
     if (self.message)
       console.log("anyModel.dbUpdateLinkListSuccess: "+self.message);
-    if (self.error)
-      console.error("anyModel.dbUpdateLinkListSuccess: "+self.error);
+    if (self.error_server)
+      console.error("anyModel.dbUpdateLinkListSuccess: "+self.error_server);
     self.dataUpdateLinkList({ data:      serverdata.data,
                               type:      options.link_type,
                               unselect:  options.unselect,
@@ -1862,8 +1903,9 @@ anyModel.prototype.dbDelete = function (options)
   this.success = options.success ? options.success : this.dbDeleteSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
-  this.message = "";
-  this.error   = "";
+  this.message      = "";
+  this.error        = "";
+  this.error_server = "";
   if (this.mode == "remote") { // Remote server call
     let url = this.dbDeleteGetURL(options);
     if (!url)
@@ -1939,11 +1981,14 @@ anyModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
     if (Object.size(serverdata.data) == 0)
       serverdata.data = null;
     self.message = serverdata.message;
-    self.error   = serverdata.error;
+    if (serverdata.error) {
+      self.error_server = serverdata.error;
+      self.error        = i18n.error.SERVER_ERROR;
+    }
     if (self.message)
       console.log("anyModel.dbDeleteSuccess: "+self.message);
-    if (self.error)
-      console.error("anyModel.dbDeleteSuccess: "+self.error);
+    if (self.error_server)
+      console.error("anyModel.dbDeleteSuccess: "+self.error_server);
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
     self.cbExecute();
@@ -1957,10 +2002,11 @@ anyModel.prototype._dbFail = function (context,jqXHR)
   if (!self)
     return false; // Should never happen
   if (jqXHR) {
-    self.error = jqXHR.statusText+" ("+jqXHR.status+"). ";
+    self.error_server = jqXHR.statusText+" ("+jqXHR.status+"). ";
     if (jqXHR.responseText)
-      self.error_extra += jqXHR.responseText;
-    console.error("anyModel._dbFail: "+self.error+"\n"+self.error_extra);
+      self.error_server += jqXHR.responseText;
+    self.error = i18n.error.SERVER_ERROR;
+    console.error("anyModel._dbFail: "+self.error_server);
     if (self.cbExecute)
       self.cbExecute();
   }

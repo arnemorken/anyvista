@@ -413,10 +413,8 @@ $.any.View.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata
     for (let idc in data) {
       if (data.hasOwnProperty(idc)) {
         if (view && !idc.startsWith("grouping")) {
-          if (view.model.error) {
-            console.log("Error: "+view.model.error);
-            //continue;
-          }
+          //if (view.model.error)
+            //console.log("Error: "+view.model.error);
           let curr_type = view._findType(data,prev_type,idc);
           let curr_kind = view._findKind(data,prev_kind,idc);
           if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type /*|| (prev_type == "group" && view.model.type == "group")*/))
@@ -490,6 +488,7 @@ $.any.View.prototype.refreshToolbarBottom = function (parent,data,id,type,kind,e
                 kind: kind,
               };
     this.refreshMessageArea(bardiv,opt);
+    this.showMessages();
   }
   if (this.options.showButtonNew) {
     // Create a "new item" button
@@ -826,7 +825,6 @@ $.any.View.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_st
                 type:       type,
                 kind:       kind,
                 pid:        id,
-                group_id:   this.current_group_id,
                 id_str:     id_str,
                 filter:     filter,
                 isEditable: true,
@@ -1145,6 +1143,9 @@ $.any.View.prototype.refreshTableDataLastCell = function (tr,data,id,type,kind,f
     $("#"+td_id).remove();
   let td = $("<td id='"+td_id+"' class='any-td any-td-last'></td>");
   tr.append(td);
+  if (this.options.isSelectable && (kind == "list" || kind == "select")) {
+  }
+  else
   if (this.options.isEditable || edit || isEditable) {
     let last_opt = { data:       data,
                      id:         id,
@@ -2065,21 +2066,30 @@ $.any.View.prototype.addListEntry = function (event)
                                });
   }
   else
-    console.error("Item "+id+" not found. ");
+    console.error("Item "+id+" not found. "); // TODO! i18n
   return true;
 }; // addListEntry
 
 $.any.View.prototype._addListEntryFromDB = function (context,serverdata,options)
 {
-  if (serverdata && serverdata.JSON_CODE)
-    serverdata = serverdata.JSON_CODE;
-  if (options) {
-    let view = options.context;
+  let self = context;
+  if (serverdata) {
+    if (serverdata.JSON_CODE)
+      serverdata = serverdata.JSON_CODE;
+    self.message = serverdata.message;
+    if (serverdata.error) {
+      self.error_server = serverdata.error;
+      self.error        = i18n.error.SERVER_ERROR;
+    }
+    if (self.message)
+      console.log("anyView._addListEntryFromDB: "+self.message);
+    if (self.error_server)
+      console.error("anyView._addListEntryFromDB: "+self.error_server);
+    let view = options.context ? options.context : null;
     if (view) {
       serverdata.kind = "list";
       serverdata.type = options.type;
       serverdata.new_id = serverdata.id;
-      serverdata.group_id = this.current_group_id;
       if (typeof serverdata.new_id == "string")
         if (serverdata.new_id.length && serverdata.new_id[0] != "+")
           serverdata.new_id = "+"+serverdata.new_id;
@@ -2174,11 +2184,26 @@ $.any.View.prototype.showItem = function (event)
 
 $.any.View.prototype._foundNextIdFromDB = function (context,serverdata,options)
 {
-  let view = options.context ? options.context : this;
-  view.model.dbSearchNextIdSuccess(this,serverdata,options);
-  let opt = serverdata.JSON_CODE;
-  opt.view = view;
-  view._doShowItem(opt);
+  let self = context;
+  if (serverdata) {
+    if (serverdata.JSON_CODE)
+      serverdata = serverdata.JSON_CODE;
+    self.message = serverdata.message;
+    if (serverdata.error) {
+      self.error_server = serverdata.error;
+      self.error        = i18n.error.SERVER_ERROR;
+    }
+    if (self.message)
+      console.log("anyView._foundNextIdFromDB: "+self.message);
+    if (self.error_server)
+      console.error("anyView._foundNextIdFromDB: "+self.error_server);
+    let view = options.context ? options.context : null;
+    self.dbSearchNextIdSuccess(self,serverdata,options);
+    if (view) {
+      serverdata.view = view;
+      view._doShowItem(serverdata);
+    }
+  }
 }; // _foundNextIdFromDB
 
 $.any.View.prototype._doShowItem = function (opt)
@@ -2347,11 +2372,11 @@ $.any.View.prototype.doToggleEdit = function (opt)
       kind:       opt.kind,
       filter:     opt.filter,
       id_str:     opt.id_str,
+      is_new:     opt.is_new,
+      isEditable: opt.isEditable,
       edit:       true,
       pdata:      opt.pdata,
       pid:        opt.pid,
-      isEditable: opt.isEditable,
-      is_new:     opt.is_new,
     };
     let filter_id = this.model && this.model.name_key ? this.model.name_key : opt.type+"_name";
     let nameid = prefix+"_"+filter_id+" .itemEdit";
@@ -2425,7 +2450,7 @@ $.any.View.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
    child_id:  id,
    simple:    true,
    success:   this.createParentDropdownMenu,
-   view:      this,
+   context:   this,
   };
   if (edit)
     return this.model.dbSearch(options);
@@ -2441,36 +2466,46 @@ $.any.View.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
 // Create the dropdown menu to select parent from.
 $.any.View.prototype.createParentDropdownMenu = function (context,serverdata,options)
 {
-  let view = options.view ? options.view : this;
-  view.last_db_command = "sea";
+  let self = context;
+  self.last_db_command = "sea";
+
   if (serverdata) {
-    // Remove encapsulation, if it exists
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
     if (Object.size(serverdata.data) == 0)
       serverdata.data = null;
-    view.message = serverdata.message;
-    view.error   = serverdata.error;
+    self.message = serverdata.message;
+    if (serverdata.error) {
+      self.error_server = serverdata.error;
+      self.error        = i18n.error.SERVER_ERROR;
+    }
+    if (self.message)
+      console.log("anyView.createParentDropdownMenu: "+self.message);
+    if (self.error_server)
+      console.error("anyView.createParentDropdownMenu: "+self.error_server);
     if (serverdata.data) {
-      let kind      = options.kind;
-      let type_name = options.type+"_name";
-      let the_id    = Number.isInteger(parseInt(options.child_id)) ? parseInt(options.child_id) : options.child_id;
-      let id_str    = view.id_stack.length ? view.id_stack.join("_")+"_"+the_id : "0_"+the_id;
-      let data      = serverdata.data["+0"].data;
-      let item_id = view.base_id+"_"+options.type+"_"+kind+"_"+id_str+"_parent_id .itemSelect";
-      let did_select = "selected='true'";
-      $.each(data,function (id,item) {
-        if (parseInt(id) != the_id) {
-          let sel = parseInt(id) == parseInt(options.parent_id) ? "selected='true'" : "";
-          let pname = data[id][type_name];
-          $("#"+item_id).append($("<option "+sel+">").attr("value",parseInt(id)).text(pname));
-          if (sel != "") {
-            $("#"+item_id+"-button .ui-selectmenu-text").text(item[type_name]);
-            did_select = "";
+      let view = options.context ? options.context : null;
+      if (view) {
+        let kind      = options.kind;
+        let type_name = options.type+"_name";
+        let the_id    = Number.isInteger(parseInt(options.child_id)) ? parseInt(options.child_id) : options.child_id;
+        let id_str    = view.id_stack.length ? view.id_stack.join("_")+"_"+the_id : "0_"+the_id;
+        let data      = serverdata.data["+0"].data;
+        let item_id = view.base_id+"_"+options.type+"_"+kind+"_"+id_str+"_parent_id .itemSelect";
+        let did_select = "selected='true'";
+        $.each(data,function (id,item) {
+          if (parseInt(id) != the_id) {
+            let sel = parseInt(id) == parseInt(options.parent_id) ? "selected='true'" : "";
+            let pname = data[id][type_name];
+            $("#"+item_id).append($("<option "+sel+">").attr("value",parseInt(id)).text(pname));
+            if (sel != "") {
+              $("#"+item_id+"-button .ui-selectmenu-text").text(item[type_name]);
+              did_select = "";
+            }
           }
-        }
-      });
-      $("#"+item_id).prepend($("<option "+did_select+">").attr("value","null").text("[None]")); // TODO! i18n
+        });
+        $("#"+item_id).prepend($("<option "+did_select+">").attr("value","null").text("[None]")); // TODO! i18n
+      } // if view
     }
   }
 }; // createParentDropdownMenu
@@ -2629,67 +2664,74 @@ $.any.View.prototype.dbSearchLinks = function (event)
 // Note: The 'this' context is here the calling model! Use options.parent_view for view methods!
 $.any.View.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
 {
-  let self = context; // context is the model
+  let self = context;
   self.last_db_command = "sea";
+
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
     if (Object.size(serverdata.data) == 0)
       serverdata.data = null;
     self.message = serverdata.message;
-    self.error   = serverdata.error;
+    if (serverdata.error) {
+      self.error_server = serverdata.error;
+      self.error        = i18n.error.SERVER_ERROR;
+    }
     if (self.message)
       console.log("anyView.dbUpdateLinkListDialog: "+self.message);
-    if (self.error)
-      console.error("anyView.dbUpdateLinkListDialog: "+self.error);
-    else
-    if (serverdata.data && options.parent_view) {
-      let list_type   = options.type;
-    //let parent_id   = isInt(options.parent_id) ? parseInt(options.parent_id) : "";
-      let parent_view = options.parent_view;
-    //let id_str      = parent_view.id_stack.length ? parent_view.id_stack.join("_")+"_"+parent_id : "0_"+parent_id;
-      let new_base_id = parent_view._createBaseId();
-      let ll_id       = new_base_id+"_"+list_type+"_link_list";
-      let ll_contents = $("<div id='"+ll_id+"'></div>");
-      let select_list_view = parent_view.createView(ll_contents,serverdata.data,null,list_type,"list");
-      if (select_list_view) {
-        select_list_view.base_id = new_base_id;
-        select_list_view.options.showHeader      = false;
-        select_list_view.options.showTableHeader = false;
-        select_list_view.options.isSelectable    = true; // Use the select filter, if available
-        select_list_view.options.preselected     = parent_view.model.dataSearch({ type:list_type });
-        let mod_opt = { select: new Set() };
-        if (select_list_view.options && select_list_view.options.preselected)
-          for (var val of select_list_view.options.preselected) {
-            let sel_id = val[select_list_view.model.id_key];
-            if (sel_id && sel_id != self.id && (self.type != val.list || !val.parent_id || val.parent_id == self.id))
-              mod_opt.select.add(parseInt(val[select_list_view.model.id_key]));
-          }
-        select_list_view.model.dataInit(mod_opt);
-        let par_view_id = parent_view.base_id+"_"+self.type+"_head_0_data";
-        let dia_id = w3_modaldialog({
-                       parentId:    par_view_id,
-                       elementId:   "",
-                       heading:     "Select "+list_type+"s to add / remove", // TODO! i18n
-                       contents:    select_list_view.main_div,
-                       width:       "25em", // TODO! css
-                       ok:          true,
-                       cancel:      true,
-                       okFunction:  parent_view.dbUpdateLinkList,
-                       context:     parent_view,
-                       // Sent to okFunction:
-                       type:        self.type,
-                       id:          self.id,
-                       data:        self.data,
-                       link_type:   select_list_view.model.type,
-                       select:      select_list_view.model.select,
-                       unselect:    select_list_view.model.unselect,
-                       name_key:    select_list_view.model.name_key,
-                     });
-        select_list_view.refresh(ll_contents,serverdata.data,null,list_type,"list",false,"");
-      }
+    if (self.error_server)
+      console.error("anyView.dbUpdateLinkListDialog: "+self.error_server);
+
+    if (serverdata.data) {
+      let parent_view = options.parent_view ? options.parent_view : this;
+      if (parent_view) {
+        let list_type   = options.type;
+      //let parent_id   = isInt(options.parent_id) ? parseInt(options.parent_id) : "";
+      //let id_str      = parent_view.id_stack.length ? parent_view.id_stack.join("_")+"_"+parent_id : "0_"+parent_id;
+        let new_base_id = parent_view._createBaseId();
+        let ll_id       = new_base_id+"_"+list_type+"_link_list";
+        let ll_contents = $("<div id='"+ll_id+"'></div>");
+        let select_list_view = parent_view.createView(ll_contents,serverdata.data,null,list_type,"list");
+        if (select_list_view) {
+          select_list_view.base_id = new_base_id;
+          select_list_view.options.showHeader      = false;
+          select_list_view.options.showTableHeader = false;
+          select_list_view.options.isSelectable    = true; // Use the select filter, if available
+          select_list_view.options.preselected     = parent_view.model.dataSearch({ type:list_type });
+          let mod_opt = { select: new Set() };
+          if (select_list_view.options && select_list_view.options.preselected)
+            for (var val of select_list_view.options.preselected) {
+              let sel_id = val[select_list_view.model.id_key];
+              if (sel_id && sel_id != self.id && (self.type != val.list || !val.parent_id || val.parent_id == self.id))
+                mod_opt.select.add(parseInt(val[select_list_view.model.id_key]));
+            }
+          select_list_view.model.dataInit(mod_opt);
+          let par_view_id = parent_view.base_id+"_"+self.type+"_head_0_data";
+          let dia_id = w3_modaldialog({
+                         parentId:    par_view_id,
+                         elementId:   "",
+                         heading:     "Select "+list_type+"s to add / remove", // TODO! i18n
+                         contents:    select_list_view.main_div,
+                         width:       "25em", // TODO! css
+                         ok:          true,
+                         cancel:      true,
+                         okFunction:  parent_view.dbUpdateLinkList,
+                         context:     parent_view,
+                         // Sent to okFunction:
+                         type:        self.type,
+                         id:          self.id,
+                         data:        self.data,
+                         link_type:   select_list_view.model.type,
+                         select:      select_list_view.model.select,
+                         unselect:    select_list_view.model.unselect,
+                         name_key:    select_list_view.model.name_key,
+                       });
+          select_list_view.refresh(ll_contents,serverdata.data,null,list_type,"list",false,"");
+        }
+      } // if parent_view
     }
   }
+  return context;
 }; // dbUpdateLinkListDialog
 
 $.any.View.prototype.dbUpdateLinkList = function (opt)
@@ -2713,6 +2755,7 @@ $.any.View.prototype.dbUpdateLinkList = function (opt)
     head:      true,
     grouping:  "tabs",
   };
+  this.options.item_opening = true; // To make top right close icon appear
   if (!this.model.dbUpdateLinkList(mod_opt))
     return false;
 

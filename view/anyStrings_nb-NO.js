@@ -8,9 +8,6 @@
  *
  ***************************************************************************************/
 var i18n = {
-  general: {
-  },
-
   button: {
     buttonNew:            "Ny",
     buttonAdd:            "Legg til",
@@ -35,6 +32,7 @@ var i18n = {
   // Error codes
   error: {
     SYSTEM_ERROR:        "Systemfeil. ",
+    SERVER_ERROR:        "Serverfeil. Se konsoll loggen for detaljer. ",
     CALLBACK_MISSING:    "Mangler callback funksjon eller kontekst. ",
     SUCCCESS_CB_MISSING: "Mangler suksess callback for local modus. ",
     MODEL_MISSING:       "Mangler modell. ",

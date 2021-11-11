@@ -36,7 +36,7 @@ function anyGetData($doEcho=false)
         case "del": $data = $table->dbDelete();     break;
         default:    $data = $table->dbSearch();     break;
       }
-      if ($table->isError() ||
+      if ($table->isError() || $table->mErrorListLeftJoin ||
           Parameters::get("search") === "no" || Parameters::get("search") === "false" ||
           Parameters::get($table->getIdKey()) === "") {
         $data = $table->getData();
@@ -46,6 +46,8 @@ function anyGetData($doEcho=false)
       $data["permission"] = $table->getPermission();
       $data["message"]    = $table->getMessage();
       $data["error"]      = $table->getError();
+      if ($table->mErrorListLeftJoin)
+        $data["error"] .= $table->mErrorListLeftJoin;
     }
     else { // No table
       $data["data"]    = null;

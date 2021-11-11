@@ -8,9 +8,6 @@
  *
  ***************************************************************************************/
 var i18n = {
-  general: {
-  },
-
   button: {
     buttonNew:            "New",
     buttonAdd:            "Add",
@@ -35,6 +32,7 @@ var i18n = {
   // Error codes
   error: {
     SYSTEM_ERROR:        "System error. ",
+    SERVER_ERROR:        "Server error. See console log for details. ",
     CALLBACK_MISSING:    "Callback function or context missing. ",
     SUCCCESS_CB_MISSING: "Success callback missing for local mode. ",
     MODEL_MISSING:       "Model missing. ",
