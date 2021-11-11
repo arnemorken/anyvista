@@ -307,14 +307,17 @@ $.any.View.prototype.showMessages = function (modelOrString)
     msgdiv.empty();
     if (!modelOrString)
       modelOrString = this.model;
+    let close_icon = "<span id='"+div_id+"_close' style='padding-right:5px;' class='far fa-window-close'></span>";
     if (typeof modelOrString == "object") {
       if (modelOrString.error || modelOrString.message)
-        msgdiv.append("<span style='color:red;'>"+modelOrString.error+"</span> "+modelOrString.message);
+        msgdiv.append(close_icon+"<span style='color:red;'>"+modelOrString.error+"</span> "+modelOrString.message);
     }
     else
     if (typeof modelOrString == "string") {
-        msgdiv.append("<span style='color:red;'>"+modelOrString+"</span>");
+        msgdiv.append(close_icon+"<span style='color:red;'>"+modelOrString+"</span>");
     }
+    let self = this;
+    $("#"+div_id+"_close").off("click").on("click",function(event) { let msgdiv = $("#"+div_id); msgdiv.empty(); });
   }
   return this;
 }; // showMessages
@@ -426,16 +429,17 @@ $.any.View.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata
         }
       }
     }
-    // Refresh bottom toolbar
-    if (!this.options.isSelectable && kind && this.id_stack && this.id_stack.length==1 &&
-        (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
-      this.refreshToolbarBottom(parent,data,this.model.id,type,kind,edit);
-    }
     if (kind == "head")
       --this.options.data_level;
   } // if data
   else
     parent.empty();
+
+  // Refresh bottom toolbar
+  if (!this.options.isSelectable && this.model.type && this.options.data_level==0 && this.id_stack && this.id_stack.length==0 &&
+      (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
+    this.refreshToolbarBottom(parent,data,this.model.id,this.model.type,this.model.kind,edit);
+  }
 
   if (this.postRefresh)
     this.postRefresh(parent,data,id,type,kind,edit);
@@ -468,7 +472,7 @@ $.any.View.prototype.refreshToolbarTop = function (parent,data,id,type,kind,edit
 //
 $.any.View.prototype.refreshToolbarBottom = function (parent,data,id,type,kind,edit)
 {
-  if (!parent || !type || !kind)
+  if (!parent || !type)
     return null;
   if (!this.options.showMessages && !this.options.showButtonNew && !this.options.showButtonAddLink)
     return null;
@@ -2730,6 +2734,11 @@ $.any.View.prototype.dbUpdateLinkListDialog = function (context,serverdata,optio
         }
       } // if parent_view
     }
+  }
+  if (options.parent_view) {
+    let view = options.parent_view;
+    view.options.item_opening = true;
+    view.refreshToolbarBottom(view.element,view.model.data,view.model.id,view.model.type,view.model.kind);
   }
   return context;
 }; // dbUpdateLinkListDialog
