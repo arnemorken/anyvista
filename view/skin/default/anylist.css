@@ -75,6 +75,7 @@
   background:   #ccc;
 }
 .any-message {
+  font-family:  Arial, Helvetica, sans-serif;
   margin-left:  0.7em;
   display:      inline-block;
   padding-top:  .6em;
@@ -92,6 +93,9 @@
   border-spacing:   0;
   padding-top:      .5em;
   padding-bottom:   .2em;
+}
+.any-th {
+  background-color: #ccc;
 }
 .any-th,
 .any-td {
@@ -156,6 +160,7 @@
 ::-webkit-datetime-edit-year-field  { line-height:1; padding: 0; }
 ::-webkit-calendar-picker-indicator { line-height:1; padding: 0; margin: 0; }
 
+/*** Special CSS for select input field ***/
 .wp-core-ui select {
   height:       25px;
   min-height:   25px;
@@ -178,7 +183,7 @@
   padding:          1em;
   padding-right:    0;
   position:         relative;
-  bottom:           .3em;
+  bottom:           .4em;
   float:            right;
   right:            1em;
 }
@@ -207,6 +212,16 @@
 }
 
 /**************************
+ * Link menu
+ **************************/
+
+.any-link-menu {
+  min-width:    120px;
+  bottom:       20px;
+  padding:      10px;
+}
+
+/**************************
  * Plugins
  **************************/
 
@@ -215,7 +230,6 @@
   font-style:   italic;
   font-weight:  normal;
 }
-
 
 /**************************
  * W3CSS
@@ -251,7 +265,6 @@
 .w3-display-topright {
   background:   #eee;
 }
-
 
 /***********************************************************************
  * Miscellaneous
