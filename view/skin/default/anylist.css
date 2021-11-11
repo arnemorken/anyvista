@@ -131,7 +131,12 @@
 .itemText,
 .itemNumber,
 .itemDate {
-  height:   25px;
+  width:            90px;
+  padding-left:     1px;
+}
+
+.itemSelect {
+  width:            110px;
 }
 
 .itemNumber {
@@ -139,7 +144,6 @@
 }
 
 /*** Input fields ***/
-
 .itemText[type=text],
 .itemDate[type=date] {
   width:            90px;
@@ -152,6 +156,14 @@
   font-family:      inherit;
   font-size:        inherit;
 }
+.wp-core-ui select {
+  min-height:   0;
+  line-height:  1.1;
+  width:        110px;
+  padding:      0 0 0 1px;
+  font-size:    13px;
+  -webkit-appearance: none;
+}
 
 /*** Special CSS for date input field ***/
 ::-webkit-datetime-edit             { line-height:1; padding: 0; }
@@ -159,12 +171,6 @@
 ::-webkit-datetime-edit-day-field   { line-height:1; padding: 0; }
 ::-webkit-datetime-edit-year-field  { line-height:1; padding: 0; }
 ::-webkit-calendar-picker-indicator { line-height:1; padding: 0; margin: 0; }
-
-/*** Special CSS for select input field ***/
-.wp-core-ui select {
-  height:       25px;
-  min-height:   25px;
-}
 
 /**************************
  * Buttons
