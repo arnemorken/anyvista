@@ -47,6 +47,9 @@
  *        (boolean) showButtonNew:         If isEditable is true, will show a button for adding a new item. Default: false.
  *        (boolean) showButtonAddLink:     Will show a button for adding links to an item. Default: true.
  *        {boolean} showButtonLabels:      Will show labels for buttons on the button panel. Default: false.
+ *        {boolean} onEnterCallDatabase:   Pressing enter will update the database with the value of the row being edited. Default: true.
+ *        {boolean} onEnterInsertNew:      A new row will be inserted when pressing enter while editing a list. Default: false.
+ *        {boolean} onEnterMoveFocus:      Pressing enter will move the focus to the next input element if editing an item. Default: True.
  *        {boolean} onEscRemoveEmpty:      The current row being edited in a list will be removed when pressing the Esc key if the row is empty. Default: true.
  *        {boolean} onFocusoutRemoveEmpty: The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
  *        {boolean} onUpdateEndEdit:       NOT IMPLEMENTED. Pressing the update button will close the element currently being edited for editing. Default: true.
@@ -87,6 +90,9 @@ $.widget("any.View", {
     showButtonNew:         true,
     showButtonAddLink:     true,
     showButtonLabels:      false,
+    onEnterCallDatabase:   true,
+    onEnterInsertNew:      true, // Note: Only used for lists, ignored for items
+    onEnterMoveFocus:      true, // Will me overridden by onEnterCallDatabase==true TODO! Make it work for lists
     onEscRemoveEmpty:      true,
     onFocusoutRemoveEmpty: true,
   //onUpdateEndEdit:       true, // TODO! NOT IMPLEMENTED
@@ -926,7 +932,7 @@ $.any.View.prototype.refreshListTableDataRow = function (tbody,data,id,type,kind
       (this.options.isEditable && (this.options.showButtonEdit || this.options.showButtonUpdate)))
     this.refreshTableDataFirstCell(tr,data,id,type,kind,filter,edit,id_str,true,pdata,pid);
 
-  this.refreshListTableDataCells(tr,data,id,type,kind,filter,edit,id_str);
+  this.refreshListTableDataCells(tr,data,id,type,kind,filter,edit,id_str,true,pdata,pid);
 
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
       (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonDelete || this.options.showButtonCancel)))
@@ -938,7 +944,7 @@ $.any.View.prototype.refreshListTableDataRow = function (tbody,data,id,type,kind
   return tr;
 }; // refreshListTableDataRow
 
-$.any.View.prototype.refreshListTableDataCells = function (tr,data,id,type,kind,filter,edit,id_str)
+$.any.View.prototype.refreshListTableDataCells = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
 {
   if (!filter || !tr|| !data || !data[id])
     return false;
@@ -962,7 +968,7 @@ $.any.View.prototype.refreshListTableDataCells = function (tr,data,id,type,kind,
         tr.append(td);
         let str = this.createCellEntry(id,type,kind,id_str,filter_id,filter_key,data[id],edit);
         td.append(str);
-        this.initTableDataCell(td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n);
+        this.initTableDataCell(td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
       }
     }
   }
@@ -1054,7 +1060,7 @@ $.any.View.prototype.refreshItemTableDataRow = function (tbody,data,id,type,kind
           else
             tr.append("<td/>");
         }
-        this.refreshItemTableDataCells(tr,data,id,type,kind,filter,filter_id,filter_key,id_str,pl_str,n,edit);
+        this.refreshItemTableDataCells(tr,data,id,type,kind,filter,filter_id,filter_key,id_str,pl_str,n,edit,true,pdata,pid);
         if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
             (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonDelete || this.options.showButtonCancel))) {
           if (n == 1)
@@ -1070,7 +1076,7 @@ $.any.View.prototype.refreshItemTableDataRow = function (tbody,data,id,type,kind
   return tbody;
 }; // refreshItemTableDataRow
 
-$.any.View.prototype.refreshItemTableDataCells = function (tr,data,id,type,kind,filter,filter_id,filter_key,id_str,pl_str,n,edit)
+$.any.View.prototype.refreshItemTableDataCells = function (tr,data,id,type,kind,filter,filter_id,filter_key,id_str,pl_str,n,edit,isEditable,pdata,pid)
 {
   let class_id_name = "any-item-name-"+filter_id;
   let class_id_val  = "any-item-val-"+filter_id;
@@ -1081,7 +1087,7 @@ $.any.View.prototype.refreshItemTableDataCells = function (tr,data,id,type,kind,
   tr.append(td3);
   let str = this.createCellEntry(id,type,kind,id_str,filter_id,filter_key,data[id],edit);
   td3.append(str);
-  this.initTableDataCell(td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n);
+  this.initTableDataCell(td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
 }; // refreshItemTableDataCells
 
 $.any.View.prototype.refreshTableDataFirstCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
@@ -1190,21 +1196,24 @@ $.any.View.prototype._rowHasData = function (data,filter)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n)
+$.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid)
 {
   if (!filter_key || !td_id)
     return;
 
   let init_opt = {
-        data:      data,
-        id:        id,
-        type:      type,
-        kind:      kind,
-        id_str:    id_str,
-        filter:    filter,
-        filter_id: filter_id,
-        edit:      edit,
-        plugins:   this.model.plugins,
+        data:       data,
+        id:         id,
+        type:       type,
+        kind:       kind,
+        id_str:     id_str,
+        filter:     filter,
+        filter_id:  filter_id,
+        isEditable: isEditable,
+        edit:       edit,
+        pdata:      pdata,
+        pid:        pid,
+        plugins:    this.model.plugins,
   };
   // Bind a method that is called while clicking on the text link (in non-edit mode)
   if (filter_key.HTML_TYPE == "link" && !edit) {
@@ -2029,6 +2038,66 @@ $.any.View.prototype._processKeyup = function (event)
   if (event.which == 27) { // esc
     event.data.edit = !event.data.edit;
     this.doToggleEdit(event.data);
+  }
+  else
+  if (event.which == 13) { // enter
+    if (event.data) {
+      let data = event.data.data;
+      let id   = event.data.id;
+      let upd_opt = { indata:     data,
+                      id:         event.data.id,
+                      type:       event.data.type,
+                      kind:       event.data.kind,
+                      filter:     event.data.filter,
+                      id_str:     event.data.id_str,
+                      is_new:     data && data[id] ? data[id].is_new : false,
+                      isEditable: event.data.isEditable,
+                      edit:       event.data.edit,
+                      pdata:      event.data.pdata,
+                      pid:        event.data.pid,
+                    };
+      let ev = {};
+      ev.data = { ...upd_opt };
+      if (this.options.onEnterCallDatabase)
+        this.dbUpdate(ev);
+      let type   = event.data.type;
+      let kind   = event.data.kind;
+      let id_str = event.data.id_str;
+      if (kind == "list" || kind == "select") {
+        if (this.options.onEnterInsertNew) {
+          ev.data.pid = ev.data.id;
+          ev.data.id  = "new"; // TODO! Use ev.data.is_new = true ?
+          if (ev.data.id_str) {
+            let n = ev.data.id_str.lastIndexOf("_");
+            if (n>-1)
+              ev.data.id_str = ev.data.id_str.slice(0,n);
+            else
+              ev.data.id_str = "";
+          }
+          this.addListEntry(ev);
+        }
+        else
+        if (this.options.onEnterMoveFocus) {
+          // TODO! Enter in a list input field should optionally move to next row and start editing it, unless onEnterInsertNew or onEnterCallDatabase are true
+        }
+      }
+      else
+      if (kind == "item") {
+        if (this.options.onEnterMoveFocus && !this.options.onEnterCallDatabase) {
+          let elem = $(":focus");
+          if (elem.length) {
+            let next_input = elem.parent().parent().next().find("input");
+            if (next_input.length) {
+              next_input.trigger("focus");
+              // Make sure cursor is at the end of the text field
+              let tmp = next_input.val();
+              next_input.val("");
+              next_input.val(tmp);
+            }
+          }
+        }
+      }
+    }
   }
   return true;
 }; // _processKeyup

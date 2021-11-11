@@ -127,6 +127,11 @@
 .itemText,
 .itemNumber,
 .itemDate {
+  height:   25px;
+}
+
+.itemNumber {
+  width:    50px;
 }
 
 /*** Input fields ***/
@@ -150,6 +155,11 @@
 ::-webkit-datetime-edit-day-field   { line-height:1; padding: 0; }
 ::-webkit-datetime-edit-year-field  { line-height:1; padding: 0; }
 ::-webkit-calendar-picker-indicator { line-height:1; padding: 0; margin: 0; }
+
+.wp-core-ui select {
+  height:       25px;
+  min-height:   25px;
+}
 
 /**************************
  * Buttons
