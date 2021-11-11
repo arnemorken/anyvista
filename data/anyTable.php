@@ -900,6 +900,8 @@ class anyTable extends dbTable
           }
         }
       }
+      if ($this->mErrorListLeftJoin)
+        error_log($this->mErrorListLeftJoin);
     }
     if ($this->hasParentId())
       $lj .= "LEFT JOIN ".$this->mTableName." temp ON ".$this->mTableName.".parent_id=temp.".$this->mIdKey." ";
@@ -925,8 +927,6 @@ class anyTable extends dbTable
           $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=CAST(".$plugintable.         ".".$plugintable_id.  " AS INT) ";
       }
     }
-    else
-      $this->mErrorListLeftJoin .= "Table '$linktable' does not exist.";
     return $lj;
   } // findListLeftJoinOne
 

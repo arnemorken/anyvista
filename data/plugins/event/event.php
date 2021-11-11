@@ -33,7 +33,7 @@ var model = new eventModel({ mode:         "remote",
                              error_server: serverdata ? serverdata.error: null,
                              permission:   serverdata ? serverdata.permission : null,
                              plugins:      serverdata ? serverdata.plugins : null,
-                                                       });
+                          });
 var data_id      = "<?php echo Parameters::get("event_id");?>";
 var is_admin     = model.permission && model.permission.is_admin;
 var is_logged_in = model.permission && model.permission.is_logged_in && parseInt(model.permission.current_user_id) > 0;
