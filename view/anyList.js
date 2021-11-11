@@ -71,11 +71,11 @@
  *
  * Plugins, such as `event` or `user`, inherits from `anyModel` and either `anyView` or `anyViewTabs`.
  *
- * __<a href="../classes/anyModel.html">`anyModel`</a>__: Keeps data in a tree structure in memory and optionally synchronizes it
- * with a database.
+ * __<a href="../classes/anyModel.html">`anyModel`</a>__: Keeps data in a tree structure in memory and optionally
+ * synchronizes it with a database.
  *
- * __<a href="../classes/anyView.html">`anyView`</a>__: Contains methods to display and optionally edit the data structure contained
- * in `anyModel`.
+ * __<a href="../classes/anyView.html">`anyView`</a>__: Contains methods to display and optionally edit the data
+ * structure contained in `anyModel`.
  *
  * __<a href="../classes/anyViewTabs.html">`anyViewTabs`</a>__: Groups a data view using tabs. Inherits from `anyView`.
  *
@@ -316,8 +316,8 @@
  *
  * `HEADER`: The label of the field (e.g. `HEADER:"Event id"`).<br/>
  * `DISPLAY`: Whether the field should be displayed or not (0 or false = hide, 1 or true = display).<br/>
- * `HTML_TYPE`: The html type of the field (e.g. `"textarea"`). Possible values are listed below (for some types, additional
- * keys are needed):
+ * `HTML_TYPE`: The html type of the field (e.g. `"textarea"`). Possible values are listed below (for some types,
+ * additional keys are needed):
  *
  * <ul>
  * <li>"html":      A verbatim html string.</li>
@@ -413,27 +413,27 @@
  *   <img style="width:10px;height:10px" src="../../../doc/img/external_link.png"/></a> extension to PHP. This interface
  *   is found under `data/db/`. The user should edit the <b>`data/db/dbDefs.php`</b> file and set the host name, database
  *   name and database user/password, but would normally not bother with the other  files in the `data/db/` folder,
- * - the class <a href="../../data/out/classes/anyListTable.html">`anyListTable`</a> contains the abstract database table interface
- *   and has methods that call the actual database operations such as  search, insert, update, delete, etc.
+ * - the class <a href="../../data/out/classes/anyTable.html">`anyTable`</a> contains the abstract database table
+ *   interface and has methods that call the actual database operations such as  search, insert, update, delete, etc.
  *   Plugins may extend this class and provide the methods `createFilters()`, `getSelectItem()`, `getLeftJoinItem()`,
  *   `getSelectList()`, `getLeftJoinList()` and `getOrderByList`. More info on these methods can be found in the
- *   documentation for the `anyListTable` class,
- * - a helper class <a href="../../data/classes/anyListTableFactory.html">`anyListTableFactory`</a> in `data/anyListTableFactory.php`.
+ *   documentation for the `anyTable` class,
+ * - a helper class <a href="../../data/classes/anyTableFactory.html">`anyTableFactory`</a> in `data/anyTableFactory.php`.
  *
  * <hr style="color:#eee;"/>
  *
  * <a name="server_api_data_format"></a>
  * <h3>Data format</h3>
  *
- * On the server side, data from the database are handled by the (abstract) `anyListTable` class.
- * Each class that derives from `anyListTable` corresponds to a type/plugin/database table.
- * A `anyListTable` may set an id in which case it contains data for a single item. If id is not set, `anyListTable` is assumed
- * to contain data for a list. Note that an item may contain lists as subdata.
- * `anyListTable` uses an id key and a name key which must correspond to the `id_key` and `name_key` in the `anyModel`
- * class on the client side. These values must be set by the plugin classes deriving from `anyListTable` (see
+ * On the server side, data from the database are handled by the (abstract) `anyTable` class.
+ * Each class that derives from `anyTable` corresponds to a type/plugin/database table.
+ * A `anyTable` may set an id in which case it contains data for a single item. If id is not set, `anyTable` is
+ * assumed to contain data for a list. Note that an item may contain lists as subdata.
+ * `anyTable` uses an id key and a name key which must correspond to the `id_key` and `name_key` in the `anyModel`
+ * class on the client side. These values must be set by the plugin classes deriving from `anyTable` (see
  * <a href="#api_plugin_classes">anyList plugins</a> below).
  *
- * Data returned from the server is formatted by the `anyListTable` class into a hierarchical tree structure
+ * Data returned from the server is formatted by the `anyTable` class into a hierarchical tree structure
  * that can be displayed by the `anyView` class on the client. This structure is exactly the same
  * as for the client <a href="#client_api_data_format">described above</a> (except that it is encoded
  * in PHP of course).
@@ -663,9 +663,9 @@
  * "document", "group", etc.). A plugin also corresponds to a `type` in the data model and a table
  * in the database.
  *
- * Below we will use the "document" plugin a an example. Follow the naming convention outlined.
+ * Below we will use the "task" plugin a an example. Follow the naming convention outlined.
  * To keep things simple, the code below does not actually contain any useful methods, just the
- * scaffolding for setting up the plugin. See the included document plugin code for full details.
+ * scaffolding for setting up the plugin.
  *
  * <h4>Writing new plugins</h4>
  *
@@ -673,184 +673,190 @@
  *
  * It should be noted that it is not absolutely neccessary to create a client side plugin in order to
  * interact with a server side plugin - the default `anyModel` and `anyView` (or `anyViewTabs`)
- * classes might be used. If a client side plugin <i>is</i> created, it should inherit from `anyModelanyModel`
+ * classes might be used. If a client side plugin <i>is</i> created, it should inherit from `anyModel`
  * and `anyView` (or `anyViewTabs`) and should set the `type` (and optionally the `id_key` and
  * `name_key`) variable(s).
  *
- * 1) Create the folder "document" under view/plugins/.
+ * 1) Create the folder "task" under view/plugins/ and create empty model, view, filter and validator files:
  *
- * 2) Create empty files for model, view, filter, validator and css:
+ *        task/taskModel.js
+ *        task/taskViewTabs.js
+ *        task/taskFilter.js
+ *        task/taskValidator.js
  *
- *        document/documentModel.js
- *        document/documentViewTabs.js
- *        document/documentFilter.js
- *        document/documentValidator.js
- *        document/document.css
+ * 2) Create the folder "skin/default" under task/ and create an empty css file:
  *
- * 3) Create the document model class in documentModel.js:
+ *        task/skin/default/task.css
  *
- *        var documentModel = function (options)
- *        {
- *          this.type     = "document";
- *          this.id_key   = "document_id";
- *          this.name_key = "document_name";
- *          anyModel.call(this,options);
- *        };
- *        documentModel.prototype = new anyModel(null);
- *        documentModel.prototype.constructor = documentModel;
+ * 3) Create the task model class in `taskModel.js`:
  *
- * 3) Create the document view class in documentViewTabs.js:
+          var taskModel = function (options)
+          {
+            this.type     = "task";
+            this.id_key   = "task_id";
+            this.name_key = "task_name";
+            anyModel.call(this,options);
+          };
+          taskModel.prototype = new anyModel(null);
+          taskModel.prototype.constructor = taskModel;
  *
- *        (function($) {
+ * 4) Create the task view class in `taskViewTabs.js`:
  *
- *          $.widget("any.documentView", $.any.View, {
- *            options: {
- *              filters: null,
- *              linkIcons: {
- *                "document": "fa fa-book",
- *                "user":     "fa fa-user",
- *                "group":    "fa fa-users",
- *              },
- *            },
- *            _create: function() {
- *              this._super();
- *              this.element.addClass("documentView");
- *              if (!this.options.filters) {
- *                let f = new documentFilter(this.options);
- *                this.options.filters = f.filters;
- *              }
- *              this.validator = new documentValidator();
- *            },
- *            _destroy: function() {
- *              this.options = null;
- *              this.element.removeClass("documentView");
- *              this._super();
- *            }
- *          });
+          (function($) {
+            $.widget("any.taskView", $.any.View, {
+              options: {
+                filters: null,
+                linkIcons: {
+                  "document": "fa fa-book",
+                  "user":     "fa fa-user",
+                  "group":    "fa fa-users",
+                },
+              },
+              _create: function() {
+                this._super();
+                this.element.addClass("taskView");
+                if (!this.options.filters) {
+                  let f = new taskFilter(this.options);
+                  this.options.filters = f.filters;
+                }
+                this.validator = new taskValidator();
+              },
+              _destroy: function() {
+                this.options = null;
+                this.element.removeClass("taskView");
+                this._super();
+              }
+            });
+
+            $.any.taskView.prototype.validateUpdate = function (options)
+            {
+              if (!this.validator)
+                return null;
+              return this.validator.validateUpdate(options,this);
+            };
+          })($);
+
+          var taskView = function (options)
+          {
+            if (!options)
+              return null;
+            return $.any.taskView(options);
+          };
+
+          taskView.prototype = new anyView(null);
+          taskView.prototype.constructor = taskView;
  *
- *          $.any.documentView.prototype.validateUpdate = function (options)
- *          {
- *            if (!this.validator)
- *              return null;
- *            return this.validator.validateUpdate(options,this);
- *          };
+ * `5) Create the task filter class in `taskFilter.js:
  *
- *        })($);
+          var taskFilter = function (options)
+          {
+            this.filters = {
+              task: {
+                item: {
+                  task_id:          { HEADER:"Task id",      DISPLAY:0, HTML_TYPE:"label"},
+                  task_owner:       { HEADER:"Owner:",       DISPLAY:1, HTML_TYPE:"link"},
+                  task_name:        { HEADER:"Task name:",   DISPLAY:1, HTML_TYPE:"link"},
+                  task_description: { HEADER:"Description:", DISPLAY:1, HTML_TYPE:"textarea"},
+                  task_date_start:  { HEADER:"Start date:",  DISPLAY:1, HTML_TYPE:"date"},
+                  task_date_end:    { HEADER:"End date:",    DISPLAY:1, HTML_TYPE:"date"},
+                  task_status:      { HEADER:"Status:",      DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT:{0:"Not started",1:"In progress",2:"Completed"}},
+                },
+                list: {
+                  task_id:          { HEADER:"Task id",      DISPLAY:0, HTML_TYPE:"label"},
+                  task_owner:       { HEADER:"Owner",        DISPLAY:1, HTML_TYPE:"link"},
+                  task_name:        { HEADER:"Task name",    DISPLAY:1, HTML_TYPE:"link"},
+                  task_date_start:  { HEADER:"Start date",   DISPLAY:1, HTML_TYPE:"date"},
+                  task_status:      { HEADER:"Status",       DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT:{0:"Not started",1:"In progress",2:"Completed"}},
+                },
+                head: {
+                  task_id:          { HEADER:"Task id",      DISPLAY:0, HTML_TYPE:"label"},
+                  task_name:        { HEADER:"Task name",    DISPLAY:1, HTML_TYPE:"link"},
+                },
+                select: {
+                  task_id:          { HEADER:"Task id",      DISPLAY:0, HTML_TYPE:"label"},
+                  task_name:        { HEADER:"Task name",    DISPLAY:1, HTML_TYPE:"label"},
+                },
+              },
+            };
+          };
  *
- *        var documentView = function (options)
- *        {
- *          if (!options)
- *            return null;
- *          return $.any.documentView(options);
- *        };
+ * 6) Create the task validator class in `taskValidator.js`:
  *
- *        documentView.prototype = new anyView(null);
- *        documentView.prototype.constructor = documentView;
+          var taskValidator = function ()
+          {
+          }
+
+          taskValidator.prototype.validateUpdate = function (opt,view)
+          {
+            let err = "";
+            if (!opt.id && opt.id != 0)
+              err += "Task id missing. ";
+            let elem_id_base = view.getBaseId()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
+            let nameid1 = elem_id_base+"_task_name .itemEdit";
+            let nameid2 = elem_id_base+"_task_name .itemUnedit";
+            if (($("#"+nameid1).length != 0 && !$("#"+nameid1).val()) &&
+                ($("#"+nameid2).length != 0 && !$("#"+nameid2).val()))
+                err += "Task name missing. ";
+            return err;
+          };
  *
- * 4) Create the document filter class in documentFilter.js:
+ * 7) Create the CSS code in `task.css`:
  *
- *        var documentFilter = function (options)
- *        {
- *          this.filters = {
- *            document: {
- *              item: {
- *                document_id:          { HEADER:"Document id",    DISPLAY:0, HTML_TYPE:"label"},
- *                document_name:        { HEADER:"Document name:", DISPLAY:1, HTML_TYPE:"link"},
- *                document_description: { HEADER:"Description:",   DISPLAY:1, HTML_TYPE:"label"},
- *                document_owner:       { HEADER:"Owner:",         DISPLAY:1, HTML_TYPE:"link"},
- *              },
- *              list: {
- *                document_id:          { HEADER:"Document id",    DISPLAY:0, HTML_TYPE:"label"},
- *                document_name:        { HEADER:"Document name",  DISPLAY:1, HTML_TYPE:"link"},
- *                document_owner:       { HEADER:"Owner",          DISPLAY:1, HTML_TYPE:"link"},
- *              },
- *              head: {
- *                document_id:         { HEADER:"Document id",     DISPLAY:0, HTML_TYPE:"label"},
- *                document_name:       { HEADER:"Document name",   DISPLAY:1, HTML_TYPE:"link"},
- *              },
- *              select: {
- *                document_id:         { HEADER:"Document id",     DISPLAY:0, HTML_TYPE:"label"},
- *                document_name:       { HEADER:"Document name",   DISPLAY:1, HTML_TYPE:"label"},
- *              },
- *            },
- *          };
- *        }; // constructor
- *
- * 5) Create the document validator class in documentValidator.js:
- *
- *        var documentValidator = function ()
- *        {
- *        }
- *
- *        documentValidator.prototype.validateUpdate = function (opt,view)
- *        {
- *          let err = "";
- *          if (!opt.id && opt.id != 0)
- *            err += "Document id missing. ";
- *          let elem_id_base = view.getBaseId()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
- *          let nameid1 = elem_id_base+"_document_name .itemEdit";
- *          let nameid2 = elem_id_base+"_document_name .itemUnedit";
- *          if (($("#"+nameid1).length != 0 && !$("#"+nameid1).val()) &&
- *              ($("#"+nameid2).length != 0 && !$("#"+nameid2).val()))
- *              err += "Document name missing. ";
- *          return err;
- *        }; // validateUpdate
- *
- * 6) Create the CSS code in document.css:
- *
- *        document_name {
- *          font-face: Arial;
- *          color:     red;
- *        }
+          .task_name {
+            font-family:  Arial, Helvetica, sans-serif;
+            color:        blue;
+          }
  *
  * **B) Server side code**
  *
- * Note that this step is only neccessary if you want to use the server side database connection.
+ * It should be noted that this step is only neccessary if you want to use the server side database connection.
  *
- * On the server side a plugin corresponds to a table (and optionally a meta table) and inherits from `anyListTable`.
+ * On the server side a plugin corresponds to a table (and optionally a meta table) and inherits from `anyTable`.
  * Each plugin table class defines the following:
  * - a number of defining characteristica of the plugin table and meta table,
  * - the plugin's specific table (and optionally meta table) fields,
- * - the plugin's filter that describes which fields are used in database operations and which information
- *   is transferred to and from the client,
+ * - the plugin's filter that describes which fields are used in database operations and transferred to and from
+ *   the client,
  * - how the plugin interacts with other plugins (link table fields).
  *
- * A server side plugin should have three files placed in a folder below the `plugins` folder.
+ * A server side plugin should have three files placed in a folder below the `plugins` folder, in this case `client.php`,
+ * `task.php` and `taskTable.php`.
  *
- * 1) Create the folder "document" under data/plugins/.
+ * 1) Create the folder "task" under data/plugins/.
  *
- * 2) Create empty files for the database table file (documentTable.php), the file for accessing the
- *    document server directly (document.php) and the file for interacting with other plugins (client.php):
+ * 2) Create empty files for the database table file (`taskTable.php`), the file for accessing the
+ *    task server directly (`task.php`) and the file for interacting with other plugins (`client.php`):
  *
- *      document/documentTable.php
- *      document/document.php
- *      document/client.php
+ *      task/taskTable.php
+ *      task/task.php
+ *      task/client.php
  *
- * 3) Create the document database table class in documentTable.php:
+ * 3) Create the task database table class in `taskTable.php`:
  *
         <?php
           require_once "anyTable.php";
-          class documentTable extends anyTable
+          class taskTable extends anyTable
           {
             protected $mTableDefs = [
-              "tableName"          => "any_document",
-              "tableNameMeta"      => "any_documentmeta",
-              "tableNameGroupLink" => "any_document_group",
-              "tableNameUserLink"  => "any_document_user",
-              "type"               => "document",
-              "idKey"              => "document_id",
-              "idKeyTable"         => "document_id",
-              "idKeyMetaTable"     => "document_id",
-              "nameKey"            => "document_name",
-              "orderBy"            => "document_registered",
+              "tableName"          => "any_task",
+              "tableNameMeta"      => "any_taskmeta",
+              "tableNameGroupLink" => "any_task_group",
+              "tableNameUserLink"  => "any_task_user",
+              "type"               => "task",
+              "idKey"              => "task_id",
+              "idKeyTable"         => "task_id",
+              "idKeyMetaTable"     => "task_id",
+              "nameKey"            => "task_name",
+              "orderBy"            => "task_date_start",
               "metaId"             => "meta_id",
               "fields" => [
-                "document_id",
-                "document_name",
-                "document_description",
-                "document_registered",
-                "parent_id",
-                "parent_name",
+                "task_id",
+                "task_name",
+                "task_description",
+                "task_owner",
+                "task_date_start",
+                "task_date_end",
+                "task_status",
               ],
               "fieldsMeta" => [
               ],
@@ -870,40 +876,40 @@
                 "user" => [
                   "user_id",
                   ],
+                "document" => [
+                  "document_id",
+                  ],
               ],
               "filters" => [
                 "list" => [
-                  "document_id"          => 1,
-                  "document_name"        => 1,
-                  "document_description" => 1,
-                  "document_registered"  => 1,
-                  "parent_id"            => 1,
-                  "parent_name"          => 1,
+                  "task_id"          => 1,
+                  "task_name"        => 1,
+                  "task_description" => 1,
+                  "task_owner"       => 1,
+                  "task_date_start"  => 1,
+                  "task_date_end"    => 1,
+                  "task_status"      => 1,
                 ],
                 "item" => [
-                  "document_id"          => 1,
-                  "document_name"        => 1,
-                  "document_description" => 1,
-                  "document_registered"  => 1,
-                  "parent_id"            => 1,
-                  "parent_name"          => 1,
+                  "task_id"          => 1,
+                  "task_name"        => 1,
+                  "task_description" => 1,
+                  "task_owner"       => 1,
+                  "task_date_start"  => 1,
+                  "task_date_end"    => 1,
+                  "task_status"      => 1,
                 ],
               ],
-              "plugins" => ["document","group","user"],
+              "plugins" => ["task","group","user","document"],
             ];
 
-            protected $mInsertSuccessMsg = "Document created. ",
-                      $mUpdateSuccessMsg = "Document updated. ",
-                      $mDeleteSuccessMsg = "Document deleted. ";
+            protected $mInsertSuccessMsg = "Task created. ",
+                      $mUpdateSuccessMsg = "Task updated. ",
+                      $mDeleteSuccessMsg = "Task deleted. ";
 
             public function __construct($connection)
             {
               parent::__construct($connection,$this->mTableDefs);
-            }
-
-            public function hasParentId()
-            {
-              return true;
             }
 
             protected function initFilters($filters)
@@ -929,21 +935,21 @@
             protected function dbUpdateExtra()
             {
             }
-
-          } // class documentTable
+          }
         ?>
  *
- * 4) Create the file for accessing the document server directly (document.php):
+ * 4) Create the file for accessing the task server directly (`task.php`):
  *
         <?php
           require_once dirname(__FILE__)."/../../anyDefs.php";
           require_once dirname(__FILE__)."/../client.php";
-          require_once dirname(__FILE__)."/../document/client.php";
+          require_once dirname(__FILE__)."/../task/client.php";
           require_once dirname(__FILE__)."/../group/client.php";
           require_once dirname(__FILE__)."/../user/client.php";
+          require_once dirname(__FILE__)."/../document/client.php";
           require_once gDataSource;
           $gViewArea = "any_content";
-          Parameters::set("type","document");
+          Parameters::set("type","task");
           $the_data = anyGetData();
         ?>
         <div id="<?php print $gViewArea;?>"/>
@@ -952,45 +958,44 @@
         var serverdata = <?php echo $the_data;?>;
         if (serverdata && serverdata.JSON_CODE)
           serverdata = serverdata.JSON_CODE;
-        var model = new documentModel({ data:       serverdata ? serverdata.data : null,
-                                            permission: serverdata ? serverdata.permission : null,
-                                            plugins:    serverdata ? serverdata.plugins : null,
-                                            mode:       "remote",
-                                         });
-        var data_id = "<?php echo Parameters::get("document_id");?>";
+        var model = new taskModel({ data:        serverdata ? serverdata.data : null,
+                                     permission: serverdata ? serverdata.permission : null,
+                                     plugins:    serverdata ? serverdata.plugins : null,
+                                     mode:       "remote",
+                                  });
+        var data_id = "<?php echo Parameters::get("task_id");?>";
         var is_new  = (data_id == "new" || parseInt(data_id) == -1);
 
-        var view = new documentView({ id:          "<?php print $gViewArea;?>",
-                                          model:       model,
-                                          isEditable:  true,
-                                          isDeletable: true,
-                                          edit:        is_new,
-                                       });
-        view.refresh(null,null,null,"document");
+        var view = new taskView({ id:          "<?php print $gViewArea;?>",
+                                  model:       model,
+                                  isEditable:  true,
+                                  isDeletable: true,
+                                  edit:        is_new,
+                               });
+        view.refresh(null,null,null,"task");
         </script>
  *
- * 5) Create the file for letting other plugins interact with the document plugin (client.php):
+ * 5) Create the file for letting other plugins interact with the task plugin (`client.php`):
  *
-        <link  href="<?php print gAnyListURL;?>view/plugins/document/document.css" rel="stylesheet"/>
-        <script src="<?php print gAnyListURL;?>view/plugins/document/documentModel.js"></script>
-        <script src="<?php print gAnyListURL;?>view/plugins/document/documentFilter.js"></script>
-        <script src="<?php print gAnyListURL;?>view/plugins/document/documentViewTabs.js"></script>
-        <script src="<?php print gAnyListURL;?>view/plugins/document/documentValidator.js"></script>
+        <link  href="<?php print gAnyListURL;?>view/plugins/task/skin/<?php print gSkin;?>/task.css" rel="stylesheet"/>
+        <script src="<?php print gAnyListURL;?>view/plugins/task/taskModel.js"></script>
+        <script src="<?php print gAnyListURL;?>view/plugins/task/taskFilter.js"></script>
+        <script src="<?php print gAnyListURL;?>view/plugins/task/taskViewTabs.js"></script>
+        <script src="<?php print gAnyListURL;?>view/plugins/task/taskValidator.js"></script>
  *
- * 6) Create the database table:
+ * 6) Create the database table (MariaDB) with this SQL code:
  *
-        CREATE TABLE `any_document` (
-          `document_id` bigint(20) NOT NULL,
-          `document_name` varchar(250) CHARACTER SET utf8 DEFAULT '',
-          `document_description` varchar(250) CHARACTER SET utf8 DEFAULT '',
-          `parent_id` bigint(20) DEFAULT NULL,
-          `document_type` varchar(20) CHARACTER SET utf8 DEFAULT '',
-          `document_registered` datetime DEFAULT NULL,
-          `document_status` int(20) DEFAULT 0,
-          `document_privacy` varchar(20) CHARACTER SET utf8 DEFAULT '',
-          PRIMARY KEY (`document_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-        INSERT INTO `any_document` VALUES ('1', 'Test.doc', 'blah', null, '', null, '0', '');
+        CREATE TABLE `any_task` (
+          `task_id` bigint(20) NOT NULL AUTO_INCREMENT,
+          `task_name` varchar(100) CHARACTER SET utf8 DEFAULT '',
+          `task_description` varchar(250) CHARACTER SET utf8 DEFAULT '',
+          `task_owner` varchar(30) CHARACTER SET utf8 DEFAULT '',
+          `task_date_start` datetime DEFAULT NULL,
+          `task_date_end` datetime DEFAULT NULL,
+          `task_status` int(20) DEFAULT 0,
+          PRIMARY KEY (`task_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+        INSERT INTO `any_task` VALUES ('1', 'Test task', 'The first task is simple', 'Mr. Man', null, null, '0');
  *
  * **C) Wordpress integration**
  *
@@ -998,11 +1003,23 @@
  *
         <td class="tooltd"
             onclick="javascript:loadPage('<?php print $gAdmViewArea;?>',
-                                         '<?php print gAnyListURL;?>data/plugins/document/document.php?head=true&grouping=tabs',
-                                          '<?php print $gAdmURL;?>');"
-            title="Documents">
-          <i class="fas fa-file-alt fa-2x"></i><br/>Documents
+                                         '<?php print gAnyListURL;?>data/plugins/task/task.php?head=true&grouping=tabs',
+                                         '<?php print $gAdmURL;?>');"
+            title="Tasks">
+          <i class="fas fa-file-alt fa-2x"></i><br/>Tasks
         </td>
+ *
+ * **D) Using the plugin**
+ *
+ * The plugin can now be accessed, either through the Wordpress integration described above, by accessing the
+ * `task.php` file directly or by using the plugin in your own files.
+ *
+ * 1) Accessing the plugin through Wordpress: Pressing the "Task" icon should bring up a list containing the one task
+ *    that was inserted by the by the SQL script above.
+ *
+ * 2) Accessing the plugin with the `task.php` file by entering the following URL in a browser:
+ *
+ *
  *
  * <h4>Included pre-defined plugins</h4>
  *
