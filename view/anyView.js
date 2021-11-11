@@ -1954,8 +1954,7 @@ $.any.View.prototype.refreshAddLinkButton = function (parent,opt)
   if ($("#"+menu_id).length)
     $("#"+menu_id).remove();
   let dd_menu = $("<div "+
-                  "class='w3-dropdown-content w3-bar-block w3-border' "+
-                  "style='min-width:120px;bottom:20px;' "+
+                  "class='w3-dropdown-content w3-bar-block w3-border any-link-menu' "+
                   "id='"+menu_id+"'>"+
                   "</div>");
   btn.append(dd_menu);
@@ -2563,7 +2562,7 @@ $.any.View.prototype.createParentDropdownMenu = function (context,serverdata,opt
         let type_name = options.type+"_name";
         let the_id    = Number.isInteger(parseInt(options.child_id)) ? parseInt(options.child_id) : options.child_id;
         let id_str    = view.id_stack.length ? view.id_stack.join("_")+"_"+the_id : "0_"+the_id;
-        let data      = serverdata.data["+0"].data;
+        let data      = serverdata.data;
         let item_id = view.base_id+"_"+options.type+"_"+kind+"_"+id_str+"_parent_id .itemSelect";
         let did_select = "selected='true'";
         $.each(data,function (id,item) {
