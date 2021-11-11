@@ -34,6 +34,7 @@
  *        {boolean} confirmDelete:         A delete confirmation dialog will be displayed. Default: true.
  *        (boolean) showHeader:            If false, all headers will be suppressed. Default: true.
  *        (boolean) showTableHeader:       Whether to show headers for list tables. Default: true.
+ *        (boolean) showToolbar:           Will show a toolbar at the bottom. Default: true.
  *        (boolean) showMessages:          Will show a message field in a toolbar. Default: false.
  *        (boolean) showEmptyRows:         Shows empty rows in non-edit mode. Default: false.
  *        (boolean) showSelectAll:         If isSelectable is true, a button for selecting all rows will be shown. Default: false.
@@ -78,6 +79,7 @@ $.widget("any.View", {
     confirmDelete:         true,
     showHeader:            true,
     showTableHeader:       true,
+    showToolbar:           true,
     showMessages:          true,
     showEmptyRows:         false,
   //showSelectAll:         false, // TODO! NOT IMPLEMENTED
@@ -442,9 +444,11 @@ $.any.View.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata
     parent.empty();
 
   // Refresh bottom toolbar
-  if (!this.options.isSelectable && this.model.type && this.options.data_level==0 && this.id_stack && this.id_stack.length==0 &&
-      (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
-    this.refreshToolbarBottom(parent,data,this.model.id,this.model.type,this.model.kind,edit);
+  if (this.options.showToolbar) {
+    if (!this.options.isSelectable && this.model.type && this.options.data_level==0 && this.id_stack && this.id_stack.length==0 &&
+        (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
+      this.refreshToolbarBottom(parent,data,this.model.id,this.model.type,this.model.kind,edit);
+    }
   }
 
   if (this.postRefresh)
@@ -1572,6 +1576,7 @@ $.any.View.prototype.getSelectStr = function (type,kind,id,val,edit,filter_key,p
     str = fval && val != "" && fval[val] ? fval[val] : val ? val : ""; //pname;
     if (!str)
       str = "";
+    str = "<div class='itemUnedit itemSelect'>"+str+"</div>";
   }
   return str;
 }; // getSelectStr
@@ -2804,9 +2809,11 @@ $.any.View.prototype.dbUpdateLinkListDialog = function (context,serverdata,optio
     }
   }
   if (options.parent_view) {
-    let view = options.parent_view;
-    view.options.item_opening = true;
-    view.refreshToolbarBottom(view.element,view.model.data,view.model.id,view.model.type,view.model.kind);
+    if (this.options.showToolbar) {
+      let view = options.parent_view;
+      view.options.item_opening = true;
+      view.refreshToolbarBottom(view.element,view.model.data,view.model.id,view.model.type,view.model.kind);
+    }
   }
   return context;
 }; // dbUpdateLinkListDialog
