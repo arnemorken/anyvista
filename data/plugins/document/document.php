@@ -13,6 +13,7 @@
   require_once dirname(__FILE__)."/../../anyDefs.php";
   require_once dirname(__FILE__)."/../client.php";
   require_once dirname(__FILE__)."/../document/client.php";
+  require_once dirname(__FILE__)."/../event/client.php";
   require_once dirname(__FILE__)."/../group/client.php";
   require_once dirname(__FILE__)."/../user/client.php";
   require_once gDataSource;
@@ -38,7 +39,7 @@ var is_new       = (data_id == "new" || parseInt(data_id) == -1);
 
 var hide_result  = !is_logged_in || "<?php echo Parameters::get("hide_result_column");?>";
 
-var view = new documentView({ id:            "<?php print $gViewArea;?>",
+var view = new documentViewTabs({ id:            "<?php print $gViewArea;?>",
                                   model:         model,
                                   isEditable:    true,
                                   isDeletable:   true, //is_admin || is_new,

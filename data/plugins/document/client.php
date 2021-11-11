@@ -14,5 +14,5 @@
 <link  href="<?php print gAnyListURL;?>view/plugins/document/skin/<?php print gSkin;?>/document.css" rel="stylesheet"/>
 <script src="<?php print gAnyListURL;?>view/plugins/document/documentModel.js"></script>
 <script src="<?php print gAnyListURL;?>view/plugins/document/documentFilter.js"></script>
-<script src="<?php print gAnyListURL;?>view/plugins/document/documentView.js"></script>
+<script src="<?php print gAnyListURL;?>view/plugins/document/documentViewTabs.js"></script>
 <script src="<?php print gAnyListURL;?>view/plugins/document/documentValidator.js"></script>

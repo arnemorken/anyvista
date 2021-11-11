@@ -8,18 +8,19 @@
  *
  ****************************************************************************************/
 /**
- * __document view class.__
+ * __document tabs view class.__
  *
- * @class documentView
+ * @class documentViewTabs
  * @constructor
  */
 (function($) {
 
-$.widget("any.documentView", $.any.View, {
+$.widget("any.documentViewTabs", $.any.View, {
   // Default options
   options: {
     filters: null, // If not set by the calling method, it will be set to default values
     linkIcons: {
+      "event":    "fa fa-calendar",
       "user":     "fa fa-user",
       "document": "fa fa-book",
       "group":    "fa fa-users",
@@ -29,7 +30,7 @@ $.widget("any.documentView", $.any.View, {
   // "Constructor"
   _create: function() {
     this._super();
-    this.element.addClass("documentView");
+    this.element.addClass("documentViewTabs");
 
     if (!this.options.filters) {
       let f = new documentFilter(this.options);
@@ -40,12 +41,12 @@ $.widget("any.documentView", $.any.View, {
 
   _destroy: function() {
     this.options = null;
-    this.element.removeClass("documentView");
+    this.element.removeClass("documentViewTabs");
     this._super();
   }
 });
 
-$.any.documentView.prototype.validateUpdate = function (options)
+$.any.documentViewTabs.prototype.validateUpdate = function (options)
 {
   if (!this.validator)
     return null;
@@ -54,12 +55,12 @@ $.any.documentView.prototype.validateUpdate = function (options)
 
 })($);
 
-var documentView = function (options)
+var documentViewTabs = function (options)
 {
   if (!options)
     return null;
-  return $.any.documentView(options);
+  return $.any.documentViewTabs(options);
 };
 
-documentView.prototype = new anyView(null);
-documentView.prototype.constructor = documentView;
+documentViewTabs.prototype = new anyView(null);
+documentViewTabs.prototype.constructor = documentViewTabs;

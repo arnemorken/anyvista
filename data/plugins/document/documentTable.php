@@ -59,6 +59,9 @@ class documentTable extends anyTable
       ],
       "user" => [
         "user_id",
+        "user_role",
+      ],
+      "event" => [
       ],
     ],
     "filters" => [
@@ -79,7 +82,7 @@ class documentTable extends anyTable
         "parent_name"          => 1,
       ],
     ],
-    "plugins" => ["document","group","user"],
+    "plugins" => ["document","event","group","user"],
   ];
 
   protected $mInsertSuccessMsg = "Document created. ",
