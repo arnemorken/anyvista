@@ -24,7 +24,6 @@
  *        {Object}  model:                 The model with data to be displayed. Default: null.
  *        {Object}  filters:               The filters define how the data will be displayed. Default: null.
  *        {string}  id:                    The jQuery id of a container element in which to display the view. Default: null.
- *        {boolean} refresh:               If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
  *        {boolean} isEditable:            Icons for edit, update and cancel will be displayed. Ignored if isSelectable is set. Default: false.
  *        {boolean} isRemovable:           An icon for removing will be displayed. Ignored if isSelectable is set. Default: false.
  *        {boolean} isDeletable:           An icon for deleting will be displayed. Ignored if isSelectable is set. Default: false.
@@ -55,6 +54,8 @@
  *        {boolean} onFocusoutRemoveEmpty: The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
  *        {boolean} onUpdateEndEdit:       NOT IMPLEMENTED. Pressing the update button will close the element currently being edited for editing. Default: true.
  *        {boolean} useOddEven:            If true, tags for odd and even columns will be generated for list entries. Default: false.
+ *        {string}  grouping:              How to group data: Empty string for no grouping, "tabs" for using psiViewTabs to group data into tabs. Default: "".
+ *        {boolean} refresh:               If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
  *
  * @example
  *      new anyView({filters:my_filters,id:"my_content"});
@@ -69,8 +70,6 @@ $.widget("any.View", {
     model:                 null,
     filters:               null,
     id:                    null,
-
-    refresh:               false,
     isEditable:            true,
     isRemovable:           true,
     isDeletable:           true,
@@ -99,6 +98,8 @@ $.widget("any.View", {
     onFocusoutRemoveEmpty: true,
   //onUpdateEndEdit:       true, // TODO! NOT IMPLEMENTED
     useOddEven:            true,
+    grouping:              "",
+    refresh:               false,
     linkIcons:             null,
 
     // Local methods
@@ -1347,10 +1348,16 @@ $.any.View.prototype.createView = function (parent,data,id,type,kind)
   let m_str = type+"Model";
   if (!window[m_str]) {
     let def_str = "anyModel";
-    console.warn("Model class "+m_str+" not found, using "+def_str+". ");
+    console.warn("Model class "+m_str+" not found, using "+def_str+". "); // TODO! i18n
     m_str = def_str;
   }
-  let model = new window[m_str](model_opt);
+  let model = null;
+  try {
+    model = new window[m_str](model_opt);
+  }
+  catch (err) {
+    console.error("Couldn't create model "+m_str+": "+err);
+  }
 
   // Create the view
   let id_str   = this.id_stack.join("_");
@@ -1362,6 +1369,7 @@ $.any.View.prototype.createView = function (parent,data,id,type,kind)
     main_div:         parent,
     view:             this,
     base_id:          this.base_id,
+    grouping:         this.options.grouping,
     item_opening:     this.options.item_opening,
     top_view:         this.options.top_view,
     data_level:       this.options.data_level,
@@ -1377,8 +1385,6 @@ $.any.View.prototype.createView = function (parent,data,id,type,kind)
     preselected:      this.options.isSelectable ? this.options.preselected : null,
   };
   let v_str = view_opt.grouping ? type+"View"+view_opt.grouping.capitalize() : type+"View";
-  if (!window[v_str])
-    v_str = type+"ViewTabs";
   if (!window[v_str]) {
     let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
     console.warn("View class "+v_str+" not found, using "+def_str+". "); // TODO! i18n
@@ -3011,8 +3017,6 @@ $.any.View.prototype.dbRemoveDialog = function (event)
     let parent_id = this.options.top_view.element.attr("id");
     if (!parent_id)
       parent_id = this.options.main_div.attr("id")
-    if (!parent_id)
-      parent_id = this.current_div_id; // TODO! current_div_id belongs in tabs class!
     w3_modaldialog({parentId:    parent_id,
                     elementId:   "",
                     heading:     kind == "item" ? i18n.button.buttonRemove : i18n.button.buttonRemoveFromList.replace("%%",type),
@@ -3081,8 +3085,6 @@ $.any.View.prototype.dbDeleteDialog = function (event)
               msgstr+
               "</div>";
     let parent_id = this.main_div.attr("id");
-    //if (!parent_id)
-      //parent_id = this.current_div_id; // TODO! current_div_id belongs in tabs class!
     w3_modaldialog({parentId:   parent_id,
                     elementId:  "",
                     heading:    i18n.button.buttonDelete,
