@@ -1571,35 +1571,36 @@ $.any.View.prototype.getImageStr = function (type,kind,id,val,edit,filter_key,id
 
 $.any.View.prototype.getSelectStr = function (type,kind,id,val,edit,filter_key,pid,pname)
 {
-  let str = "";
+  let str  = "";
+  let sval = val;
   let fval = filter_key.OBJ_SELECT;
   if (fval) {
-    if (isFunction(this[fval]))
-      val = this[fval](type,kind,id,val,edit,pid);
+    if (typeof this[fval] === 'function')
+      sval = this[fval](type,kind,id,val,edit,pid);
     else
-    if (typeof fval != "object")
-      fval = "";
+    if (typeof fval == "object")
+      sval = edit? fval : fval[val]
+    else
+      sval = fval;
   }
   if (edit) {
     str =  "<select class='itemEdit itemSelect'>";
-    //str += "<option class='itemOption' id='select' name='select' value=''></option>";
-    if (fval && typeof fval == "object") {
+    if (typeof sval == "object") {
       let o_str = "";
-      for (let fid in fval) {
-        if (fval.hasOwnProperty(fid)) {
-          let sel = (fid == val) ? "selected" : "";
-          o_str += "<option class='itemOption' id='"+parseInt(fid)+"' name='"+fid+"' "+"value='"+fid+"' "+sel+">"+fval[fid]+"</option>";
+      for (let fid in sval) {
+        if (sval.hasOwnProperty(fid)) {
+          let sel = (fid != "" && fid == parseInt(val)) ? "selected" : "";
+          o_str += "<option class='itemOption' id='"+parseInt(fid)+"' name='"+fid+"' "+"value='"+fid+"' "+sel+">"+sval[fid]+"</option>";
         }
       }
       str += o_str;
     }
-    else {
-      str += "<i>"+fval+"</i>";
-    }
+    else
+      str += "<i>"+sval+"</i>";
     str += "</select>";
   }
   else {
-    str = fval && val != "" && fval[val] ? fval[val] : val ? val : ""; //pname;
+    str = sval;
     if (!str)
       str = "";
     str = "<div class='itemUnedit itemSelect'>"+str+"</div>";
@@ -1609,29 +1610,36 @@ $.any.View.prototype.getSelectStr = function (type,kind,id,val,edit,filter_key,p
 
 $.any.View.prototype.getRadioStr = function (type,kind,id,val,edit,filter_key,filter_id)
 {
-  let str = "";
+  let str  = "";
+  let sval = val;
   let fval = filter_key.OBJ_RADIO;
   if (fval) {
     if (typeof this[fval] == "function")
-      fval = this[fval](type,kind,id,val,edit);
+      sval = this[fval](type,kind,id,val,edit);
     else
-    if (typeof fval != "object")
-      fval = "";
+    if (typeof fval == "object")
+      sval = edit? fval : fval[val]
+    else
+      sval = fval;
   }
   if (edit) {
-    if (fval && typeof fval == "object") {
-      for (let fid in fval) {
-        if (fval.hasOwnProperty(fid)) {
-          let chk = (fid == parseInt(val)) ? "checked" : "";
-          str += "<input class='itemEdit itemRadio' type='radio' id='"+fid+"' name='"+filter_id+"' value='"+fval[fid]+"' "+chk+"/>";
-          str += "<label for='"+fid+"'>&nbsp;"+fval[fid]+"</label>&nbsp;";
+    if (typeof sval == "object") {
+      for (let fid in sval) {
+        if (sval.hasOwnProperty(fid)) {
+          let chk = (fid != "" && fid == parseInt(val)) ? "checked" : "";
+          str += "<input class='itemEdit itemRadio' type='radio' id='"+fid+"' name='"+filter_id+"' value='"+sval[fid]+"' "+chk+"/>";
+          str += "<label for='"+fid+"'>&nbsp;"+sval[fid]+"</label>&nbsp;";
         }
       }
     }
+    else
+      str += sval;
   }
   else {
-    if (fval && fval[parseInt(val)])
-      str = fval[parseInt(val)];
+    str = sval;
+    if (!str)
+      str = "";
+    str = "<div class='itemUnedit itemSelect'>"+str+"</div>";
   }
   return str;
 }; // getRadioStr
