@@ -1219,8 +1219,8 @@ $.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_st
         pid:        pid,
         plugins:    this.model.plugins,
   };
-  // Bind a method that is called while clicking on the text link (in non-edit mode)
-  if (filter_key.HTML_TYPE == "link" && !edit) {
+  // Bind a method that is called while clicking on the text link, file view or file name (in non-edit mode)
+  if (["link", "upload", "fileview"].includes(filter_key.HTML_TYPE)) {
     let link_elem = $("#"+td_id);
     if (link_elem.length) {
       if (this.options.isSelectable) {
@@ -1230,19 +1230,45 @@ $.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_st
         link_elem.off("click").on("click",init_opt ,$.proxy(fun,this));
       }
       else {
-        let fun = this.options.itemLinkClicked
-                  ? this.options.itemLinkClicked
-                  : this.itemLinkClicked;
-        link_elem.off("click").on("click", init_opt, $.proxy(fun,this));
-      }
-    }
+        if (filter_key.HTML_TYPE == "upload") {
+          // File select link in edit mode opens file select dialog
+          let inp_id = td_id+"_upload";
+          let inp_elem = $("#"+inp_id);
+          if (inp_elem.length) {
+            let fun = this._uploadClicked;
+            init_opt.elem_id = td_id;
+            inp_elem.off("change").on("change", init_opt, $.proxy(fun,this));
+          }
+        }
+        else
+        if (filter_key.HTML_TYPE == "fileview") {
+          // File view link opens the file in a new window
+          let inp_id = td_id+"_fileview";
+          let inp_elem = $("#"+inp_id);
+          if (inp_elem.length) {
+            let fun = this._fileViewClicked;
+            init_opt.elem_id = td_id;
+            inp_elem.off("click").on("click", init_opt, $.proxy(fun,this));
+          }
+        }
+        else
+        if (!edit) {
+          // A link click in edit mode opens the item view window
+          let fun = this.options.itemLinkClicked
+                    ? this.options.itemLinkClicked
+                    : this.itemLinkClicked;
+          link_elem.off("click").on("click", init_opt, $.proxy(fun,this));
+          $("#"+td_id).prop("title", "Open item view"); // TODO i18n
+        }
+      } // else
+    } // if link_elem.length
   }
   // Find the element to work with
-  let inp_edit = td_id+" .itemEdit";
-  let inp_elem = $("#"+inp_edit);
+  let inp_id = td_id+" .itemEdit";
+  let inp_elem = $("#"+inp_id);
   if (!inp_elem.length) {
-    inp_edit = td_id+" .itemUnedit";
-    inp_elem = $("#"+inp_edit);
+    inp_id = td_id+" .itemUnedit";
+    inp_elem = $("#"+inp_id);
     if (!inp_elem.length)
       return;
   }
@@ -1278,10 +1304,9 @@ $.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_st
     inp_elem.off("keyup").on("keyup",     init_opt, $.proxy(this._processKeyup,this));
     inp_elem.off("keydown").on("keydown", init_opt, $.proxy(this._processKeyup,this)); // For catching the ESC key on Vivaldi
   }
-  // Set focus to first editable text field
+  // Set focus to first editable text field and make sure cursor is at the end of the field
   if (this.options.isEditable && edit && n==1) {
     inp_elem.trigger("focus");
-    // Make sure cursor is at the end of the text field
     let tmp = inp_elem.val();
     inp_elem.val("");
     inp_elem.val(tmp);
@@ -1335,10 +1360,10 @@ $.any.View.prototype.createView = function (parent,data,id,type,kind)
     filters:          this._createFilters(model), // Create filter if we don't already have one
     id:               view_id,
     main_div:         parent,
+    view:             this,
     base_id:          this.base_id,
     item_opening:     this.options.item_opening,
     top_view:         this.options.top_view,
-    view:             this,
     data_level:       this.options.data_level,
     showHeader:       this.options.showHeader,
     showTableHeader:  this.options.showTableHeader,
@@ -1409,8 +1434,9 @@ $.any.View.prototype.createCellEntry = function (id,type,kind,id_str,filter_id,f
     case "select":   return this.getSelectStr  (type,kind,id,val,edit,filter_key,pid,data_item["parent_name"]);
     case "function": return this.getFunctionStr(type,kind,id,val,edit,filter_key,pid,data_item["parent_name"]);
     case "list":     return this.getListView   (type,kind,id,val,edit,filter_key,id_str);
+    case "upload":   return this.getUploadStr  (type,kind,id,val,edit,data_item,filter_id,id_str);
+    case "fileview": return this.getFileViewStr(type,kind,id,val,edit,data_item,filter_id,id_str);
     /* Not used yet
-    case "file":     return this.getFileStr    (type,kind,id,val,edit);
     case "http":
     case "https":    return this.getHttpStr    (type,kind,id,val,edit);
     case "textspan": return this.getTextspanStr(type,kind,id,val,edit);
@@ -1707,6 +1733,90 @@ $.any.View.prototype.getListViewOptions = function (model,view_id,view)
     showTableHeader: false,
   };
 }; // getListViewOptions
+
+$.any.View.prototype.getUploadStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
+{
+  // Shows a clickable label that opens a file select dialog when pressed
+  let elem_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id; // element id
+  let name     = data_item[type+"_name"];                                 // real file name from user
+  let style    = "style='cursor:pointer;'";
+  let str_open = "Select a new file for upload"; // TODO i18n
+  let str      = "<label id='"+elem_id+"_filelabel' for='"+elem_id+"_upload' class='itemLabel' "+style+" title='"+str_open+"'>"+
+                 "<i class='fa fa-upload'></i>"+
+                 "</label>"+
+                 "<input id='"+elem_id+"_upload'  name='"+elem_id+"_upload' type='file' style='display:none;'/>"+
+                 "<input class='itemText' value='"+name+"' type='hidden'/>"; // Sent to database
+  return str;
+}; // getUploadStr
+
+$.any.View.prototype._uploadClicked = function (event)
+{
+  let elem_id = event.data.elem_id;
+  let fname = $("#"+elem_id+"_upload").val().replace(/C:\\fakepath\\/i, '')
+  if (fname) {
+    window.any_current_file = $("#"+elem_id+"_upload")[0].files[0]; // Remember the file
+    // Change the filename link
+    $("#"+elem_id+" .itemText").val(fname);  // Update the field to be sent to server
+
+    // Empty and disable the view button / input field until the file is actually uploaded
+    // TODO! Direct ref. to document plugin:
+    elem_id = this.base_id+"_"+event.data.type+"_"+event.data.kind+"_"+event.data.id_str+"_document_filename";
+    let str_deactivated = "File is not yet uploaded"; // TODO i18n
+    $("#"+elem_id).find("a").attr("href","");
+    $("#"+elem_id+" .itemText").val(fname);
+    $("#"+elem_id+" .fa-file").addClass("fa-disabled"); // Disable the view icon
+    $("#"+elem_id+" .fa-file").prop("title", str_deactivated);
+
+    // Change the name link
+    // TODO! Direct ref. to document plugin:
+    elem_id = this.base_id+"_"+event.data.type+"_"+event.data.kind+"_"+event.data.id_str+"_document_name";
+    $("#"+elem_id+" .itemText").text(fname);
+    $("#"+elem_id+" .itemText").val(fname);
+
+    // Update the model
+    // TODO! Direct ref. to document plugin:
+    this.model.dataUpdate({ id:     event.data.id,
+                            data:   event.data.data,
+                            type:   event.data.type,
+                            indata: { document_name:     fname,
+                                      document_filename: fname, // TODO! Neccessary?
+                                    },
+                          });
+  }
+  else
+    window.any_current_file = null;
+}; // _uploadClicked
+
+$.any.View.prototype.getFileViewStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
+{
+  let elem_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;   // element id
+  let filename = data_item[filter_id] ? data_item[filter_id]          : ""; // local file name on server
+  let fileurl  = filename             ? any_defs.uploadURL + filename : ""; // url of server file
+  let style    = kind == "list" ? "style='text-align:center;'" : "";
+  let str_open = "View file in new tab/window"; // TODO i18n
+  let str = "<div id='"+elem_id+"_fileview' "+style+">"+
+            "<a href='"+fileurl+"' onclick='return false;'>"+
+            "<input class='itemText' value='"+filename+"' type='hidden'></input>"+
+            "<i class='far fa-file' title='"+str_open+"'></i>"+
+            "</a>"+
+            "</div>";
+  return str;
+}; // getFileViewStr
+
+$.any.View.prototype._fileViewClicked = function (event)
+{
+  let type = event.data.type;
+  let id   = event.data.id;
+  let item = this.model.dataSearch({ type:type, id:id });
+  if (item && item[id]) {
+    let filter_id = event.data.filter_id;
+    let fileurl   = any_defs.uploadURL + item[id][filter_id];
+    if (fileurl)
+      window.open(fileurl); // Open file in a new window
+    else
+      this.showMessages("File not found. "); // TODO! i18n
+  }
+}; // _fileViewClicked
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2215,7 +2325,6 @@ $.any.View.prototype._addListEntry = function (opt)
   }
 
   this.refreshOne(this.element,data,new_id,type,kind,true,id_str);
-
 }; // _addListEntry
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2666,6 +2775,7 @@ $.any.View.prototype.dbUpdate = function (event)
       let con_div = this.getOrCreateMainContainer(null,type,kind,id_str);
       this.refreshHeader(con_div,this.model.data,"0",type,"head",false,"0",true); // TODO! Does not work!
     }
+    /* TODO! Neccessary?
     // Make sure the items original model is also updated
     if (this.options.view && this.options.view != this) { // TODO! no view here
       if (!is_new)
@@ -2683,6 +2793,7 @@ $.any.View.prototype.dbUpdate = function (event)
                                           });
         }
     }
+    */
   }
   // Update view TODO! Neccessary for mode == "remote"?
   let item = this.model.dataSearch({ type: type,

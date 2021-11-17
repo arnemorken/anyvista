@@ -1512,13 +1512,11 @@ anyModel.prototype.dbUpdate = function (options)
     return false;
   }
   // Data to update or insert
-  let item_to_send = item[options.id].is_new
+  let item_to_send = item[options.id].is_new || options.is_new
                      ? item[options.id]        // insert
                      : item[options.id].dirty
                        ? item[options.id].dirty
-                       : options.is_new
-                         ? item[options.id]
-                         : {}; // update
+                       : {}; // update
   // Data used in dbUpdateSuccess method
   options.client_id = options.id;     // Update this id in existing data structure with new id from server
   options.data      = the_data;       // Clean up this data structure after server returns successfully

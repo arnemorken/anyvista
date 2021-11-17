@@ -36,7 +36,7 @@
  * &nbsp;&nbsp;&nbsp;<a href="#server_api_anyList_classes">- Basic classes</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#server_api_data_format">- Data format</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#server_api_data_filter">- Data filter</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#server_api_anyList_defs">- Configuration files</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#server_api_anyDefs">- Configuration files</a><br/>
  * <br/>
  * &nbsp;<a href="#api_plugin_classes">anyList plugins</a><br/>
  * <br/>
@@ -51,15 +51,15 @@
  *
  * The client API is written in Javascript and uses the jQuery library. It is easily integrated into web
  * pages for displaying and modifying information (for example from database tables) by including the
- * following in your index.html (replace `anyList.1.0.0` with your actual version of anyList):
+ * following in your index.html (replace `anylist.1.0.0` with your actual version of anyList):
  *
- *      <script src="anyList_defs.js"></script>
- *      <script src="anyList.1.0.0.min.js"></script>
- *      <link  href="anyList.1.0.0.min.css" rel="stylesheet"/>
+ *      <script src="anyDefs.js"></script>
+ *      <script src="anylist.1.0.0.min.js"></script>
+ *      <link  href="anylist.1.0.0.min.css" rel="stylesheet"/>
  *
- * Note: The first line (including the <b>anyList_defs.js</b> configuration file) is only neccessary when using
+ * Note: The first line (including the <b>anyDefs.js</b> configuration file) is only neccessary when using
  * anyList with a server backend.
- * See <a href="#server_api_anyList_defs">configuration files</a> and the <a href="#server_api">server API</a>
+ * See <a href="#server_api_anyDefs">configuration files</a> and the <a href="#server_api">server API</a>
  * documentation below for more info on this.
  *
  * <hr style="color:#eee;"/>
@@ -400,8 +400,8 @@
  * `user`, `event`, `document` and `group`. The anyList server API is developed for and tested in the Apache/MySQL
  * (and Wordpress) environment but should also work in other settings.
  *
- * The file <b>`data/anyList_defs.php`</b> should be edited to match the `anyList_defs.js` file of the client.
- * See <a href="#server_api_anyList_defs">configuration files</a> below for more info on this.
+ * The file <b>`data/anyDefs.php`</b> should be edited to match the `anyDefs.js` file of the client.
+ * See <a href="#server_api_anyDefs">configuration files</a> below for more info on this.
  *
  * <hr style="color:#eee;"/>
  *
@@ -539,11 +539,11 @@
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="server_api_anyList_defs"></a>
+ * <a name="server_api_anyDefs"></a>
  * <h3>Configuration files</h3>
  *
  * When anyList is used in a server environment, the client and server must know how to communicate with each other.
- * This is done by setting certain values in the <b>`anyList_defs.js`</b> and <b>`anyList_defs.php`</b> configuration files.
+ * This is done by setting certain values in the <b>`anyDefs.js`</b> and <b>`anyDefs.php`</b> configuration files.
  * Some of these values could and should be set by the user. Do this by editing the files, not programmatically.
  *
  * Common values for the two files are:
@@ -555,8 +555,8 @@
  * The anyList root directory. If anyList is run as a Wordpress plugin, `gHomeFolder` should be something like
  * `my_wp_installation/wp-content/plugins/anyList/`.
  *
- * `gThirdpartyFolder`:
- * The location of the third party code for uploading files, for exporting tables to Excel, etc.
+ * `gThirdpartyJS`:
+ * The location of the third party Javascript code.
  *
  * `gDataScript`:
  * The location of a script, relative to `gHomeFolder`, that delivers data on the correct JSON format. Default
@@ -571,45 +571,44 @@
  * `gSkin`:
  * The skin (CSS) to use. Skins are found in the `view/skin/` folder.
  *
- * <h4>anyList_defs.js</h4>
+ * <h4>anyDefs.js</h4>
  *
- * anyList_defs.js is located in the anyList `view` directory and must be included by Javascript code that wants
+ * anyDefs.js is located in the anyList `view` directory and must be included by Javascript code that wants
  * to interact with the database server backend.
  *
- * Sample listing of the `anyList_defs.js` file:
+ * Sample listing of the `anyDefs.js` file:
  *
- *      let gServer           = "//localhost/";
- *      let gHomeFolder       = "projects/anyList/testserver/wp-content/plugins/anyList/";
- *      let gThirdpartyFolder = "projects/anyList/thirdparty/";
- *      let gDataScript       = "data/anyGetData.php"; // Relative to gHomeFolder
- *      let gUploadFolder     = "wordpress/upload/";   // Relative to gHomeFolder
- *      let gSkin             = "default";
+ *      let gServer       = "//localhost/";
+ *      let gHomeFolder   = "projects/anyList/testserver/wp-content/plugins/anyList/";
+ *      let gThirdpartyJS = "projects/anyList/thirdparty/javascript/";
+ *      let gDataScript   = "data/anyGetData.php"; // Relative to gHomeFolder
+ *      let gUploadFolder = "upload/";             // Relative to gHomeFolder
+ *      let gSkin         = "default";
  *
  *      // Do not edit below unless you really know what you are doing.
  *
  *      let gVersion = "1.0.0";
  *
- *      let anyList_defs = {
- *        dataScript:   gServer + gHomeFolder + gDataScript,                               // URL of data source script
- *        uploadFolder: gUploadFolder,                                                     // Name of upload folder
- *        uploadURL:    gServer + gHomeFolder + gUploadFolder,                             // URL of upload folder
- *        uploadScript: gServer + gThirdpartyFolder + "ajaxfileupload/ajaxfileupload.php", // URL of upload script
+ *      let anyDefs = {
+ *        dataScript:   gServer + gHomeFolder + gDataScript,                            // URL of data source script
+ *        uploadURL:    gServer + gHomeFolder + gUploadFolder,                          // URL of upload folder
+ *        uploadScript: gServer + gThirdpartyPHP + "ajaxfileupload/ajaxfileupload.php", // URL of upload script
  *      };
  *
- * <h4>anyList_defs.php</h4>
+ * <h4>anyDefs.php</h4>
  *
- * anyList_defs.php is located in the anyList `data` directory and must be included by PHP code that wants
+ * anyDefs.php is located in the anyList `data` directory and must be included by PHP code that wants
  * to interact with anyList clients.
  *
- * Sample listing of the `anyList_defs.php` file:
+ * Sample listing of the `anyDefs.php` file:
  *
  *      <?php
- *      define("gServer",           "//localhost/");
- *      define("gHomeFolder",       "projects/anyList/testserver/wp-content/plugins/anyList/");
- *      define("gThirdpartyFolder", "projects/anyList/thirdparty/");
- *      define("gDataScript",       "data/anyGetData.php"); // Relative to gHomeFolder
- *      define("gUploadFolder",     "wordpress/upload/");   // Relative to gHomeFolder
- *      define("gSkin",             "default");
+ *      define("gServer",       "//localhost/");
+ *      define("gHomeFolder",   "projects/anyList/testserver/wp-content/plugins/anyList/");
+ *      define("gThirdpartyJS", "projects/anyList/thirdparty/");
+ *      define("gDataScript",   "data/anyGetData.php"); // Relative to gHomeFolder
+ *      define("gUploadFolder", "wordpress/upload/");   // Relative to gHomeFolder
+ *      define("gSkin",         "default");
  *
  *      // Do not edit below unless you really know what you are doing.
  *
@@ -621,13 +620,11 @@
  *      define("gDataSource", $_SERVER['DOCUMENT_ROOT']."/".gHomeFolder.gDataScript);
  *      define("gUploadPath", $_SERVER['DOCUMENT_ROOT']."/".gHomeFolder.gUploadFolder);
  *
- *      define("gjQueryURL",        gServer.gThirdpartyFolder."jquery/");
- *      define("gjQueryWidgetURL",  gServer.gThirdpartyFolder."jquery/");
- *      define("gW3CSSURL",         gServer.gThirdpartyFolder."w3css/");
- *      define("gFontAwesomeURL",   gServer.gThirdpartyFolder."fontawesome/");
- *      define("gTinyMCEURL",       gServer.gThirdpartyFolder."/tinymce/");
- *      define("gajaxFileUploadURL",gServer.gThirdpartyFolder."ajaxfileupload/");
- *      define("gjQueryPaging",     gServer.gThirdpartyFolder."jQuery-Paging/");
+ *      define("gjQueryURL",        gServer.gThirdpartyJS."jquery/");
+ *      define("gjQueryWidgetURL",  gServer.gThirdpartyJS."jquery/");
+ *      define("gW3CSSURL",         gServer.gThirdpartyJS."w3css/");
+ *      define("gFontAwesomeURL",   gServer.gThirdpartyJS."fontawesome/");
+ *      define("gajaxFileUploadURL",gServer.gThirdpartyPHP."ajaxfileupload/");
  *
  *      define("WP_PLUGIN",""); // Comment out if using the server API, but not as a Wordpress plugin
  *      define("gWProot", dirname(dirname(dirname(dirname(dirname(__FILE__)))))); // Path to wp-load.php
@@ -642,16 +639,16 @@
  * Sample listing of the `dbDefs.php` file:
  *
  *      <?php
- *      define('anyListDB_HOST','127.0.0.1'); // Database server
- *      define('anyListDB_USER','root');      // Database user
- *      define('anyListDB_PASS','');          // Database password
- *      define('anyListDB_NAME','anyList-testserver'); // Database name
+ *      define('ANY_DB_HOST','127.0.0.1'); // Database server
+ *      define('ANY_DB_USER','root');      // Database user
+ *      define('ANY_DB_PASS','');          // Database password
+ *      define('ANY_DB_NAME','any-testserver'); // Database name
  *
- *      define('anyListDB_TYPE',   'mysql');  // Database type
- *      define('anyListDB_CHARSET','UTF8');   // Database charset
+ *      define('ANY_DB_TYPE',   'mysql');  // Database type
+ *      define('ANY_DB_CHARSET','UTF8');   // Database charset
  *
- *      define('anyList_USER',    'wp_users');    // Name of user table
- *      define('anyList_USERMETA','wp_usermeta'); // Name of user meta table
+ *      define('ANY_USER',    'wp_users');    // Name of user table
+ *      define('ANY_USERMETA','wp_usermeta'); // Name of user meta table
  *      ?>
  *
  * <hr/>

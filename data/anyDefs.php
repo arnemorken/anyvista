@@ -31,6 +31,10 @@ define("gAnyListURL", gServer . gHomeFolder);
 
 define("gDataSource", $_SERVER['DOCUMENT_ROOT'] . "/" . gHomeFolder . "/" . gDataScript);
 
+// File upload
+define("gUploadFolder", "upload/"); // Relative to gHomeFolder
+define("gUploadPath",   $_SERVER['DOCUMENT_ROOT'] . "/" . gHomeFolder . "/" . gUploadFolder);
+
 //
 // Thirdparty stuff
 //

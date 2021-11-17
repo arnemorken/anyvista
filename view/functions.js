@@ -36,6 +36,18 @@ var isFunction = function (functionToCheck)
   return getType.toString.call(functionToCheck) === "[object Function]";
 };
 
+var doUploadFile = function (url,file,uid,local_fname)
+{
+  var form_data = new FormData();
+  form_data.append("file", file);
+  form_data.append("uid",  uid);
+  form_data.append("fname",local_fname);
+  var request = new XMLHttpRequest();
+  request.open("POST", url);
+  request.send(form_data);
+  return true; // TODO! Check return value from server!
+}; // doUploadFile
+
 //
 // Simple modal dialog
 //

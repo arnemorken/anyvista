@@ -20,13 +20,12 @@ var documentValidator = function ()
 documentValidator.prototype.validateUpdate = function (opt,view)
 {
   let err = "";
-  if (!opt.id && opt.id != 0)
-    err += "Id missing. ";
+
   let elem_id_base = view.getBaseId()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
-  let nameid1 = elem_id_base+"_document_name .itemEdit";
-  let nameid2 = elem_id_base+"_document_name .itemUnedit";
-  if (($("#"+nameid1).length != 0 && !$("#"+nameid1).val()) &&
-      ($("#"+nameid2).length != 0 && !$("#"+nameid2).val()))
-      err += "Document name missing. ";
+
+  let nameid = elem_id_base+"_document_name";
+  if ($("#"+nameid).length == 0 || !$("#"+nameid).text())
+    err += "Document name missing. ";
+
   return err;
 }; // validateUpdate

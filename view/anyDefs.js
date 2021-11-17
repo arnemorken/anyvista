@@ -10,11 +10,13 @@
 //
 // User-editable "constants" that define some basic properties of the server API.
 //
-var gServer           = "//localhost/";
-var gHomeFolder       = "Prosjekter/testserver/wp-content/plugins/anylist/";
-var gThirdpartyFolder = "Prosjekter/testserver/javascript/";
-var gDataScript       = "data/anyGetData.php"; // Relative to gHomeFolder
-var gSkin             = "default";
+var gServer        = "//localhost/";
+var gHomeFolder    = "Prosjekter/testserver/wp-content/plugins/anylist/";
+var gThirdpartyPHP = "Prosjekter/testserver/php/";
+var gDataScript    = "data/anyGetData.php"; // Relative to gHomeFolder
+var gUploadScript  = "ajaxfileupload.php";  // Relative to gThirdpartyPHP
+var gUploadFolder  = "upload/";
+var gSkin          = "default";
 
 //
 // Do not edit below unless you really know what you are doing
@@ -22,5 +24,7 @@ var gSkin             = "default";
 var gVersion = "1.0.0";
 
 var any_defs = {
-  dataScript:   gServer + gHomeFolder + gDataScript,                               // URL of the data source script
+  dataScript:   gServer + gHomeFolder + gDataScript,      // URL of the data source script
+  uploadScript: gServer + gThirdpartyPHP + gUploadScript, // URL of the upload script
+  uploadURL:    gServer + gHomeFolder + gUploadFolder,    // Name of the upload folder
 };

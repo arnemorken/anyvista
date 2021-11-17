@@ -102,6 +102,7 @@
   text-align:       left;
   padding-right:    .5em;
   white-space:      nowrap;
+  overflow:         hidden;
   font-family:      inherit;
 }
 .any-td:empty,
