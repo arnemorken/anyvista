@@ -677,7 +677,7 @@
  * 1) Create the folder "task" under view/plugins/ and create empty model, view, filter and validator files:
  *
  *        task/taskModel.js
- *        task/taskViewTabs.js
+ *        task/taskView.js
  *        task/taskFilter.js
  *        task/taskValidator.js
  *
@@ -697,7 +697,7 @@
           taskModel.prototype = new anyModel(null);
           taskModel.prototype.constructor = taskModel;
  *
- * 4) Create the task view class in `taskViewTabs.js`:
+ * 4) Create the task view class in `taskView.js`:
  *
           (function($) {
             $.widget("any.taskView", $.any.View, {
@@ -977,7 +977,7 @@
         <link  href="<?php print gAnyListURL;?>view/plugins/task/skin/<?php print gSkin;?>/task.css" rel="stylesheet"/>
         <script src="<?php print gAnyListURL;?>view/plugins/task/taskModel.js"></script>
         <script src="<?php print gAnyListURL;?>view/plugins/task/taskFilter.js"></script>
-        <script src="<?php print gAnyListURL;?>view/plugins/task/taskViewTabs.js"></script>
+        <script src="<?php print gAnyListURL;?>view/plugins/task/taskView.js"></script>
         <script src="<?php print gAnyListURL;?>view/plugins/task/taskValidator.js"></script>
  *
  * 6) Create the database table (MariaDB) with this SQL code:
