@@ -65,7 +65,7 @@ eventModel.prototype.dbSetAttended = function (options)
   param_str += lf_str;
   if (this.mode == "remote") { // Remote server call
     let self = this;
-    let url = anyDefs.dataScript + param_str;
+    let url = any_defs.dataScript + param_str;
     jQuery.getJSON(url)
     .done(function(jqXHR) { return self.dbSetAttendedSuccess(jqXHR,options); });
   }

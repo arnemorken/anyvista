@@ -105,17 +105,26 @@ $.any.eventViewTabs.prototype.bindCell = function (options,view)
 
 $.any.eventViewTabs.prototype.getPlaces = function (type,kind,id,val,edit)
 {
-  return {"": "[Velg sted]", "0":"Oslo", "1":"Bergen", "2":"Bergsdalen"}; // TODO: Get this from database event settings
+  let obj = {"": "[Velg sted]", "0":"Oslo", "1":"Bergen", "2":"Bergsdalen"}; // TODO: Get this from database event settings
+  if (edit)
+    return obj;
+  return obj[val];
 };
 
 $.any.eventViewTabs.prototype.getArrangers = function (type,kind,id,val,edit)
 {
-  return {"0":"UCI", "1":"NCF"}; // TODO: Get this from database event settings
+  let obj = {"0":"UCI", "1":"NCF"}; // TODO: Get this from database event settings
+  if (edit)
+    return obj;
+  return obj[val];
 };
 
 $.any.eventViewTabs.prototype.getInstructors = function (type,kind,id,val,edit)
 {
-  return {"0":"John", "1":"Jane"}; // TODO: Get this from database event settings
+  let obj = {"0":"John", "1":"Jane"}; // TODO: Get this from database event settings
+  if (edit)
+    return obj;
+  return obj[val];
 };
 
 $.any.eventViewTabs.prototype.dbSetAttended = function (event)
