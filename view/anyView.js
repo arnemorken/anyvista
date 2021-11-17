@@ -2928,8 +2928,8 @@ $.any.View.prototype.dbUpdateLinkListDialog = function (context,serverdata,optio
     }
   }
   if (options.parent_view) {
-    if (this.options.showToolbar) {
-      let view = options.parent_view;
+    let view = options.parent_view;
+    if (view.options.showToolbar) {
       view.options.item_opening = true;
       view.refreshToolbarBottom(view.element,view.model.data,view.model.id,view.model.type,view.model.kind);
     }
@@ -3058,6 +3058,7 @@ $.any.View.prototype.dbDeleteDialog = function (event)
   let type   = event.data.type;
   let kind   = event.data.kind;
   let id_str = event.data.id_str;
+
   let item = this.model.dataSearch({ type: type,
                                      id:   id,
                                      data: data,
