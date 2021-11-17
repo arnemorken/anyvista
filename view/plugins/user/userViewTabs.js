@@ -15,7 +15,7 @@
  */
 (function($) {
 
-$.widget("any.userViewTabs", $.any.View, {
+$.widget("any.userViewTabs", $.any.ViewTabs, {
   // Default options
   options: {
     filters: null, // Must be set by the calling method or will be set to default values in the constructor
@@ -28,8 +28,8 @@ $.widget("any.userViewTabs", $.any.View, {
 
   // "Constructor"
   _create: function() {
-    this.element.addClass("userViewTabs");
     this._super();
+    this.element.addClass("userViewTabs");
 
     if (!this.options.filters) {
       let f = new userFilter(this.options);
@@ -73,5 +73,5 @@ var userViewTabs = function (options)
   return $.any.userViewTabs(options);
 };
 
-userViewTabs.prototype = new anyView(null);
+userViewTabs.prototype = new anyViewTabs(null);
 userViewTabs.prototype.constructor = userViewTabs;

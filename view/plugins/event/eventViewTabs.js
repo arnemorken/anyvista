@@ -15,7 +15,7 @@
  */
 (function($) {
 
-$.widget("any.eventViewTabs", $.any.View, {
+$.widget("any.eventViewTabs", $.any.ViewTabs, {
   // Default options
   options: {
     mustEnroll:  true,
@@ -32,8 +32,8 @@ $.widget("any.eventViewTabs", $.any.View, {
 
   // "Constructor"
   _create: function() {
-    this.element.addClass("eventViewTabs");
     this._super();
+    this.element.addClass("eventViewTabs");
 
     if (!this.options.filters) {
       let f = new eventFilter(this.options);
@@ -140,5 +140,5 @@ var eventViewTabs = function (options)
   return $.any.eventViewTabs(options);
 };
 
-eventViewTabs.prototype = new anyView(null);
+eventViewTabs.prototype = new anyViewTabs(null);
 eventViewTabs.prototype.constructor = eventViewTabs;

@@ -15,7 +15,7 @@
  */
 (function($) {
 
-$.widget("any.groupViewTabs", $.any.View, {
+$.widget("any.groupViewTabs", $.any.ViewTabs, {
   // Default options
   options: {
     filters: null, // Must be set by the calling method or will be set to default values in the constructor
@@ -29,8 +29,8 @@ $.widget("any.groupViewTabs", $.any.View, {
 
   // "Constructor"
   _create: function() {
-    this.element.addClass("groupViewTabs");
     this._super();
+    this.element.addClass("groupViewTabs");
 
     if (!this.options.filters) {
       let f = new groupFilter(this.options);
@@ -74,5 +74,5 @@ var groupViewTabs = function (options)
   return $.any.groupViewTabs(options);
 };
 
-groupViewTabs.prototype = new anyView(null);
+groupViewTabs.prototype = new anyViewTabs(null);
 groupViewTabs.prototype.constructor = groupViewTabs;

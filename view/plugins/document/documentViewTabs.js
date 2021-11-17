@@ -15,7 +15,7 @@
  */
 (function($) {
 
-$.widget("any.documentViewTabs", $.any.View, {
+$.widget("any.documentViewTabs", $.any.ViewTabs, {
   // Default options
   options: {
     filters: null, // If not set by the calling method, it will be set to default values
@@ -128,5 +128,5 @@ var documentViewTabs = function (options)
   return $.any.documentViewTabs(options);
 };
 
-documentViewTabs.prototype = new anyView(null);
+documentViewTabs.prototype = new anyViewTabs(null);
 documentViewTabs.prototype.constructor = documentViewTabs;
