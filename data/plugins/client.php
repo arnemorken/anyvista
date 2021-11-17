@@ -30,6 +30,7 @@
 
 <script src="<?php print gAnyListURL;?>view/anyModel.js"></script>
 <script src="<?php print gAnyListURL;?>view/anyView.js"></script>
+<script src="<?php print gAnyListURL;?>view/anyViewTabs.js"></script>
 <script src="<?php print gAnyListURL;?>view/anyFilter.js"></script>
 
 <style>
