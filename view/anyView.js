@@ -2826,6 +2826,7 @@ $.any.View.prototype.dbUpdate = function (event)
   }
 
   // Update database
+  this.options.item_opening = true; // To make top right close icon appear
   return this.model.dbUpdate(event.data);
 }; // dbUpdate
 
