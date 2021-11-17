@@ -2486,7 +2486,7 @@ $.any.View.prototype._doShowItem = function (opt)
   else {
     // Local refresh
     if (is_new)
-      view.refreshLoop(con_div,item,"+0",type,"item");
+      view.refreshLoop(con_div,item,"+0",type,"item",true);
     else
       view.refreshLoop(con_div,item,the_id,type,"item");
   } // else
