@@ -2530,20 +2530,25 @@ $.any.View.prototype.doToggleEdit = function (opt)
   let elem = $("#"+elem_id);
   if (elem.length) {
     if (opt.kind != "item") {
-      if (this.options.onEscRemoveEmpty || this.options.onFocusoutRemoveEmpty) {
-        // Remove if empty
-        let filter_id = this.model && this.model.name_key ? this.model.name_key : opt.type+"_name"; // TODO! Should work for all input fields!
-        let input_id  = prefix+"_"+filter_id+" .itemEdit";
-        let elem_empty = $("#"+input_id);
-        if (this.model && elem_empty.length) {
-          if (!elem_empty.val()) {
-            this.model.dataDelete({ data: opt.data,
-                                    type: opt.type,
-                                    id:   opt.id,
-                                 });
-            elem_empty.parent().parent().remove();
-            this.current_edit = null;
+      if (!opt.edit && (this.options.onEscRemoveEmpty || this.options.onFocusoutRemoveEmpty)) {
+        // Check all entries defined in filter, then remove if empty
+        let is_empty = true;
+        for (let filter_id in opt.filter) {
+          if (opt.filter.hasOwnProperty(filter_id)) {
+            let input_id = prefix+"_"+filter_id+" .itemEdit";
+            if ($("#"+input_id).val()) {
+              is_empty = false;
+              break;
+            }
           }
+        }
+        if (this.model && is_empty) {
+          this.model.dataDelete({ data: opt.data,
+                                  type: opt.type,
+                                  id:   opt.id,
+                               });
+          elem.remove();
+          this.current_edit = null;
         }
       }
       this.refreshData(this.element,opt.data,opt.id,opt.type,opt.kind,opt.edit,opt.id_str,opt.pdata,opt.pid);
