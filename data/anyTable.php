@@ -738,29 +738,31 @@ class anyTable extends dbTable
           $table->mListForName = isset($data[$idx]) && isset($data[$idx][$this->mNameKey]) ? $data[$idx][$this->mNameKey] : "";
           $table_data = null;
           $skipOwnId = $plugin == $this->mType;
-          if (!$table->dbSearchList($table_data,$skipOwnId,true,false)) // TODO! Searching for "simple" list does not work here
-            $this->mError .= $table->getError();
-          // We found some data, insert it in the data structure
-          if ($table_data) {
-            if (!isset($data[$idx]))
-              $data[$idx] = array();
-            if (!isset($data[$idx]["data"]))
-              $data[$idx]["data"] = array();
-            if (isset($grouping) && $grouping)
-              $data[$idx]["data"]['grouping']      = $grouping;
-            $data[$idx]["data"]['groupingForType'] = $table->mListForType;
-            $data[$idx]["data"]['groupingForId']   = $table->mListForId;
-            $data[$idx]["data"]['groupingForName'] = $table->mListForName;
-            $data[$idx]["data"]["plugin-".$plugin] = array();
-            $data[$idx]["data"]["plugin-".$plugin]["head"] = $plugin;
-            $data[$idx]["data"]["plugin-".$plugin][$table->getNameKey()] = $this->findDefaultHeader($plugin,$data[$idx]["data"]["plugin-".$plugin],true);
-            if (isset($table_data[$plugin]))
-              $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data[$plugin]["data"];
-            else
-            if ($plugin == $this->mType)
-              $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data;
-            else
-              $data[$idx]["data"]["plugin-".$plugin]["data"] = "empty"; // So that the view can create an empty container
+          if (!$skipOwnId || $this->hasParentId()) {
+            if (!$table->dbSearchList($table_data,$skipOwnId,true,false)) // TODO! Searching for "simple" list does not work here
+              $this->mError .= $table->getError();
+            // If we found some data, insert it in the data structure
+            if ($table_data) {
+              if (!isset($data[$idx]))
+                $data[$idx] = array();
+              if (!isset($data[$idx]["data"]))
+                $data[$idx]["data"] = array();
+              if (isset($grouping) && $grouping)
+                $data[$idx]["data"]['grouping']      = $grouping;
+              $data[$idx]["data"]['groupingForType'] = $table->mListForType;
+              $data[$idx]["data"]['groupingForId']   = $table->mListForId;
+              $data[$idx]["data"]['groupingForName'] = $table->mListForName;
+              $data[$idx]["data"]["plugin-".$plugin] = array();
+              $data[$idx]["data"]["plugin-".$plugin]["head"] = $plugin;
+              $data[$idx]["data"]["plugin-".$plugin][$table->getNameKey()] = $this->findDefaultHeader($plugin,$data[$idx]["data"]["plugin-".$plugin],true);
+              if (isset($table_data[$plugin]))
+                $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data[$plugin]["data"];
+              else
+              if ($plugin == $this->mType)
+                $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data;
+              else
+                $data[$idx]["data"]["plugin-".$plugin]["data"] = "empty"; // So that the view can create an empty container
+            }
           }
         }
       }
@@ -1385,7 +1387,10 @@ class anyTable extends dbTable
             }
             else {
               $idx = isset($data[$gidx][$this->mId]) ? $this->mId : "+".$this->mId;
-              $data_tree[$ngidx][$this->mNameKey] = $data[$gidx][$idx][$this->mNameKey];
+              if (isset($data[$gidx][$idx]))
+                $data_tree[$ngidx][$this->mNameKey] = $data[$gidx][$idx][$this->mNameKey];
+              else
+                $data_tree[$ngidx][$this->mNameKey] = null;
             }
           } // if grouping
           $data_tree[$ngidx]["data"] = array();
