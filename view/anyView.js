@@ -1286,7 +1286,7 @@ $.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_st
     inp_elem.inputFilter(function(value) { return /^\d*\.?\d*$/.test(value); }); // Allow digits and '.' only
   }
   // Bind a function to be called when clicking/pressings the element
-  if (filter_key.OBJ_FUNCTION) {
+  if (filter_key.OBJ_FUNCTION && filter_key.HTML_TYPE != "select") {
     let func_name = filter_key.OBJ_FUNCTION;
     let func = isFunction(this[func_name])
                ? this[func_name] // Method in view class
@@ -1587,7 +1587,7 @@ $.any.View.prototype.getSelectStr = function (type,kind,id,val,edit,filter_key,p
 {
   let str  = "";
   let sval = val;
-  let fval = filter_key.OBJ_SELECT;
+  let fval = filter_key.OBJ_SELECT ? filter_key.OBJ_SELECT : filter_key.OBJ_FUNCTION;
   if (fval) {
     if (typeof this[fval] === 'function')
       sval = this[fval](type,kind,id,val,edit,pid);
