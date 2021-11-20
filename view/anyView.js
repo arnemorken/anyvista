@@ -3227,3 +3227,4 @@ var anyView = function (options)
   return $.any.View(options);
 };
 /////////////////////////////////////////////////////////////////////////////
+//@ sourceURL=anyView.js
