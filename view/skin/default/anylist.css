@@ -138,16 +138,17 @@
   padding-left:     1px;
 }
 
+.itemNumber {
+  width:            50px;
+}
+
 .itemSelect {
   width:            110px;
 }
 
-.itemNumber {
-  width:    50px;
-}
-
 /*** Input fields ***/
 .itemText[type=text],
+.itemNumber[type=text],
 .itemDate[type=date] {
   width:            90px;
   padding:          0;
@@ -159,6 +160,11 @@
   font-family:      inherit;
   font-size:        inherit;
 }
+
+.itemNumber[type=text] {
+  width:            50px;
+}
+
 .wp-core-ui select {
   min-height:   0;
   line-height:  1.1;
