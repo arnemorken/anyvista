@@ -548,7 +548,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     return data;
   }
   for (let idx in data) {
-    if (data.hasOwnProperty(idx) && data[idx]) {
+    if (data.hasOwnProperty(idx) && data[idx] && !["head","item","list"].includes(idx)) {
       let item = null;
       let dtype = data[idx].list ? data[idx].list : data[idx].item ? data[idx].item : data[idx].head ? data[idx].head : null;
       if (dtype == type || (!dtype && data[idx][name_key])) {
@@ -1670,29 +1670,31 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
           console.error("anyModel.dbUpdateSuccess: System error: Could not find item with id "+options.client_id);
           return false;
         }
-        self.last_insert_id = serverdata.id; // Id of the item inserted/updated, as provided by server
-        if (options.client_id && serverdata.id && parseInt(options.client_id) != parseInt(serverdata.id)) {
-          // Replace item with defunct id with an item using new id from server
-          item[serverdata.id] = item[options.client_id]
-                                ? item[options.client_id]
-                                : item["+"+options.client_id];
-          if (item[serverdata.id][self.id_key])
-            item[serverdata.id][self.id_key] = serverdata.id;
-          delete item[serverdata.id].is_new;
-          delete item[serverdata.id].dirty;
-          self.dataDelete({ type: options.type,
-                            id:   options.client_id,
-                         });
-        }
-        // Remove the is_new mark and dirty data
-        let tmp_id = item[options.client_id]
-                     ? options.client_id
-                     : item["+"+options.client_id]
-                       ? "+"+options.client_id
-                       : null;
-        if (tmp_id && item[tmp_id]) {
-          delete item[tmp_id].is_new;
-          delete item[tmp_id].dirty;
+        if (!["head","item","list"].includes(serverdata.id)) { // head, item and list are illegal as ids
+          self.last_insert_id = serverdata.id; // Id of the item inserted/updated, as provided by server
+          if ((options.client_id || options.client_id === 0) && (serverdata.id || serverdata.id === 0) && parseInt(options.client_id) != parseInt(serverdata.id)) {
+            // Replace item with defunct id with an item using new id from server
+            item[serverdata.id] = item[options.client_id]
+                                  ? item[options.client_id]
+                                  : item["+"+options.client_id];
+            if (item[serverdata.id][self.id_key])
+              item[serverdata.id][self.id_key] = serverdata.id;
+            delete item[serverdata.id].is_new;
+            delete item[serverdata.id].dirty;
+            self.dataDelete({ type: options.type,
+                              id:   options.client_id,
+                           });
+          }
+          // Remove the is_new mark and dirty data
+          let tmp_id = item[options.client_id]
+                       ? options.client_id
+                       : item["+"+options.client_id]
+                         ? "+"+options.client_id
+                         : null;
+          if (tmp_id && item[tmp_id]) {
+            delete item[tmp_id].is_new;
+            delete item[tmp_id].dirty;
+          }
         }
       } // if (item)
       delete options.client_id; // Delete property set by dbUpdate

@@ -267,10 +267,14 @@ $.any.View.prototype._createFilters = function (model)
 $.any.View.prototype._findType = function (data,otype,id)
 {
   let type = null;
-  if (data && (id || id === 0)) {
-    let d = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
-    if (d)
-      type = d.list ? d.list : d.item ? d.item : d.head ? d.head : null;
+  if (data) {
+    if (id || id === 0) {
+      let d = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
+      if (d)
+        type = d.list ? d.list : d.item ? d.item : d.head ? d.head : null;
+    }
+    if (!type)
+      type = data.list ? data.list : data.item ? data.item : data.head ? data.head : null;
   }
   if (!type)
     type = otype;
@@ -284,10 +288,14 @@ $.any.View.prototype._findType = function (data,otype,id)
 $.any.View.prototype._findKind = function (data,okind,id)
 {
   let kind = null;
-  if (data && (id || id === 0)) {
-    let d = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
-    if (d)
-      kind = d.list ? "list" : d.item ? "item" : d.head ? "head" : null;
+  if (data) {
+    if (id || id === 0) {
+      let d = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
+      if (d)
+        kind = d.list ? "list" : d.item ? "item" : d.head ? "head" : null;
+    }
+    if (!kind)
+      kind = data.list ? "list" : data.item ? "item" : data.head ? "head" : null;
   }
   if (!kind && okind != "head")
     kind = okind;
@@ -428,12 +436,14 @@ $.any.View.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata
             //console.log("Error: "+view.model.error);
           let curr_type = view._findType(data,prev_type,idc);
           let curr_kind = view._findKind(data,prev_kind,idc);
-          if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type /*|| (prev_type == "group" && view.model.type == "group")*/))
-            view = view.createView(parent,data,idc,curr_type,curr_kind); // New type to display, create new view
-          if (view)
-            view.refreshOne(parent,data,idc,curr_type,curr_kind,edit,"",pdata,pid);
-          prev_type = curr_type;
-          prev_kind = curr_kind;
+          if (curr_type && curr_kind) {
+            if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type /*|| (prev_type == "group" && view.model.type == "group")*/))
+              view = view.createView(parent,data,idc,curr_type,curr_kind); // New type to display, create new view
+            if (view)
+              view.refreshOne(parent,data,idc,curr_type,curr_kind,edit,"",pdata,pid);
+            prev_type = curr_type;
+            prev_kind = curr_kind;
+          }
         }
       }
     }
