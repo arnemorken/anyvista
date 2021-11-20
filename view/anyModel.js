@@ -591,7 +591,8 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
 /**
  * @method dataSearchNextId
  * @description Sets `this.max` to the largest id for the specified type in the in-memory data structure
- *              and returns the next id (i.e. `this.max + 1`). Will ignore non-numerical indexes.
+ *              and returns the next id (i.e. `this.max + 1`). If any if the indexes are non-numerical,
+ *              the number of items in the data structure minus 1 will be returned.
  * @param {String} type: The type of the data to search for.
  *                       Optional. Default: The model's type (`this.type`).
  * @param {Object} data: The data structure to search in.
@@ -628,14 +629,17 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
     data = this.data;
   if (!type || !data)
     return -1;
-  // Must at least be bigger than biggest "index" in object
+  // If a non-numerical index is found, return immediately
   let datakeys = Object.keys(data);
   for (const key in datakeys) {
     if (datakeys.hasOwnProperty(key)) {
-      if (!isInt(datakeys[key]))
-        datakeys[key] = "-1";
+      if (!isInt(datakeys[key])) {
+        this.max = Object.size(data)-1;
+        return this.max;
+      };
     }
   }
+  // Must at least be bigger than biggest "index" in object
   let max = $.isEmptyObject(datakeys) ? -1 : Math.max(...datakeys);
   if (!isNaN(max)) {
     let dmax  = data[max] ? max : data["+"+max] ? "+"+max : null;
