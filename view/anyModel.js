@@ -1036,7 +1036,7 @@ anyModel.prototype.dataDelete = function (options)
   else
   if (it_ptr["+"+id])
     it_idx = "+"+id;
-  if (!it_idx || !it_ptr || !it_ptr[it_idx])
+  if ((!it_idx && it_idx !== 0) || !it_ptr || !it_ptr[it_idx])
     return null;
   delete it_ptr[it_idx];
 
@@ -1493,7 +1493,7 @@ anyModel.prototype.dbUpdate = function (options)
                : options.id
                  ? options.id
                  : null;
-  if (!the_id && typeof options.id !== "string") {
+  if (!the_id && the_id !== 0 && typeof options.id !== "string") {
     console.error("anyModel.dbUpdate: "+i18n.error.ID_ILLEGAL);
     return false;
   }

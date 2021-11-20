@@ -2237,7 +2237,7 @@ $.any.View.prototype.addListEntry = function (event)
   let id   = event.data.id;
   let pid  = event.data.pid;
   let type = event.data.type;
-  if (event.data.edit && event.data.new_id) {
+  if (event.data.edit && (event.data.new_id || event.data.new_id === 0)) {
     this.model.dataDelete({id:event.data.new_id});
     this.refreshData(this.element,this.model.data,pid,type);
   }
@@ -2743,7 +2743,7 @@ $.any.View.prototype.dbUpdate = function (event)
   let is_new = event.data.is_new;
 
   this.model.error = "";
-  if (!id) // Should never happen
+  if (!id && id !== 0) // Should never happen
     this.model.error += i18n.error.ID_MISSING;
   if (!indata || !indata[id]) // Should never happen
     this.model.error += i18n.error.DATA_MISSING;
