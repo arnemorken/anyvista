@@ -325,7 +325,6 @@ $.any.View.prototype.showMessages = function (modelOrString)
     if (typeof modelOrString == "string") {
         msgdiv.append(close_icon+"<span style='color:red;'>"+modelOrString+"</span>");
     }
-    let self = this;
     $("#"+div_id+"_close").off("click").on("click",function(event) { let msgdiv = $("#"+div_id); msgdiv.empty(); });
   }
   return this;
@@ -839,7 +838,6 @@ $.any.View.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_st
                 id:         "new", // Find a new id
                 type:       type,
                 kind:       kind,
-                pid:        id,
                 id_str:     id_str,
                 filter:     filter,
                 isEditable: true,
@@ -1585,7 +1583,7 @@ $.any.View.prototype.getSelectStr = function (type,kind,id,val,edit,filter_key,p
       sval = this[fval](type,kind,id,val,edit,pid);
     else
     if (typeof fval == "object")
-      sval = edit? fval : fval[val]
+      sval = edit? fval : fval[val];
     else
       sval = fval;
   }
@@ -1624,7 +1622,7 @@ $.any.View.prototype.getRadioStr = function (type,kind,id,val,edit,filter_key,fi
       sval = this[fval](type,kind,id,val,edit);
     else
     if (typeof fval == "object")
-      sval = edit? fval : fval[val]
+      sval = edit? fval : fval[val];
     else
       sval = fval;
   }
@@ -1766,7 +1764,7 @@ $.any.View.prototype.getUploadStr = function (type,kind,id,val,edit,data_item,fi
 $.any.View.prototype._uploadClicked = function (event)
 {
   let elem_id = event.data.elem_id;
-  let fname = $("#"+elem_id+"_upload").val().replace(/C:\\fakepath\\/i, '')
+  let fname = $("#"+elem_id+"_upload").val().replace(/C:\\fakepath\\/i, '');
   if (fname) {
     window.any_current_file = $("#"+elem_id+"_upload")[0].files[0]; // Remember the file
     // Change the filename link
@@ -2188,9 +2186,7 @@ $.any.View.prototype._processKeyup = function (event)
       ev.data = { ...upd_opt };
       if (this.options.onEnterCallDatabase)
         this.dbUpdate(ev);
-      let type   = event.data.type;
-      let kind   = event.data.kind;
-      let id_str = event.data.id_str;
+      let kind = event.data.kind;
       if (kind == "list" || kind == "select") {
         if (this.options.onEnterInsertNew) {
           ev.data.pid = ev.data.id;
@@ -2353,7 +2349,6 @@ $.any.View.prototype.itemLinkClicked = function (event)
 $.any.View.prototype.showItem = function (event)
 {
   event.data.view = this;
-//let data   = event.data.data;
   let id     = event.data.id;
   let type   = event.data.type;
   let is_new = event.data.is_new;
@@ -2740,7 +2735,6 @@ $.any.View.prototype.dbUpdate = function (event)
   let id_str = event.data.id_str;
   let pdata  = event.data.pdata;
   let pid    = event.data.pid;
-  let is_new = event.data.is_new;
 
   this.model.error = "";
   if (!id && id !== 0) // Should never happen
@@ -2797,7 +2791,7 @@ $.any.View.prototype.dbUpdate = function (event)
     /* TODO! Neccessary?
     // Make sure the items original model is also updated
     if (this.options.view && this.options.view != this) { // TODO! no view here
-      if (!is_new)
+      if (!event.data.is_new)
         this.options.view.model.dataUpdate({ type:   type,
                                              id:     id,
                                              indata: data_values,
@@ -2915,25 +2909,25 @@ $.any.View.prototype.dbUpdateLinkListDialog = function (context,serverdata,optio
             }
           select_list_view.model.dataInit(mod_opt);
           let par_view_id = parent_view.base_id+"_"+self.type+"_head_0_data";
-          let dia_id = w3_modaldialog({
-                         parentId:    par_view_id,
-                         elementId:   "",
-                         heading:     "Select "+list_type+"s to add / remove", // TODO! i18n
-                         contents:    select_list_view.main_div,
-                         width:       "25em", // TODO! css
-                         ok:          true,
-                         cancel:      true,
-                         okFunction:  parent_view.dbUpdateLinkList,
-                         context:     parent_view,
-                         // Sent to okFunction:
-                         type:        self.type,
-                         id:          self.id,
-                         data:        self.data,
-                         link_type:   select_list_view.model.type,
-                         select:      select_list_view.model.select,
-                         unselect:    select_list_view.model.unselect,
-                         name_key:    select_list_view.model.name_key,
-                       });
+          w3_modaldialog({
+            parentId:    par_view_id,
+            elementId:   "",
+            heading:     "Select "+list_type+"s to add / remove", // TODO! i18n
+            contents:    select_list_view.main_div,
+            width:       "25em", // TODO! css
+            ok:          true,
+            cancel:      true,
+            okFunction:  parent_view.dbUpdateLinkList,
+            context:     parent_view,
+            // Sent to okFunction:
+            type:        self.type,
+            id:          self.id,
+            data:        self.data,
+            link_type:   select_list_view.model.type,
+            select:      select_list_view.model.select,
+            unselect:    select_list_view.model.unselect,
+            name_key:    select_list_view.model.name_key,
+          });
           select_list_view.refresh(ll_contents,serverdata.data,null,list_type,"list",false,"");
         }
       } // if parent_view
@@ -3022,7 +3016,7 @@ $.any.View.prototype.dbRemoveDialog = function (event)
               "</div>";
     let parent_id = this.options.top_view.element.attr("id");
     if (!parent_id)
-      parent_id = this.options.main_div.attr("id")
+      parent_id = this.options.main_div.attr("id");
     w3_modaldialog({parentId:    parent_id,
                     elementId:   "",
                     heading:     kind == "item" ? i18n.button.buttonRemove : i18n.button.buttonRemoveFromList.replace("%%",type),

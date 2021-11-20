@@ -357,7 +357,7 @@ anyModel.prototype._dataInitSelect = function ()
     if (options.id)                                    { this.id               = options.id; }
     if (this.id && this.data) {
       let hdr_id = Object.keys(this.data)[0];
-      let the_id = this.data[this.id] ? this.id : this.data["+"+this.id] ? "+"+this.id : null
+      let the_id = this.data[this.id] ? this.id : this.data["+"+this.id] ? "+"+this.id : null;
       if (!the_id && (!hdr_id || !this.data[hdr_id] && (!this.data[hdr_id].data || !this.data[hdr_id].data[this.id]))) {
         console.warn("Id "+this.id+" given to constructor, but not found in data. Resetting id to null.");
         this.id = null;
@@ -533,7 +533,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     return null; // Not found
 
   if (!id && id !== 0 && !options.item_list)
-    options.item_list = new Array(); // Used if type search
+    options.item_list = []; // Used if type search
 
   let name_key = type == this.type
                  ? (this.name_key ? this.name_key : type+"_name")
@@ -636,7 +636,7 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
       if (!isInt(datakeys[key])) {
         this.max = Object.size(data)-1;
         return this.max;
-      };
+      }
     }
   }
   // Must at least be bigger than biggest "index" in object
@@ -1075,7 +1075,7 @@ anyModel.prototype.dataDelete = function (options)
  */
 anyModel.prototype.dbCreate = function (options)
 {
-  let type  = options.type ? options.type : type;
+  let type  = options.type ? options.type : this.type;
 
   if (!options.timeoutSec)
     options.timeoutSec = 10;
