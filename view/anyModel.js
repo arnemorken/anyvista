@@ -533,7 +533,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     return null; // Not found
 
   if (!id && id !== 0 && !options.item_list)
-    options.item_list = new Set(); // Used if type search
+    options.item_list = new Array(); // Used if type search
 
   let name_key = type == this.type
                  ? (this.name_key ? this.name_key : type+"_name")
@@ -562,7 +562,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
         else {
           // type search
           if (!data[idx].head)
-            options.item_list.add(data[idx]);
+            options.item_list.push(data[idx]);
         }
       }
       if (!item && data[idx].data) { // subdata
@@ -574,7 +574,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
           options.item_list = this.dataSearch({data:data[idx].data,id:id,type:type,item_list:options.item_list},p_data,p_idx);
       }
       if (item && id != null)
-        return item; // Found
+        return item; // Found (id search)
     }
   }
   if (id || id === 0)
@@ -582,8 +582,8 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
   else {
     if (!options.item_list || options.item_list.size === 0)
       return null; // Not found (type search)
-    let it_lst = options.item_list;
-    delete options.item_list; // We dont want to change in-parameter
+    let it_lst = [...options.item_list];
+    delete options.item_list; // We dont want to change in-parameter permanently
     return it_lst;
   }
 }; // dataSearch
