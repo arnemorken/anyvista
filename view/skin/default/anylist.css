@@ -86,7 +86,6 @@
  **************************/
 
 .any-table {
-  padding-left: 1.0em;
 }
 .any-list-table,
 .any-item-table {
@@ -94,13 +93,16 @@
   padding-top:      .5em;
   padding-bottom:   .2em;
 }
+.any-list-table {
+  margin-left:  1.0em;
+  margin-right: -1.0em;
+}
 .any-th {
   background-color: #ccc;
 }
 .any-th,
 .any-td {
   text-align:       left;
-  padding-right:    .5em;
   white-space:      nowrap;
   overflow:         hidden;
   font-family:      inherit;
