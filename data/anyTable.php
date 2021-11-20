@@ -48,6 +48,10 @@ require_once "anyTableFactory.php";
  *              '[key]':       '[value]',   // Optional. One or more key / value pairs.
  *              ...
  *              'data': {    // Optional
+ *                'grouping':        'tabs',    // Optional
+ *                'groupingForId':   '[id]',    // Optional, but mandatory if both 'grouping' and 'id' is specified.
+ *                'groupingForType': '[type]',  // Optional, but mandatory if both 'grouping' and 'id' is specified.
+ *                'groupingForName': '[value]', // Optional, but mandatory if both 'grouping' and 'id' is specified.
  *                '+[id]': { // Optional
  *                  'head' | 'item' | 'list': '[type]',         // Mandatory.
  *                  'parent_id':              '[id]',           // Optional. Contains the id of the level above, if of the same type.
@@ -57,10 +61,6 @@ require_once "anyTableFactory.php";
  *                  ...
  *                },
  *                ...
- *                'grouping':        'tabs',    // Optional
- *                'groupingForType': '[type]',  // Optional, but mandatory if both 'grouping' and 'id' is specified.
- *                'groupingForId':   '[id]',    // Optional, but mandatory if both 'grouping' and 'id' is specified.
- *                'groupingForName': '[value]', // Optional, but mandatory if both 'grouping' and 'id' is specified.
  *              },
  *            }
  *            ...
