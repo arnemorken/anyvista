@@ -266,7 +266,7 @@ class anyTable extends dbTable
       // Set minimal working values ("defsOrType" should be type)
       $this->mType               = $defsOrType;
       $this->mTableName          = "any_".$this->mType;
-      $this->mTableNameMeta      = "any_".$this->mType."meta";
+      $this->mTableNameMeta      = null; // No meta table for auto-generated type/table
       $ltn = ["group",$this->mType];
       sort($ltn);
       $ltn = "any_".implode("_",$ltn);
@@ -277,10 +277,10 @@ class anyTable extends dbTable
       $this->mTableNameUserLink  = $ltn;
       $this->mIdKey              = $this->mType."_id";
       $this->mIdKeyTable         = $this->mType."_id";
-      $this->mIdKeyMetaTable     = $this->mType."_id";
+      $this->mIdKeyMetaTable     = null; // No meta table for auto-generated type/table
       $this->mNameKey            = $this->mType."_name";
       $this->mOrderBy            = $this->mIdKeyTable;
-      $this->mMetaId = "meta_id";
+      $this->mMetaId             = null; // No meta table for auto-generated type/table
       // Set default table fields
       $this->mTableFields = [
         $this->mIdKey,
@@ -304,7 +304,7 @@ class anyTable extends dbTable
     if (!isset($this->mOrderBy))
       $this->mOrderBy = $this->mIdKeyTable;
     if (!isset($this->mMetaId))
-      $this->mMetaId = "meta_id";
+      $this->mMetaId = null;
     if (!isset($this->mInsertSuccessMsg))
       $this->mInsertSuccessMsg = ucfirst($this->mType)." created. ";
     if (!isset($this->mUpdateSuccessMsg))
@@ -339,14 +339,14 @@ class anyTable extends dbTable
       $err .= "Type missing. ";
     if (!isset($tableDefs["tableName"]))
       $err .= "Table name missing. ";
-    if (!isset($tableDefs["tableNameMeta"]))
-      $err .= "Meta table name missing. ";
+  //if (!isset($tableDefs["tableNameMeta"]))
+  //  $err .= "Meta table name missing. ";
     if (!isset($tableDefs["idKey"]))
       $err .= "Id key missing. ";
     if (!isset($tableDefs["idKeyTable"]))
       $err .= "Table id key missing. ";
-    if (!isset($tableDefs["idKeyMetaTable"]))
-      $err .= "Meta table id key missing. ";
+  //if (!isset($tableDefs["idKeyMetaTable"]))
+  //  $err .= "Meta table id key missing. ";
     if (!isset($tableDefs["nameKey"]))
       $err .= "Name key missing. ";
     if ($err !== "") {
@@ -1028,8 +1028,7 @@ class anyTable extends dbTable
   // Get the meta data
   protected function dbSearchMeta(&$data,$kind,$flat)
   {
-    $hasMetaTable = $this->tableExists($this->mTableNameMeta);
-    if (!$hasMetaTable || $this->mTableNameMeta === null) {
+    if (!$this->tableExists($this->mTableNameMeta)) {
       $this->mMessage = "No meta table. ";
       return false;
     }
@@ -1123,7 +1122,7 @@ class anyTable extends dbTable
           } // for
         }
         // Meta table
-        if (isset($this->mTableFieldsMeta)) {
+        if ($this->tableExists($this->mTableNameMeta) && isset($this->mTableFieldsMeta)) {
           for ($t=0; $t<count($this->mTableFieldsMeta); $t++) {
             $item_id_table = $this->mTableFieldsMeta[$t];
             if (!$simple || $item_id_table == $this->mIdKey || $item_id_table == $this->mNameKey)
@@ -1257,6 +1256,8 @@ class anyTable extends dbTable
   //
   protected function getRowMetaData(&$data,$kind,$flat=false)
   {
+    if (!$this->tableExists($this->mTableNameMeta))
+      return false;
     $filter = $kind == "list" ? $this->mFilters["list"] : $this->mFilters["item"];
     while (($nextrow = $this->getNext(true)) !== null) {
       //elog("getRowMetaData,nextrow:".var_export($nextrow,true));
@@ -1957,7 +1958,7 @@ class anyTable extends dbTable
 
   protected function dbMetaInsertOrUpdate($id)
   {
-    if (!isset($this->mTableFieldsMeta))
+    if (!$this->tableExists($this->mTableNameMeta) || !isset($this->mTableFieldsMeta))
       return true;
     $is_err = false;
     // Insert any_ Parameters
@@ -2246,10 +2247,12 @@ class anyTable extends dbTable
         $this->setMessage($this->mDeleteNothingToDo);
 
       // Delete from meta table
-      $stmt = "DELETE FROM ".$this->mTableNameMeta." WHERE ".$this->mIdKeyMetaTable."='".$this->mId."'";
-      //elog("dbDelete:".$stmt);
-      if (!$this->query($stmt))
-        return null;
+      if ($this->tableExists($this->mTableNameMeta) && $this->mIdKeyMetaTable) {
+        $stmt = "DELETE FROM ".$this->mTableNameMeta." WHERE ".$this->mIdKeyMetaTable."='".$this->mId."'";
+        //elog("dbDelete:".$stmt);
+        if (!$this->query($stmt))
+          return null;
+      }
 
       // Update parent_id of children
       if ($this->hasParentId()) {
