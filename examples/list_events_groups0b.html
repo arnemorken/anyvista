@@ -12,17 +12,27 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<script src="../../../../../thirdparty/jquery/jquery-3.5.1.min.js"></script>
-<script src="../../../../../thirdparty/jquery/jquery-widget-1.12.1.min.js"></script>
-<link  href="../../../../../thirdparty/w3css/w3.css"                    rel="stylesheet"/>
-<link  href="../../../../../thirdparty/fontawesome/fa.min.css"          rel="stylesheet"/>
-<link  href="../view/skin/default/any_new.css" rel="stylesheet"/>
+<script src="../../../../javascript/jquery/jquery-3.6.0.min.js"></script>
+<script src="../../../../javascript/jquery/jquery-widget-1.12.1.min.js"></script>
+<link  href="../../../../javascript/w3css/w3.css"                    rel="stylesheet"/>
+<link  href="../../../../javascript/fontawesome/fa.min.css"          rel="stylesheet"/>
+<link  href="../view/skin/default/anylist.css" rel="stylesheet"/>
 <style>
+body {
+  margin-top: 0;
+}
 .any-item-td {
   width: 202px;
 }
 .any-tool-td {
   width: 25px;
+}
+#any_ex {
+  padding:        5px;
+  border-bottom:  1px solid #555;
+  background:     #eee;
+  font-size:      9pt;
+  text-align:     right;"
 }
 </style>
   <title>anyList test - minimal item</title>
@@ -33,6 +43,7 @@
 <script src="../view/anyStrings_en-GB.js"></script>
 <script src="../view/anyModel.js"></script>
 <script src="../view/anyView.js"></script>
+<div id="any_ex"><i>anyList examples&nbsp;</i></div>
 <div id="any_content" title="Minimal grouped lists / items"></div>
 
 <script>
