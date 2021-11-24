@@ -5,4 +5,4 @@ Earlier versions of the library (distributed under another name) has already bee
 
 The libary will be dual licensed under 1) AGPLv3.0 and 2) a proprietary license (under development).
 
-Sources are currently being added. First release expected in November 2021.
+First production release date: December 22nd 2021.
