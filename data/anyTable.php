@@ -519,7 +519,7 @@ class anyTable extends dbTable
       if (isset($unique))
         $sql .= "UNIQUE KEY(".$unique.")";
       $sql .= ")";
-      elog("dbCreate,sql:$sql");
+      //elog("dbCreate,sql:$sql");
       $this->getConnection()->mDBHandle->exec($sql); // TODO! Delegate this to dbTable class
       elog("Table $tableName created successfully"); // TODO! Check for non-catchable errors!
     }

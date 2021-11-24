@@ -7,5 +7,4 @@ function vlog($msg=null,$logVar)
 {
   error_log($msg.var_export($logVar,true));
 }
-
 ?>
