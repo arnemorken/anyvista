@@ -1052,21 +1052,23 @@ class anyTable extends dbTable
       }
     }
     */
-    if (isset($this->mTableNameGroupLink) && $this->tableExists($this->mTableNameGroupLink)) {
-      $group_id_sel   = $is_list || isset($this->mListForType) ? ",".$this->mTableNameGroupLink.".group_id " : " ";
-      $group_type_sel = /*$this->mType == "group" ? ",any_group.group_type" :*/ "";
-      $stmt = "SELECT ".$this->mTableNameMeta.".* ".
-              $group_type_sel.
-              $group_id_sel.
-              "FROM ".$this->mTableNameMeta." ".
-              "LEFT JOIN ".$this->mTableNameGroupLink." ".
-              "ON ".$this->mTableNameMeta.".".$this->mIdKeyMetaTable."=".$this->mTableNameGroupLink.".".$this->mIdKeyMetaTable." ".
-              //$left_join.
-              $where;
-      //elog("dbSearchMeta:".$stmt);
-      if (!$this->query($stmt))
-        return false;
-    }
+    $has_grp_lnk     = isset($this->mTableNameGroupLink) && $this->tableExists($this->mTableNameGroupLink);
+    $group_id_sel    = $has_grp_lnk && $is_list || isset($this->mListForType) ? ",".$this->mTableNameGroupLink.".group_id " : " ";
+    $group_type_sel  = /*$has_grp_lnk && $this->mType == "group" ? ",any_group.group_type" :*/ " ";
+    $group_left_join = $has_grp_lnk ? "LEFT JOIN ".$this->mTableNameGroupLink." ".
+                                      "ON ".$this->mTableNameMeta.".".$this->mIdKeyMetaTable."=".$this->mTableNameGroupLink.".".$this->mIdKeyMetaTable." "
+                                    : "";
+    $stmt = "SELECT ".$this->mTableNameMeta.".* ".
+            $group_type_sel.
+            $group_id_sel.
+            "FROM ".$this->mTableNameMeta." ".
+            $group_left_join.
+            //$left_join.
+            $where;
+    //elog("dbSearchMeta:".$stmt);
+    if (!$this->query($stmt))
+      return false;
+
     // Get the data
     return $this->getRowMetaData($data,$kind,$flat);
   } // dbSearchMeta
@@ -1341,7 +1343,7 @@ class anyTable extends dbTable
              : null;
     //vlog("buildGroupTreeAndAttach,gdata:",$gdata);
     if ((empty($gdata) || !isset($gdata["group"])) && $group_table)
-      $this->setMessage($group_table->mError);
+      $this->setError($group_table->mError);
     //
     // Build data tree for all groups
     //
