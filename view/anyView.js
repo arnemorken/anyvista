@@ -54,7 +54,7 @@
  *        {boolean} onFocusoutRemoveEmpty: The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
  *        {boolean} onUpdateEndEdit:       NOT IMPLEMENTED. Pressing the update button will close the element currently being edited for editing. Default: true.
  *        {boolean} useOddEven:            If true, tags for odd and even columns will be generated for list entries. Default: false.
- *        {string}  grouping:              How to group data: Empty string for no grouping, "tabs" for using psiViewTabs to group data into tabs. Default: "".
+ *        {string}  grouping:              How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
  *        {boolean} refresh:               If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
  *
  * @example
@@ -677,7 +677,7 @@ $.any.View.prototype.getOrCreateHeaderContainer = function (parent,type,kind,id_
   let header_div = $("#"+div_id);
   if (header_div.length) {
     if (!doNotEmpty)
-      this._emptyDataDiv(header_div);
+      this._emptyDiv(header_div);
   }
   else
   if (haveData) {
@@ -690,11 +690,6 @@ $.any.View.prototype.getOrCreateHeaderContainer = function (parent,type,kind,id_
   }
   return header_div;
 }; // getOrCreateHeaderContainer
-
-$.any.View.prototype._emptyHeaderDiv = function (div)
-{
-  return div && div.length ? div.empty() : null;
-}; // _emptyHeaderDiv
 
 //
 // Refresh a single header entry
@@ -752,7 +747,7 @@ $.any.View.prototype.getOrCreateDataContainer = function (parent,type,kind,id_st
   let data_div = $("#"+div_id);
   if (kind != "list" && kind != "select") {
     if (data_div.length)
-      this._emptyDataDiv(data_div);
+      this._emptyDiv(data_div);
     else
     if (haveData) {
       // Create new data container if we have data
@@ -768,10 +763,10 @@ $.any.View.prototype.getOrCreateDataContainer = function (parent,type,kind,id_st
   return data_div;
 }; // getOrCreateDataContainer
 
-$.any.View.prototype._emptyDataDiv = function (div)
+$.any.View.prototype._emptyDiv = function (div)
 {
   return div && div.length ? div.empty() : null;
-}; // _emptyDataDiv
+}; // _emptyDiv
 
 //
 // Create a table, or find a table created previously
@@ -1341,18 +1336,7 @@ $.any.View.prototype.createView = function (parent,data,id,type,kind)
     return null;
 
   // Create a new model
-  let model_opt = {
-    data:       data,
-    id:         id,
-    type:       type,
-    kind:       kind,
-    mode:       this.model.mode,
-    fields:     this.model.fields,
-    permission: this.model.permission,
-    plugins:    this.model.plugins,
-    select:     this.model.select,
-    unselect:   this.model.unselect,
-  };
+  let model_opt = this.getCreateModelOptions(data,id,type,kind);
   let m_str = type+"Model";
   if (!window[m_str]) {
     let def_str = "anyModel";
@@ -1370,28 +1354,7 @@ $.any.View.prototype.createView = function (parent,data,id,type,kind)
   // Create the view
   let id_str   = this.id_stack.join("_");
   let view_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_container";
-  let view_opt = {
-    model:            model,
-    filters:          this._createFilters(model), // Create filter if we don't already have one
-    id:               view_id,
-    main_div:         parent,
-    view:             this,
-    base_id:          this.base_id,
-    grouping:         this.options.grouping,
-    item_opening:     this.options.item_opening,
-    top_view:         this.options.top_view,
-    data_level:       this.options.data_level,
-    showHeader:       this.options.showHeader,
-    showTableHeader:  this.options.showTableHeader,
-    // Give same permissions to new view as the current one.
-    // TODO! May NOT always be the desired behaviour!
-    isEditable:       this.options.isEditable,
-    isRemovable:      this.options.isRemovable || kind == "item", // TODO! Not a good solution
-    isDeletable:      this.options.isDeletable,
-    isSelectable:     this.options.isSelectable, // TODO!
-    itemLinkClicked:  this.options.itemLinkClicked,
-    preselected:      this.options.isSelectable ? this.options.preselected : null,
-  };
+  let view_opt = this.getCreateViewOptions(model,view_id,parent,kind);
   let v_str = view_opt.grouping ? type+"View"+view_opt.grouping.capitalize() : type+"View";
   if (!window[v_str]) {
     let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
@@ -1414,6 +1377,48 @@ $.any.View.prototype.createView = function (parent,data,id,type,kind)
   }
   return view;
 }; // createView
+
+$.any.View.prototype.getCreateModelOptions = function(data,id,type,kind)
+{
+  return {
+    data:       data,
+    id:         id,
+    type:       type,
+    kind:       kind,
+    mode:       this.model.mode,
+    fields:     this.model.fields,
+    permission: this.model.permission,
+    plugins:    this.model.plugins,
+    select:     this.model.select,
+    unselect:   this.model.unselect,
+  };
+}; // getCreateModelOptions
+
+$.any.View.prototype.getCreateViewOptions = function(model,view_id,parent,kind)
+{
+  return {
+    model:            model,
+    filters:          this._createFilters(model), // Create filter if we don't already have one
+    id:               view_id,
+    main_div:         parent,
+    view:             this,
+    base_id:          this.base_id,
+    grouping:         this.options.grouping,
+    item_opening:     this.options.item_opening,
+    top_view:         this.options.top_view,
+    data_level:       this.options.data_level,
+    showHeader:       this.options.showHeader,
+    showTableHeader:  this.options.showTableHeader,
+    // Give same permissions to new view as the current one. This may not always
+    // be the desired behaviour, in that case override this method and correct.
+    isEditable:       this.options.isEditable,
+    isRemovable:      this.options.isRemovable || kind == "item", // TODO! Not a good solution
+    isDeletable:      this.options.isDeletable,
+    isSelectable:     this.options.isSelectable,
+    itemLinkClicked:  this.options.itemLinkClicked,
+    preselected:      this.options.isSelectable ? this.options.preselected : null,
+  };
+}; // getCreateViewOptions
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1705,7 +1710,7 @@ $.any.View.prototype.getListView = function (type,kind,id,val,edit,filter_key,id
   let v_str = view_opt.grouping ? list_type.capitalize()+"View"+view_opt.grouping.capitalize() : list_type.capitalize()+"View";
   if (!window[v_str]) {
     let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
-    console.warn(v_str+" is not a valid view, using "+def_str+". ");
+    console.warn(v_str+" is not a valid list view, using "+def_str+". ");
     v_str = def_str;
   }
   view_opt.filter_key = filter_key;
@@ -1713,14 +1718,14 @@ $.any.View.prototype.getListView = function (type,kind,id,val,edit,filter_key,id
   try {
     view = new window[v_str](view_opt);
     if (!Object.keys(view).length) {
-      console.error("Couldn't create view "+v_str+" with id "+list_view_id);
+      console.error("Couldn't create list view "+v_str+" with id "+list_view_id);
       view = null;
     }
     if (view && view.refresh)
       view.refreshLoop();
   }
   catch (err) {
-    console.error("Couldn't create view "+v_str+": "+err);
+    console.error("Couldn't create list view "+v_str+": "+err);
   }
   return view;
 }; // getListView
@@ -2431,9 +2436,7 @@ $.any.View.prototype._doShowItem = function (opt)
   let name_key = this.model.name_key ? this.model.name_key : type+"_name";
   let the_item = null;
   if (!is_new)
-    the_item = this.model.dataSearch({ type: type,
-                                       id:   id,
-                                    });
+    the_item = this.model.dataSearch({ type:type, id:id });
   else
     the_item = data;
   let the_id    = the_item ? the_item[id] ? id : the_item["+"+id] ? "+"+id : null : null;
@@ -2465,30 +2468,26 @@ $.any.View.prototype._doShowItem = function (opt)
       if (filter[filter_id].DISPLAY)
         item["+0"].data[the_id][filter_id] = "";
   }
+  // Create a new display area and display the item data
   item["+0"].data[the_id].item   = type;
   item["+0"].data[the_id].is_new = is_new;
-  let view = this.createView(opt.view,item,the_id,type,kind); // New type to display, create new view
+  let view = this.createView(opt.view,item,the_id,type,kind);
   if (!view || !view.options || !view.options.top_view) {
-    console.warn("View missing. "); // Should never happen TODO! i18n
-   return false;
-  }
-  view.options.item_opening = true; // To make top right close icon appear
-  let filter = view.getFilter(type,kind);
-  if (!filter) {
-    this.model.message = i18n.error.FILTER_NOT_FOUND.replace("%%", type+" "+kind+"");
-    console.warn(this.model.message);
-    this.showMessages();
+    console.error("View missing. "); // Should never happen TODO! i18n
     return false;
   }
-  // Create a new display area and display the item data
   let con_div = $("#"+view.options.top_view.element.attr("id"));
   if (!con_div.length)
     con_div = view.element;
   con_div.empty(); // TODO! This should perhaps be done elsewhere
   view.element  = con_div;
-  view.main_div = null; // TODO! Why?
+  view.main_div = null;
+  view.id_stack       = [...view.root_id_stack];
+  view.tabs_list      = {};   // TODO! Belongs in Tabs class
+  view.first_div_id   = null; // TODO! Belongs in Tabs class
+  view.current_div_id = null; // TODO! Belongs in Tabs class
   view.options.data_level = 0;
-  view.id_stack     = [...view.root_id_stack];
+  view.options.item_opening = true; // To make top right close icon appear
   if (is_new) {
     view.options.isEditable  = true;
     view.options.isDeletable = false;
@@ -2500,16 +2499,15 @@ $.any.View.prototype._doShowItem = function (opt)
                     id:       the_id,
                     type:     type,
                     head:     true,
-                    grouping: "tabs",
+                    grouping: this.options.grouping,
                   };
     view.model.dbSearch(mod_opt);
   }
   else {
     // Local refresh
     if (is_new)
-      view.refreshLoop(con_div,item,"+0",type,"item",true);
-    else
-      view.refreshLoop(con_div,item,the_id,type,"item");
+      the_id = "+0";
+    view.refreshLoop(con_div,item,the_id,type,"item",is_new);
   } // else
   return true;
 }; // _doShowItem
@@ -2877,7 +2875,7 @@ $.any.View.prototype.dbSearchLinks = function (event)
    success:     this.dbUpdateLinkListDialog, // Call the view success handler
    parent_view: this,
    head:        true,
-   grouping:    "tabs",
+   grouping:    this.options.grouping,
   };
   return this.model.dbSearch(options);
 }; // dbSearchLinks
@@ -2982,7 +2980,7 @@ $.any.View.prototype.dbUpdateLinkList = function (opt)
     name_key:  opt.name_key,
     view:      opt.view, // Refresh only this view
     head:      true,
-    grouping:  "tabs",
+    grouping:  this.options.grouping,
   };
   this.options.item_opening = true; // To make top right close icon appear
   if (!this.model.dbUpdateLinkList(mod_opt))
