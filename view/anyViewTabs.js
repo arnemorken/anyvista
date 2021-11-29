@@ -36,9 +36,21 @@ $.widget("any.ViewTabs", $.any.View, {
 
   _destroy: function() {
     this.element.removeClass("any-datatabs-view");
+    this.tabs_list = null;
     this._super();
   }
 }); // ViewTabs widget constructor
+
+$.any.ViewTabs.prototype.createView = function (parent,data,id,type,kind)
+{
+  let view = $.any.View.prototype.createView.call(this,parent,data,id,type,kind);
+  if (view) {
+    view.tabs_list      = this.tabs_list;
+    view.first_div_id   = this.first_div_id;
+    view.current_div_id = this.current_div_id;
+  }
+  return view;
+}; // createView
 
 $.any.ViewTabs.prototype.refresh = function (parent,data,id,type,kind,edit,pdata,pid)
 {
@@ -126,7 +138,7 @@ $.any.ViewTabs.prototype.refreshHeader = function (header_div,data,id,type,kind,
           ev.data.div_id = div_id;
           ev.data.data_level = this.options.data_level;
           ev.data.kind = kind;
-          //this.openTab(ev);
+          this.openTab(ev);
           if (this.first_div_id /*|| this.current_div_id*/) {
             ev.data.div_id = /*this.current_div_id? this.current_div_id :*/ this.first_div_id;
             this.openTab(ev);
@@ -139,20 +151,12 @@ $.any.ViewTabs.prototype.refreshHeader = function (header_div,data,id,type,kind,
     return $.any.View.prototype.refreshHeader.call(this,header_div,data,id,type,kind,edit,id_str,doNotEmpty);
   return null;
 }; // refreshHeader
-/*
-$.any.ViewTabs.prototype.refreshHeaderEntry = function (header_div,data,id,filter_id,n)
-{
- if (this.options.grouping != "tabs")
-   return $.any.View.prototype.refreshHeaderEntry.call(this,header_div,data,id,filter_id,n);
- return null;
-}; // refreshHeaderEntry
-*/
 
-$.any.ViewTabs.prototype._emptyDataDiv = function (div)
+$.any.ViewTabs.prototype._emptyDiv = function (div)
 {
   this.tabs_list = {}; // Redraw tabs
-  return $.any.View.prototype._emptyDataDiv(div);
-}; // _emptyDataDiv
+  return $.any.View.prototype._emptyDiv(div);
+}; // _emptyDiv
 
 $.any.ViewTabs.prototype.clickOpenTab = function (event)
 {
@@ -185,17 +189,6 @@ $.any.ViewTabs.prototype.getWidgetName = function()
   return "";
 }; // getWidgetName
 */
-
-$.any.ViewTabs.prototype.createView = function (parent,data,id,type,kind)
-{
-  let view = $.any.View.prototype.createView.call(this,parent,data,id,type,kind);
-  if (view) {
-    view.tabs_list      = this.tabs_list;
-    view.first_div_id   = this.first_div_id;
-    view.current_div_id = this.current_div_id;
-  }
-  return view;
-}; // createView
 
 })($);
 
