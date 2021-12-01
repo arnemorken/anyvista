@@ -439,6 +439,16 @@ class anyTable extends dbTable
     return ucfirst($type);
   } // findDefaultItemHeader
 
+  protected function findDefaultNogroupHeader($type,$data=null,$skipOther=false)
+  {
+      return $this->findDefaultHeader($type,$data,$skipOther);
+  } // findDefaultNogroupHeader
+
+  protected function findDefaultItemListHeader($type,$data=null,$skipOther=false)
+  {
+      return $this->findDefaultHeader($type,$data,$skipOther);
+  } // findDefaultItemListHeader
+
   protected function findDefaultHeader($type,$data=null,$skipOther=false)
   {
     $other = $skipOther ? "" : "Other "; // TODO: i18n
@@ -761,7 +771,7 @@ class anyTable extends dbTable
               $data[$idx]["data"]['groupingForName'] = $table->mListForName;
               $data[$idx]["data"]["plugin-".$plugin] = array();
               $data[$idx]["data"]["plugin-".$plugin]["head"] = $plugin;
-              $data[$idx]["data"]["plugin-".$plugin][$table->getNameKey()] = $this->findDefaultHeader($plugin,$data[$idx]["data"]["plugin-".$plugin],true);
+              $data[$idx]["data"]["plugin-".$plugin][$table->getNameKey()] = $this->findDefaultItemListHeader($plugin,$data[$idx]["data"]["plugin-".$plugin],true);
               if (isset($table_data[$plugin]))
                 $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data[$plugin]["data"];
               else
@@ -1469,7 +1479,7 @@ class anyTable extends dbTable
     if ($type && $type != "") {
       $data_tree["group"]["nogroup"]["group_type"] = $type;
       $data_tree["group"]["nogroup"]["group_id"]   = "nogroup";
-      $data_tree["group"]["nogroup"]["group_name"] = $this->findDefaultHeader($type);
+      $data_tree["group"]["nogroup"]["group_name"] = $this->findDefaultNogroupHeader($type);
       $data_tree["group"]["nogroup"]["head"]       = "group";
     }
     //vlog("dbSearchGroupNames,data_tree:",$data_tree);
