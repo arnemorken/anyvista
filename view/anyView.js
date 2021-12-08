@@ -1259,7 +1259,10 @@ $.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_st
             init_opt.elem_id = td_id;
             inp_elem.off("click").on("click", init_opt,
               function(e)
-              { if (!e.data.edit) e.preventDefault(); } // Only open file dialog if cell is editable
+              {
+                // Only open file dialog if cell is editable
+                if (!e.data.edit) e.preventDefault();
+              }
             );
             inp_elem.off("change").on("change", init_opt, $.proxy(fun,this));
           }
@@ -2111,11 +2114,6 @@ $.any.View.prototype.refreshAddLinkButton = function (parent,opt)
   btn.append(dd_menu);
   dd_menu.hide();
 
-  // Clicking off the menu (inside main_div) will hide it
-  let opt2 = {...opt};
-  opt2.edit = false;
-  this.main_div.off("click").on("click", opt2, fun);
-
   // Pressing ESC (27) will hide the menu
   let self = this;
   window.onkeydown = function(e) {
@@ -2170,9 +2168,21 @@ $.any.View.prototype.showLinkMenu = function (event)
   let dd_menu = $("#"+event.data.element_id);
   let elem = document.getElementById(event.data.element_id);
   if (elem) {
-    if (elem.className.indexOf("w3-show") == -1 && event.data.edit !== false) { // TODO! w3-show should not be hardcoded
+    // TODO! w3-show should not be hardcoded
+    if (elem.className.indexOf("w3-show") == -1 && event.data.edit !== false && event.which !== 27) {
       elem.className += " w3-show";
       dd_menu.show();
+      // Clicking off the menu (inside main_div) will hide it
+      let opt2 = {...event.data};
+      opt2.edit    = false;
+      opt2.elem    = elem;
+      opt2.dd_menu = dd_menu;
+      this.main_div.off("click").on("click", opt2,
+        function(e) {
+          e.data.elem.className = elem.className.replace(" w3-show", "");
+          e.data.dd_menu.hide();
+        }
+      );
     }
     else {
       elem.className = elem.className.replace(" w3-show", "");
