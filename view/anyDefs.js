@@ -26,5 +26,6 @@ var gVersion = "1.0.0";
 var any_defs = {
   dataScript:   gServer + gHomeFolder + gDataScript,      // URL of the data source script
   uploadScript: gServer + gThirdpartyPHP + gUploadScript, // URL of the upload script
-  uploadURL:    gServer + gHomeFolder + gUploadFolder,    // Name of the upload folder
+  uploadURL:    gServer + gHomeFolder + gUploadFolder,    // URL of the upload folder
+  uploadFolder: gUploadFolder,                            // Name of the upload folder
 };
