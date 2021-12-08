@@ -2267,20 +2267,23 @@ $.any.View.prototype.addListEntry = function (event)
   let type   = event.data.type;
   let id_str = event.data.id_str;
   let filter = event.data.filter;
+  let is_new = event.data.is_new;
   if (event.data.edit && (event.data.new_id || event.data.new_id === 0)) {
     this.model.dataDelete({id:event.data.new_id});
     this.refreshData(this.element,this.model.data,pid,type);
   }
   // Get a new id (from database, if we use that) and add a new empty item to the data model.
-  event.data.data = this.model.dataSearch({ type: type,
-                                            id:   pid,
-                                            data: this.model.data,
-                                         }); // Find the place to add the new item
-  if (event.data.is_new) {
+  let the_data = this.model.dataSearch({ type: type,
+                                         id:   pid,
+                                         data: this.model.data,
+                                         parent: true,
+                                      }); // Find the place to add the new item
+  if (is_new) {
     if (this.model.mode != "remote") {
       let new_id = this.model.dataSearchNextId(type);
       if (new_id >= 0) {
-        this._addListEntry({ new_id: new_id,
+        this._addListEntry({ data:   the_data,
+                             new_id: new_id,
                              type:   type,
                              kind:   "list",
                              id_str: id_str,
@@ -2295,9 +2298,10 @@ $.any.View.prototype.addListEntry = function (event)
     }
     else // remote
       this.model.dbSearchNextId({ type:    type,
-                                  id_str:  id_str,
                                   success: this._addListEntryFromDB,
                                   context: this,
+                                  data:    the_data,
+                                  id_str:  id_str,
                                });
   }
   else
@@ -2322,13 +2326,14 @@ $.any.View.prototype._addListEntryFromDB = function (context,serverdata,options)
       console.error("anyView._addListEntryFromDB: "+self.error_server);
     let view = options.context ? options.context : null;
     if (view) {
-      serverdata.kind = "list";
-      serverdata.type = options.type;
+      serverdata.kind   = "list";
+      serverdata.type   = options.type;
+      serverdata.id_str = options.id_str;
       serverdata.new_id = serverdata.id;
       if (typeof serverdata.new_id == "string")
         if (serverdata.new_id.length && serverdata.new_id[0] != "+")
           serverdata.new_id = "+"+serverdata.new_id;
-      serverdata.data   = view.model.data;
+      serverdata.data   = options.data ? options.data : view.model.data;
       serverdata.filter = view.getFilter(serverdata.type,serverdata.kind);
       view._addListEntry(serverdata);
     }
@@ -2343,42 +2348,40 @@ $.any.View.prototype._addListEntry = function (opt)
   let kind   = opt.kind;
   let filter = opt.filter;
 
-  let d = {};
-  if ((new_id || new_id===0) && !d[new_id])  { // New row
-    d = {};
-    d[kind] = type;
-    d.data = {};
+  let indata = {};
+  if ((new_id || new_id===0) && !indata[new_id])  { // New row
+    indata = {};
+    indata[kind] = type;
+    //indata.data = {}; // TODO! Why?
   }
-  if (d) {
+  if (indata) {
     let id_key = this.model.id_key
                  ? this.model.id_key
                  : type+"_id";
     for (let filter_id in filter) {
       if (filter_id == id_key)
-        d[filter_id] = new_id;
+        indata[filter_id] = new_id;
       else
-        d[filter_id] = "";
+        indata[filter_id] = "";
     }
-    d.type   = type;
-    d.kind   = kind;
-    d.is_new = true;
+    indata.type   = type;
+    indata.kind   = kind;
+    indata.is_new = true;
   }
   if (new_id || new_id===0)
-    this.model.dataInsert({ new_id: new_id,
-                            type:   opt.type,
-                            data:   opt.data,
+    this.model.dataInsert({ type:   opt.type,
                             id:     null,
-                            indata: d,
+                            indata: indata,
+                            new_id: new_id,
                          });
   else
     this.model.dataUpdate({ type:   opt.type,
-                            data:   opt.data,
                             id:     opt.id,
-                            indata: d,
+                            indata: indata,
                          });
   opt.new_id = null; // Important! To make addListEntry work with id == 0
 
-  this.refreshOne(this.element,this.model.data,new_id,type,kind,true,id_str);
+  this.refreshOne(this.element,opt.data,new_id,type,kind,true,id_str);
 }; // _addListEntry
 
 ///////////////////////////////////////////////////////////////////////////////
