@@ -41,8 +41,8 @@ var is_new       = (data_id == "new" || parseInt(data_id) == -1) && (!is_logged_
 var is_me        = model.permission && parseInt(model.permission.current_user_id) == parseInt(data_id);
 var view = new eventViewTabs({ id:          "<?php print $gViewArea;?>",
                                model:       model,
-                               isEditable:  true, //is_admin || is_new || is_me,
-                               isDeletable: true, //is_admin || is_new || is_me,
+                               isEditable:  is_admin || is_new || is_me,
+                               isDeletable: is_admin || is_new || is_me,
                                isRemovable: false,
                                edit:        is_new,
                                dispEmail:   is_admin || is_me || is_new,
