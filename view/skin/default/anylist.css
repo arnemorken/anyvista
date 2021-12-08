@@ -1,3 +1,61 @@
+.fa-disabled {
+  opacity:  0.6;
+  cursor:   not-allowed;
+}
+
+/*** Special CSS for date input field ***/
+::-webkit-datetime-edit             { line-height:1; padding: 0; }
+::-webkit-datetime-edit-month-field { line-height:1; padding: 0; }
+::-webkit-datetime-edit-day-field   { line-height:1; padding: 0; }
+::-webkit-datetime-edit-year-field  { line-height:1; padding: 0; }
+::-webkit-calendar-picker-indicator { line-height:1; padding: 0; margin: 0; }
+
+/*** Special CSS for select input field ***/
+.wp-core-ui select {
+  width:        110px;
+  height:       25px;
+  min-height:   0;
+  line-height:  1.1;
+  padding:      0 0 0 1px;
+  font-size:    13px;
+  -webkit-appearance: none;
+}
+
+/**************************
+ * W3CSS
+ **************************/
+
+.w3-container  {
+  padding:  0;
+}
+
+.w3-modal {
+  color:    #111;
+  z-index:  9999;
+}
+
+.w3-modal-content {
+  padding:  .4em;
+}
+
+.w3-modaldialog-header {
+  font-size:        1.3em;
+  text-decoration:  underline;
+  height:           2em;
+}
+
+.w3-button {
+  background:   #ccc;
+}
+
+.w3-button:hover {
+  background-color: #aaa !important;
+}
+
+.w3-display-topright {
+  background:   #eee;
+}
+
 /**************************
  * Top level containers
  **************************/
@@ -62,13 +120,17 @@
 }
 .any-item-data {
 }
+.any-list-container {
+  height: 650px;
+  overflow: auto;
+}
 
 /**************************
  * Toolbars
  **************************/
 
 .any-toolbar-bottom {
-  width:        800px;
+  width:        100%;
   margin-top:   1em;
   border-top:   1px solid #333;
   height:       2.5em;
@@ -94,8 +156,7 @@
   padding-bottom:   .2em;
 }
 .any-list-table {
-  margin-left:  1.0em;
-  margin-right: -1.0em;
+  margin-left:  0.5em;
 }
 .any-th {
   background-color: #ccc;
@@ -105,6 +166,7 @@
   text-align:       left;
   white-space:      nowrap;
   overflow:         hidden;
+  padding-left:     0;
   font-family:      inherit;
 }
 .any-td:empty,
@@ -135,7 +197,7 @@
 .itemNumber,
 .itemDate {
   height:           25px;
-  width:            90px;
+  width:            fit-content;
   padding-left:     1px;
 }
 
@@ -144,7 +206,6 @@
 }
 
 .itemSelect {
-  width:            110px;
 }
 
 /*** Input fields ***/
@@ -152,7 +213,7 @@
 .itemText[type=text],
 .itemNumber[type=text],
 .itemDate[type=date] {
-  width:            90px;
+  width:            fit-content;
   padding:          0;
   margin:           0;
   line-height:      1;
@@ -164,25 +225,7 @@
 }
 
 .itemNumber[type=text] {
-  width:            50px;
-}
-
-/*** Special CSS for date input field ***/
-::-webkit-datetime-edit             { line-height:1; padding: 0; }
-::-webkit-datetime-edit-month-field { line-height:1; padding: 0; }
-::-webkit-datetime-edit-day-field   { line-height:1; padding: 0; }
-::-webkit-datetime-edit-year-field  { line-height:1; padding: 0; }
-::-webkit-calendar-picker-indicator { line-height:1; padding: 0; margin: 0; }
-
-/*** Special CSS for select input field ***/
-.wp-core-ui select {
-  width:        110px;
-  height:       25px;
-  min-height:   0;
-  line-height:  1.1;
-  padding:      0 0 0 1px;
-  font-size:    13px;
-  -webkit-appearance: none;
+  width:            fit-content;
 }
 
 /**************************
@@ -250,48 +293,8 @@
   font-weight:  normal;
 }
 
-/**************************
- * W3CSS
- **************************/
-
-.w3-container  {
-  padding:  0;
-}
-
-.w3-modal {
-  color:    #111;
-  z-index:  9999;
-}
-
-.w3-modal-content {
-  padding:  .4em;
-}
-
-.w3-modaldialog-header {
-  font-size:        1.3em;
-  text-decoration:  underline;
-  height:           2em;
-}
-
-.w3-button {
-  background:   #ccc;
-}
-
-.w3-button:hover {
-  background-color: #aaa !important;
-}
-
-.w3-display-topright {
-  background:   #eee;
-}
-
 /***********************************************************************
  * Miscellaneous
  ***********************************************************************/
 
 .pointer { cursor:  pointer; }
-
-.fa-disabled {
-  opacity:  0.6;
-  cursor:   not-allowed;
-}
