@@ -122,7 +122,7 @@ $.widget("any.View", {
     id_stack:              null,
     data_level:            0,    // Current "vertical" level in data tree
     indent_tables:         false,
-    indent_level:          0,
+    indent_level:          -1,
     indent_amount:         20,
     cutoff:                100,
     item_opening:          false,
