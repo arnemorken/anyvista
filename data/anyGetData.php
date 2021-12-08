@@ -10,7 +10,7 @@
 //
 // Gets data from an anyList database server and returns it in a JSON object.
 //
-require_once dirname(__FILE__)."/Parameters.php";
+require_once dirname(__FILE__)."/parameters.php";
 require_once dirname(__FILE__)."/anyTableFactory.php";
 
 function anyGetData($doEcho=false)
