@@ -53,6 +53,40 @@ $.any.documentViewTabs.prototype.validateUpdate = function (options)
   return this.validator.validateUpdate(options,this);
 }; // validateUpdate
 
+$.any.documentViewTabs.prototype._uploadClicked = function (event)
+{
+  let fname = $.any.View.prototype._uploadClicked.call(this,event);
+
+  if (fname) {
+  // Update the document_name and document_filename entries in model data
+    this.model.dataUpdate({ id:     event.data.id,
+                            data:   event.data.data,
+                            type:   event.data.type,
+                            indata: { document_name:     fname,
+                                      document_filename: "", // Filename not yet determined
+                                    },
+                         });
+
+    // Empty and disable the view button / input field until the file is actually uploaded
+    let elem_id = this.base_id+"_"+event.data.type+"_"+event.data.kind+"_"+event.data.id_str+"_document_filename";
+    if ($("#"+elem_id).length) {
+      let str_deactivated = "File is not yet uploaded"; // TODO i18n
+      $("#"+elem_id).find("a").attr("href","");
+      $("#"+elem_id+" .itemText").text(fname);
+      $("#"+elem_id+" .itemText").val(fname);
+      $("#"+elem_id+" .fa-file").addClass("fa-disabled"); // Disable the view icon
+      $("#"+elem_id+" .fa-file").prop("title", str_deactivated);
+    }
+    // Change the name link
+    elem_id = this.base_id+"_"+event.data.type+"_"+event.data.kind+"_"+event.data.id_str+"_document_name";
+    if ($("#"+elem_id+" .itemText").length) {
+      $("#"+elem_id+" .itemText").text(fname);
+      $("#"+elem_id+" .itemText").val(fname);
+    }
+  }
+  return fname;
+}; // _uploadClicked
+
 $.any.documentViewTabs.prototype.dbUpdate = function (event)
 {
   let opt = event.data;
@@ -63,26 +97,44 @@ $.any.documentViewTabs.prototype.dbUpdate = function (event)
     this.showMessages(this.model);
     return false;
   }
-  let file        = window.any_current_file;
-  let d           = new Date();
-  let thedate     = d.getFullYear()+"-"+d.getMonth()+""+d.getDate()+"_"+d.getHours()+"-"+d.getMinutes()+"-"+d.getSeconds();
-  let rnd         = Math.floor(Math.random() * 1000000);
-  let ext         = file.name.split('.').pop();
-  let uid         = this.model && this.model.permission ? this.model.permission.current_user_id : "u";
-  if (uid<0) uid  = "u";
-  let local_fname = uid+"_"+thedate+"_"+rnd+"."+ext;
-  doUploadFile(any_defs.uploadScript,
-               file,
-               uid,
-               local_fname);
-  window.any_current_file = null;
-
+  let local_fname = null;
+  let file = window.any_current_file;
+  if (!file) {
+    this.model.message = "No file selected. ";
+  }
+  else {
+    let d       = new Date();
+    let thedate = d.getFullYear()+"-"+d.getMonth()+""+d.getDate()+"_"+d.getHours()+"-"+d.getMinutes()+"-"+d.getSeconds();
+    let rnd     = Math.floor(Math.random() * 1000000);
+    let ext     = file.name.split('.').pop();
+    let uid     = this.model && this.model.permission ? this.model.permission.current_user_id : "u";
+    if (uid<0)
+      uid = "u";
+    local_fname = uid+"_"+thedate+"_"+rnd+"."+ext;
+    doUploadFile(any_defs.uploadScript,
+                 file,
+                 uid,
+                 local_fname);
+    window.any_current_file = null;
+  }
+  let e = this.model.error;
+  let m = this.model.message;
   this.model.dataUpdate({ id:     event.data.id,
                           data:   event.data.data,
                           type:   event.data.type,
-                          indata: { document_filename: local_fname },
-                        });
-  return $.any.View.prototype.dbUpdate.call(this,event);
+                          indata: { document_upload:   local_fname,
+                                    document_filename: local_fname,
+                                  },
+                       });
+  let res = $.any.View.prototype.dbUpdate.call(this,event);
+  if (!res) {
+    this.model.error   = e + this.model.error;
+    this.model.message = m + this.model.message;
+    if (this.model.error)   console.log(this.model.error);
+    if (this.model.message) console.log(this.model.message);
+  }
+  this.showMessages(this.model);
+  return res;
 }; // dbUpdate
 
 $.any.documentViewTabs.prototype.dbDeleteDialog = function (event)

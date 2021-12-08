@@ -1257,6 +1257,10 @@ $.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_st
           if (inp_elem.length) {
             let fun = this._uploadClicked;
             init_opt.elem_id = td_id;
+            inp_elem.off("click").on("click", init_opt,
+              function(e)
+              { if (!e.data.edit) e.preventDefault(); } // Only open file dialog if cell is editable
+            );
             inp_elem.off("change").on("change", init_opt, $.proxy(fun,this));
           }
         }
@@ -1780,54 +1784,43 @@ $.any.View.prototype.getListViewOptions = function (model,view_id,view)
 $.any.View.prototype.getUploadStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
 {
   // Shows a clickable label that opens a file select dialog when pressed
-  let elem_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id; // element id
-  let name     = data_item[type+"_name"];                                 // real file name from user
-  let style    = "style='cursor:pointer;'";
-  let str_open = "Select a new file for upload"; // TODO i18n
-  let str      = "<label id='"+elem_id+"_filelabel' for='"+elem_id+"_upload' class='itemLabel' "+style+" title='"+str_open+"'>"+
-                 "<i class='fa fa-upload'></i>"+
-                 "</label>"+
-                 "<input id='"+elem_id+"_upload'  name='"+elem_id+"_upload' type='file' style='display:none;'/>"+
-                 "<input class='itemText' value='"+name+"' type='hidden'/>"; // Sent to database
+  let elem_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id; // element id
+  let name    = data_item[type+"_name"];                                 // real file name from user
+  let style   = "style='cursor:pointer;'";
+  let title   = "title='Select a new file for upload'"; // TODO i18n
+  let str     = "<label id='"+elem_id+"_label' for='"+elem_id+"_upload' class='itemLabel' "+style+" "+title+">"+
+                "<i class='fa fa-upload'></i>"+
+                "</label>"+
+                "<input id='"+elem_id+"_upload'  name='"+elem_id+"_upload' type='file' style='display:none;'/>"+
+                "<input class='itemText itemEdit' value='"+name+"' type='hidden'/>"; // Sent to database
   return str;
 }; // getUploadStr
 
 $.any.View.prototype._uploadClicked = function (event)
 {
+  if (!event.data.edit) {
+    console.log(event.data.filter_id+" not editable. "); // TODO! i18n
+    return null;
+  }
   let elem_id = event.data.elem_id;
   let fname = $("#"+elem_id+"_upload").val().replace(/C:\\fakepath\\/i, '');
   if (fname) {
-    window.any_current_file = $("#"+elem_id+"_upload")[0].files[0]; // Remember the file
-    // Change the filename link
-    $("#"+elem_id+" .itemText").val(fname);  // Update the field to be sent to server
-
-    // Empty and disable the view button / input field until the file is actually uploaded
-    // TODO! Direct ref. to document plugin:
-    elem_id = this.base_id+"_"+event.data.type+"_"+event.data.kind+"_"+event.data.id_str+"_document_filename";
-    let str_deactivated = "File is not yet uploaded"; // TODO i18n
-    $("#"+elem_id).find("a").attr("href","");
-    $("#"+elem_id+" .itemText").val(fname);
-    $("#"+elem_id+" .fa-file").addClass("fa-disabled"); // Disable the view icon
-    $("#"+elem_id+" .fa-file").prop("title", str_deactivated);
-
-    // Change the name link
-    // TODO! Direct ref. to document plugin:
-    elem_id = this.base_id+"_"+event.data.type+"_"+event.data.kind+"_"+event.data.id_str+"_document_name";
-    $("#"+elem_id+" .itemText").text(fname);
-    $("#"+elem_id+" .itemText").val(fname);
+    // Remember the file
+    window.any_current_file = $("#"+elem_id+"_upload")[0].files[0];
 
     // Update the model
-    // TODO! Direct ref. to document plugin:
+    let filter_id = event.data.filter_id;
     this.model.dataUpdate({ id:     event.data.id,
                             data:   event.data.data,
                             type:   event.data.type,
-                            indata: { document_name:     fname,
-                                      document_filename: fname, // TODO! Neccessary?
-                                    },
-                          });
+                            indata: { [filter_id]: fname },
+                         });
+    // Change the filename link
+    $("#"+elem_id+" .itemText").val(fname);  // Update the field to be sent to server
   }
   else
     window.any_current_file = null;
+  return fname;
 }; // _uploadClicked
 
 $.any.View.prototype.getFileViewStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
