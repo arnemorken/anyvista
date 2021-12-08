@@ -167,6 +167,8 @@ $.widget("any.View", {
       this.model.cbSubscribe(this.onModelChange,this);
     }
 
+    this._setPermissions();
+
     if (this.options.refresh)
       this.refresh();
 
@@ -306,6 +308,19 @@ $.any.View.prototype._findKind = function (data,okind,id)
   return kind;
 }; // _findKind
 
+$.any.View.prototype._setPermissions = function ()
+{
+  if (this.options.admin_always_edits) {
+    let is_admin = this.model && this.model.permission && this.model.permission.is_admin;
+    this.options.isEditable = this.options.isEditable || is_admin;
+  }
+  else
+  if (this.model.permission) {
+    if (this.model.permission.isEditable)
+      this.options.isEditable = this.model.permission.isEditable;
+  }
+}; // _setPermissions
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -353,6 +368,7 @@ $.any.View.prototype.onModelChange = function (model)
 {
   if (model) {
     this.model = model;
+    this._setPermissions(); // Model permissions may have changed
   }
   this.refreshLoop();
   this.showMessages(model);
