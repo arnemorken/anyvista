@@ -505,7 +505,7 @@ anyModel.prototype._getDataSourceName = function ()
  *
  * @return If id is specified and parent is false: A pointer to the item found, or null if not found or on error.
  *         If id is specified and parent is true: A pointer to the parent of the item found, or null if not found or on error.
- *         If id is not specified: A new set of pointers to all the items of the specified type (might be empty if none found).
+ *         If id is not specified: The first item found of the specified type or null if none found.
  *
  * @example
  *      mymodel.dataSearch({type:"user",id:"38"});
@@ -517,9 +517,10 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     console.error("anyModel.dataSearch: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
-  let data = options.data                  ? options.data : this.data;
-  let id   = options.id || options.id===0  ? options.id   : null;
-  let type = options.type                  ? options.type : this.type;
+  let data      = options.data                  ? options.data      : this.data;
+  let id        = options.id || options.id===0  ? options.id        : null;
+  let type      = options.type                  ? options.type      : this.type;
+  let prev_type = options.prev_type             ? options.prev_type : this.type;
 
   if (!type) {
     console.error("anyModel.dataSearch: "+i18n.error.TYPE_MISSING);
@@ -532,14 +533,11 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
   if (!data)
     return null; // Not found
 
-  if (!id && id !== 0 && !options.item_list)
-    options.item_list = []; // Used if type search
-
   let name_key = type == this.type
                  ? (this.name_key ? this.name_key : type+"_name")
                  : type+"_name";
   let data_ptr = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
-  let dp_type  = data_ptr ? data_ptr.list ? data_ptr.list : data_ptr.item ? data_ptr.item : data_ptr.head ? data_ptr.head : null : null;
+  let dp_type  = data_ptr ? data_ptr.list ? data_ptr.list : data_ptr.item ? data_ptr.item : data_ptr.head ? data_ptr.head : prev_type: prev_type;
   if ((id || id === 0) && data_ptr && (dp_type == type || (!dp_type && (data_ptr[name_key] || data_ptr[name_key] === "")))) {
     if (parent_data && parent_data[parent_id]) {
       parent_data[parent_id].id = parent_id; // Hack
@@ -550,7 +548,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
   for (let idx in data) {
     if (data.hasOwnProperty(idx) && data[idx] && !["head","item","list"].includes(idx)) {
       let item = null;
-      let dtype = data[idx].list ? data[idx].list : data[idx].item ? data[idx].item : data[idx].head ? data[idx].head : null;
+      let dtype = data[idx].list ? data[idx].list : data[idx].item ? data[idx].item : data[idx].head ? data[idx].head : prev_type;
       if (dtype == type || (!dtype && data[idx][name_key])) {
         if (id || id === 0) {
           // id search
@@ -562,30 +560,26 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
         else {
           // type search
           if (!data[idx].head)
-            options.item_list.push(data[idx]);
+            if (!options.parent)
+              return data[idx];
+            else
+              return data;
         }
       }
       if (!item && data[idx].data) { // subdata
         let p_data = options.parent ? data : null;
         let p_idx  = options.parent ? idx  : null;
-        if (id || id === 0)
-          item              = this.dataSearch({data:data[idx].data,id:id,type:type,item_list:options.item_list},p_data,p_idx);
-        else
-          options.item_list = this.dataSearch({data:data[idx].data,id:id,type:type,item_list:options.item_list},p_data,p_idx);
+        let data_ptr  = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
+        let prev_type = data_ptr ? data_ptr.list ? data_ptr.list : data_ptr.item ? data_ptr.item : data_ptr.head ? data_ptr.head : this.type: this.type;
+        item = this.dataSearch({data:data[idx].data,id:id,type:type,prev_type},p_data,p_idx);
+        if (item && item.data)
+          item = item.data;
       }
-      if (item && id != null)
-        return item; // Found (id search)
+      if (item)
+        return item; // Found
     }
   }
-  if (id || id === 0)
-    return null; // Not found (id search)
-  else {
-    if (!options.item_list || options.item_list.size === 0)
-      return null; // Not found (type search)
-    let it_lst = [...options.item_list];
-    delete options.item_list; // We dont want to change in-parameter permanently
-    return it_lst;
-  }
+  return null; // Not found
 }; // dataSearch
 
 /**
