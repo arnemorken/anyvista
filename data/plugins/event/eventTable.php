@@ -96,7 +96,6 @@ class eventTable extends anyTable
     "filters" => [
       "list" => [
         "event_id"            => 1,
-      //"group_id"            => 1,
         "event_name"          => 1,
         "event_place"         => 1,
         "event_date_start"    => 1,
@@ -121,7 +120,6 @@ class eventTable extends anyTable
       ],
       "item" => [
         "event_id"            => 1,
-      //"group_id"            => 1,
         "event_name"          => 1,
         "event_place"         => 1,
         "event_date_start"    => 1,
