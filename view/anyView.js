@@ -2118,10 +2118,20 @@ $.any.View.prototype.refreshAddLinkButton = function (parent,opt)
   btn.append(dd_menu);
   dd_menu.hide();
 
-  // Clicking off the menu will hide it
+  // Clicking off the menu (inside main_div) will hide it
   let opt2 = {...opt};
   opt2.edit = false;
-  $(document).off("click").on("click", opt2, fun);
+  this.main_div.off("click").on("click", opt2, fun);
+
+  // Pressing ESC (27) will hide the menu
+  let self = this;
+  window.onkeydown = function(e) {
+    if (e.keyCode == 27) {
+      e.data = {};
+      e.data.element_id = opt.element_id;
+      self.showLinkMenu(e);
+    }
+  };
 
   // Add the clickable menu entries
   for (let plugin_type in this.options.linkIcons) {
