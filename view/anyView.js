@@ -2378,15 +2378,18 @@ $.any.View.prototype._addListEntry = function (opt)
     indata.kind   = kind;
     indata.is_new = true;
   }
+  let the_data = opt.data ? opt.data : this.model.data;
   if (new_id || new_id===0)
     this.model.dataInsert({ type:   opt.type,
                             id:     null,
+                            data:   the_data,
                             indata: indata,
                             new_id: new_id,
                          });
   else
     this.model.dataUpdate({ type:   opt.type,
                             id:     opt.id,
+                            data:   the_data,
                             indata: indata,
                          });
   opt.new_id = null; // Important! To make addListEntry work with id == 0
@@ -2472,8 +2475,14 @@ $.any.View.prototype._doShowItem = function (opt)
   else
     the_item = data;
   let the_id    = the_item ? the_item[id] ? id : the_item["+"+id] ? "+"+id : null : null;
+  if (!the_id && is_new)
+    the_id = id;
+  if (!the_id) {
+    console.error("System error: Could not find id. "); // Should never happen TODO! i18n
+    return false;
+  }
   let item_name = null;
-  if (the_id)
+  if (the_id && !is_new)
     item_name = the_item[the_id][name_key];
   else
     item_name = i18n.message.newType.replace("%%",type); // Edit new
@@ -2829,16 +2838,18 @@ $.any.View.prototype.dbUpdate = function (event)
   if (data_values["parent_name"])
     delete data_values["parent_name"]; // TODO! Why?
   if (id || id === 0) { // TODO!
-    // Update header for item view
-    let head_item = this.model.dataSearch({ type: type,
-                                            id:   "+0",
-                                         });
-    if (head_item && head_item["+0"]) {
-      head_item["+0"][this.model.name_key] = data_values[this.model.name_key];
-      let con_div = this.getOrCreateMainContainer(null,type,kind,id_str);
-      this.refreshHeader(con_div,this.model.data,"0",type,"head",false,"0",true); // TODO! Does not work!
+    if (kind == "item") {
+      // Update header for item view
+      let head_item = this.model.dataSearch({ type: type,
+                                              id:   "+0",
+                                           });
+      if (head_item && head_item["+0"]) {
+        head_item["+0"][this.model.name_key] = data_values[this.model.name_key];
+        let con_div = this.getOrCreateMainContainer(null,type,kind,id_str);
+        this.refreshHeader(con_div,this.model.data,"0",type,"head",false,"0",true); // TODO! Does not work!
+      }
     }
-    /* TODO! Neccessary?
+    /* TODO! Neccessary for mode == "remote"?
     // Make sure the items original model is also updated
     if (this.options.view && this.options.view != this) { // TODO! no view here
       if (!event.data.is_new)
