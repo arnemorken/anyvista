@@ -2872,9 +2872,11 @@ $.any.View.prototype.dbUpdate = function (event)
                                               id:   "+0",
                                            });
       if (head_item && head_item["+0"]) {
-        head_item["+0"][this.model.name_key] = data_values[this.model.name_key];
-        let con_div = this.getOrCreateMainContainer(null,type,kind,id_str);
-        this.refreshHeader(con_div,this.model.data,"0",type,"head",false,"0",true); // TODO! Does not work!
+        if (data_values[this.model.name_key]) {
+          head_item["+0"][this.model.name_key] = data_values[this.model.name_key];
+          let con_div = this.getOrCreateMainContainer(null,type,kind,id_str);
+          this.refreshHeader(con_div,this.model.data,"0",type,"head",false,"0",true); // TODO! Does not work?
+        }
       }
     }
     /* TODO! Neccessary for mode == "remote"?
