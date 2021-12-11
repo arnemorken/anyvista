@@ -56,7 +56,7 @@ var userFilter = function (options)
       list: {
         user_id:         { HEADER:"User id",          DISPLAY:0, HTML_TYPE:"label" },
         user_login:      { HEADER:"User login",       DISPLAY:1, HTML_TYPE:"link"},
-        display_name:    { HEADER:"Disp name:",       DISPLAY:1, HTML_TYPE:"link"},
+        display_name:    { HEADER:"Disp name",        DISPLAY:1, HTML_TYPE:"link"},
         user_name:       { HEADER:"User name",        DISPLAY:1, HTML_TYPE:"link"},
         first_name:      { HEADER:"First name",       DISPLAY:1, HTML_TYPE:"text"},
         last_name:       { HEADER:"Last name",        DISPLAY:0, HTML_TYPE:"text"},

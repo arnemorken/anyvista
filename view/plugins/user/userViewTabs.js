@@ -31,10 +31,8 @@ $.widget("any.userViewTabs", $.any.ViewTabs, {
     this._super();
     this.element.addClass("userViewTabs");
 
-    if (!this.options.filters) {
-      let f = new userFilter(this.options);
-      this.options.filters = f.filters;
-    }
+    let f = new userFilter(this.options);
+    this.options.filters = f.filters;
 
     //this.validator = new userValidator();
 

@@ -27,7 +27,7 @@ var documentFilter = function (options)
         document_privacy:     { HEADER:"Privacy",         DISPLAY:1, HTML_TYPE:"select", /*OBJ_SELECT:privacy*/ },
         date_access:          { HEADER:"Accessible from", DISPLAY:1, HTML_TYPE:"date" },
         parent_id:            { HEADER:"Parent group",    DISPLAY:0, HTML_TYPE:"select", /*OBJ_SELECT:parents*/ },
-        user_role:            { HEADER:"Your role",       DISPLAY:1, HTML_TYPE:"label" },
+        user_role:            { HEADER:"Your&nbsp;role",  DISPLAY:1, HTML_TYPE:"label" },
       },
       list: {
         document_id:          { HEADER:"Document id",     DISPLAY:0, HTML_TYPE:"label" },

@@ -96,7 +96,6 @@ eventModel.prototype.dbSetAttendedSuccess = function (jqXHR,options)
 eventModel.prototype.dbSearchGetURL = function (options)
 {
   let url_str = anyModel.prototype.dbSearchGetURL.call(this,options);
-
   url_str += this.event_date_start ? "&event_date_start="+this.event_date_start : "";
   url_str += this.event_date_end   ? "&event_date_end="  +this.event_date_end   : "";
   return url_str;

@@ -141,3 +141,4 @@ function w3_modaldialog_close(options)
   let dia_id = "moddia_"+parentId+"_"+elementId;
   $("#"+dia_id).remove();
 } // w3_modaldialog_close
+//@ sourceURL=functions.js

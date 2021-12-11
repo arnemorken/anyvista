@@ -251,7 +251,7 @@ class eventTable extends anyTable
   // Update event_user table
   protected function dbUpdateAssociation()
   {
-    if ($this->mTableFieldsLeftJoin["user"]) {
+    if (isset($this->mTableFieldsLeftJoin["user"])) {
       $stmt_par = null;
       for ($t=0; $t<count($this->mTableFieldsLeftJoin["user"]); $t++) {
         $str  = $this->mTableFieldsLeftJoin["user"][$t];

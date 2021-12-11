@@ -35,10 +35,8 @@ $.widget("any.eventViewTabs", $.any.ViewTabs, {
     this._super();
     this.element.addClass("eventViewTabs");
 
-    if (!this.options.filters) {
-      let f = new eventFilter(this.options);
-      this.options.filters = f.filters;
-    }
+    let f = new eventFilter(this.options);
+    this.options.filters = f.filters;
     if (this.options.filters.event && this.options.filters.event.list && this.options.filters.event.user_result)
       this.options.filters.event.list.user_result.DISPLAY = !this.options.hide_result;
 

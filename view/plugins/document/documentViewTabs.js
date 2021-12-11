@@ -56,9 +56,8 @@ $.any.documentViewTabs.prototype.validateUpdate = function (options)
 $.any.documentViewTabs.prototype._uploadClicked = function (event)
 {
   let fname = $.any.View.prototype._uploadClicked.call(this,event);
-
   if (fname) {
-  // Update the document_name and document_filename entries in model data
+    // Update the document_name and document_filename entries in model data
     this.model.dataUpdate({ id:     event.data.id,
                             data:   event.data.data,
                             type:   event.data.type,

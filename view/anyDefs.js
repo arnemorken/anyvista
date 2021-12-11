@@ -8,7 +8,7 @@
  *
  ****************************************************************************************/
 //
-// User-editable "constants" that define some basic properties of the server API.
+// User-editable "constants" that define some basic properties of the anyList API.
 //
 var gServer        = "//localhost/";
 var gHomeFolder    = "Prosjekter/testserver/wp-content/plugins/anylist/";
@@ -21,7 +21,7 @@ var gSkin          = "default";
 //
 // Do not edit below unless you really know what you are doing
 //
-var gVersion = "1.0.0";
+var gVersion = "0.0.1";
 
 var any_defs = {
   dataScript:   gServer + gHomeFolder + gDataScript,      // URL of the data source script
