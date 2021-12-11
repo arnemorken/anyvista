@@ -1799,11 +1799,15 @@ $.any.View.prototype.getUploadStr = function (type,kind,id,val,edit,data_item,fi
   let name    = data_item[type+"_name"];                                 // real file name from user
   let style   = "style='cursor:pointer;'";
   let title   = "title='Select a new file for upload'"; // TODO i18n
+  let filter  = this.getFilter(type,kind);
+  let img_str = "<i class='fa fa-upload'></i>";
+  if (filter && filter[filter_id] && filter[filter_id]["OBJ_IMAGE"])
+    img_str = "<img src='"+filter[filter_id]["OBJ_IMAGE"]+"' style='border:0;box-shadow:none;'/>";
   let str     = "<label id='"+elem_id+"_label' for='"+elem_id+"_upload' class='itemLabel' "+style+" "+title+">"+
-                "<i class='fa fa-upload'></i>"+
+                img_str+
                 "</label>"+
                 "<input id='"+elem_id+"_upload'  name='"+elem_id+"_upload' type='file' style='display:none;'/>"+
-                "<input class='itemText itemEdit' value='"+name+"' type='hidden'/>"; // Sent to database
+                "<input class='itemText itemEdit' value='"+val+"' type='hidden'/>"; // Sent to database
   return str;
 }; // getUploadStr
 
