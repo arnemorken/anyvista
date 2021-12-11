@@ -35,6 +35,7 @@
  *        (boolean) showTableHeader:       Whether to show headers for list tables. Default: true.
  *        (boolean) showToolbar:           Will show a toolbar at the bottom. Default: true.
  *        (boolean) showMessages:          Will show a message field in a toolbar. Default: false.
+ *        (boolean) showServerErrors:      If true, errors from a server will be shown directly.
  *        (boolean) showEmptyRows:         Shows empty rows in non-edit mode. Default: false.
  *        (boolean) showSelectAll:         If isSelectable is true, a button for selecting all rows will be shown. Default: false.
  *        (integer) showButtonAdd:         If isEditable is true, a button for adding new rows may be shown in list table headers. Possible values:
@@ -56,6 +57,7 @@
  *        {boolean} useOddEven:            If true, tags for odd and even columns will be generated for list entries. Default: false.
  *        {string}  grouping:              How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
  *        {boolean} refresh:               If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
+ *        {boolean} uploadDirect:          If true, the selected file will be uploaded without the user having to press the "edit" and "update" buttons. Default: true.
  *
  * @example
  *      new anyView({filters:my_filters,id:"my_content"});
@@ -80,6 +82,7 @@ $.widget("any.View", {
     showTableHeader:       true,
     showToolbar:           true,
     showMessages:          true,
+    showServerErrors:      false,
     showEmptyRows:         false,
   //showSelectAll:         false, // TODO! NOT IMPLEMENTED
     showButtonAdd:         1, // 0 == do not show, 1 == first cell, 2 == last cell
@@ -100,6 +103,7 @@ $.widget("any.View", {
     useOddEven:            true,
     grouping:              "",
     refresh:               false,
+    uploadDirect:          true,
     linkIcons:             null,
 
     // Local methods
@@ -341,8 +345,9 @@ $.any.View.prototype.showMessages = function (modelOrString)
       modelOrString = this.model;
     let close_icon = "<span id='"+div_id+"_close' style='padding-right:5px;' class='far fa-window-close'></span>";
     if (typeof modelOrString == "object") {
-      if (modelOrString.error || modelOrString.message)
-        msgdiv.append(close_icon+"<span style='color:red;'>"+modelOrString.error+"</span> "+modelOrString.message);
+      let err = this.options.showServerErrors && modelOrString.error_server ? modelOrString.error_server : modelOrString.error;
+      if (err || modelOrString.message)
+        msgdiv.append(close_icon+"<span style='color:red;'>"+err+"</span> "+modelOrString.message);
     }
     else
     if (typeof modelOrString == "string") {
@@ -1255,13 +1260,13 @@ $.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_st
           let inp_id = td_id+"_upload";
           let inp_elem = $("#"+inp_id);
           if (inp_elem.length) {
+            let self = this;
             let fun = this._uploadClicked;
             init_opt.elem_id = td_id;
             inp_elem.off("click").on("click", init_opt,
-              function(e)
-              {
-                // Only open file dialog if cell is editable
-                if (!e.data.edit) e.preventDefault();
+              // Only open file dialog if cell is editable
+              function(e) {
+                if (!self.options.uploadDirect && !e.data.edit) e.preventDefault();
               }
             );
             inp_elem.off("change").on("change", init_opt, $.proxy(fun,this));
@@ -1432,6 +1437,9 @@ $.any.View.prototype.getCreateViewOptions = function(model,view_id,parent,kind)
     data_level:       this.options.data_level,
     showHeader:       this.options.showHeader,
     showTableHeader:  this.options.showTableHeader,
+    showServerErrors: this.options.showServerErrors,
+    showButtonNew:    this.options.showButtonNew,
+    showButtonAddLink:this.options.showButtonAddLink,
     // Give same permissions to new view as the current one. This may not always
     // be the desired behaviour, in that case override this method and correct.
     isEditable:       this.options.isEditable,
@@ -1801,15 +1809,16 @@ $.any.View.prototype.getUploadStr = function (type,kind,id,val,edit,data_item,fi
 
 $.any.View.prototype._uploadClicked = function (event)
 {
-  if (!event.data.edit) {
+  if (!this.options.uploadDirect && !event.data.edit) {
     console.log(event.data.filter_id+" not editable. "); // TODO! i18n
     return null;
   }
   let elem_id = event.data.elem_id;
   let fname = $("#"+elem_id+"_upload").val().replace(/C:\\fakepath\\/i, '');
   if (fname) {
-    // Remember the file
-    window.any_current_file = $("#"+elem_id+"_upload")[0].files[0];
+    // Remember the file in case it should be uploaded later
+    let the_file = $("#"+elem_id+"_upload")[0].files[0];
+    window.any_current_file = the_file;
 
     // Update the model
     let filter_id = event.data.filter_id;
@@ -1818,8 +1827,23 @@ $.any.View.prototype._uploadClicked = function (event)
                             type:   event.data.type,
                             indata: { [filter_id]: fname },
                          });
-    // Change the filename link
-    $("#"+elem_id+" .itemText").val(fname);  // Update the field to be sent to server
+    // Update the field to be sent to server
+    $("#"+elem_id+" .itemText").val(fname);
+
+    // Empty the file input field, so that the event will fire a second time even for the same file
+    $("#"+elem_id+"_upload").val(null);
+
+    // See if we should upload the file immediately
+    if (this.options.uploadDirect) {
+      let uid = this.model && this.model.permission ? this.model.permission.current_user_id : "u";
+      if (uid<0)
+        uid = "u";
+      doUploadFile(any_defs.uploadScript,
+                   the_file,
+                   uid,
+                   the_file.name);
+      console.log("Uploaded "+the_file.name);
+    }
   }
   else
     window.any_current_file = null;
