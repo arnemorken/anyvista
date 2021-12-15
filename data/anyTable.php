@@ -2039,7 +2039,7 @@ class anyTable extends dbTable
   //////////////////////// Insert or update link ////////////////////////
   ///////////////////////////////////////////////////////////////////////
 
-  private function dbUpdateLink()
+  protected function dbUpdateLink()
   {
     $link_type = Parameters::get("link_type");
     if (!$link_type) {
