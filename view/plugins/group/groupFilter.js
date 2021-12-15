@@ -32,7 +32,7 @@ var groupFilter = function (options)
         group_id:          { HEADER:"Group id",    DISPLAY:0, HTML_TYPE:"label" },
         group_name:        { HEADER:"Group name",  DISPLAY:1, HTML_TYPE:"link" },
         group_type:        { HEADER:"Group type",  DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT: {"group":"Group","user":"User","event":"Event","document":"Document"} },
-        group_description: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"textspan" },
+        group_description: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"text" },
         parent_id:         { HEADER:"Parent group",DISPLAY:0, HTML_TYPE:"select", OBJ_SELECT: "dbSearchParents" },
         group_sort_order:  { HEADER:"Sort order",  DISPLAY:1, HTML_TYPE:"text" },
       //group_status:      { HEADER:"Status",      DISPLAY:1, HTML_TYPE:"select", /*OBJ_SELECT: status*/ },
@@ -41,7 +41,7 @@ var groupFilter = function (options)
       },
       head: {
         group_name:        { HEADER:"Group name",  DISPLAY:1, HTML_TYPE:"link" },
-        group_description: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"textspan" },
+        group_description: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"text" },
       },
       select: {
         group_name:        { HEADER:"Group name",  DISPLAY:1, HTML_TYPE:"link" },
