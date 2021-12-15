@@ -1894,9 +1894,13 @@ class anyTable extends dbTable
     // Update normal table
     $stmt = $this->dbPrepareUpdateStmt();
     //elog("dbUpdateItem:".$stmt);
-    if ($stmt) // May be null if we only update meta fields
+    if ($stmt) { // May be null if we only update meta fields
       if (!$this->query($stmt))
         return null;
+    }
+    else
+    if ($this->isError())
+      return null;
     $this->mNumRowsChanged += $this->getNumRowsChanged();
 
     // Update meta table
