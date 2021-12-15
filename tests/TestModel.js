@@ -107,6 +107,7 @@ function testModel()
               };
     deepEqual(dm2.dataInit(opt),
               opt, "dataInit #1: return input options");
+    let errmsg = dm2.mode == "remote" ? i18n.error.SERVER_ERROR : "The error";
     deepEqual(dm2.type             === "barobj" &&
               dm2.id_key           === "barobj_id" &&
               dm2.name_key         === "barobj_name" &&
@@ -117,7 +118,7 @@ function testModel()
               dm2.auto_search_init === true &&
               dm2.auto_callback    === false &&
               dm2.message          === "The message" &&
-              dm2.error            === "The error",
+              dm2.error            === errmsg,
               true, "dataInit #2: init ok");
     let data = { data: "more data",
                };
@@ -313,10 +314,7 @@ function testModel()
     let dm = new anyModel({type:"foo",data:data});
     let res = dm.dataSearch({type:"foo",id:"11",parent:true});
     deepEqual(res     !== null &&
-              res[11] === undefined &&
-              res.type === "bar" &&
-              res.id === "99" &&
-              res.data[11] !== undefined,
+              res[11] !== undefined,
               true, "dm.dataSearch('foo','11', true)) return parent data");
   });
 
@@ -890,7 +888,7 @@ function testModel()
     let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      2:{list:"user",user_name:"The faz user",
-                                         dirty:{list:"user",user_name:"The faz user",user_name:"The faz user name"}}}}};
+                                         dirty:{list:"user",user_name:"The faz user"}}}}};
     let dm = new anyModel({name_key:"user_name",type:"user",search:false,mode:"remote",data:data});
     let res = dm.dbUpdate({type:"user",id:2});
     deepEqual(res,
@@ -1232,3 +1230,4 @@ function testModel()
   ///////////////////// end dbDelete tests /////////////////////
 
 } // testModel
+//@ sourceURL=TestModel.js
