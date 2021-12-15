@@ -171,7 +171,6 @@ $.any.ViewTabs.prototype.openTab = function (event)
   $(".anyTabButton").removeClass("w3-blue");
   let btn = $("#"+event.data.div_id+"_tab_btn");
   btn.addClass("w3-blue");
-  //let class_id = "any-"+event.data.kind+"-container-"+event.data.data_level;
   let tab_area = $("#"+event.data.div_id);
   tab_area.parent().find("#"+document.prev_div_id).hide(); // TODO! Should be "this.prev_div_id", but that does not work
   tab_area.show();
