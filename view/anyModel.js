@@ -382,8 +382,14 @@ anyModel.prototype._dataInitSelect = function ()
     if (options.message)                               { this.message          = options.message; }
     if (options.error)                                 { this.error            = options.error; }
     if (options.error) {
-      this.error_server = options.error;
-      this.error        = i18n.error.SERVER_ERROR;
+      if (this.mode == "remote") {
+        this.error_server = options.error;
+        this.error        = i18n.error.SERVER_ERROR;
+      }
+      else {
+        this.error_server = "";
+        this.error        = options.error;
+      }
     }
     if (options.error_server) {
       this.error_server = options.error_server;
