@@ -11,7 +11,7 @@
  *
  ***************************************************************************************/
 /**
- * __View for the anyList data model.__
+ * __anyView: View for the anyList data model.__
  *
  * See <a href="../classes/anyModel.html">`anyModel`</a> for a description of the data model class.
  *
