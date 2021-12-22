@@ -33,6 +33,7 @@
  *        {boolean} confirmDelete:         A delete confirmation dialog will be displayed. Default: true.
  *        (boolean) showHeader:            If false, all headers will be suppressed. Default: true.
  *        (boolean) showTableHeader:       Whether to show headers for list tables. Default: true.
+ *        (boolean) showTableFooter:       Whether to show footers for list tables. Default: true.
  *        (boolean) showToolbar:           Will show a toolbar at the bottom. Default: true.
  *        (boolean) showMessages:          Will show a message field in a toolbar. Default: false.
  *        (boolean) showServerErrors:      If true, errors from a server will be shown directly.
@@ -80,6 +81,7 @@ $.widget("any.View", {
     confirmDelete:         true,
     showHeader:            true,
     showTableHeader:       true,
+    showTableFooter:       true,
     showToolbar:           true,
     showMessages:          true,
     showServerErrors:      false,
@@ -754,6 +756,11 @@ $.any.View.prototype.refreshData = function (parent,data,id,type,kind,edit,id_st
       let tbody = this.getOrCreateTbody(table,type,kind,tab_id_str);
       if (tbody)
         this.refreshTbody(tbody,data,id,type,kind,edit,id_str,pdata,pid);
+      let tfoot = table.find("tfoot").length ? table.find("tfoot") : null;
+      if (!tfoot)
+        tfoot = this.getOrCreateTfoot(table,type,kind,tab_id_str);
+      else
+        this.refreshTfoot(tfoot,data,id,type,kind,edit,id_str,pdata,pid);
     }
   }
   return data_div;
@@ -814,6 +821,8 @@ $.any.View.prototype.getOrCreateTbody = function (table,type,kind,id_str)
 {
   if (!table)
     return null;
+  if (!type || !kind)
+    return null;
   let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tbody";
   let tbody  = $("#"+div_id); // Can we reuse list tbody?
   if (!tbody.length) {
@@ -834,12 +843,32 @@ $.any.View.prototype.getOrCreateThead = function (table,type,kind,id_str)
   if (!type || !kind || (kind != "list" && kind != "select"))
     return null;
   let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_thead";
-  if ($("#"+div_id).length)
-    $("#"+div_id).remove();
-  let thead = $("<thead id='"+div_id+"'></thead>");
+  let thead  = $("#"+div_id);
+  if (thead.length)
+    thead.remove();
+  thead = $("<thead id='"+div_id+"'></thead>");
   table.prepend(thead);
   return thead;
 }; // getOrCreateThead
+
+//
+// Create a tfoot, or find a tfoot created previously
+//
+$.any.View.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
+{
+  if (!this.options.showTableFooter || !table)
+    return null;
+  if (!type || !kind || (kind != "list" && kind != "select"))
+    return null;
+  id_str = id_str.substr(0,id_str.lastIndexOf("_"));
+  let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tfoot";
+  let tfoot = $("#"+div_id); // Can we reuse list tfoot?
+  if (!tfoot.length) {
+    tfoot = $("<tfoot id='"+div_id+"'></tfoot>");
+    table.append(tfoot);
+  }
+  return tfoot;
+}; // getOrCreateTfoot
 
 //
 // Refresh a table header
@@ -910,6 +939,13 @@ $.any.View.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_st
   if (!thead.children().length)
     thead.remove();
 }; // refreshThead
+
+//
+// Refresh the table footer
+//
+$.any.View.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,id_str)
+{
+}; // refreshTfoot
 
 //
 // Refresh a single table row
@@ -1252,7 +1288,7 @@ $.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_st
         let fun = this.options.localSelect
                   ? this.options.localSelect
                   : this._toggleChecked;
-        link_elem.off("click").on("click",init_opt ,$.proxy(fun,this));
+        link_elem.off("click").on("click",init_opt, $.proxy(fun,this));
       }
       else {
         if (filter_key.HTML_TYPE == "upload") {
@@ -1437,6 +1473,7 @@ $.any.View.prototype.getCreateViewOptions = function(model,view_id,parent,kind)
     data_level:       this.options.data_level,
     showHeader:       this.options.showHeader,
     showTableHeader:  this.options.showTableHeader,
+    showTableFooter:  this.options.showTableFooter,
     showServerErrors: this.options.showServerErrors,
     showButtonNew:    this.options.showButtonNew,
     showButtonAddLink:this.options.showButtonAddLink,
@@ -1789,6 +1826,7 @@ $.any.View.prototype.getListViewOptions = function (model,view_id,view)
     isDeletable:     false,
     showSearch:      true,
     showTableHeader: false,
+    showTableFooter: false,
   };
 }; // getListViewOptions
 
@@ -2989,6 +3027,7 @@ $.any.View.prototype.dbUpdateLinkListDialog = function (context,serverdata,optio
           select_list_view.base_id = new_base_id;
           select_list_view.options.showHeader      = false;
           select_list_view.options.showTableHeader = false;
+          select_list_view.options.showTableFooter = false;
           select_list_view.options.isSelectable    = true; // Use the select filter, if available
           select_list_view.options.preselected     = parent_view.model.dataSearch({ type:list_type });
           let mod_opt = { select: new Set() };
