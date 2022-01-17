@@ -795,8 +795,11 @@ class anyTable extends dbTable
       return true; // We do not have subusers (user table does not have parent_id field) TODO! Neccessary?
 
     // Build and execute the full statement
-    $stmt = $this->dbPrepareSearchListStmt($skipOwnId);
-    //elog("dbSearchList:".$stmt);
+    $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId);
+    $limit        = $this->findLimit();
+    $stmt = $partial_stmt.$limit;
+
+    //elog("dbSearchList1:".$stmt);
     if (!$stmt || !$this->query($stmt))
       return false; // An error occured
 
@@ -818,6 +821,23 @@ class anyTable extends dbTable
       // Build the data tree unless its a 'simple' list
       if (!$simple)
         $this->buildGroupTreeAndAttach($data,"list");
+
+      if ($limit != "") {
+        // We should count how many rows would have been returned without LIMIT
+        $count_stmt = "SELECT count(*) AS num_results FROM (".
+                      $partial_stmt.
+                      ") AS dummy";
+        //elog("dbSearchList2:".$count_stmt);
+        if (!$this->query($count_stmt))
+          return false; // An error occured
+        $row = $this->getNext(true);
+        if ($row && isset($row["num_results"])) {
+          $this->mNumResults = $row["num_results"];
+          //error_log($this->mNumResults);
+        }
+        else
+          unset($this->mNumResults);
+      }
     }
 
     return !$this->isError();
@@ -981,9 +1001,21 @@ class anyTable extends dbTable
   {
     if (!isset($this->mOrderBy))
       return "";
-    $ob = "ORDER BY ".$this->getTableName().".".$this->mOrderBy." ".$sort;
+    $ob = "ORDER BY ".$this->getTableName().".".$this->mOrderBy." ".$sort." ";
     return $ob;
   } // findListOrderBy
+
+  protected function findLimit()
+  {
+    $num = Parameters::get("num");
+    if (!$num)
+      return "";
+    $lim = "LIMIT ".$num." ";
+    $from = Parameters::get("from");
+    if ($from)
+      $lim .= "OFFSET ".$from." ";
+    return $lim;
+  } // findLimit
 
   protected function setSortFunction($sortFunc)
   {
@@ -1023,7 +1055,7 @@ class anyTable extends dbTable
   protected function dbSearchMeta(&$data,$kind,$flat)
   {
     if (!$this->tableExists($this->mTableNameMeta)) {
-      $this->mMessage = "No meta table. ";
+      $this->mMessage = "No meta table for '$this->mType' type. ";
       return false;
     }
 
@@ -1590,14 +1622,18 @@ class anyTable extends dbTable
       else
         $d = &$data;
       if (!isset($this->mId) || $this->mId == "") {
+        // List
         if ($use_head && $h != "true" && $h != "1")
           $hdr = $h;
         else
           $hdr = $this->findDefaultListHeader($this->mType);
         $d[$this->mNameKey] = $hdr;
         $d["data"]          = $inData;
+        if (isset($this->mNumResults))
+          $d["data"]["nogroup"]["num_results"] = $this->mNumResults;
       }
       else {
+        // Item
         if (isset($inData["+".$this->mId][$this->mNameKey])) {
           $d[$this->mNameKey] = $inData["+".$this->mId][$this->mNameKey]; // findDefaultItemHeader
         }
