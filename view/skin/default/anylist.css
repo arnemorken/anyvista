@@ -1,3 +1,12 @@
+/****************************************************************************************
+ *
+ * anyList is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
+ *
+ * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
+ * Get licences here: http://balanse.info/anylist/license/ (coming soon).
+ *
+ ****************************************************************************************/
+
 .fa-disabled {
   opacity:  0.6;
   cursor:   not-allowed;
@@ -57,6 +66,18 @@
 }
 
 /**************************
+ * anyPaginator
+ **************************/
+
+.any-paginator-container {
+  background:   #eee;
+}
+
+.any-paginator-ellipse {
+  border:   1px solid #eee;
+}
+
+/**************************
  * Top level containers
  **************************/
 
@@ -79,7 +100,7 @@
 .any-header {
 }
 .any-head-header {
-  width:     789px;
+  width:     809px;
   font-size: 1em;
 }
 .any-list-header {
@@ -163,10 +184,11 @@
 }
 .any-th,
 .any-td {
+  vertical-align:   text-bottom;
   text-align:       left;
   white-space:      nowrap;
   overflow:         hidden;
-  padding-left:     0;
+  padding-left:     5px;
   font-family:      inherit;
 }
 .any-td:empty,
@@ -192,11 +214,14 @@
 .itemUnedit {
 }
 
+.itemUnedit {
+  height:         20px;
+}
+
 .itemLabel,
 .itemText,
 .itemNumber,
 .itemDate {
-  height:           25px;
   width:            fit-content;
   padding-left:     1px;
 }
