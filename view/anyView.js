@@ -56,6 +56,8 @@
  *        {boolean} onFocusoutRemoveEmpty: The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
  *        {boolean} onUpdateEndEdit:       NOT IMPLEMENTED. Pressing the update button will close the element currently being edited for editing. Default: true.
  *        {boolean} useOddEven:            If true, tags for odd and even columns will be generated for list entries. Default: false.
+ *        (integer) currentPage:           The current page to show. Only applicable for "list" and "select" kinds.
+ *        (integer) itemsPerPage:          The number of rows to show per page. Only applicable for "list" and "select" kinds.
  *        {string}  grouping:              How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
  *        {boolean} refresh:               If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
  *        {boolean} uploadDirect:          If true, the selected file will be uploaded without the user having to press the "edit" and "update" buttons. Default: true.
@@ -103,6 +105,8 @@ $.widget("any.View", {
     onFocusoutRemoveEmpty: true,
   //onUpdateEndEdit:       true, // TODO! NOT IMPLEMENTED
     useOddEven:            true,
+    currentPage:           1,
+    itemsPerPage:          20,
     grouping:              "",
     refresh:               false,
     uploadDirect:          true,
@@ -613,6 +617,10 @@ $.any.View.prototype.refreshOne = function (parent,data,id,last_type,last_kind,e
   if (data && data[id] && data[id].data) {
     if ((kind == "list" || kind == "select"))
       ++this.options.indent_level;
+    if (data[id].num_results)
+      this.numResults = data[id].num_results;
+    else
+      delete this.numResults;
     let p_data = data;
     let p_id   = id;
     data = data[id].data;
@@ -945,7 +953,85 @@ $.any.View.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_st
 //
 $.any.View.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,id_str)
 {
+  id_str = id_str.substr(0,id_str.lastIndexOf("_"));
+  let tr_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tr_foot";
+  let tr    = $("#"+tr_id);
+  if (!tr.length) {
+    tr = $("<tr id='"+tr_id+"'></tr>");
+    tfoot.append(tr);
+  }
+  let td_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_td_foot";
+  let td    = $("#"+td_id);
+  if (!td.length) {
+    let f = this.getFilter(type,kind);
+    let max_num_cols = f ? Object.size(f) : 5;
+    td = $("<td colspan='"+max_num_cols+"' id='"+td_id+"' class='any-td any-td-list-foot'></td>");
+    tr.append(td);
+
+    // Initialize paging
+    let pager = tfoot.data("pager");
+    if (!pager && this.numResults) {
+      pager = td.anyPaginator({ itemsPerPage: this.options.itemsPerPage,
+                                onClick:      this.pageNumClicked,
+                                context:      this, // onClick context
+                                // Set in paginator options that are sent to onClick handler:
+                                div_info: {
+                                  type:   type,
+                                  kind:   kind,
+                                  id_str: id_str,
+                                },
+                             });
+      pager.numItems(this.numResults);
+      pager.currentPage(this.options.currentPage);
+      tfoot.data("pager",pager);
+    }
+  }
+  // Clean up
+  if (!tr.children().length)
+    tr.remove();
+  if (!tfoot.children().length)
+    tfoot.remove();
 }; // refreshTfoot
+
+$.any.View.prototype.pageNumClicked = function (pager)
+{
+  if (!pager || !pager.options || !pager.options.div_info) {
+    console.error("System error: Pager or pager options missing for pageNumClicked. "); // TODO! i18n
+    return;
+  }
+  $("#"+this.options.id).empty();
+  this.options.currentPage = pager.currentPage();
+  let from = pager.options.itemsPerPage *(pager.currentPage() - 1);
+  let num  = pager.options.itemsPerPage;
+  let mod_opt = { context: this.model,
+                  type:    pager.options.div_info.type,
+                  from:    from,
+                  num:     num,
+                };
+  this.model.dbSearch(mod_opt);
+/*
+  let div_id = this.base_id+"_"+options.div_info.type+"_"+options.div_info.kind+"_"+options.div_info.id_str+"_table";
+  let table  = $("#"+div_id);
+  if (table.length) {
+    let offset = parseInt(table.attr("offset"));
+    let rpp    = this.options.itemsPerPage;
+    if (options.clickedPage == "prev")
+      table.attr("offset",offset-rpp);
+    else
+    if (options.clickedPage == "next")
+      table.attr("offset",offset+rpp);
+    else
+    if (Number.isInteger(options.clickedPage)) {
+      let page_offset = (options.clickedPage - 1) * options.itemsPerPage;
+      table.attr("offset",page_offset);
+    }
+    let tbody = table.children('tbody');
+    if (tbody.length)
+      tbody.empty();
+    this.refreshLoop();
+  }
+*/
+}; // pageNumClicked
 
 //
 // Refresh a single table row
@@ -1434,6 +1520,8 @@ $.any.View.prototype.createView = function (parent,data,id,type,kind)
     }
     else {
       view.id_stack = [...this.id_stack];
+      if (this.numResults)
+        view.numResults = this.numResults;
     }
   }
   catch (err) {
