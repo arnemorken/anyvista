@@ -39,7 +39,7 @@ class dbConnection
 
   function isError()
   {
-    return isset($this->mError) && $this->mError !== "" && $this->mDBHandle->errorCode() !== null;
+    return isset($this->mError) && $this->mError !== "" && ($this->mDBHandle != null && $this->mDBHandle->errorCode() !== null);
   }
 
   function getError()

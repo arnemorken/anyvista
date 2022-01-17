@@ -136,11 +136,11 @@ class dbTable
    * @return {boolean} Returns true if the query was executed, false if it did not execute
    *                   or returned an error (in which case mError is set).
    */
-  function query($stmt)
+  public function query($stmt)
   {
     $this->mDBResult = null;
     $this->mNumRowsChanged = 0;
-    if ($this->mDBConnection == null || $this->mDBConnection->isError()) {
+    if ($this->mDBConnection == null || $this->mDBConnection->mDBHandle == null || $this->mDBConnection->isError()) {
       if ($this->mDBConnection == null)
         $this->mError = "dbTable::query1: No connection to database. ";
       else
@@ -181,7 +181,7 @@ class dbTable
    * @param  {Boolean} removeEmpty If true, remove empty rows.
    * @return {Object}  The next row.
    */
-  protected function getNext($removeEmpty=false)
+  public function getNext($removeEmpty=false)
   {
     return $this->getIt(false,$removeEmpty);
   } // getNext
@@ -192,7 +192,7 @@ class dbTable
    * @param  {Boolean} removeEmpty If true, remove empty rows.
    * @return {Object}  All rows.
    */
-  protected function getAll($removeEmpty=false)
+  public function getAll($removeEmpty=false)
   {
     return $this->getIt(true,$removeEmpty);
   } // getAll
@@ -239,7 +239,7 @@ class dbTable
    * @param  {String}  tableName Name of table to check.
    * @return {integer} Id of last item.
    */
-  protected function getLastInsertID($tableName)
+  public function getLastInsertID($tableName)
   {
     if ($this->mDBConnection == null) {
       $this->mError = "dbTable::getLastInsertID: No connection to database. ";
@@ -257,13 +257,13 @@ class dbTable
    * @param  {String} id        Value of id to check.
    * @return true | false
    */
-  protected function idExists($tableName,$idName,$id)
+  public function idExists($tableName,$idName,$id)
   {
-      $stmt = "SELECT count(*) as num_obj FROM ".$tableName." WHERE ".$idName."='".$id."'";
-      if (!$this->query($stmt))
-        return false;
-      $row = $this->getNext();
-      return ($row != null && $row['num_obj'] > 0);
+    $stmt = "SELECT count(*) as num_obj FROM ".$tableName." WHERE ".$idName."='".$id."'";
+    if (!$this->query($stmt))
+      return false;
+    $row = $this->getNext();
+    return ($row != null && $row['num_obj'] > 0);
   } // idExists
 
   /**
@@ -272,7 +272,7 @@ class dbTable
    * @param  {String} tableName Name of table to check.
    * @return true | false
    */
-  protected function tableExists($tableName)
+  public function tableExists($tableName)
   {
     if ($tableName == null || $tableName == "")
       return false;
