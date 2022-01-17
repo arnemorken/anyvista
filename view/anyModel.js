@@ -1275,10 +1275,12 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += the_id
                ? "&"+id_key+"="+the_id // Item search
                : ""; // List search
-  param_str += options.simple ? "&lt=" + "simple" : "";
+  param_str += options.simple                       ? "&lt=" + "simple" : "";
   param_str += type == "group" && options.link_type ? "&group_type="+options.link_type : "";
-  param_str += options.head     ? "&head="+options.head : "";
-  param_str += options.grouping ? "&grouping="+options.grouping : "";
+  param_str += options.head                         ? "&head="+options.head : "";
+  param_str += options.grouping                     ? "&grouping="+options.grouping : "";
+  param_str += options.from || options.from==0      ? "&from="+options.from : "";
+  param_str += options.num                          ? "&num=" +options.num   : "";
   return this._getDataSourceName() + param_str;
 }; // dbSearchGetURL
 
