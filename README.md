@@ -7,4 +7,4 @@ Earlier versions of the library (distributed under another name) has already bee
 
 The libary will be dual licensed under 1) AGPLv3.0 and 2) a proprietary license (under development).
 
-First production release: March 2022.
+First beta release planned for March 2022.
