@@ -5,8 +5,6 @@ A Javascript library that can be used with or without a database back-end for di
 
 Earlier versions of the library (distributed under another name) has already been used in both commercial and non-commercial projects.
 
-The libary will be dual licensed under 1) AGPLv3.0 and 2) a proprietary license (under development).
-
 **First beta release planned for March 2022.**
 
 # Improvements
