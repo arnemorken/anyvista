@@ -1,7 +1,7 @@
 <?php
 /****************************************************************************************
  *
- * anyList is copyright (C) 2011-2021 Arne D. Morken and Balanse Software.
+ * anyList is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
  *
  * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
  * Get licences here: http://balanse.info/anylist/license/ (coming soon).
@@ -19,8 +19,12 @@
 <link href="<?php print gW3CSS_css;?>"       rel="stylesheet"/>
 <link href="<?php print gFontAwesome_css;?>" rel="stylesheet"/>
 
+<!-- anyPaginator -->
+<link  href="<?php print gAnyPaginator_css;?>" rel="stylesheet"/>
+<script src="<?php print gAnyPaginator_js;?>"></script>
+
 <!--
-  -- AnyList
+  -- anyList
   -->
 <link  href="<?php print gAnyListURL;?>view/skin/<?php print gSkin;?>/anylist.css" rel="stylesheet"/>
 
