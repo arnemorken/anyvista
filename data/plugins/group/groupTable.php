@@ -131,7 +131,7 @@ class groupTable extends anyTable
                        $this->getTableName().".group_type,".
                        $this->getTableName().".group_id ".$sort.",".
                        $this->getTableName().".parent_id ".$sort.",".
-                       $this->getTableName().".".$this->mNameKey." ".$sort;
+                       $this->getTableName().".".$this->mNameKey." ".$sort." ";
   } // findListOrderBy
 
   /////////////////////////////////////////////////////////////////////////////
