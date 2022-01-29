@@ -39,6 +39,11 @@ define("gUploadPath",   $_SERVER['DOCUMENT_ROOT'] . "/" . gHomeFolder . "/" . gU
 // Thirdparty stuff
 //
 
+// anyPaginator
+define("gAnyPaginatorURL",  gServer          . gHomeFolder . "../anyPaginator/");
+define("gAnyPaginator_css", gAnyPaginatorURL . "anyPaginator.css");
+define("gAnyPaginator_js",  gAnyPaginatorURL . "anyPaginator.js");
+
 // jQuery / jQuery widget factory
 define("gjQueryURL",        gServer            . gThirdpartyJS . "jquery/");
 define("gjQuery_js",        gjQueryURL         . "jquery-3.6.0.min.js");

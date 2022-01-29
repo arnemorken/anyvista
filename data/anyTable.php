@@ -1629,7 +1629,7 @@ class anyTable extends dbTable
           $hdr = $this->findDefaultListHeader($this->mType);
         $d[$this->mNameKey] = $hdr;
         $d["data"]          = $inData;
-        if (isset($this->mNumResults))
+        if (isset($this->mNumResults) && isset($d["data"]["nogroup"]))
           $d["data"]["nogroup"]["num_results"] = $this->mNumResults;
       }
       else {

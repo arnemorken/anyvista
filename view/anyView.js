@@ -436,6 +436,9 @@ $.any.View.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata
   if (this.options.ref_rec > ANY_MAX_REF_REC)
     throw i18n.error.TOO_MUCH_RECURSION;
 
+  if (this.must_empty) // Paginator button pressed
+    $("#"+this.options.id).empty();
+
   if (!data && this.model)
     data = this.model.data;
 
@@ -993,13 +996,16 @@ $.any.View.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,id_st
     tfoot.remove();
 }; // refreshTfoot
 
+//
+// Refresh when a paginator is activated
+//
 $.any.View.prototype.pageNumClicked = function (pager)
 {
   if (!pager || !pager.options || !pager.options.div_info) {
     console.error("System error: Pager or pager options missing for pageNumClicked. "); // TODO! i18n
     return;
   }
-  $("#"+this.options.id).empty();
+  this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty (to avoid flashing)
   this.options.currentPage = pager.currentPage();
   let from = pager.options.itemsPerPage *(pager.currentPage() - 1);
   let num  = pager.options.itemsPerPage;
@@ -1009,28 +1015,6 @@ $.any.View.prototype.pageNumClicked = function (pager)
                   num:     num,
                 };
   this.model.dbSearch(mod_opt);
-/*
-  let div_id = this.base_id+"_"+options.div_info.type+"_"+options.div_info.kind+"_"+options.div_info.id_str+"_table";
-  let table  = $("#"+div_id);
-  if (table.length) {
-    let offset = parseInt(table.attr("offset"));
-    let rpp    = this.options.itemsPerPage;
-    if (options.clickedPage == "prev")
-      table.attr("offset",offset-rpp);
-    else
-    if (options.clickedPage == "next")
-      table.attr("offset",offset+rpp);
-    else
-    if (Number.isInteger(options.clickedPage)) {
-      let page_offset = (options.clickedPage - 1) * options.itemsPerPage;
-      table.attr("offset",page_offset);
-    }
-    let tbody = table.children('tbody');
-    if (tbody.length)
-      tbody.empty();
-    this.refreshLoop();
-  }
-*/
 }; // pageNumClicked
 
 //
