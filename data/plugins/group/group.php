@@ -19,6 +19,8 @@
   require_once gDataSource;
   $gViewArea = "any_content";
   Parameters::set("type","group");
+  Parameters::set("from","0");
+  Parameters::set("num","20");
   $the_data = anyGetData();
 ?>
 <div id="<?php print $gViewArea;?>"/>

@@ -1176,6 +1176,8 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                               If false, 0, null or undefined, data will not be grouped. Any other
  *                               value will specify grouping.
  *                               Optional. Default: `undefined`.
+ *        (string)   order:      Tell the server how to order the results.
+ *                               Optional. Default: undefined (server decides).
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
  *        {Function} success:    Method to call on success.
@@ -1280,7 +1282,8 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += options.head                         ? "&head="+options.head : "";
   param_str += options.grouping                     ? "&grouping="+options.grouping : "";
   param_str += options.from || options.from==0      ? "&from="+options.from : "";
-  param_str += options.num                          ? "&num=" +options.num   : "";
+  param_str += options.num                          ? "&num=" +options.num : "";
+  param_str += options.order                        ? "&order=" +options.order : "";
   return this._getDataSourceName() + param_str;
 }; // dbSearchGetURL
 

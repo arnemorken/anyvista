@@ -29,6 +29,8 @@
  *        {boolean} isDeletable:           An icon for deleting will be displayed. Ignored if isSelectable is set. Default: false.
  *        {boolean} isSelectable:          An icon for selecting a list row will be displayed. Ignored for items. If isSelectable is set,
  *                                         isEditable, isRemovable and isDeletable will be ignored. Default: false.
+ *        {boolean} isSortable:            List tables will be sortable by clicking on column headers. An icon indicating
+ *                                         the direction of the sort wil be displayed. Default: true.
  *        {boolean} confirmRemove:         A remove confirmation dialog will be displayed. Default: true.
  *        {boolean} confirmDelete:         A delete confirmation dialog will be displayed. Default: true.
  *        (boolean) showHeader:            If false, all headers will be suppressed. Default: true.
@@ -79,6 +81,7 @@ $.widget("any.View", {
     isRemovable:           true,
     isDeletable:           true,
     isSelectable:          false,
+    isSortable:            true,
     confirmRemove:         true,
     confirmDelete:         true,
     showHeader:            true,
@@ -915,7 +918,8 @@ $.any.View.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_st
   // First tool cell for editable list
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
       (this.options.isEditable && (this.options.showButtonAdd || this.options.showButtonEdit || this.options.showButtonUpdate))) {
-    let th = $("<th class='any-th any-list-th any-tools-first-th'></th>");
+    let thid = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+"_th";
+    let th   = $("<th class='any-th any-list-th any-tools-first-th' id='"+thid+"'></th>");
     if (add_opt && this.options.showButtonAdd == 1)
       this.refreshAddButton(th,add_opt);
     tr.append(th);
@@ -934,6 +938,17 @@ $.any.View.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_st
         let style_str = disp_str || pl_str ? "style='"+disp_str+pl_str+"'" : "";
         let th = $("<th class='any-th any-list-th "+filter_id+"-th' "+style_str+">"+filter_key.HEADER+"</th>");
         tr.append(th);
+        if (this.options.isSortable) {
+          th.css("cursor","pointer");
+          let th_opt = { table_id: this.base_id+"_"+type+"_"+kind+"_"+id_str+"_table",
+                         filter_id:  filter_id,
+                         filter_key: filter_key,
+                         type:       type,
+                       };
+          th.off("click").on("click",th_opt,$.proxy(this.sortTable,this));
+        }
+        else
+          th.css("cursor","default");
       }
     }
   }
@@ -950,6 +965,44 @@ $.any.View.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_st
   if (!thead.children().length)
     thead.remove();
 }; // refreshThead
+
+$.any.View.prototype.sortTable = function (event)
+{
+  if (!event || !event.data) {
+    console.log("sortTable: Missing event or event.data. ");
+    return;
+  }
+  let type  = event.data.type;
+  let order = event.data.filter_id;
+  if (this.model.mode == "remote") {
+    // Remote search, let the database do the search.
+    // Will (normally) call refresh via onModelChange
+    let from = null;
+    let num  = null;
+    let table = $("#"+event.data.table_id);
+    if (table.length) {
+      let tfoot = table.find("tfoot");
+      if (tfoot.length) {
+        let pager = tfoot.data("pager");
+        if (pager) {
+          from = pager.options.itemsPerPage *(pager.currentPage() - 1);
+          num  = pager.options.itemsPerPage;
+        }
+      }
+      this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty (to avoid flashing)
+    }
+    let mod_opt = { context: this.model,
+                    type:    type,
+                    from:    from,
+                    num:     num,
+                    order:   order,
+                  };
+    this.model.dbSearch(mod_opt);
+  } // if remote
+  else {
+    // TODO! Local sort not implemented yet
+  }
+}; // sortTable
 
 //
 // Refresh the table footer
@@ -1014,7 +1067,12 @@ $.any.View.prototype.pageNumClicked = function (pager)
                   from:    from,
                   num:     num,
                 };
-  this.model.dbSearch(mod_opt);
+  if (this.model.mode == "remote") {
+    this.model.dbSearch(mod_opt);
+  }
+  else {
+    // TODO! Local pagination not implemented yet
+  }
 }; // pageNumClicked
 
 //

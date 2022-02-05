@@ -795,6 +795,8 @@ class anyTable extends dbTable
       return true; // We do not have subusers (user table does not have parent_id field) TODO! Neccessary?
 
     // Build and execute the full statement
+    if (Parameters::get("order"))
+      $this->mOrderBy = ltrim(Parameters::get("order"));
     $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId);
     $limit        = $this->findLimit();
     $stmt = $partial_stmt.$limit;
