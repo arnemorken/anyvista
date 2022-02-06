@@ -125,7 +125,7 @@ class groupTable extends anyTable
   /////////////////////// Database query fragments ////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function findListOrderBy($sort="ASC")
+  protected function findListOrderBy()
   {
     return "ORDER BY ".$this->getTableName().".group_sort_order,".
                        $this->getTableName().".group_type,".

@@ -104,6 +104,7 @@
  *                          - "idKeyMetaTable":     The id key used in the meta table, "event_id" or "user_id".
  *                          - "nameKey":            The name key used by the client and in the table, e.g. "event_name" or "login_name".
  *                          - "orderBy":            The field to sort by. e.g. "event_date_start".
+ *                          - "orderDir":           The direction of the sort, "ASC" or "DESC".
  *                          - "metaId":             The name of the id foeld in the meta table, e.g. "meta_id" or "umeta_id".
  *                          - "fields":             An array containing the field names of the table.
  *                          - "fieldsMeta":         An array containing the name of the meta keys of the meta table.
@@ -146,6 +147,7 @@ class anyTable extends dbTable
             $mFilters           = null,
             $mPermission        = null,
             $mOrderBy           = null,
+            $mOrderDir          = "ASC",
             $mSortFunction      = null;
 
   protected $mInsertSuccessMsg  = "",
@@ -228,7 +230,8 @@ class anyTable extends dbTable
       $this->mIdKeyTable         = $defsOrType["idKeyTable"];
       $this->mIdKeyMetaTable     = $defsOrType["idKeyMetaTable"];
       $this->mNameKey            = $defsOrType["nameKey"];
-      $this->mOrderBy            = $defsOrType["orderBy"];
+      $this->mOrderBy            = isset($defsOrType["orderBy"])  ? $defsOrType["orderBy"]  : null;
+      $this->mOrderDir           = isset($defsOrType["orderDir"]) ? $defsOrType["orderDir"] : "ASC";
       $this->mMetaId             = $defsOrType["metaId"];
 
       // Set table fields, meta table fields and user link table fields
@@ -795,8 +798,11 @@ class anyTable extends dbTable
       return true; // We do not have subusers (user table does not have parent_id field) TODO! Neccessary?
 
     // Build and execute the full statement
-    if (Parameters::get("order"))
+    if (Parameters::get("order")) {
       $this->mOrderBy = ltrim(Parameters::get("order"));
+      if (Parameters::get("dir"))
+        $this->mOrderDir = ltrim(Parameters::get("dir"));
+    }
     $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId);
     $limit        = $this->findLimit();
     $stmt = $partial_stmt.$limit;
@@ -999,11 +1005,12 @@ class anyTable extends dbTable
     return $where;
   } // findListWhere
 
-  protected function findListOrderBy($sort="ASC")
+  protected function findListOrderBy()
   {
     if (!isset($this->mOrderBy))
       return "";
-    $ob = "ORDER BY ".$this->getTableName().".".$this->mOrderBy." ".$sort." ";
+    $dir = $this->mOrderDir ? $this->mOrderDir : "";
+    $ob = "ORDER BY ".$this->getTableName().".".$this->mOrderBy." ".$dir." ";
     return $ob;
   } // findListOrderBy
 

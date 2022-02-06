@@ -1283,7 +1283,8 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += options.grouping                     ? "&grouping="+options.grouping : "";
   param_str += options.from || options.from==0      ? "&from="+options.from : "";
   param_str += options.num                          ? "&num=" +options.num : "";
-  param_str += options.order                        ? "&order=" +options.order : "";
+  param_str += options.order                        ? "&order="+options.order : "";
+  param_str += options.direction                    ? "&dir="  +options.direction: "";
   return this._getDataSourceName() + param_str;
 }; // dbSearchGetURL
 

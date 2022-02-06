@@ -61,6 +61,8 @@
  *        (integer) currentPage:           The current page to show. Only applicable for "list" and "select" kinds.
  *        (integer) itemsPerPage:          The number of rows to show per page. Only applicable for "list" and "select" kinds.
  *        {string}  grouping:              How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
+ *        {string}  sortBy:                The filter id of the table header that the table should be sorted by. Only valid if isSortable is `true`. Default: "".
+ *        {string}  sortDirection:         Whether the sorting of tables should be ascending (`ASC`) or descending (`DESC`). Only valid if isSortable is `true`. Default: "`ASC`".
  *        {boolean} refresh:               If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
  *        {boolean} uploadDirect:          If true, the selected file will be uploaded without the user having to press the "edit" and "update" buttons. Default: true.
  *
@@ -111,6 +113,8 @@ $.widget("any.View", {
     currentPage:           1,
     itemsPerPage:          20,
     grouping:              "",
+    sortBy:                "",
+    sortDirection:         "ASC",
     refresh:               false,
     uploadDirect:          true,
     linkIcons:             null,
@@ -436,8 +440,10 @@ $.any.View.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata
     throw i18n.error.VIEW_AREA_MISSING;
 
   ++this.options.ref_rec;
-  if (this.options.ref_rec > ANY_MAX_REF_REC)
+  if (this.options.ref_rec > ANY_MAX_REF_REC) {
+    this.options.ref_rec = 0;
     throw i18n.error.TOO_MUCH_RECURSION;
+  }
 
   if (this.must_empty) // Paginator button pressed
     $("#"+this.options.id).empty();
@@ -936,7 +942,9 @@ $.any.View.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_st
         let pl        = this.options.indent_level * this.options.indent_amount;
         let pl_str    = pl > 0 && filter_id == name_key ? "padding-left:"+pl+"px;" : "";
         let style_str = disp_str || pl_str ? "style='"+disp_str+pl_str+"'" : "";
-        let th = $("<th class='any-th any-list-th "+filter_id+"-th' "+style_str+">"+filter_key.HEADER+"</th>");
+        let sort_dir  = this.options.sortDirection == "ASC" ? "fas fa-sort-up" : "fas fa-sort-down";
+        let sort_arr  = this.options.isSortable && this.options.sortBy == filter_id ? "&nbsp;<div class='"+sort_dir+"'/>" : "";
+        let th = $("<th class='any-th any-list-th "+filter_id+"-th' "+style_str+">"+filter_key.HEADER+sort_arr+"</th>");
         tr.append(th);
         if (this.options.isSortable) {
           th.css("cursor","pointer");
@@ -974,29 +982,35 @@ $.any.View.prototype.sortTable = function (event)
   }
   let type  = event.data.type;
   let order = event.data.filter_id;
+  let last_sort_by = this.options.sortBy;
+  this.options.sortBy = order;
+  if (this.options.sortBy == last_sort_by)
+    this.options.sortDirection = this.options.sortDirection == "ASC" ? "DESC" : "ASC";
+  let from = null;
+  let num  = null;
+  let table = $("#"+event.data.table_id);
+  if (table.length) {
+    let tfoot = table.find("tfoot");
+    if (tfoot.length) {
+      let pager = tfoot.data("pager");
+      if (pager) {
+        from = pager.options.itemsPerPage *(pager.currentPage() - 1);
+        num  = pager.options.itemsPerPage;
+      }
+    }
+    this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty (to avoid flashing)
+  }
+  let mod_opt = { context:   this.model,
+                  type:      type,
+                  from:      from,
+                  num:       num,
+                  order:     order,
+                  direction: this.options.sortDirection,
+                };
   if (this.model.mode == "remote") {
     // Remote search, let the database do the search.
     // Will (normally) call refresh via onModelChange
-    let from = null;
-    let num  = null;
-    let table = $("#"+event.data.table_id);
-    if (table.length) {
-      let tfoot = table.find("tfoot");
-      if (tfoot.length) {
-        let pager = tfoot.data("pager");
-        if (pager) {
-          from = pager.options.itemsPerPage *(pager.currentPage() - 1);
-          num  = pager.options.itemsPerPage;
-        }
-      }
-      this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty (to avoid flashing)
-    }
-    let mod_opt = { context: this.model,
-                    type:    type,
-                    from:    from,
-                    num:     num,
-                    order:   order,
-                  };
+    this.options.ref_rec = 0;
     this.model.dbSearch(mod_opt);
   } // if remote
   else {
@@ -1068,6 +1082,7 @@ $.any.View.prototype.pageNumClicked = function (pager)
                   num:     num,
                 };
   if (this.model.mode == "remote") {
+    this.options.ref_rec = 0;
     this.model.dbSearch(mod_opt);
   }
   else {
