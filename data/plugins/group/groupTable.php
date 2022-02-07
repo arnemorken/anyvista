@@ -129,9 +129,9 @@ class groupTable extends anyTable
   {
     return "ORDER BY ".$this->getTableName().".group_sort_order,".
                        $this->getTableName().".group_type,".
-                       $this->getTableName().".group_id ".$sort.",".
-                       $this->getTableName().".parent_id ".$sort.",".
-                       $this->getTableName().".".$this->mNameKey." ".$sort." ";
+                       $this->getTableName().".group_id,".
+                       $this->getTableName().".parent_id,".
+                       $this->getTableName().".".$this->mNameKey." ASC ";
   } // findListOrderBy
 
   /////////////////////////////////////////////////////////////////////////////
