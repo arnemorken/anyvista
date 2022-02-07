@@ -924,8 +924,7 @@ $.any.View.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_st
   // First tool cell for editable list
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
       (this.options.isEditable && (this.options.showButtonAdd || this.options.showButtonEdit || this.options.showButtonUpdate))) {
-    let thid = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+"_th";
-    let th   = $("<th class='any-th any-list-th any-tools-first-th' id='"+thid+"'></th>");
+    let th = $("<th class='any-th any-list-th any-tools-first-th'></th>");
     if (add_opt && this.options.showButtonAdd == 1)
       this.refreshAddButton(th,add_opt);
     tr.append(th);
@@ -1008,7 +1007,7 @@ $.any.View.prototype.sortTable = function (event)
                   direction: this.options.sortDirection,
                 };
   if (this.model.mode == "remote") {
-    // Remote search, let the database do the search.
+    // Remote search, let the database do the sorting.
     // Will (normally) call refresh via onModelChange
     this.options.ref_rec = 0;
     this.model.dbSearch(mod_opt);
