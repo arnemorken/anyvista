@@ -922,7 +922,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
     return false;
   }
   if (!options.data) {
-    console.error("anyModel.dataUpdateLinkList: "+"Data missing, please refresh the view. "); // TODO! i18n
+    console.error("anyModel.dataUpdateLinkList: "+i18n.error.DATA_MISSING);
     return false;
   }
   if (parseInt(this.id) == parseInt(options.link_id))
