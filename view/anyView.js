@@ -73,7 +73,7 @@
 var ANY_LOCALE_NOT_FOUND = "No locale found. ";
 var ANY_MAX_REF_REC = 30;
 
-$.widget("any.View", {
+$.widget("any.anyView", {
   // Default options
   options: {
     model:                 null,
@@ -186,6 +186,9 @@ $.widget("any.View", {
 
     this._setPermissions();
 
+    // API access through jQuery. Note small "v".
+    $.fn.anyview = this;
+
     if (this.options.refresh)
       this.refresh();
 
@@ -215,7 +218,7 @@ $.widget("any.View", {
  * @description
  * @return this.baseId
  */
-$.any.View.prototype.getBaseId = function ()
+$.any.anyView.prototype.getBaseId = function ()
 {
   return this.base_id;
 }; // getBaseId
@@ -232,7 +235,7 @@ $.any.View.prototype.getBaseId = function ()
  * @param {String} type Object type (e.g. "event"). Optional, but mandatory if `kind` is given.
  * @param {String} kind "item", "list", "head" or "select". Ignored if `type` is not given.
  */
-$.any.View.prototype.getFilter = function (type,kind)
+$.any.anyView.prototype.getFilter = function (type,kind)
 {
   if (!this.options.filters)
     return null;
@@ -248,12 +251,12 @@ $.any.View.prototype.getFilter = function (type,kind)
 // Internal methods
 /////////////////////////
 
-$.any.View.prototype._createBaseId = function ()
+$.any.anyView.prototype._createBaseId = function ()
 {
   return "baseId" + 1 + Math.floor(Math.random()*10000000); // Pseudo-unique id
 }; // _createBaseId
 
-$.any.View.prototype._createFilters = function (model)
+$.any.anyView.prototype._createFilters = function (model)
 {
   let type = model ? model.type : null;
   let f = this.options.filters;
@@ -283,7 +286,7 @@ $.any.View.prototype._createFilters = function (model)
   return f;
 }; // _createFilters
 
-$.any.View.prototype._findType = function (data,otype,id)
+$.any.anyView.prototype._findType = function (data,otype,id)
 {
   let type = null;
   if (data) {
@@ -304,7 +307,7 @@ $.any.View.prototype._findType = function (data,otype,id)
   return type;
 }; // _findType
 
-$.any.View.prototype._findKind = function (data,okind,id)
+$.any.anyView.prototype._findKind = function (data,okind,id)
 {
   let kind = null;
   if (data) {
@@ -325,7 +328,7 @@ $.any.View.prototype._findKind = function (data,okind,id)
   return kind;
 }; // _findKind
 
-$.any.View.prototype._setPermissions = function ()
+$.any.anyView.prototype._setPermissions = function ()
 {
   if (this.options.admin_always_edits) {
     let is_admin = this.model && this.model.permission && this.model.permission.is_admin;
@@ -348,7 +351,7 @@ $.any.View.prototype._setPermissions = function ()
  *                               If null, `this.model` is assumed.
  * @return `this`.
  */
-$.any.View.prototype.showMessages = function (modelOrString)
+$.any.anyView.prototype.showMessages = function (modelOrString)
 {
   let div_id = this.base_id+"_any_message";
   let msgdiv = $("#"+div_id);
@@ -382,7 +385,7 @@ $.any.View.prototype.showMessages = function (modelOrString)
  *                 If specified, `this.model` will be set to `model`, before calling `this.refresh`.
  * @return `this`.
  */
-$.any.View.prototype.onModelChange = function (model)
+$.any.anyView.prototype.onModelChange = function (model)
 {
   if (model) {
     this.model = model;
@@ -414,7 +417,7 @@ $.any.View.prototype.onModelChange = function (model)
  *
  * @throws {VIEW_AREA_MISSING} If both `parent` and `this.element` are null or undefined.
  */
-$.any.View.prototype.refresh = function (parent,data,id,type,kind,edit,pdata,pid)
+$.any.anyView.prototype.refresh = function (parent,data,id,type,kind,edit,pdata,pid)
 {
   this.options.filters = this._createFilters(this.model); // Create filters if they dont exist yet
   this.options.data_level = 0;
@@ -432,7 +435,7 @@ $.any.View.prototype.refresh = function (parent,data,id,type,kind,edit,pdata,pid
 //
 // Main refresh loop
 //
-$.any.View.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata,pid)
+$.any.anyView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata,pid)
 {
   if (!parent)
     parent = this.element;
@@ -509,7 +512,7 @@ $.any.View.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata
 //
 // Display a "close item" button
 //
-$.any.View.prototype.refreshToolbarTop = function (parent,data,id,type,kind,edit)
+$.any.anyView.prototype.refreshToolbarTop = function (parent,data,id,type,kind,edit)
 {
   if (!parent)
     return null;
@@ -529,7 +532,7 @@ $.any.View.prototype.refreshToolbarTop = function (parent,data,id,type,kind,edit
 //
 // Display a toolbar for messages and a "new item" button
 //
-$.any.View.prototype.refreshToolbarBottom = function (parent,data,id,type,kind,edit)
+$.any.anyView.prototype.refreshToolbarBottom = function (parent,data,id,type,kind,edit)
 {
   if (!parent || !type)
     return null;
@@ -583,7 +586,7 @@ $.any.View.prototype.refreshToolbarBottom = function (parent,data,id,type,kind,e
 //
 // A message area
 //
-$.any.View.prototype.refreshMessageArea = function (parent,opt)
+$.any.anyView.prototype.refreshMessageArea = function (parent,opt)
 {
   let div_id   = this.base_id+"_any_message";
   let class_id = "any-message any-"+opt.kind+"-message any-message-"+this.options.data_level;
@@ -599,7 +602,7 @@ $.any.View.prototype.refreshMessageArea = function (parent,opt)
 //
 // Refresh header and data for one list entry or one item
 //
-$.any.View.prototype.refreshOne = function (parent,data,id,last_type,last_kind,edit,id_str,pdata,pid)
+$.any.anyView.prototype.refreshOne = function (parent,data,id,last_type,last_kind,edit,id_str,pdata,pid)
 {
   if (!data || (!id && id !== 0) || (typeof id == "string" && id.startsWith("grouping")))
     return null;
@@ -654,7 +657,7 @@ $.any.View.prototype.refreshOne = function (parent,data,id,last_type,last_kind,e
 //
 // Get the current main div, or create a new one if it does not exist
 //
-$.any.View.prototype.getOrCreateMainContainer = function (parent,type,kind,id_str)
+$.any.anyView.prototype.getOrCreateMainContainer = function (parent,type,kind,id_str)
 {
   let con_id_str = (kind == "list" || kind == "select" ? this.id_stack.join("_") : id_str);
   let div_id = this.base_id+"_"+type+"_"+kind+"_"+con_id_str+"_container";
@@ -673,7 +676,7 @@ $.any.View.prototype.getOrCreateMainContainer = function (parent,type,kind,id_st
 //
 // Refresh the header for an object.
 //
-$.any.View.prototype.refreshHeader = function (parent,data,id,type,kind,edit,id_str,doNotEmpty)
+$.any.anyView.prototype.refreshHeader = function (parent,data,id,type,kind,edit,id_str,doNotEmpty)
 {
   if (!data || !this.options.showHeader)
     return null;
@@ -714,7 +717,7 @@ $.any.View.prototype.refreshHeader = function (parent,data,id,type,kind,edit,id_
 //
 // Get the current header div, or create a new one if it does not exist
 //
-$.any.View.prototype.getOrCreateHeaderContainer = function (parent,type,kind,id_str,haveData,doNotEmpty)
+$.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,id_str,haveData,doNotEmpty)
 {
   let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_header";
   let header_div = $("#"+div_id);
@@ -737,7 +740,7 @@ $.any.View.prototype.getOrCreateHeaderContainer = function (parent,type,kind,id_
 //
 // Refresh a single header entry
 //
-$.any.View.prototype.refreshHeaderEntry = function (header_div,data,id,filter_id,n)
+$.any.anyView.prototype.refreshHeaderEntry = function (header_div,data,id,filter_id,n)
 {
   let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null; // TODO! Do this other places in the code too
   if (!header_div || !d)
@@ -751,7 +754,7 @@ $.any.View.prototype.refreshHeaderEntry = function (header_div,data,id,filter_id
 //
 // Refresh the data for an object.
 //
-$.any.View.prototype.refreshData = function (parent,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.anyView.prototype.refreshData = function (parent,data,id,type,kind,edit,id_str,pdata,pid)
 {
   // Create or get container for data
   let have_data = Object.size(data) > 0;
@@ -789,7 +792,7 @@ $.any.View.prototype.refreshData = function (parent,data,id,type,kind,edit,id_st
 //
 // Get the current data div, or create a new one if it does not exist
 //
-$.any.View.prototype.getOrCreateDataContainer = function (parent,type,kind,id_str,haveData)
+$.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,id_str,haveData)
 {
   let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_data";
   let data_div = $("#"+div_id);
@@ -811,7 +814,7 @@ $.any.View.prototype.getOrCreateDataContainer = function (parent,type,kind,id_st
   return data_div;
 }; // getOrCreateDataContainer
 
-$.any.View.prototype._emptyDiv = function (div)
+$.any.anyView.prototype._emptyDiv = function (div)
 {
   return div && div.length ? div.empty() : null;
 }; // _emptyDiv
@@ -819,7 +822,7 @@ $.any.View.prototype._emptyDiv = function (div)
 //
 // Create a table, or find a table created previously
 //
-$.any.View.prototype.getOrCreateTable = function (parent,type,kind,id_str)
+$.any.anyView.prototype.getOrCreateTable = function (parent,type,kind,id_str)
 {
   if (!parent)
     return null;
@@ -837,7 +840,7 @@ $.any.View.prototype.getOrCreateTable = function (parent,type,kind,id_str)
 //
 // Create a tbody, or find a tbody created previously
 //
-$.any.View.prototype.getOrCreateTbody = function (table,type,kind,id_str)
+$.any.anyView.prototype.getOrCreateTbody = function (table,type,kind,id_str)
 {
   if (!table)
     return null;
@@ -856,7 +859,7 @@ $.any.View.prototype.getOrCreateTbody = function (table,type,kind,id_str)
 //
 // Create a thead, or find a thead created previously
 //
-$.any.View.prototype.getOrCreateThead = function (table,type,kind,id_str)
+$.any.anyView.prototype.getOrCreateThead = function (table,type,kind,id_str)
 {
   if (!this.options.showTableHeader || !table)
     return null;
@@ -874,7 +877,7 @@ $.any.View.prototype.getOrCreateThead = function (table,type,kind,id_str)
 //
 // Create a tfoot, or find a tfoot created previously
 //
-$.any.View.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
+$.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
 {
   if (!this.options.showTableFooter || !table)
     return null;
@@ -893,7 +896,7 @@ $.any.View.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
 //
 // Refresh a table header
 //
-$.any.View.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_str)
+$.any.anyView.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_str)
 {
   if (!this.options.filters) {
     this.model.error = type.capitalize()+" "+kind+" "+i18n.error.FILTERS_MISSING;
@@ -973,7 +976,7 @@ $.any.View.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_st
     thead.remove();
 }; // refreshThead
 
-$.any.View.prototype.sortTable = function (event)
+$.any.anyView.prototype.sortTable = function (event)
 {
   if (!event || !event.data) {
     console.log("sortTable: Missing event or event.data. ");
@@ -1020,7 +1023,7 @@ $.any.View.prototype.sortTable = function (event)
 //
 // Refresh the table footer
 //
-$.any.View.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,id_str)
+$.any.anyView.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,id_str)
 {
   id_str = id_str.substr(0,id_str.lastIndexOf("_"));
   let tr_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tr_foot";
@@ -1065,7 +1068,7 @@ $.any.View.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,id_st
 //
 // Refresh when a paginator is activated
 //
-$.any.View.prototype.pageNumClicked = function (pager)
+$.any.anyView.prototype.pageNumClicked = function (pager)
 {
   if (!pager || !pager.options || !pager.options.div_info) {
     console.error("System error: Pager or pager options missing for pageNumClicked. "); // TODO! i18n
@@ -1092,7 +1095,7 @@ $.any.View.prototype.pageNumClicked = function (pager)
 //
 // Refresh a single table row
 //
-$.any.View.prototype.refreshTbody = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.anyView.prototype.refreshTbody = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
 {
   if (kind == "list" || kind == "select")
     this.refreshListTableDataRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
@@ -1101,7 +1104,7 @@ $.any.View.prototype.refreshTbody = function (tbody,data,id,type,kind,edit,id_st
       this.refreshItemTableDataRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
 }; // refreshTbody
 
-$.any.View.prototype.refreshListTableDataRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.anyView.prototype.refreshListTableDataRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
 {
   if (!tbody || !data || !data[id])
     return null;
@@ -1151,7 +1154,7 @@ $.any.View.prototype.refreshListTableDataRow = function (tbody,data,id,type,kind
   return tr;
 }; // refreshListTableDataRow
 
-$.any.View.prototype.refreshListTableDataCells = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
+$.any.anyView.prototype.refreshListTableDataCells = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
 {
   if (!filter || !tr|| !data || !data[id])
     return false;
@@ -1182,7 +1185,7 @@ $.any.View.prototype.refreshListTableDataCells = function (tr,data,id,type,kind,
   return true;
 }; // refreshListTableDataCells
 
-$.any.View.prototype.refreshItemTableDataRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.anyView.prototype.refreshItemTableDataRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
 {
   if (!tbody || !data || !data[id])
     return null;
@@ -1283,7 +1286,7 @@ $.any.View.prototype.refreshItemTableDataRow = function (tbody,data,id,type,kind
   return tbody;
 }; // refreshItemTableDataRow
 
-$.any.View.prototype.refreshItemTableDataCells = function (tr,data,id,type,kind,filter,filter_id,filter_key,id_str,pl_str,n,edit,isEditable,pdata,pid)
+$.any.anyView.prototype.refreshItemTableDataCells = function (tr,data,id,type,kind,filter,filter_id,filter_key,id_str,pl_str,n,edit,isEditable,pdata,pid)
 {
   let class_id_name = "any-item-name-"+filter_id;
   let class_id_val  = "any-item-val-"+filter_id;
@@ -1297,7 +1300,7 @@ $.any.View.prototype.refreshItemTableDataCells = function (tr,data,id,type,kind,
   this.initTableDataCell(td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
 }; // refreshItemTableDataCells
 
-$.any.View.prototype.refreshTableDataFirstCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
+$.any.anyView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
 {
   let td_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_edit"; // First tool cell
   if ($("#"+td_id).length)
@@ -1353,7 +1356,7 @@ $.any.View.prototype.refreshTableDataFirstCell = function (tr,data,id,type,kind,
   }
 }; // refreshTableDataFirstCell
 
-$.any.View.prototype.refreshTableDataLastCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
+$.any.anyView.prototype.refreshTableDataLastCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
 {
   let td_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_unedit"; // Last tool cell
   if ($("#"+td_id).length)
@@ -1385,7 +1388,7 @@ $.any.View.prototype.refreshTableDataLastCell = function (tr,data,id,type,kind,f
   }
 }; // refreshTableDataLastCell
 
-$.any.View.prototype._rowHasData = function (data,filter)
+$.any.anyView.prototype._rowHasData = function (data,filter)
 {
   let row_has_data = false;
   for (let filter_id in filter) {
@@ -1403,7 +1406,7 @@ $.any.View.prototype._rowHasData = function (data,filter)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid)
+$.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid)
 {
   if (!filter_key || !td_id)
     return;
@@ -1528,7 +1531,7 @@ $.any.View.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_st
 //
 // Create a new model in a new view and return the view
 //
-$.any.View.prototype.createView = function (parent,data,id,type,kind)
+$.any.anyView.prototype.createView = function (parent,data,id,type,kind)
 {
   if (!parent)
     parent = this.element;
@@ -1586,7 +1589,7 @@ $.any.View.prototype.createView = function (parent,data,id,type,kind)
   return view;
 }; // createView
 
-$.any.View.prototype.getCreateModelOptions = function(data,id,type,kind)
+$.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
 {
   return {
     data:       data,
@@ -1602,7 +1605,7 @@ $.any.View.prototype.getCreateModelOptions = function(data,id,type,kind)
   };
 }; // getCreateModelOptions
 
-$.any.View.prototype.getCreateViewOptions = function(model,view_id,parent,kind)
+$.any.anyView.prototype.getCreateViewOptions = function(model,view_id,parent,kind)
 {
   return {
     model:            model,
@@ -1638,7 +1641,7 @@ $.any.View.prototype.getCreateViewOptions = function(model,view_id,parent,kind)
 // Methods that create cell items
 //
 
-$.any.View.prototype.createCellEntry = function (id,type,kind,id_str,filter_id,filter_key,data_item,edit)
+$.any.anyView.prototype.createCellEntry = function (id,type,kind,id_str,filter_id,filter_key,data_item,edit)
 {
   if (!filter_id || !filter_key)
     return "";
@@ -1679,12 +1682,12 @@ $.any.View.prototype.createCellEntry = function (id,type,kind,id_str,filter_id,f
   return val;
 }; // createCellEntry
 
-$.any.View.prototype.getHtmlStr = function (type,kind,id,val,edit)
+$.any.anyView.prototype.getHtmlStr = function (type,kind,id,val,edit)
 {
   return val;
 }; // getHtmlStr
 
-$.any.View.prototype.getLabelStr = function (type,kind,id,val)
+$.any.anyView.prototype.getLabelStr = function (type,kind,id,val)
 {
   //val = (val.replace(/<(?:.|\n)*?>/gm,''));
   let val_cleaned = typeof val == "string" ? val.substring(0,this.options.cutoff) : ""+val;
@@ -1695,7 +1698,7 @@ $.any.View.prototype.getLabelStr = function (type,kind,id,val)
   return "<div class='itemUnedit itemLabel'>"+val+"</div>";
 }; // getLabelStr
 
-$.any.View.prototype.getTextAreaStr = function (type,kind,id,val,edit,filter_id,id_str)
+$.any.anyView.prototype.getTextAreaStr = function (type,kind,id,val,edit,filter_id,id_str)
 {
   if (edit) {
     let nameid = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;
@@ -1709,7 +1712,7 @@ $.any.View.prototype.getTextAreaStr = function (type,kind,id,val,edit,filter_id,
     return this.getLabelStr(type,kind,id,val);
 }; // getTextAreaStr
 
-$.any.View.prototype.getTextStr = function (type,kind,id,val,edit)
+$.any.anyView.prototype.getTextStr = function (type,kind,id,val,edit)
 {
   if (edit)
     return "<input class='itemEdit itemText' type='text' value='"+val+"'/>";
@@ -1717,7 +1720,7 @@ $.any.View.prototype.getTextStr = function (type,kind,id,val,edit)
     return this.getLabelStr(type,kind,id,val);
 }; // getTextStr
 
-$.any.View.prototype.getPasswordStr = function (type,kind,id,val,edit)
+$.any.anyView.prototype.getPasswordStr = function (type,kind,id,val,edit)
 {
   if (edit)
     return "<input class='itemEdit itemText password' type='password' value='"+val+"'/>";
@@ -1725,7 +1728,7 @@ $.any.View.prototype.getPasswordStr = function (type,kind,id,val,edit)
     return this.getLabelStr(type,kind,id,"");
 }; // getLabelStr
 
-$.any.View.prototype.getLinkStr = function (type,kind,id,val,edit)
+$.any.anyView.prototype.getLinkStr = function (type,kind,id,val,edit)
 {
   if (edit)
     return this.getTextStr(type,kind,id,val,edit);
@@ -1733,7 +1736,7 @@ $.any.View.prototype.getLinkStr = function (type,kind,id,val,edit)
     return "<div class='itemUnedit itemText pointer underline' attr='link'>"+val+"</div>";
 }; // getLinkStr
 
-$.any.View.prototype.getEmailStr = function (type,kind,id,val,edit)
+$.any.anyView.prototype.getEmailStr = function (type,kind,id,val,edit)
 {
   if (edit)
     return this.getTextStr(type,kind,id,val,edit);
@@ -1743,7 +1746,7 @@ $.any.View.prototype.getEmailStr = function (type,kind,id,val,edit)
 
 // In edit mode, the input field is modified with a filter
 // in append methods to allow only numerals and '.'
-$.any.View.prototype.getNumberStr = function (type,kind,id,val,edit)
+$.any.anyView.prototype.getNumberStr = function (type,kind,id,val,edit)
 {
   if (edit)
     return "<input class='itemEdit itemNumber' type='text' value='"+val+"'/>";
@@ -1756,7 +1759,7 @@ $.any.View.prototype.getNumberStr = function (type,kind,id,val,edit)
 }; // getNumberStr
 
 // In edit mode, a date selector will be shown.
-$.any.View.prototype.getDateStr = function (type,kind,id,val,edit)
+$.any.anyView.prototype.getDateStr = function (type,kind,id,val,edit)
 {
   let str = "";
   if (edit) {
@@ -1780,7 +1783,7 @@ $.any.View.prototype.getDateStr = function (type,kind,id,val,edit)
 }; // getDateStr
 
 // Execute a function which should return an html string
-$.any.View.prototype.getFunctionStr = function (type,kind,id,val,edit,filter_key,pid,pname)
+$.any.anyView.prototype.getFunctionStr = function (type,kind,id,val,edit,filter_key,pid,pname)
 {
   let func_name = filter_key.OBJ_FUNCTION;
   if (isFunction(this[func_name])) // Method in view class
@@ -1790,7 +1793,7 @@ $.any.View.prototype.getFunctionStr = function (type,kind,id,val,edit,filter_key
   return ""; // Function not found
 }; // getFunctionStr
 
-$.any.View.prototype.getImageStr = function (type,kind,id,val,edit,filter_key,id_str)
+$.any.anyView.prototype.getImageStr = function (type,kind,id,val,edit,filter_key,id_str)
 {
   let image_src = filter_key.OBJ_IMAGE;
   if (!image_src && filter_key.OBJ_FUNCTION && typeof window[filter_key.OBJ_FUNCTION] == "function")
@@ -1800,7 +1803,7 @@ $.any.View.prototype.getImageStr = function (type,kind,id,val,edit,filter_key,id
          "</div>";
 }; // getImageStr
 
-$.any.View.prototype.getSelectStr = function (type,kind,id,val,edit,filter_key,pid,pname)
+$.any.anyView.prototype.getSelectStr = function (type,kind,id,val,edit,filter_key,pid,pname)
 {
   let str  = "";
   let sval = val;
@@ -1839,7 +1842,7 @@ $.any.View.prototype.getSelectStr = function (type,kind,id,val,edit,filter_key,p
   return str;
 }; // getSelectStr
 
-$.any.View.prototype.getRadioStr = function (type,kind,id,val,edit,filter_key,filter_id)
+$.any.anyView.prototype.getRadioStr = function (type,kind,id,val,edit,filter_key,filter_id)
 {
   let str  = "";
   let sval = val;
@@ -1875,7 +1878,7 @@ $.any.View.prototype.getRadioStr = function (type,kind,id,val,edit,filter_key,fi
   return str;
 }; // getRadioStr
 
-$.any.View.prototype.getCheckStr = function (type,kind,id,val,edit,filter_key,filter_id)
+$.any.anyView.prototype.getCheckStr = function (type,kind,id,val,edit,filter_key,filter_id)
 {
   let str = "";
   if (edit) {
@@ -1898,7 +1901,7 @@ $.any.View.prototype.getCheckStr = function (type,kind,id,val,edit,filter_key,fi
 }; // getCheckStr
 
 // Return a view containing a list
-$.any.View.prototype.getListView = function (type,kind,id,val,edit,filter_key,id_str)
+$.any.anyView.prototype.getListView = function (type,kind,id,val,edit,filter_key,id_str)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -1943,7 +1946,7 @@ $.any.View.prototype.getListView = function (type,kind,id,val,edit,filter_key,id
 }; // getListView
 
 // May be overidden by derived classes
-$.any.View.prototype.getListModelOptions = function (type,list_type,data)
+$.any.anyView.prototype.getListModelOptions = function (type,list_type,data)
 {
   return {
     type:       list_type,
@@ -1957,7 +1960,7 @@ $.any.View.prototype.getListModelOptions = function (type,list_type,data)
 }; // getListModelOptions
 
 // May be overidden by derived classes
-$.any.View.prototype.getListViewOptions = function (model,view_id,view)
+$.any.anyView.prototype.getListViewOptions = function (model,view_id,view)
 {
   return {
     model:           model,
@@ -1974,7 +1977,7 @@ $.any.View.prototype.getListViewOptions = function (model,view_id,view)
   };
 }; // getListViewOptions
 
-$.any.View.prototype.getUploadStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
+$.any.anyView.prototype.getUploadStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
 {
   // Shows a clickable label that opens a file select dialog when pressed
   let elem_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id; // element id
@@ -1993,7 +1996,7 @@ $.any.View.prototype.getUploadStr = function (type,kind,id,val,edit,data_item,fi
   return str;
 }; // getUploadStr
 
-$.any.View.prototype._uploadClicked = function (event)
+$.any.anyView.prototype._uploadClicked = function (event)
 {
   if (!this.options.uploadDirect && !event.data.edit) {
     console.log(event.data.filter_id+" not editable. "); // TODO! i18n
@@ -2036,7 +2039,7 @@ $.any.View.prototype._uploadClicked = function (event)
   return fname;
 }; // _uploadClicked
 
-$.any.View.prototype.getFileViewStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
+$.any.anyView.prototype.getFileViewStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
 {
   let elem_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;   // element id
   let filename = data_item[filter_id] ? data_item[filter_id]          : ""; // local file name on server
@@ -2052,7 +2055,7 @@ $.any.View.prototype.getFileViewStr = function (type,kind,id,val,edit,data_item,
   return str;
 }; // getFileViewStr
 
-$.any.View.prototype._fileViewClicked = function (event)
+$.any.anyView.prototype._fileViewClicked = function (event)
 {
   let type = event.data.type;
   let id   = event.data.id;
@@ -2075,7 +2078,7 @@ $.any.View.prototype._fileViewClicked = function (event)
 
 // Button in top toolbar for closing item view
 // By default calls closeItem
-$.any.View.prototype.refreshCloseItemButton = function (parent,opt)
+$.any.anyView.prototype.refreshCloseItemButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonCancel;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -2098,7 +2101,7 @@ $.any.View.prototype.refreshCloseItemButton = function (parent,opt)
 
 // Add-button in list table header
 // By default calls addListEntry
-$.any.View.prototype.refreshAddButton = function (parent,opt)
+$.any.anyView.prototype.refreshAddButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonAddToList.replace("%%",opt.type);
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -2120,7 +2123,7 @@ $.any.View.prototype.refreshAddButton = function (parent,opt)
 
 // Select-button in first list table cell
 // By default calls _toggleChecked
-$.any.View.prototype.refreshSelectButton = function (parent,opt)
+$.any.anyView.prototype.refreshSelectButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonSelect;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -2145,7 +2148,7 @@ $.any.View.prototype.refreshSelectButton = function (parent,opt)
 
 // Edit-button in first list or item table cell
 // By default calls toggleEdit
-$.any.View.prototype.refreshEditButton = function (parent,opt)
+$.any.anyView.prototype.refreshEditButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonEdit;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -2170,7 +2173,7 @@ $.any.View.prototype.refreshEditButton = function (parent,opt)
 
 // Update-button in first list or item table cell
 // By default calls dbUpdate
-$.any.View.prototype.refreshUpdateButton = function (parent,opt)
+$.any.anyView.prototype.refreshUpdateButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonUpdate;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -2195,7 +2198,7 @@ $.any.View.prototype.refreshUpdateButton = function (parent,opt)
 
 // Remove-button in last list or item table cell
 // By default calls dbRemoveDialog
-$.any.View.prototype.refreshRemoveButton = function (parent,opt)
+$.any.anyView.prototype.refreshRemoveButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonRemove;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -2219,7 +2222,7 @@ $.any.View.prototype.refreshRemoveButton = function (parent,opt)
 
 // Delete-button in last list or item table cell
 // By default calls dbDeleteDialog
-$.any.View.prototype.refreshDeleteButton = function (parent,opt)
+$.any.anyView.prototype.refreshDeleteButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonDelete;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -2243,7 +2246,7 @@ $.any.View.prototype.refreshDeleteButton = function (parent,opt)
 
 // Cancel-button in last list or item table cell
 // By default calls toggleEdit
-$.any.View.prototype.refreshCancelButton = function (parent,opt)
+$.any.anyView.prototype.refreshCancelButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonCancel;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
@@ -2268,7 +2271,7 @@ $.any.View.prototype.refreshCancelButton = function (parent,opt)
 
 // Button in bottom toolbar for opening a new empty item view
 // By default calls showItem
-$.any.View.prototype.refreshNewItemButton = function (parent,opt)
+$.any.anyView.prototype.refreshNewItemButton = function (parent,opt)
 {
   let tit_str = this.options.newButtonLabel ? this.options.newButtonLabel : i18n.button.buttonNew+" "+opt.type;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'> "+/*tit_str+*/"</span>" : "";
@@ -2290,7 +2293,7 @@ $.any.View.prototype.refreshNewItemButton = function (parent,opt)
 
 // Button in bottom toolbar for displaying a menu for adding links
 // By default calls showLinkMenu
-$.any.View.prototype.refreshAddLinkButton = function (parent,opt)
+$.any.anyView.prototype.refreshAddLinkButton = function (parent,opt)
 {
   if (!this.model.plugins || !this.options.linkIcons)
     return;
@@ -2352,7 +2355,7 @@ $.any.View.prototype.refreshAddLinkButton = function (parent,opt)
 
 // Button in menu for adding a link
 // By default calls dbSearchLinks
-$.any.View.prototype.refreshLinkButton = function (options,onClickMethod)
+$.any.anyView.prototype.refreshLinkButton = function (options,onClickMethod)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -2373,7 +2376,7 @@ $.any.View.prototype.refreshLinkButton = function (options,onClickMethod)
 }; // refreshLinkButton
 
 // Display or hide the link menu
-$.any.View.prototype.showLinkMenu = function (event)
+$.any.anyView.prototype.showLinkMenu = function (event)
 {
   let dd_menu = $("#"+event.data.element_id);
   let elem = document.getElementById(event.data.element_id);
@@ -2406,7 +2409,7 @@ $.any.View.prototype.showLinkMenu = function (event)
 ///////////////////////////////////////////////////////////////////////////////
 
 // Process Esc and Enter keys.
-$.any.View.prototype._processKeyup = function (event)
+$.any.anyView.prototype._processKeyup = function (event)
 {
   if ((event.type == "keyup"   && event.which != 13) ||
       (event.type == "keydown" && event.which != 27)) // For catching the ESC key on Vivaldi
@@ -2480,7 +2483,7 @@ $.any.View.prototype._processKeyup = function (event)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.View.prototype.addListEntry = function (event)
+$.any.anyView.prototype.addListEntry = function (event)
 {
   let id     = event.data.id;
   let pid    = event.data.pid;
@@ -2529,7 +2532,7 @@ $.any.View.prototype.addListEntry = function (event)
   return true;
 }; // addListEntry
 
-$.any.View.prototype._addListEntryFromDB = function (context,serverdata,options)
+$.any.anyView.prototype._addListEntryFromDB = function (context,serverdata,options)
 {
   let self = context;
   if (serverdata) {
@@ -2560,7 +2563,7 @@ $.any.View.prototype._addListEntryFromDB = function (context,serverdata,options)
   }
 }; // _addListEntryFromDB
 
-$.any.View.prototype._addListEntry = function (opt)
+$.any.anyView.prototype._addListEntry = function (opt)
 {
   let new_id = opt.new_id;
   let id_str = opt.id_str;
@@ -2610,13 +2613,13 @@ $.any.View.prototype._addListEntry = function (opt)
 ///////////////////////////////////////////////////////////////////////////////
 
 // Default action when clicking on a name link.
-$.any.View.prototype.itemLinkClicked = function (event)
+$.any.anyView.prototype.itemLinkClicked = function (event)
 {
   return this.showItem(event);
 }; // itemLinkClicked
 
 // Open a (possibly new and empty) item view.
-$.any.View.prototype.showItem = function (event)
+$.any.anyView.prototype.showItem = function (event)
 {
   event.data.view = this;
   let id     = event.data.id;
@@ -2647,7 +2650,7 @@ $.any.View.prototype.showItem = function (event)
     return this._doShowItem(event.data);
 }; // showItem
 
-$.any.View.prototype._foundNextIdFromDB = function (context,serverdata,options)
+$.any.anyView.prototype._foundNextIdFromDB = function (context,serverdata,options)
 {
   let self = context;
   if (serverdata) {
@@ -2671,7 +2674,7 @@ $.any.View.prototype._foundNextIdFromDB = function (context,serverdata,options)
   }
 }; // _foundNextIdFromDB
 
-$.any.View.prototype._doShowItem = function (opt)
+$.any.anyView.prototype._doShowItem = function (opt)
 {
   let data   = opt.data;
   let id     = opt.id;
@@ -2763,7 +2766,7 @@ $.any.View.prototype._doShowItem = function (opt)
   return true;
 }; // _doShowItem
 
-$.any.View.prototype.closeItem = function (event)
+$.any.anyView.prototype.closeItem = function (event)
 {
   // TODO! Should check for changed values and give warning before closing
   if (this.options.top_view)
@@ -2772,14 +2775,14 @@ $.any.View.prototype.closeItem = function (event)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.View.prototype.toggleEdit = function (event)
+$.any.anyView.prototype.toggleEdit = function (event)
 {
   if (!event || !event.data)
     return null;
   return this.doToggleEdit(event.data);
 }; // toggleEdit
 
-$.any.View.prototype.doToggleEdit = function (opt)
+$.any.anyView.prototype.doToggleEdit = function (opt)
 {
   if (!opt)
     return null;
@@ -2871,7 +2874,7 @@ $.any.View.prototype.doToggleEdit = function (opt)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.View.prototype._toggleChecked = function (event)
+$.any.anyView.prototype._toggleChecked = function (event)
 {
   let opt = event.data;
   let chk_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_select_icon .check";
@@ -2907,7 +2910,7 @@ $.any.View.prototype._toggleChecked = function (event)
  * @param  pid
  * @return true on success, false on error.
  */
-$.any.View.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
+$.any.anyView.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
 {
   if (!this.model)
     return val;
@@ -2933,7 +2936,7 @@ $.any.View.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
 }; // dbSearchParents
 
 // Create the dropdown menu to select parent from.
-$.any.View.prototype.createParentDropdownMenu = function (context,serverdata,options)
+$.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,options)
 {
   let self = context;
   self.last_db_command = "sea";
@@ -2981,7 +2984,7 @@ $.any.View.prototype.createParentDropdownMenu = function (context,serverdata,opt
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.View.prototype.dbUpdate = function (event)
+$.any.anyView.prototype.dbUpdate = function (event)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -3103,7 +3106,7 @@ $.any.View.prototype.dbUpdate = function (event)
 }; // dbUpdate
 
 // Override this in derived classes
-$.any.View.prototype.validateUpdate = function (data)
+$.any.anyView.prototype.validateUpdate = function (data)
 {
   return "";
 }; // validateUpdate
@@ -3118,7 +3121,7 @@ $.any.View.prototype.validateUpdate = function (data)
  * @param  {Object} event
  * @return true on success, false on error.
  */
-$.any.View.prototype.dbSearchLinks = function (event)
+$.any.anyView.prototype.dbSearchLinks = function (event)
 {
   if (!this.model)
     return false;
@@ -3137,7 +3140,7 @@ $.any.View.prototype.dbSearchLinks = function (event)
 
 // Create a list of selectable items and display in a modal dialog.
 // Note: The 'this' context is here the calling model! Use options.parent_view for view methods!
-$.any.View.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
+$.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
 {
   let self = context;
   self.last_db_command = "sea";
@@ -3217,7 +3220,7 @@ $.any.View.prototype.dbUpdateLinkListDialog = function (context,serverdata,optio
   return context;
 }; // dbUpdateLinkListDialog
 
-$.any.View.prototype.dbUpdateLinkList = function (opt)
+$.any.anyView.prototype.dbUpdateLinkList = function (opt)
 {
   // Close dialog
   w3_modaldialog_close(opt);
@@ -3247,7 +3250,7 @@ $.any.View.prototype.dbUpdateLinkList = function (opt)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.View.prototype.dbRemoveDialog = function (event)
+$.any.anyView.prototype.dbRemoveDialog = function (event)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -3324,7 +3327,7 @@ $.any.View.prototype.dbRemoveDialog = function (event)
  * @throws {MODEL_MISSING} If `this.model` or `this.model.permission` are null or undefined.
  * @throws {DATA_MISSING}
  */
-$.any.View.prototype.dbDeleteDialog = function (event)
+$.any.anyView.prototype.dbDeleteDialog = function (event)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -3379,7 +3382,7 @@ $.any.View.prototype.dbDeleteDialog = function (event)
   return true;
 }; // dbDeleteDialog
 
-$.any.View.prototype.dbDelete = function (opt)
+$.any.anyView.prototype.dbDelete = function (opt)
 {
   // Close dialog
   w3_modaldialog_close(opt);
@@ -3426,7 +3429,7 @@ $.any.View.prototype.dbDelete = function (opt)
 
 // Remove a row (and subrows, id any) from a list, or the main container of an item
 // Must be called after deleting or removing data.
-$.any.View.prototype.removeFromView = function (opt)
+$.any.anyView.prototype.removeFromView = function (opt)
 {
   let data   = opt.data;
   let id     = opt.id;
@@ -3478,7 +3481,7 @@ var anyView = function (options)
 {
   if (!options)
     return null;
-  return $.any.View(options);
+  return $.any.anyView(options);
 };
 /////////////////////////////////////////////////////////////////////////////
 //@ sourceURL=anyView.js
