@@ -1,0 +1,75 @@
+<!--
+ ****************************************************************************************
+ *
+ * anyList is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
+ *
+ * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
+ * Get licences here: http://balanse.info/anylist/license/ (coming soon).
+ *
+ ****************************************************************************************
+-->
+<!doctype html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8" />
+<!-- Third party code -->
+<script src="../../../testserver/javascript/jquery/jquery-3.6.0.min.js"></script>
+<script src="../../../testserver/javascript/jquery/jquery-widget-1.12.1.min.js"></script>
+<link  href="../../../testserver/javascript/w3css/w3.css"           rel="stylesheet"/>
+<link  href="../../../testserver/javascript/fontawesome/fa.min.css" rel="stylesheet"/>
+<!-- anyList code -->
+<script src="../../view/anylist.min.js"></script>
+<link  href="../../view/anylist.min.css" rel="stylesheet"/>
+</head>
+
+<body>
+
+<!-- The view is displayed in this div -->
+<div id="minimal_foo_list"/>
+
+<script>
+
+<!-- Data to display -->
+let my_data = {
+  0: {
+    list: "foo",
+    foo_name: "Hello world 1",
+    foo_desc: "A simple hello to the world",
+  },
+  1: {
+    list: "foo",
+    foo_name: "Hello world 2",
+    foo_desc: "Another hello to the world",
+  },
+};
+<!-- Filters for the data -->
+let my_filters = {
+  foo: {
+    list: {
+      foo_id  : { HEADER:"Id",          DISPLAY:0, HTML_TYPE:"label" },
+      foo_name: { HEADER:"Message",     DISPLAY:1, HTML_TYPE:"label" },
+      foo_desc: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"text" },
+    },
+  },
+};
+
+<!-- Give the data to a model -->
+var my_model = new anyModel({
+  data: my_data,
+});
+
+<!-- Give the model to a view -->
+var my_view  = new anyView ({
+  model:   my_model,
+  filters: my_filters,
+  id:      "minimal_foo_list", // Id of div in which to display result
+});
+
+<!-- Display -->
+my_view.refresh();
+
+</script>
+
+</body>
+</html>
