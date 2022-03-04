@@ -1774,7 +1774,7 @@ anyModel.prototype.dbUpdateLinkList = function (options)
       console.warn("anyModel.dbUpdateLinkList: "+this.message);
       return false;
     }
-    return options.success(this,options);
+    return self.success(this,this,options);
   }
   return true;
 }; // dbUpdateLinkList
@@ -1916,11 +1916,11 @@ anyModel.prototype.dbDelete = function (options)
   this.message      = "";
   this.error        = "";
   this.error_server = "";
+  let self = this;
   if (this.mode == "remote") { // Remote server call
     let url = this.dbDeleteGetURL(options);
     if (!url)
       return false;
-    let self = this;
     $.getJSON(url) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
       return self.success ? self.success(self.context,serverdata,options) : false;
@@ -1931,12 +1931,12 @@ anyModel.prototype.dbDelete = function (options)
     return true;
   }
   else {
-    if (!this.success) {
+    if (!self.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
       console.warn("anyModel.dbDelete: "+this.message);
       return false;
     }
-    return this.success(this,this,options);
+    return self.success(this,this,options);
   }
 }; // dbDelete
 
