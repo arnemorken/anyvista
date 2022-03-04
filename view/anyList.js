@@ -707,7 +707,7 @@
  * 4) Create the task view class in `taskView.js`:
  *
           (function($) {
-            $.widget("any.taskView", $.any.View, {
+            $.widget("any.taskView", $.any.anyView, {
               options: {
                 filters: null,
                 linkIcons: {
