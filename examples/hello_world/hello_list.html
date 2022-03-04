@@ -29,8 +29,7 @@
 <div id="minimal_foo_list"/>
 
 <script>
-
-<!-- Data to display -->
+// Data to display
 let my_data = {
   0: {
     list: "foo",
@@ -43,7 +42,7 @@ let my_data = {
     foo_desc: "Another hello to the world",
   },
 };
-<!-- Filters for the data -->
+// Filters for the data
 let my_filters = {
   foo: {
     list: {
@@ -54,21 +53,20 @@ let my_filters = {
   },
 };
 
-<!-- Give the data to a model -->
+// Give the data to a model
 var my_model = new anyModel({
   data: my_data,
 });
 
-<!-- Give the model to a view -->
+// Give the model to a view
 var my_view  = new anyView ({
   model:   my_model,
   filters: my_filters,
   id:      "minimal_foo_list", // Id of div in which to display result
 });
 
-<!-- Display -->
+// Display
 my_view.refresh();
-
 </script>
 
 </body>
