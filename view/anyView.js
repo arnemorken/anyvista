@@ -3265,7 +3265,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   let pdata     = event.data.pdata;
   let pid       = event.data.pid;
   let link_id   = pdata && pdata.groupingForId   ? pdata.groupingForId   : pid && pdata[pid] ? pid : null;
-  let link_type = pdata && pdata.groupingForType ? pdata.groupingForType : pid && pdata[pid] ? pdata[pid].list : null;
+  let link_type = pdata && pdata.groupingForType ? pdata.groupingForType : pid && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
   if (!data || !data[id]) {
     console.warn("Data not found ("+type+" id="+id+"). ");
     return null;
