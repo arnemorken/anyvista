@@ -15,7 +15,7 @@
  */
 (function($) {
 
-$.widget("any.documentViewTabs", $.any.ViewTabs, {
+$.widget("any.documentViewTabs", $.any.anyViewTabs, {
   // Default options
   options: {
     filters: null, // If not set by the calling method, it will be set to default values
@@ -55,7 +55,7 @@ $.any.documentViewTabs.prototype.validateUpdate = function (options)
 
 $.any.documentViewTabs.prototype._uploadClicked = function (event)
 {
-  let fname = $.any.View.prototype._uploadClicked.call(this,event);
+  let fname = $.any.anyView.prototype._uploadClicked.call(this,event);
   if (fname) {
     // Update the document_name and document_filename entries in model data
     this.model.dataUpdate({ id:     event.data.id,
@@ -125,7 +125,7 @@ $.any.documentViewTabs.prototype.dbUpdate = function (event)
                                     document_filename: local_fname,
                                   },
                        });
-  let res = $.any.View.prototype.dbUpdate.call(this,event);
+  let res = $.any.anyView.prototype.dbUpdate.call(this,event);
   if (!res) {
     this.model.error   = e + this.model.error;
     this.model.message = m + this.model.message;
@@ -140,7 +140,7 @@ $.any.documentViewTabs.prototype.dbDeleteDialog = function (event)
 {
   let opt = event.data;
   if (opt.data && opt.id && opt.data[opt.id] && opt.data[opt.id].is_new)
-    return $.any.View.prototype.dbDeleteDialog.call(this,event);
+    return $.any.anyView.prototype.dbDeleteDialog.call(this,event);
 
   this.model.message = this.validateUpdate(opt);
   if (this.model.message) {
@@ -166,7 +166,7 @@ $.any.documentViewTabs.prototype.dbDeleteDialog = function (event)
   if (!docname)
     return false;
   event.data.message = i18n.message.deleteByName.replace("%%", docname);
-  let res = $.any.View.prototype.dbDeleteDialog.call(this,event);
+  let res = $.any.anyView.prototype.dbDeleteDialog.call(this,event);
   return res;
 }; // dbDeleteDialog
 

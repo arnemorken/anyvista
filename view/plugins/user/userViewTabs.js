@@ -15,7 +15,7 @@
  */
 (function($) {
 
-$.widget("any.userViewTabs", $.any.ViewTabs, {
+$.widget("any.userViewTabs", $.any.anyViewTabs, {
   // Default options
   options: {
     filters: null, // Must be set by the calling method or will be set to default values in the constructor

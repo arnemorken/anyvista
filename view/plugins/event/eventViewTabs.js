@@ -15,7 +15,7 @@
  */
 (function($) {
 
-$.widget("any.eventViewTabs", $.any.ViewTabs, {
+$.widget("any.eventViewTabs", $.any.anyViewTabs, {
   // Default options
   options: {
     mustEnroll:  true,
