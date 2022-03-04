@@ -19,7 +19,7 @@
  */
 (function($) {
 
-$.widget("any.ViewTabs", $.any.View, {
+$.widget("any.anyViewTabs", $.any.anyView, {
   // Default options
   options: {
     grouping: "tabs",
@@ -41,9 +41,9 @@ $.widget("any.ViewTabs", $.any.View, {
   }
 }); // ViewTabs widget constructor
 
-$.any.ViewTabs.prototype.createView = function (parent,data,id,type,kind)
+$.any.anyViewTabs.prototype.createView = function (parent,data,id,type,kind)
 {
-  let view = $.any.View.prototype.createView.call(this,parent,data,id,type,kind);
+  let view = $.any.anyView.prototype.createView.call(this,parent,data,id,type,kind);
   if (view) {
     view.tabs_list      = this.tabs_list;
     view.first_div_id   = this.first_div_id;
@@ -52,15 +52,15 @@ $.any.ViewTabs.prototype.createView = function (parent,data,id,type,kind)
   return view;
 }; // createView
 
-$.any.ViewTabs.prototype.refresh = function (parent,data,id,type,kind,edit,pdata,pid)
+$.any.anyViewTabs.prototype.refresh = function (parent,data,id,type,kind,edit,pdata,pid)
 {
   this.tabs_list = {};
-  $.any.View.prototype.refresh.call(this,parent,data,id,type,kind,edit,pdata,pid);
+  $.any.anyView.prototype.refresh.call(this,parent,data,id,type,kind,edit,pdata,pid);
 }; // refresh
 
-$.any.ViewTabs.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata,pid)
+$.any.anyViewTabs.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata,pid)
 {
-  $.any.View.prototype.refreshLoop.call(this,parent,data,id,type,kind,edit,pdata,pid);
+  $.any.anyView.prototype.refreshLoop.call(this,parent,data,id,type,kind,edit,pdata,pid);
   if (this.current_div_id) {
     let ev = {};
     ev.data = {};
@@ -71,7 +71,7 @@ $.any.ViewTabs.prototype.refreshLoop = function (parent,data,id,type,kind,edit,p
   }
 }; // refreshLoop
 
-$.any.ViewTabs.prototype.refreshHeader = function (header_div,data,id,type,kind,edit,id_str,doNotEmpty)
+$.any.anyViewTabs.prototype.refreshHeader = function (header_div,data,id,type,kind,edit,id_str,doNotEmpty)
 {
   if (!header_div || !data || !this.options.showHeader)
     return null;
@@ -148,23 +148,23 @@ $.any.ViewTabs.prototype.refreshHeader = function (header_div,data,id,type,kind,
     }
   }
   if (!skip) // TODO: Should just skip the name, not the rest of the header
-    return $.any.View.prototype.refreshHeader.call(this,header_div,data,id,type,kind,edit,id_str,doNotEmpty);
+    return $.any.anyView.prototype.refreshHeader.call(this,header_div,data,id,type,kind,edit,id_str,doNotEmpty);
   return null;
 }; // refreshHeader
 
-$.any.ViewTabs.prototype._emptyDiv = function (div)
+$.any.anyViewTabs.prototype._emptyDiv = function (div)
 {
   this.tabs_list = {}; // Redraw tabs
-  return $.any.View.prototype._emptyDiv(div);
+  return $.any.anyView.prototype._emptyDiv(div);
 }; // _emptyDiv
 
-$.any.ViewTabs.prototype.clickOpenTab = function (event)
+$.any.anyViewTabs.prototype.clickOpenTab = function (event)
 {
   this.current_div_id = event.data.div_id;
   this.openTab(event);
 }; // clickOpenTab
 
-$.any.ViewTabs.prototype.openTab = function (event)
+$.any.anyViewTabs.prototype.openTab = function (event)
 {
   if (!event)
     return false;
@@ -179,7 +179,7 @@ $.any.ViewTabs.prototype.openTab = function (event)
   return true;
 }; // _openTab
 /*
-$.any.ViewTabs.prototype.getWidgetName = function()
+$.any.anyViewTabs.prototype.getWidgetName = function()
 {
   let d = this.element.data();
   let k = Object.keys(d);
@@ -199,7 +199,7 @@ var anyViewTabs = function (options)
 {
   if (!options)
     return null;
-  return $.any.ViewTabs(options);
+  return $.any.anyViewTabs(options);
 };
 
 anyViewTabs.prototype = new anyView(null);
