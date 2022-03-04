@@ -932,6 +932,13 @@ anyModel.prototype.dataUpdateLinkList = function (options)
     this.data = options.data;
   else {
     // Delete items
+    if (options.link_id) {
+      this.dataDelete({ data: this.data,
+                        id:   options.link_id,
+                        type: options.link_type,
+                     });
+    }
+    else
     if (options.unselect) {
       for (let id of options.unselect) {
         if (parseInt(id) != parseInt(options.link_id)) {
@@ -1027,7 +1034,7 @@ anyModel.prototype.dataDelete = function (options)
   if (!item)
     return null;
   // When parent==true, dataSearch may return item indexed with [id]
-  // if id is found on top level of data, so guard agains that
+  // if id is found on top level of data, so guard against that
   let it_ptr = null;
   let it_idx = null;
   if (item.data)
@@ -1812,21 +1819,23 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
                   "&"+the_type+"_id"+"="+the_id;
   if (options.link_type)
     param_str += "&link_type="+options.link_type;
+  if (options.link_id)
+    param_str += "&del="+options.link_id;
   param_str += "&sea=y";
   param_str += options.head     ? "&head="+options.head : "";
   param_str += options.grouping ? "&grouping="+options.grouping : "";
   let has_add_or_del = false;
-  if (options.select) {
+  if (options.select && !options.link_id) {
     let sel = [...options.select];
     param_str += "&add="+sel;
     has_add_or_del = true;
   }
-  if (options.unselect) {
+  if (options.unselect && !options.link_id) {
     let uns = [...options.unselect];
     param_str += "&del="+uns;
     has_add_or_del = true;
   }
-  if (!has_add_or_del) {
+  if (!has_add_or_del && !options.link_id) {
     console.error("anyModel.dbUpdateLinkListGetURL: "+"No items selected. "); // TODO! i18n
     return null;
   }

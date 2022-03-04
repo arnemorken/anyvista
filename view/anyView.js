@@ -3164,8 +3164,6 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
       let parent_view = options.parent_view ? options.parent_view : this;
       if (parent_view) {
         let list_type   = options.type;
-      //let parent_id   = isInt(options.parent_id) ? parseInt(options.parent_id) : "";
-      //let id_str      = parent_view.id_stack.length ? parent_view.id_stack.join("_")+"_"+parent_id : "0_"+parent_id;
         let new_base_id = parent_view._createBaseId();
         let ll_id       = new_base_id+"_"+list_type+"_link_list";
         let ll_contents = $("<div id='"+ll_id+"'></div>");
@@ -3201,6 +3199,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             id:          self.id,
             data:        self.data,
             link_type:   select_list_view.model.type,
+            link_id:     null,
             select:      select_list_view.model.select,
             unselect:    select_list_view.model.unselect,
             name_key:    select_list_view.model.name_key,
@@ -3228,12 +3227,15 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
 
+  this.removeFromView(opt);
+
   // Update database
   let mod_opt = {
     type:      opt.type,
     id:        opt.id,
     data:      opt.data,
     link_type: opt.link_type,
+    link_id:   opt.link_id,
     select:    opt.select,
     unselect:  opt.unselect,
     name_key:  opt.name_key,
@@ -3261,7 +3263,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   let id        = event.data.id;
   let type      = event.data.type;
   let kind      = event.data.kind;
-//let id_str    = event.data.id_str;
+  let id_str    = event.data.id_str;
   let pdata     = event.data.pdata;
   let pid       = event.data.pid;
   let link_id   = pdata && pdata.groupingForId   ? pdata.groupingForId   : pid && pdata[pid] ? pid : null;
@@ -3304,10 +3306,13 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
                     okFunction:  this.dbUpdateLinkList,
                     context:     this,
                     // Sent to okFunction:
-                    type:        link_type,
-                    id:          link_id,
+                    type:        type,
+                    kind:        kind,
+                    id:          id,
                     data:        data,
-                    link_type:   type,
+                    id_str:      id_str,
+                    link_type:   link_type,
+                    link_id:     link_id,
                     select:      new Set(),
                     unselect:    new Set().add(id),
                   });
