@@ -511,7 +511,7 @@ anyModel.prototype._getDataSourceName = function ()
  *
  * @return If id is specified and parent is false: A pointer to the item found, or null if not found or on error.
  *         If id is specified and parent is true: A pointer to the parent of the item found, or null if not found or on error.
- *         If id is not specified: The first item found of the specified type or null if none found.
+ *         If id is not specified: The first list of items of the specified type found, or null if none found or on error.
  *
  * @example
  *      mymodel.dataSearch({type:"user",id:"38"});
@@ -551,6 +551,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     }
     return data;
   }
+  let itemlist = [];
   for (let idx in data) {
     if (data.hasOwnProperty(idx) && data[idx] && !["head","item","list"].includes(idx)) {
       let item = null;
@@ -567,9 +568,9 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
           // type search
           if (!data[idx].head)
             if (!options.parent)
-              return data[idx];
+              itemlist.push(data[idx]);
             else
-              return data;
+              itemlist.push(data);
         }
       }
       if (!item && data[idx].data) { // subdata
@@ -581,10 +582,12 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
         if (item && item.data)
           item = item.data;
       }
-      if (item)
-        return item; // Found
+      if (item && itemlist.length < 1)
+        return item; // Found id
     }
-  }
+  } // for
+  if (itemlist.length > 0)
+    return itemlist; // Found type list
   return null; // Not found
 }; // dataSearch
 
