@@ -523,10 +523,10 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     console.error("anyModel.dataSearch: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
-  let data      = options.data                  ? options.data      : this.data;
-  let id        = options.id || options.id===0  ? options.id        : null;
-  let type      = options.type                  ? options.type      : this.type;
-  let prev_type = options.prev_type             ? options.prev_type : this.type;
+  let data      = options.data                    ? options.data      : this.data;
+  let id        = options.id || options.id === 0  ? options.id        : null;
+  let type      = options.type                    ? options.type      : this.type;
+  let prev_type = options.prev_type               ? options.prev_type : this.type;
 
   if (!type) {
     console.error("anyModel.dataSearch: "+i18n.error.TYPE_MISSING);

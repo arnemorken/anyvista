@@ -1593,7 +1593,7 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
 {
   return {
     data:       data,
-    id:         id,
+    id:         kind == "item" ? id : null,
     type:       type,
     kind:       kind,
     mode:       this.model.mode,
@@ -2925,7 +2925,7 @@ $.any.anyView.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
    context:   this,
   };
   if (edit)
-    return this.model.dbSearch(options);
+    return this.model.dbSearch(options); // TODO! What if mode == "local"?
   else {
     options.id = id;
     let item = this.model.dataSearch(options);
@@ -3100,9 +3100,16 @@ $.any.anyView.prototype.dbUpdate = function (event)
     this.refreshData();
   }
 
+  // To make top right close icon appear
+  this.options.item_opening = true;
+
   // Update database
-  this.options.item_opening = true; // To make top right close icon appear
-  return this.model.dbUpdate(event.data);
+  if (this.model.mode == "remote")
+    return this.model.dbUpdate(event.data);
+  else {
+    delete item[id].is_new;
+    delete item[id].dirty;
+  }
 }; // dbUpdate
 
 // Override this in derived classes
@@ -3135,7 +3142,7 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
    head:        true,
    grouping:    this.options.grouping,
   };
-  return this.model.dbSearch(options);
+  return this.model.dbSearch(options); // TODO! What if mode == "local"?
 }; // dbSearchLinks
 
 // Create a list of selectable items and display in a modal dialog.
@@ -3244,7 +3251,7 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
     grouping:  this.options.grouping,
   };
   this.options.item_opening = true; // To make top right close icon appear
-  if (!this.model.dbUpdateLinkList(mod_opt))
+  if (!this.model.dbUpdateLinkList(mod_opt)) // TODO! What if mode == "local"?
     return false;
 
   return true;
@@ -3427,7 +3434,7 @@ $.any.anyView.prototype.dbDelete = function (opt)
 
   // Delete from database, but only if the item is not new (i.e. exists in db).
   if (!is_new)
-    this.model.dbDelete(opt);
+    this.model.dbDelete(opt); // TODO! What if mode == "local"?
 
   return true;
 }; // dbDelete
