@@ -93,7 +93,7 @@ To make the view editable, give the following option to the anyView constructor:
 
 We will then get a view like this:
 
-![alt text](examples\hello_world\hello_list_editable.png)
+![alt text](https://raw.githubusercontent.com/arnemorken/anylist/main/examples/hello_world/hello_list_editable.png)
 <br/>
 
 # API
