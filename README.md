@@ -59,7 +59,7 @@ let my_filters = {
 };
 ```
 
-6. Give the model and filter to a view, tell the view where to live and display:
+6. Give the model and filters to a view, tell the view where to live and display:
 ```js
 let my_view  = new anyView({
   model:   my_model,
@@ -70,12 +70,14 @@ my_view.refresh();
 ```
 
 7. As an alternative  to the last step, one could do this:
+```js
 $("#minimal_foo_list").anyView({
   model:   my_model,
   filters: my_filters,
   id:      "minimal_foo_list", // Id of div in which to display result
 });
 $("#minimal_foo_list").anyView("refresh");
+```
 
 # API
 
