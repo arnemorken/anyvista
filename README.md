@@ -18,6 +18,8 @@ Early versions of the library is already been used in both commercial and non-co
 
 ![alt text](https://raw.githubusercontent.com/arnemorken/anylist/main/examples/sample_ss_acupedia.png)
 
+jsFiddle examples coming soon.
+
 # Download
 
 The library is currently in the last stages of development. Find it at Github: https://github.com/arnemorken/anylist/edit/main/README.md.
