@@ -43,7 +43,7 @@ let my_data = {
 
 4. Feed the data  to a model:
 ```js
-var my_model = new anyModel({ data: my_data });
+let my_model = new anyModel({ data: my_data });
 ```
 
 5. Provide filters to describe the data for the view:
@@ -61,7 +61,7 @@ let my_filters = {
 
 6. Give the model and filter to a view, tell the view where to live and display:
 ```js
-var my_view  = new anyView({
+let my_view  = new anyView({
   model:   my_model,
   filters: my_filters,
   id:      "myview",
