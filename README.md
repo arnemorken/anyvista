@@ -79,8 +79,8 @@ $("#minimal_foo_list").anyView({
 $("#minimal_foo_list").anyView("refresh");
 ```
 
-The above will produce an output like this:
-<img src="examples\hello_world\hello_list_uneditable.png">
+The above will produce an output like this:<br/>
+<img src="examples\hello_world\hello_list_uneditable.png" align="left">
 
 To make the view editable, give the following option to the anyView constructor:
 ```js
@@ -88,9 +88,8 @@ To make the view editable, give the following option to the anyView constructor:
   isEditable: true,
   ...
 ```
-We will the get a view like this:
-<img src="examples\hello_world\hello_list_editable.png">
-
+We will then get a view like this:<br/>
+<img src="examples\hello_world\hello_list_editable.png" align="left">
 
 # API
 
