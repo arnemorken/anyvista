@@ -18,7 +18,7 @@ The library is currently in the last stages of development. Find it at Github: h
 
 ```html
 <script src="/path/to/anyList.js"></script>
-<link  href="/path/to/anyLlist.css" rel="stylesheet"/>
+<link  href="/path/to/anyList.css" rel="stylesheet"/>
 ```
 
 2. Create a place for the view to live:
@@ -59,19 +59,23 @@ let my_filters = {
 };
 ```
 
-6. Give the model and filter to a view and tell the view where to live:
+6. Give the model and filter to a view, tell the view where to live and display:
 ```js
 var my_view  = new anyView({
   model:   my_model,
   filters: my_filters,
   id:      "myview",
 });
-```
-
-7. Display the view:
-```js
 my_view.refresh();
 ```
+
+7. As an alternative  to the last step, one could do this:
+$("#minimal_foo_list").anyView({
+  model:   my_model,
+  filters: my_filters,
+  id:      "minimal_foo_list", // Id of div in which to display result
+});
+$("#minimal_foo_list").anyView("refresh");
 
 # API
 
