@@ -22,7 +22,7 @@ jsFiddle examples coming soon.
 
 # Download
 
-The library is currently in the last stages of development. Find it at Github: https://github.com/arnemorken/anylist/edit/main/README.md.
+The library is currently in the last stages of development. Find it at Github: https://github.com/arnemorken/anylist/.
 
 **First beta release planned for March 2022.**
 
