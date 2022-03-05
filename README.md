@@ -10,7 +10,7 @@ Early versions of the library is already been used in both commercial and non-co
 
 ![alt text](https://raw.githubusercontent.com/arnemorken/anylist/main/examples/sample_ss_rt.png)
 
-**Example 2: "Acupedia", a commercial Android app for professional acupunturists:**
+**Example 2: "Acupedia", a commercial Android app for professional acupuncturists:**
 
 ![alt text](https://raw.githubusercontent.com/arnemorken/anylist/main/examples/sample_ss_acupedia.png)
 
