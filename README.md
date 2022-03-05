@@ -2,7 +2,11 @@
 
 # anylist <img src="balanselogo_85x95.png" align="right">
 
-A Javascript library that can be used in apps or web pages, with or without a database back-end, for displaying editable or non-editable items and lists of almost any combination of HTML elements, freely mixing lists and items of different types, interacting with lists and list items and using predefined or user defined plugins. anyList can read complex data structures from Ajax, inline code or indeed any data source, as long as it follows a certain flexible data format, and display it in beautiful tables. anyList can also be used as a Wordpress plugin. 
+A Javascript library that can be used in apps or web pages, with or without a database back-end, for displaying editable or non-editable items and lists of almost any combination of HTML elements, freely mixing lists and items of different types, interacting with lists and list items and using predefined or user defined plugins. 
+
+anyList can read complex data structures from Ajax, inline code or indeed any data source, as long as it follows a certain flexible data format, and display it in beautiful tables. 
+
+anyList can also be used as a Wordpress plugin. 
 
 Early versions of the library is already been used in both commercial and non-commercial projects - see screenshots below:
 
