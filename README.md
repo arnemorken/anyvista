@@ -6,11 +6,11 @@ A Javascript library that can be used in apps or web pages, with or without a da
 
 Early versions of the library is already been used in both commercial and non-commercial projects - see screenshots below:
 
-Example 1: "Rulletour", an online bicycle tournament:
+**Example 1: "Rulletour", an online bicycle tournament:**
 
 ![alt text](https://raw.githubusercontent.com/arnemorken/anylist/main/examples/sample_ss_rt.png)
 
-Example ": "Acupedia", an Android app for professional acupunturists:
+**Example 2: "Acupedia", an Android app for professional acupunturists:**
 
 ![alt text](https://raw.githubusercontent.com/arnemorken/anylist/main/examples/sample_ss_acupedia.png)
 
