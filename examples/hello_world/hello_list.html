@@ -37,7 +37,6 @@ let my_data = {
     foo_desc: "A simple hello to the world",
   },
   1: {
-    list: "foo",
     foo_name: "Hello world 2",
     foo_desc: "Another hello to the world",
   },
@@ -46,7 +45,6 @@ let my_data = {
 let my_filters = {
   foo: {
     list: {
-      foo_id  : { HEADER:"Id",          DISPLAY:0, HTML_TYPE:"label" },
       foo_name: { HEADER:"Message",     DISPLAY:1, HTML_TYPE:"label" },
       foo_desc: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"text" },
     },
@@ -54,19 +52,25 @@ let my_filters = {
 };
 
 // Give the data to a model
-var my_model = new anyModel({
-  data: my_data,
-});
+let my_model = new anyModel({ data: my_data });
 
-// Give the model to a view
-var my_view  = new anyView ({
+// Give the model to a view and display
+let my_view  = new anyView({
   model:   my_model,
   filters: my_filters,
   id:      "minimal_foo_list", // Id of div in which to display result
 });
-
-// Display
 my_view.refresh();
+
+// Alternative to the above step:
+/*
+$("#minimal_foo_list").anyView({
+  model:   my_model,
+  filters: my_filters,
+  id:      "minimal_foo_list", // Id of div in which to display result
+});
+$("#minimal_foo_list").anyView("refresh");
+*/
 </script>
 
 </body>
