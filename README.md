@@ -80,9 +80,9 @@ $("#minimal_foo_list").anyView("refresh");
 ```
 
 The above will produce an output like this:
-<p>
+<div>
 <img src="examples\hello_world\hello_list_uneditable.png" align="left">
-</p>
+</div>
 
 To make the view editable, give the following option to the anyView constructor:
 ```js
@@ -91,9 +91,10 @@ To make the view editable, give the following option to the anyView constructor:
   ...
 ```
 We will then get a view like this:
-<p>
+<div>
 <img src="examples\hello_world\hello_list_editable.png" align="left">
-</p>
+</div>
+
 # API
 
 Coming soon.
