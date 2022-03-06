@@ -142,7 +142,6 @@
 .any-item-data {
 }
 .any-list-container {
-  height: 650px;
   overflow: auto;
 }
 
@@ -179,8 +178,12 @@
 .any-list-table {
   margin-left:  0.5em;
 }
+.any-table-2 {
+  width:  806px;
+}
 .any-th {
   background-color: #ccc;
+  border-bottom:    1px solid #666;
 }
 .any-th,
 .any-td {
