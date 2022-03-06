@@ -32,7 +32,7 @@ class eventTable extends anyTable
     "idKeyTable"         => "event_id",
     "idKeyMetaTable"     => "event_id",
     "nameKey"            => "event_name",
-    "orderBy"            => "event_date_start",
+    "orderBy"            => "event_name",
     "metaId"             => "meta_id",
     "fields" => [
       "event_id",
@@ -81,10 +81,10 @@ class eventTable extends anyTable
       "user" => [
         "user_id",
         "user_attended",
-        "user_discount",
-        "user_paid",
-        "user_paid_date",
-        "user_joined_date",
+        //"user_discount",
+        //""user_paid",
+        //""user_paid_date",
+        //""user_joined_date",
         "user_feedback",
         "user_result",
       ],
@@ -146,7 +146,7 @@ class eventTable extends anyTable
         "user_attended"       => 1,
       ],
     ],
-    "plugins" => ["document","event","group","user"],
+    "plugins" => [/*"document",*/"event","group","user"],
   ];
 
   protected $mInsertSuccessMsg  = "Event created. ",

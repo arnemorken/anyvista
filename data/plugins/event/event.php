@@ -41,13 +41,13 @@ var is_admin     = model.permission && model.permission.is_admin;
 var is_logged_in = model.permission && model.permission.is_logged_in && parseInt(model.permission.current_user_id) > 0;
 var is_new       = (data_id == "new" || parseInt(data_id) == -1) && (!is_logged_in || is_admin);
 var is_me        = model.permission && parseInt(model.permission.current_user_id) == parseInt(data_id);
-var view = new eventViewTabs({ id:          "<?php print $gViewArea;?>",
-                               model:       model,
-                               isEditable:  is_admin || is_new || is_me,
-                               isDeletable: is_admin || is_new || is_me,
-                               isRemovable: false,
-                               edit:        is_new,
-                               dispEmail:   is_admin || is_me || is_new,
+var view = new eventViewTabs({ id:           "<?php print $gViewArea;?>",
+                               model:        model,
+                               showSearcher: true,
+                               isEditable:   true,
+                               isDeletable:  true,
+                               isRemovable:  true,
+                               edit:         is_new,
                                event_date_start: "<?php echo Parameters::get('event_date_start'); ?>",
                                event_date_end:   "<?php echo Parameters::get('event_date_end'); ?>",
                             });

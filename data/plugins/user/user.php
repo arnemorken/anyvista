@@ -47,7 +47,6 @@ var view = new userViewTabs({ id:          "<?php print $gViewArea;?>",
                               isDeletable: is_admin || is_new || is_me,
                               isRemovable: false,
                               edit:        is_new,
-                              dispEmail:   is_admin || is_me || is_new,
                            });
 view.refresh(null,null,null,"user");
 </script>
