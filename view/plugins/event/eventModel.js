@@ -101,6 +101,13 @@ eventModel.prototype.dbSearchGetURL = function (options)
   return url_str;
 }; // dbSearchGetURL
 
+eventModel.prototype.dbUpdateGetURL = function (options)
+{
+  let url_str = anyModel.prototype.dbUpdateGetURL.call(this,options);
+  url_str += "&user_id="+this.permission.current_user_id;
+  return url_str;
+}; // dbUpdateGetURL
+
 /**
  * @method dataSearchUserLink
  * @description Search the item model for a user with the given id and return true if "user_attended" is set.
