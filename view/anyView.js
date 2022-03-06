@@ -36,6 +36,8 @@
  *        (boolean) showHeader:            If false, all headers will be suppressed. Default: true.
  *        (boolean) showTableHeader:       Whether to show headers for list tables. Default: true.
  *        (boolean) showTableFooter:       Whether to show footers for list tables. Default: true.
+ *        (boolean) showSearcher:          Whether to show a search field for list tables. Default: false.
+ *        (boolean) showPaginator:         Whether to show paginator buttons for list tables. Default: true.
  *        (boolean) showToolbar:           Will show a toolbar at the bottom. Default: true.
  *        (boolean) showMessages:          Will show a message field in a toolbar. Default: false.
  *        (boolean) showServerErrors:      If true, errors from a server will be shown directly.
@@ -89,6 +91,8 @@ $.widget("any.anyView", {
     showHeader:            true,
     showTableHeader:       true,
     showTableFooter:       true,
+    showSearcher:          false,
+    showPaginator:         true,
     showToolbar:           true,
     showMessages:          true,
     showServerErrors:      false,
@@ -885,10 +889,17 @@ $.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
     return null;
   id_str = id_str.substr(0,id_str.lastIndexOf("_"));
   let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tfoot";
-  let tfoot = $("#"+div_id); // Can we reuse list tfoot?
+  let tfoot = $("#"+div_id); // Can we reuse tfoot?
   if (!tfoot.length) {
     tfoot = $("<tfoot id='"+div_id+"'></tfoot>");
     table.append(tfoot);
+  }
+  // Create a special footer to contain pager, search box, etc.
+  let foot_div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_footdiv";
+  let foot_div = $("#"+foot_div_id); // Can we reuse footdiv?
+  if (!foot_div.length) {
+    foot_div = $("<div class='table_footdiv' id='"+foot_div_id+"'></div>");
+    foot_div.insertAfter(table);
   }
   return tfoot;
 }; // getOrCreateTfoot
@@ -992,9 +1003,9 @@ $.any.anyView.prototype.sortTable = function (event)
   let num  = null;
   let table = $("#"+event.data.table_id);
   if (table.length) {
-    let tfoot = table.find("tfoot");
-    if (tfoot.length) {
-      let pager = tfoot.data("pager");
+    let footdiv = table.parent().find(".table_footdiv");
+    if (footdiv.length) {
+      let pager = footdiv.data("pager");
       if (pager) {
         from = pager.options.itemsPerPage *(pager.currentPage() - 1);
         num  = pager.options.itemsPerPage;
@@ -1040,23 +1051,38 @@ $.any.anyView.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,id
     td = $("<td colspan='"+max_num_cols+"' id='"+td_id+"' class='any-td any-td-list-foot'></td>");
     tr.append(td);
 
-    // Initialize paging
-    let pager = tfoot.data("pager");
-    if (!pager && this.numResults) {
-      pager = td.anyPaginator({ itemsPerPage: this.options.itemsPerPage,
-                                onClick:      this.pageNumClicked,
-                                context:      this, // onClick context
-                                // Set in paginator options that are sent to onClick handler:
-                                div_info: {
-                                  type:   type,
-                                  kind:   kind,
-                                  id_str: id_str,
-                                },
-                             });
-      pager.numItems(this.numResults);
-      pager.currentPage(this.options.currentPage);
-      tfoot.data("pager",pager);
-    }
+    let footdiv = tfoot.parent().parent().find(".table_footdiv");
+    if (this.options.showPaginator) {
+      // Initialize paging
+      let pager = footdiv.data("pager");
+      if (!pager && this.numResults) {
+        pager = footdiv.anyPaginator({ itemsPerPage: this.options.itemsPerPage,
+                                       onClick:      this.pageNumClicked,
+                                       context:      this, // onClick context
+                                       // Set in paginator options that are sent to onClick handler:
+                                       div_info: {
+                                         type:   type,
+                                         kind:   kind,
+                                         id_str: id_str,
+                                       },
+                                    });
+        pager.numItems(this.numResults);
+        pager.currentPage(this.options.currentPage);
+        footdiv.data("pager",pager);
+        $("#"+pager.container_id).css("display","inline-block");
+      }
+    } // if
+    if (this.options.showSearcher) {
+      // Initialize searching
+      let searcher = footdiv.data("searcher");
+      if (!searcher) {
+        let search_box = "Search: <input type='search' style='height:25px;min-height:25px;'>";
+        let searcher_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_searcher_foot";
+        searcher = $("<div style='display:inline-block;float:right;padding-top:10px;' id='"+searcher_id+"'>"+search_box+"</div>");
+        footdiv.append(searcher);
+      }
+      footdiv.data("searcher",searcher);
+    } // if
   }
   // Clean up
   if (!tr.children().length)
@@ -1621,6 +1647,8 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,view_id,parent,kin
     showHeader:       this.options.showHeader,
     showTableHeader:  this.options.showTableHeader,
     showTableFooter:  this.options.showTableFooter,
+    showSearcher:     this.options.showSearcher,
+    showPaginator:    this.options.showPaginator,
     showServerErrors: this.options.showServerErrors,
     showButtonNew:    this.options.showButtonNew,
     showButtonAddLink:this.options.showButtonAddLink,
