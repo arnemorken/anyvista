@@ -15,21 +15,15 @@
  */
 var userFilter = function (options)
 {
-/*
-  let data = null;
-  let id   = null;
-  if (options.model) {
-    id = options.model.id; // TODO
-    if (id)
-      data = options.model.dataSearch({id:id});
-  }
-  let link_type = null;
-  let link_id   = null;
-  if (data && data[id]) {
-    link_type = data[id].link_type;
-    link_id   = data[id].link_id;
-  }
-*/
+  let model      = options ? options.model    : null;
+  let permission = model   ? model.permission : null;
+  let data_id    = model   ? model.id         : null;
+
+  this.is_logged_in = permission && parseInt(permission.current_user_id) > 0;
+  this.is_new       = (data_id == "new" || parseInt(data_id) == -1);
+  this.is_admin     = permission && permission.is_admin;
+  this.is_me        = permission && parseInt(permission.current_user_id) == parseInt(data_id);
+
   this.filters = {
     user: {
       item: {
