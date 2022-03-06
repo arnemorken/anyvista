@@ -28,6 +28,7 @@ $.widget("any.eventViewTabs", $.any.anyViewTabs, {
       "document": "fa fa-book",
       "group":    "fa fa-users",
     },
+    sortBy: "event_date_start",
   },
 
   // "Constructor"
@@ -129,6 +130,27 @@ $.any.eventViewTabs.prototype.dbSetAttended = function (event)
 {
   return this.model.dbSetAttended(event.data);
 };
+
+// Upload directly after selecting file
+$.any.eventViewTabs.prototype._uploadClicked = function (event)
+{
+  let fname = $.any.anyView.prototype._uploadClicked.call(this,event);
+  if (fname) {
+    let e = this.model.error;
+    let m = this.model.message;
+    event.data.indata = event.data.data;
+    let res = $.any.anyView.prototype.dbUpdate.call(this,event);
+    if (!res) {
+      this.model.error   = e + this.model.error;
+      this.model.message = m + this.model.message;
+      if (this.model.error)   console.log(this.model.error);
+      if (this.model.message) console.log(this.model.message);
+    }
+    this.showMessages(this.model);
+    return res;
+  }
+  return fname;
+}; // _uploadClicked
 })($);
 
 var eventViewTabs = function (options)
@@ -140,3 +162,4 @@ var eventViewTabs = function (options)
 
 eventViewTabs.prototype = new anyViewTabs(null);
 eventViewTabs.prototype.constructor = eventViewTabs;
+//@ sourceURL=eventViewTabs.js
