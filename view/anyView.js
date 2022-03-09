@@ -91,7 +91,7 @@ $.widget("any.anyView", {
     showHeader:            true,
     showTableHeader:       true,
     showTableFooter:       true,
-    showSearcher:          false,
+    showSearcher:          20,
     showPaginator:         true,
     showToolbar:           true,
     showMessages:          true,
@@ -783,11 +783,12 @@ $.any.anyView.prototype.refreshData = function (parent,data,id,type,kind,edit,id
       let tbody = this.getOrCreateTbody(table,type,kind,tab_id_str);
       if (tbody)
         this.refreshTbody(tbody,data,id,type,kind,edit,id_str,pdata,pid);
-      let tfoot = table.find("tfoot").length ? table.find("tfoot") : null;
-      if (!tfoot)
-        tfoot = this.getOrCreateTfoot(table,type,kind,tab_id_str);
-      else
+      let tfoot = this.getOrCreateTfoot(table,type,kind,tab_id_str);
+      if (tfoot)
         this.refreshTfoot(tfoot,data,id,type,kind,edit,id_str,pdata,pid);
+      let extra_foot = this.getOrCreateExtraFoot(table,type,kind,tab_id_str);
+      if (extra_foot)
+        this.refreshExtraFoot(extra_foot,data,id,type,kind,edit,id_str,pdata,pid);
     }
   }
   return data_div;
@@ -894,15 +895,24 @@ $.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
     tfoot = $("<tfoot id='"+div_id+"'></tfoot>");
     table.append(tfoot);
   }
-  // Create a special footer to contain pager, search box, etc.
+  return tfoot;
+}; // getOrCreateTfoot
+
+//
+// Create a special footer to contain pager, search box, etc.
+//
+$.any.anyView.prototype.getOrCreateExtraFoot = function (table,type,kind,id_str)
+{
+  if (!type || !kind || (kind != "list" && kind != "select"))
+    return null;
   let foot_div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_footdiv";
   let foot_div = $("#"+foot_div_id); // Can we reuse footdiv?
   if (!foot_div.length) {
     foot_div = $("<div class='table_footdiv' id='"+foot_div_id+"'></div>");
     foot_div.insertAfter(table);
   }
-  return tfoot;
-}; // getOrCreateTfoot
+  return foot_div;
+}; // getOrCreateExtraFoot
 
 //
 // Refresh a table header
@@ -1050,46 +1060,62 @@ $.any.anyView.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,id
     let max_num_cols = f ? Object.size(f) : 5;
     td = $("<td colspan='"+max_num_cols+"' id='"+td_id+"' class='any-td any-td-list-foot'></td>");
     tr.append(td);
-
-    let footdiv = tfoot.parent().parent().find(".table_footdiv");
-    if (this.options.showPaginator) {
-      // Initialize paging
-      let pager = footdiv.data("pager");
-      if (!pager && this.numResults) {
-        pager = footdiv.anyPaginator({ itemsPerPage: this.options.itemsPerPage,
-                                       onClick:      this.pageNumClicked,
-                                       context:      this, // onClick context
-                                       // Set in paginator options that are sent to onClick handler:
-                                       div_info: {
-                                         type:   type,
-                                         kind:   kind,
-                                         id_str: id_str,
-                                       },
-                                    });
-        pager.numItems(this.numResults);
-        pager.currentPage(this.options.currentPage);
-        footdiv.data("pager",pager);
-        $("#"+pager.container_id).css("display","inline-block");
-      }
-    } // if
-    if (this.options.showSearcher) {
-      // Initialize searching
-      let searcher = footdiv.data("searcher");
-      if (!searcher) {
-        let search_box = "Search: <input type='search' style='height:25px;min-height:25px;'>";
-        let searcher_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_searcher_foot";
-        searcher = $("<div style='display:inline-block;float:right;padding-top:10px;' id='"+searcher_id+"'>"+search_box+"</div>");
-        footdiv.append(searcher);
-      }
-      footdiv.data("searcher",searcher);
-    } // if
   }
   // Clean up
   if (!tr.children().length)
     tr.remove();
   if (!tfoot.children().length)
     tfoot.remove();
+  return tfoot;
 }; // refreshTfoot
+
+//
+// Refresh the extra table footer
+//
+$.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kind,edit,id_str)
+{
+  if (this.options.showPaginator) {
+    // Initialize paging
+let d = this.model.data;
+    let pager = extra_foot.data("pager");
+    if (!pager && this.numResults) {
+      pager = extra_foot.anyPaginator({ itemsPerPage: this.options.itemsPerPage,
+                                     onClick:      this.pageNumClicked,
+                                     context:      this, // onClick context
+                                     // Set in paginator options that are sent to onClick handler:
+                                     div_info: {
+                                       type:   type,
+                                       kind:   kind,
+                                       id_str: id_str,
+                                     },
+                                  });
+      pager.numItems(this.numResults);
+      pager.currentPage(this.options.currentPage);
+      extra_foot.data("pager",pager);
+      if (!pager.options.hideIfOne || this.numResults > pager.options.itemsPerPage)
+        $("#"+pager.container_id).css("display","inline-block");
+    }
+  } // if
+  if (this.numResults > this.options.showSearcher) {
+    // Initialize searching if results span more than one page
+    let searcher = extra_foot.data("searcher");
+    if (!searcher) {
+      let search_box = "Search: <input type='search' style='height:25px;min-height:25px;'>";
+      let searcher_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_searcher_foot";
+      searcher = $("<div style='display:inline-block;float:right;padding-top:10px;' id='"+searcher_id+"'>"+search_box+"</div>");
+      extra_foot.append(searcher);
+      let search_opt = {};
+      searcher.off("keyup").on("keyup", search_opt, $.proxy(this._processSearch,this));
+    }
+    extra_foot.data("searcher",searcher);
+  } // if
+  return extra_foot;
+}; // refreshExtraFoot
+
+$.any.anyView.prototype._processSearch = function (event)
+{
+  console.log("_processSearch");
+}; // _processSearch
 
 //
 // Refresh when a paginator is activated
