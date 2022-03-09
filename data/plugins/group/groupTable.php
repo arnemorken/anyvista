@@ -180,7 +180,7 @@ class groupTable extends anyTable
   } // dbSearchItem
 
   // Return a tree structure of all groups of a given type
-  protected function dbSearchGroupNames($type=null)
+  protected function dbSearchGroupInfo($type=null)
   {
     $stmt = "SELECT ".$this->getTableName().".group_id,".
                       $this->getTableName().".group_type,".
@@ -192,7 +192,7 @@ class groupTable extends anyTable
     if ($type && $type != "group")
       $stmt .= "WHERE group_type='".$type."' ";
     $stmt .= "ORDER BY group_sort_order,group_id,group_type";
-    //error_log("dbSearchGroupNames:".$stmt);
+    //error_log("dbSearchGroupInfo:".$stmt);
     if (!$this->tableExists($this->getTableName()) || !$this->query($stmt))
       error_log("Warning: No group tree. "); // No group tree
     $data = array();
@@ -220,11 +220,11 @@ class groupTable extends anyTable
       $data_tree["group"]["nogroup"]["group_name"] = $this->findDefaultHeader($type);
       $data_tree["group"]["nogroup"]["head"]       = "group";
     }
-    //error_log("dbSearchGroupNames,data_tree:".var_export($data_tree,true));
+    //error_log("dbSearchGroupInfo,data_tree:".var_export($data_tree,true));
     $this->tdata = $data_tree;
 
     return $data;
-  } // dbSearchGroupNames
+  } // dbSearchGroupInfo
 
 } // class groupTable
 ?>

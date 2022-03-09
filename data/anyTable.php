@@ -1373,11 +1373,11 @@ class anyTable extends dbTable
     // Get the group names
     //
     $group_table = anyTableFactory::create("group",$this);
-    $gdata = $group_table
-             ? $group_table->dbSearchGroupNames($this->mType)
-             : null;
-    //vlog("buildGroupTreeAndAttach,gdata:",$gdata);
-    if ((empty($gdata) || !isset($gdata["group"])) && $group_table)
+    $group_data = $group_table
+                  ? $group_table->dbSearchGroupInfo($this->mType)
+                  : null;
+    //vlog("buildGroupTreeAndAttach,group_data:",$group_data);
+    if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
       $this->setError($group_table->mError);
     //
     // Build data tree for all groups
@@ -1407,8 +1407,8 @@ class anyTable extends dbTable
                     : "head");
             $data_tree[$ngidx][$k] = isset($this->mId) && $this->mId != "" ? $this->mType : "group";
             if (!isset($this->mId) || $this->mId == "") {
-              $gname = isset($gdata) && isset($gdata["group"][$gidx])
-                       ? $gdata["group"][$gidx]["group_name"]
+              $gname = isset($group_data) && isset($group_data["group"][$gidx])
+                       ? $group_data["group"][$gidx]["group_name"]
                        : ucfirst($gidx)." groups";
               if ($this->mType != "group") {
                 if (!$gname)
@@ -1491,14 +1491,14 @@ class anyTable extends dbTable
   } // buildGroupTreeAndAttach
 
   // Overridden in group table
-  protected function dbSearchGroupNames($type=null)
+  protected function dbSearchGroupInfo($type=null)
   {
     // Get group tree and append data to it
     $num = 0;
     $data_tree = array();
     $data_tree["group"] = array();
     $data_tree["group"] = $this->buildDataTree($data_tree["group"],null,false,$num);
-    //vlog("dbSearchGroupNames,data_tree:",$data_tree);
+    //vlog("dbSearchGroupInfo,data_tree:",$data_tree);
 
     // Add the default "nogroup" group
     if ($type && $type != "") {
@@ -1507,10 +1507,10 @@ class anyTable extends dbTable
       $data_tree["group"]["nogroup"]["group_name"] = $this->findDefaultNogroupHeader($type);
       $data_tree["group"]["nogroup"]["head"]       = "group";
     }
-    //vlog("dbSearchGroupNames,data_tree:",$data_tree);
+    //vlog("dbSearchGroupInfo,data_tree:",$data_tree);
     $this->tdata = $data_tree;
     return $data_tree;
-  } // dbSearchGroupNames
+  } // dbSearchGroupInfo
 
   protected function buildDataTree(&$flatdata,$parentId,$getPageLinks,&$num)
   {
@@ -1640,6 +1640,15 @@ class anyTable extends dbTable
         $d["data"]          = $inData;
         if (isset($this->mNumResults) && isset($d["data"]["nogroup"]))
           $d["data"]["nogroup"]["num_results"] = $this->mNumResults;
+        if (isset($d["data"])) {
+          foreach ($d["data"] as &$data_obj) {
+            if ((gettype($data_obj) == "array" || gettype($data_obj) == "object") && isset($data_obj["data"])) {
+              //vlog("data_obj:",$data_obj["data"]);
+              $data_obj["data"]["grouping_num_results"] = count($data_obj["data"]);
+            }
+          }
+//vlog("data:",$d["data"]);
+        }
       }
       else {
         // Item
