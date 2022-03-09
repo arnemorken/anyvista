@@ -649,8 +649,17 @@ class anyTable extends dbTable
       if (!$skipLists)
         $this->dbSearchItemLists($data);
 
+      // Get group data
+      $group_table = anyTableFactory::create("group",$this);
+      $group_data = $group_table
+                    ? $group_table->dbSearchGroupInfo($this->mType)
+                    : null;
+      //vlog("dbSearchItem,group_data:",$group_data);
+      if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
+        $this->setError($group_table->mError);
+
       // Build the data tree
-      $this->buildGroupTreeAndAttach($data,"item");
+      $this->buildGroupTreeAndAttach($data,"item",$group_table,$group_data);
     }
 
     return !$this->isError();
@@ -797,26 +806,53 @@ class anyTable extends dbTable
     if ($this->mType == "user" && $this->mListForType == "user")
       return true; // We do not have subusers (user table does not have parent_id field) TODO! Neccessary?
 
-    // Build and execute the full statement
+    // Set mOrder * properties
     if (Parameters::get("order")) {
       $this->mOrderBy = ltrim(Parameters::get("order"));
       if (Parameters::get("dir"))
         $this->mOrderDir = ltrim(Parameters::get("dir"));
     }
-    $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId);
-    $limit        = $this->findLimit();
-    $stmt = $partial_stmt.$limit;
 
-    //elog("dbSearchList1:".$stmt);
-    if (!$stmt || !$this->query($stmt))
-      return false; // An error occured
+    // Since a 'LIMIT' operation might apply, we need to search for results for
+    // each group seperately rather then using a LEFT JOIN on the group table.
 
-    // Get the data
-    if (!$simple)
-      if (Parameters::get("lt") == "simple")
-         $simple = true;
-    $success = $this->getRowData($data,"list",$flat,$simple);
+    // Get group data
+    $group_table = anyTableFactory::create("group",$this);
+    $group_data = $group_table
+                  ? $group_table->dbSearchGroupInfo($this->mType)
+                  : null;
+    //vlog("dbSearchList,group_data:",$group_data);
+    $success = false;
+    $limit   = $this->findLimit(); // Same limit for all groups
+    $part_stmt = $this->dbPrepareSearchListStmt($skipOwnId);
 
+    if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
+      $this->setError($group_table->mError);
+    else {
+      if (!$simple)
+        if (Parameters::get("lt") == "simple")
+           $simple = true;
+      foreach ($group_data["group"] as $gid => $group) {
+        // Build and execute the full statement
+        $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$gid);
+        $stmt = $partial_stmt.$limit;
+        //elog("dbSearchList1:".$stmt);
+        if (!$stmt || !$this->query($stmt))
+          return false; // An error occured, abort
+        // Get the data
+        $s = $this->getRowData($data,"list",$flat,$simple);
+        $success = $success || $s;
+      }
+      // Build and execute the full statement for ungrouped data
+      $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,null);
+      $stmt = $partial_stmt.$limit;
+      //elog("dbSearchList2:".$stmt);
+      if (!$stmt || !$this->query($stmt))
+        return false; // An error occured, abort
+      // Get the data
+      $s = $this->getRowData($data,"list",$flat,$simple);
+      $success = $success || $s;
+    }
     if ($success) {
       // Search and get the meta data
       if (!$simple)
@@ -828,12 +864,12 @@ class anyTable extends dbTable
 
       // Build the data tree unless its a 'simple' list
       if (!$simple)
-        $this->buildGroupTreeAndAttach($data,"list");
+        $this->buildGroupTreeAndAttach($data,"list",$group_table,$group_data);
 
       if ($limit != "") {
         // We should count how many rows would have been returned without LIMIT
         $count_stmt = "SELECT count(*) AS num_results FROM (".
-                      $partial_stmt.
+                      $part_stmt.
                       ") AS dummy";
         //elog("dbSearchList2:".$count_stmt);
         if (!$this->query($count_stmt))
@@ -851,14 +887,20 @@ class anyTable extends dbTable
     return !$this->isError();
   } // dbSearchList
 
-  protected function dbPrepareSearchListStmt($skipOwnId=false)
+  protected function dbPrepareSearchListStmt($skipOwnId=false,$gid=null)
   {
     // Get query fragments
     $this->mError = "";
     $this->mErrorListLeftJoin = "";
-    $select    = $this->findListSelect();
-    $left_join = $this->findListLeftJoin();
+    $select    = $this->findListSelect($gid);
+    $left_join = $this->findListLeftJoin($gid);
     $where     = $this->findListWhere($skipOwnId);
+    if ($gid) {
+      if ($where)
+        $where .= " AND ".$this->mTableNameGroup.".group_id=".$gid." ";
+      else
+        $where .= " WHERE ".$this->mTableNameGroup.".group_id=".$gid." ";
+    }
     $order_by  = $this->findListOrderBy();
 
     if ($this->isError()) {
@@ -874,13 +916,13 @@ class anyTable extends dbTable
     return $stmt;
   } // dbPrepareSearchListStmt
 
-  protected function findListSelect()
+  protected function findListSelect($gid)
   {
     // Select from own table
     $sl = "SELECT DISTINCT ".$this->getTableName().".* ";
 
     // Always select from group table
-    if (isset($this->mTableFieldsGroup)) {
+    if ($gid && isset($this->mTableFieldsGroup)) {
       if ("group" != $this->mType) {
         $linktable = $this->findLinkTableName("group");
         if ($this->tableExists($this->mTableNameGroup) &&
@@ -914,20 +956,20 @@ class anyTable extends dbTable
     return $sl;
   } // findListSelect
 
-  protected function findListLeftJoin()
+  protected function findListLeftJoin($gid)
   {
     $cur_uid = $this->mPermission["current_user_id"];
     $lj = "";
     // Always left join group table
     if ("group" != $this->mType)
-      $lj .= $this->findListLeftJoinOne($cur_uid,"group");
+      $lj .= $this->findListLeftJoinOne($cur_uid,"group",$gid);
 
     // Left join other tables (link tables)
     if (isset($this->mPlugins)) {
       foreach($this->mPlugins as $i => $plugin) {
         if ($plugin != "group" && $plugin != $this->mType) {
           if (isset($this->mListForType) || $plugin == "user") {
-            $lj .= $this->findListLeftJoinOne($cur_uid,$plugin);
+            $lj .= $this->findListLeftJoinOne($cur_uid,$plugin,$gid);
           }
         }
       }
@@ -939,7 +981,7 @@ class anyTable extends dbTable
     return $lj;
   } // findListLeftJoin
 
-  protected function findListLeftJoinOne($cur_uid,$plugin)
+  protected function findListLeftJoinOne($cur_uid,$plugin,$gid)
   {
     $lj = "";
     $linktable      = $this->findLinkTableName($plugin);
@@ -953,9 +995,18 @@ class anyTable extends dbTable
       if (!isset($this->mListForType) && $plugin == "user" && $cur_uid)
         $lj .= "AND CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$cur_uid." AS INT) "; // Only return results for current user
       if ($this->tableExists($plugintable)) {
-        $lj .= "LEFT JOIN ".$plugintable." ON CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$plugintable.         ".".$plugintable_id.  " AS INT) ";
-        if ($this->tableExists($metatable))
-          $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=CAST(".$plugintable.         ".".$plugintable_id.  " AS INT) ";
+        if ($plugin != "group") {
+          $lj .= "LEFT JOIN ".$plugintable." ON CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$plugintable.".".$plugintable_id." AS INT) ";
+          if ($this->tableExists($metatable))
+            $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=CAST(".$plugintable.".".$plugintable_id." AS INT) ";
+        }
+        else {
+          if ($gid) {
+            $lj .= "LEFT JOIN ".$plugintable." ON CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$gid." AS INT) ";
+            if ($this->tableExists($metatable))
+              $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=CAST(".$gid." AS INT) ";
+          }
+        }
       }
     }
     return $lj;
@@ -1052,7 +1103,17 @@ class anyTable extends dbTable
       if (!$simple)
         $this->dbSearchMeta($data,"list",true); // TODO! WHERE wp_usermeta.user_id IN ({ids})
 
-      $this->buildGroupTreeAndAttach($data,"list");
+      // Get group data
+      $group_table = anyTableFactory::create("group",$this);
+      $group_data = $group_table
+                    ? $group_table->dbSearchGroupInfo($this->mType)
+                    : null;
+      //vlog("dbSearchListFromIds,group_data:",$group_data);
+      if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
+        $this->setError($group_table->mError);
+
+      // Build the data tree
+      $this->buildGroupTreeAndAttach($data,"list",$group_table,$group_data);
     }
 
     return !$this->isError();
@@ -1123,7 +1184,8 @@ class anyTable extends dbTable
     //elog("getRowData,filter:".var_export($filter,true));
     $cur_user_id = $this->mPermission["current_user_id"];
     $this->mLastNumRows = 0;
-    $data = array();
+    if (!$data)
+      $data = array();
     while (($nextrow = $this->getNext(true)) !== null) {
       //elog("getRowData,nextrow:".var_export($nextrow,true));
       ++$this->mLastNumRows;
@@ -1348,7 +1410,7 @@ class anyTable extends dbTable
   //
   // Build the group tree. List data are grouped, item data are not.
   //
-  protected function buildGroupTreeAndAttach(&$data,$kind)
+  protected function buildGroupTreeAndAttach(&$data,$kind,$group_table,$group_data)
   {
     if (!$data)
       return;
@@ -1369,16 +1431,6 @@ class anyTable extends dbTable
       }
     }
     */
-    //
-    // Get the group names
-    //
-    $group_table = anyTableFactory::create("group",$this);
-    $group_data = $group_table
-                  ? $group_table->dbSearchGroupInfo($this->mType)
-                  : null;
-    //vlog("buildGroupTreeAndAttach,group_data:",$group_data);
-    if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
-      $this->setError($group_table->mError);
     //
     // Build data tree for all groups
     //
