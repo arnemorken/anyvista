@@ -140,14 +140,13 @@ $.widget("any.anyView", {
     top_view:              null, // The top view for all views in the view tree (used by dialogs and item view)
     main_div:              null, // The main div for this view (used by dialogs)
     base_id:               "",
-    id_stack:              null,
     data_level:            0,    // Current "vertical" level in data tree
     indent_tables:         false,
     indent_level:          -1,
     indent_amount:         20,
     cutoff:                100,
     item_opening:          false,
-    ref_rec:               0, // Used to prevent (theoretical) infinite recursion
+    ref_rec:               0,    // Used to prevent (theoretical) infinite recursion
   }, // options
 
   // Constructor
@@ -178,9 +177,7 @@ $.widget("any.anyView", {
                     : this._createBaseId();
 
     this.id_stack      = [];
-    this.root_id_stack = this.options.id_stack
-                         ? this.options.id_stack
-                         : [];
+    this.root_id_stack = [];
 
     if (this.model && this.options.subscribe_default) {
       if (this.options.reset_listeners)
@@ -478,8 +475,6 @@ $.any.anyView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pd
     for (let idc in data) {
       if (data.hasOwnProperty(idc)) {
         if (view && !idc.startsWith("grouping")) {
-          //if (view.model.error)
-            //console.log("Error: "+view.model.error);
           let curr_type = view._findType(data,prev_type,idc);
           let curr_kind = view._findKind(data,prev_kind,idc);
           if (curr_type && curr_kind) {
@@ -1080,7 +1075,6 @@ $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kin
 {
   if (this.options.showPaginator) {
     // Initialize paging
-let d = this.model.data;
     let pager = extra_foot.data("pager");
     if (!pager && this.numResults) {
       pager = extra_foot.anyPaginator({ itemsPerPage: this.options.itemsPerPage,
