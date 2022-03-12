@@ -493,7 +493,7 @@ $.any.anyView.prototype.refreshLoop = function (params)
       ++this.data_level;
 
     // Refresh top close button for item
-    if (!this.options.isSelectable && kind && this.id_stack && this.id_stack.length==1)
+    if (!this.options.isSelectable && this.options.item_opening && this.id_stack && this.id_stack.length==1)
       this.refreshCloseItemButton(params);
 
     // Refresh header and data for all entries
@@ -509,7 +509,16 @@ $.any.anyView.prototype.refreshLoop = function (params)
             if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type /*|| (prev_type == "group" && view.model.type == "group")*/))
               view = view.createView(parent,data,idc,curr_type,curr_kind); // New type to display, create new view
             if (view)
-              view.refreshOne(parent,data,idc,curr_type,curr_kind,edit,"",pdata,pid);
+              view.refreshOne({ parent:    parent,
+                                data:      data,
+                                id:        idc,
+                                last_type: curr_type,
+                                last_kind: curr_kind,
+                                edit:      edit,
+                                id_str:    "",
+                                pdata:     pdata,
+                                pid:       pid,
+                             });
             prev_type = curr_type;
             prev_kind = curr_kind;
           }
@@ -539,8 +548,18 @@ $.any.anyView.prototype.refreshLoop = function (params)
 //
 // Refresh header and data for one list entry or one item
 //
-$.any.anyView.prototype.refreshOne = function (parent,data,id,last_type,last_kind,edit,id_str,pdata,pid)
+$.any.anyView.prototype.refreshOne = function (params)
 {
+  let parent    = params && params.parent ? params.parent : null;
+  let data      = params && params.data   ? params.data   : null;
+  let id        = params && params.id     ? params.id     : null;
+  let last_type = params && params.type   ? params.type   : null;
+  let last_kind = params && params.kind   ? params.kind   : null;
+  let pdata     = params && params.pdata  ? params.pdata  : null;
+  let pid       = params && params.pid    ? params.pid    : null;
+  let id_str    = params && params.id_str ? params.id_str : null;
+  let edit      = params && params.edit   ? params.edit   : null;
+
   if (!data || (!id && id !== 0) || (typeof id == "string" && id.startsWith("grouping")))
     return null;
 
@@ -2153,35 +2172,34 @@ $.any.anyView.prototype.refreshCloseItemButton = function (params)
   let kind   = params && params.kind   ? params.kind   : null;
   let id_str = params && params.id_str ? params.id_str : null;
 
-  if (!parent)
+  if (!parent || !type || !kind)
     return null;
+
   // Create cancel/close button for item view
-  if (this.options.item_opening) {
-    let opt = {
-      type:     type,
-      kind:     kind,
-      edit:     false,
-      top_view: this.options.top_view,
-    };
-    let tit_str = i18n.button.buttonCancel;
-    let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-    let btn_id  = this.base_id+"_cancel_new_icon";
-    if ($("#"+btn_id).length)
-      $("#"+btn_id).remove();
-    let btn = $("<div id='"+btn_id+"' class='any-tool-cancel any-tool-button pointer' title='"+tit_str+"'>"+
-                //tit_str+
-                //btn_str+
-                "<i class='far fa-window-close fa-lg'></i>"+
-                "</div>");
-    let fun = this.option("localCloseItem")
-              ? this.option("localCloseItem")
-              : this.closeItem;
-    btn.off("click").on("click",opt,$.proxy(fun,this));
-    if (parent && parent.length)
-      parent.prev().prepend(btn);
-    this.options.item_opening = false;
-    return btn;
-  }
+  let opt = {
+    type:     type,
+    kind:     kind,
+    edit:     false,
+    top_view: this.options.top_view,
+  };
+  let tit_str = i18n.button.buttonCancel;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.base_id+"_cancel_new_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-tool-cancel any-tool-button pointer' title='"+tit_str+"'>"+
+              //tit_str+
+              //btn_str+
+              "<i class='far fa-window-close fa-lg'></i>"+
+              "</div>");
+  let fun = this.option("localCloseItem")
+            ? this.option("localCloseItem")
+            : this.closeItem;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  if (parent && parent.length)
+    parent.prev().prepend(btn);
+  this.options.item_opening = false;
+  return btn;
 }; // refreshCloseItemButton
 
 // Add-button in list table header
@@ -2692,7 +2710,14 @@ $.any.anyView.prototype._addListEntry = function (opt)
                          });
   opt.new_id = null; // Important! To make addListEntry work with id == 0
 
-  this.refreshOne(this.element,opt.data,new_id,type,kind,true,id_str);
+  this.refreshOne({ parent:    this.element,
+                    data:      opt.data,
+                    id:        new_id,
+                    last_type: type,
+                    last_kind: kind,
+                    edit:      true,
+                    id_str:    id_str,
+                 });
 }; // _addListEntry
 
 ///////////////////////////////////////////////////////////////////////////////
