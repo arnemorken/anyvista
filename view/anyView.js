@@ -509,15 +509,15 @@ $.any.anyView.prototype.refreshLoop = function (params)
             if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type /*|| (prev_type == "group" && view.model.type == "group")*/))
               view = view.createView(parent,data,idc,curr_type,curr_kind); // New type to display, create new view
             if (view)
-              view.refreshOne({ parent:    parent,
-                                data:      data,
-                                id:        idc,
-                                last_type: curr_type,
-                                last_kind: curr_kind,
-                                edit:      edit,
-                                id_str:    "",
-                                pdata:     pdata,
-                                pid:       pid,
+              view.refreshOne({ parent: parent,
+                                data:   data,
+                                id:     idc,
+                                type:   curr_type,
+                                kind:   curr_kind,
+                                edit:   edit,
+                                id_str: "",
+                                pdata:  pdata,
+                                pid:    pid,
                              });
             prev_type = curr_type;
             prev_kind = curr_kind;
@@ -550,21 +550,18 @@ $.any.anyView.prototype.refreshLoop = function (params)
 //
 $.any.anyView.prototype.refreshOne = function (params)
 {
-  let parent    = params && params.parent ? params.parent : null;
-  let data      = params && params.data   ? params.data   : null;
-  let id        = params && params.id     ? params.id     : null;
-  let last_type = params && params.type   ? params.type   : null;
-  let last_kind = params && params.kind   ? params.kind   : null;
-  let pdata     = params && params.pdata  ? params.pdata  : null;
-  let pid       = params && params.pid    ? params.pid    : null;
-  let id_str    = params && params.id_str ? params.id_str : null;
-  let edit      = params && params.edit   ? params.edit   : null;
+  let parent = params && params.parent ? params.parent : null;
+  let data   = params && params.data   ? params.data   : null;
+  let id     = params && params.id     ? params.id     : null;
+  let type   = params && params.type   ? params.type   : this._findType(data,null,id);
+  let kind   = params && params.kind   ? params.kind   : this._findKind(data,null,id);
+  let pdata  = params && params.pdata  ? params.pdata  : null;
+  let pid    = params && params.pid    ? params.pid    : null;
+  let id_str = params && params.id_str ? params.id_str : null;
+  let edit   = params && params.edit   ? params.edit   : null;
 
   if (!data || (!id && id !== 0) || (typeof id == "string" && id.startsWith("grouping")))
     return null;
-
-  let type = last_type ? last_type : this._findType(data,last_type,id);
-  let kind = last_kind ? last_kind : this._findKind(data,last_kind,id);
 
   // Create the string used to uniquely identify current data element
   let the_id = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
@@ -2710,13 +2707,13 @@ $.any.anyView.prototype._addListEntry = function (opt)
                          });
   opt.new_id = null; // Important! To make addListEntry work with id == 0
 
-  this.refreshOne({ parent:    this.element,
-                    data:      opt.data,
-                    id:        new_id,
-                    last_type: type,
-                    last_kind: kind,
-                    edit:      true,
-                    id_str:    id_str,
+  this.refreshOne({ parent: this.element,
+                    data:   opt.data,
+                    id:     new_id,
+                    type:   type,
+                    kind:   kind,
+                    edit:   true,
+                    id_str: id_str,
                  });
 }; // _addListEntry
 
