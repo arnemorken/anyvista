@@ -976,7 +976,7 @@
                                   isDeletable: true,
                                   edit:        is_new,
                                });
-        view.refresh(null,null,null,"task");
+        view.refresh({parent:null,data:null,id:null,type:"task"});
         </script>
  *
  * 5) Create the file for letting other plugins interact with the task plugin (`client.php`):

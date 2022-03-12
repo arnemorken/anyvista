@@ -52,5 +52,9 @@ var view = new documentViewTabs({ id:            "<?php print $gViewArea;?>",
                                   showButtonAdd: false,
                                   hide_result:   hide_result,
                                });
-view.refresh(null,null,null,"document");
+view.refresh({ parent: null,
+               data:   null,
+               id:     null,
+               type:   "document",
+            });
 </script>

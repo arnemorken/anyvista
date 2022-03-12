@@ -58,15 +58,15 @@ $.any.anyViewTabs.prototype.refresh = function (parent,data,id,type,kind,edit,pd
   $.any.anyView.prototype.refresh.call(this,parent,data,id,type,kind,edit,pdata,pid);
 }; // refresh
 
-$.any.anyViewTabs.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata,pid)
+$.any.anyViewTabs.prototype.refreshLoop = function (params)
 {
-  $.any.anyView.prototype.refreshLoop.call(this,parent,data,id,type,kind,edit,pdata,pid);
+  $.any.anyView.prototype.refreshLoop.call(this,params);
   if (this.current_div_id) {
     let ev = {};
     ev.data = {};
     ev.data.div_id = this.current_div_id;
     ev.data.data_level = this.options.data_level;
-    ev.data.kind = kind;
+    ev.data.kind = params.kind;
     this.openTab(ev);
   }
 }; // refreshLoop

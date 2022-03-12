@@ -401,43 +401,68 @@ $.any.anyView.prototype.onModelChange = function (model)
  * @method refresh
  * @description Displays data in a jQuery element.
  *              "Top-level" refresh: Resets filters etc. before displaying.
- * @param {Object}  parent The element in which to display data. If not given, `this.element` is used.
- *                         Default: null.
- * @param {Object}  data   The data to display. If not given, `this.model.data` is used.
- *                         Default: null.
- * @param {string}  id     The id of the data to display. If given, only the item with the given id and its
- *                         subdata will be refreshed, otherwise the entire data structure will be refreshed.
- *                         Default: null.
- * @param {string}  type   The type of the data to display.
- *                         Default: null.
- * @param {string}  kind   The kind of the data to display.
- *                         Default: null.
- * @param {boolean} edit   If true, the item should be displayed as editable.
+ * @params {Object}  params  An object which may contain these elements:
+ *
+ *         {Object}  parent The element in which to display data. If not given, `this.element` is used.
+ *                          Default: null.
+ *         {Object}  data   The data to display. If not given, `this.model.data` is used.
+ *                          Default: null.
+ *         {string}  id     The id of the data to display. If given, only the item with the given id and its
+ *                          subdata will be refreshed, otherwise the entire data structure will be refreshed.
+ *                          Default: null.
+ *         {string}  type   The type of the data to display.
+ *                          Default: null.
+ *         {string}  kind   The kind of the data to display.
+ *                          Default: null.
+ *         {boolean} edit   If true, the item should be displayed as editable.
+ *         {Object}  pdata
+ *         {string}  pid
  *
  * @return parent
  *
  * @throws {VIEW_AREA_MISSING} If both `parent` and `this.element` are null or undefined.
  */
-$.any.anyView.prototype.refresh = function (parent,data,id,type,kind,edit,pdata,pid)
+$.any.anyView.prototype.refresh = function (params)
 {
+  let parent = params && params.parent ? params.parent : null;
+  let data   = params && params.data   ? params.data   : null;
+  let id     = params && params.id     ? params.id     : null;
+  let type   = params && params.type   ? params.type   : null;
+  let kind   = params && params.kind   ? params.kind   : null;
+  let pdata  = params && params.pdata  ? params.pdata  : null;
+  let pid    = params && params.pid    ? params.pid    : null;
+  let edit   = params && params.edit   ? params.edit   : null;
+
   this.options.filters = this._createFilters(this.model); // Create filters if they dont exist yet
   this.options.data_level = 0;
   this.id_stack = [...this.root_id_stack];
 
-  this.element.empty();
+  if (!parent)
+    parent = this.element;
+  if (!parent)
+    throw i18n.error.VIEW_AREA_MISSING;
+  parent.empty();
 
-  this.refreshLoop(parent,data,id,type,kind,edit,pdata,pid);
+  this.refreshLoop(params);
 
   // Bind key-back on tablets. TODO! Untested
   //document.addEventListener("backbutton", $.proxy(this._processKeyup,this), false);
-
 }; // refresh
 
 //
 // Main refresh loop
 //
-$.any.anyView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pdata,pid)
+$.any.anyView.prototype.refreshLoop = function (params)
 {
+  let parent = params && params.parent ? params.parent : null;
+  let data   = params && params.data   ? params.data   : null;
+  let id     = params && params.id     ? params.id     : null;
+  let type   = params && params.type   ? params.type   : null;
+  let kind   = params && params.kind   ? params.kind   : null;
+  let pdata  = params && params.pdata  ? params.pdata  : null;
+  let pid    = params && params.pid    ? params.pid    : null;
+  let edit   = params && params.edit   ? params.edit   : null;
+
   if (!parent)
     parent = this.element;
   if (!parent)
@@ -507,6 +532,69 @@ $.any.anyView.prototype.refreshLoop = function (parent,data,id,type,kind,edit,pd
 
   return parent;
 }; // refreshLoop
+
+//
+// Refresh header and data for one list entry or one item
+//
+$.any.anyView.prototype.refreshOne = function (parent,data,id,last_type,last_kind,edit,id_str,pdata,pid)
+{
+  if (!data || (!id && id !== 0) || (typeof id == "string" && id.startsWith("grouping")))
+    return null;
+
+  let type = last_type ? last_type : this._findType(data,last_type,id);
+  let kind = last_kind ? last_kind : this._findKind(data,last_kind,id);
+
+  // Create the string used to uniquely identify current data element
+  let the_id = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
+  if (kind != "list" && kind != "select")
+    this.id_stack.push(the_id);
+  id_str = id_str ? id_str : this.id_stack.join("_");
+  if (kind == "list" || kind == "select")
+    id_str += id_str ? "_"+the_id : the_id;
+
+  // Create or get main container for header and data containers
+  let con_div = this.getOrCreateMainContainer(parent,type,kind,id_str);
+  if (kind == "head" || (data && data.grouping)) {
+    // Refresh header
+    this.refreshHeader(con_div,data,id,type,kind,edit,id_str);
+  }
+  // Refresh data
+  let data_div = con_div;
+  data_div = this.refreshData(con_div,data,id,type,kind,edit,id_str,pdata,pid);
+
+  // If we have subdata, make a recursive call
+  if (data && data[id] && data[id].data) {
+    if ((kind == "list" || kind == "select"))
+      ++this.options.indent_level;
+    if (data[id].num_results)
+      this.numResults = data[id].num_results;
+    else
+      delete this.numResults;
+    let p_data = data;
+    let p_id   = id;
+    data = data[id].data;
+    this.refreshLoop({ parent: data_div,
+                       data:   data,
+                       id:     null,
+                       type:   type,
+                       kind:   kind,
+                       pdata:  p_data,
+                       pid:    p_id,
+                       edit:   edit,
+                     });
+    if ((kind == "list" || kind == "select"))
+      --this.options.indent_level;
+  }
+  // Clean up
+  if (con_div && !con_div.children().length) {
+    con_div.remove();
+    con_div = null;
+  }
+  if (kind != "list" && kind != "select")
+    this.id_stack.pop();
+
+  return parent;
+}; // refreshOne
 
 //
 // Display a "close item" button
@@ -597,61 +685,6 @@ $.any.anyView.prototype.refreshMessageArea = function (parent,opt)
   parent.append(msgdiv);
   return msgdiv;
 }; // refreshMessageArea
-
-//
-// Refresh header and data for one list entry or one item
-//
-$.any.anyView.prototype.refreshOne = function (parent,data,id,last_type,last_kind,edit,id_str,pdata,pid)
-{
-  if (!data || (!id && id !== 0) || (typeof id == "string" && id.startsWith("grouping")))
-    return null;
-
-  let type = last_type ? last_type : this._findType(data,last_type,id);
-  let kind = last_kind ? last_kind : this._findKind(data,last_kind,id);
-
-  // Create the string used to uniquely identify current data element
-  let the_id = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
-  if (kind != "list" && kind != "select")
-    this.id_stack.push(the_id);
-  id_str = id_str ? id_str : this.id_stack.join("_");
-  if (kind == "list" || kind == "select")
-    id_str += id_str ? "_"+the_id : the_id;
-
-  // Create or get main container for header and data containers
-  let con_div = this.getOrCreateMainContainer(parent,type,kind,id_str);
-  if (kind == "head" || (data && data.grouping)) {
-    // Refresh header
-    this.refreshHeader(con_div,data,id,type,kind,edit,id_str);
-  }
-  // Refresh data
-  let data_div = con_div;
-  data_div = this.refreshData(con_div,data,id,type,kind,edit,id_str,pdata,pid);
-
-  // If we have subdata, make a recursive call
-  if (data && data[id] && data[id].data) {
-    if ((kind == "list" || kind == "select"))
-      ++this.options.indent_level;
-    if (data[id].num_results)
-      this.numResults = data[id].num_results;
-    else
-      delete this.numResults;
-    let p_data = data;
-    let p_id   = id;
-    data = data[id].data;
-    this.refreshLoop(data_div,data,null,type,kind,edit,p_data,p_id);
-    if ((kind == "list" || kind == "select"))
-      --this.options.indent_level;
-  }
-  // Clean up
-  if (con_div && !con_div.children().length) {
-    con_div.remove();
-    con_div = null;
-  }
-  if (kind != "list" && kind != "select")
-    this.id_stack.pop();
-
-  return parent;
-}; // refreshOne
 
 //
 // Get the current main div, or create a new one if it does not exist
@@ -2813,7 +2846,13 @@ $.any.anyView.prototype._doShowItem = function (opt)
     // Local refresh
     if (is_new)
       the_id = "+0";
-    view.refreshLoop(con_div,item,the_id,type,"item",is_new);
+    view.refreshLoop({ parent: con_div,
+                       data:   item,
+                       id:     the_id,
+                       type:   type,
+                       kind:   "item",
+                       edit:   is_new,
+                     });
   } // else
   return true;
 }; // _doShowItem
@@ -3263,7 +3302,13 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             unselect:    select_list_view.model.unselect,
             name_key:    select_list_view.model.name_key,
           });
-          select_list_view.refresh(ll_contents,serverdata.data,null,list_type,"list",false,"");
+          select_list_view.refresh({ parent: ll_contents,
+                                     data:   serverdata.data,
+                                     id:     null,
+                                     type:   list_type,
+                                     kind:   "list",
+                                     edit:   false,
+                                  });
         }
       } // if parent_view
     }

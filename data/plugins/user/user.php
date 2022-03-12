@@ -48,5 +48,9 @@ var view = new userViewTabs({ id:          "<?php print $gViewArea;?>",
                               isRemovable: false,
                               edit:        is_new,
                            });
-view.refresh(null,null,null,"user");
+view.refresh({ parent: null,
+               data:   null,
+               id:     null,
+               type:   "user",
+            });
 </script>
