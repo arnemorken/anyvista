@@ -1020,6 +1020,10 @@ $.any.anyView.prototype.sortTable = function (event)
         from = pager.options.itemsPerPage *(pager.currentPage() - 1);
         num  = pager.options.itemsPerPage;
       }
+      else {
+        from = 0;
+        num  = this.options.itemsPerPage;
+      }
     }
     this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty (to avoid flashing)
   }
