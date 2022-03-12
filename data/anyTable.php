@@ -769,7 +769,7 @@ class anyTable extends dbTable
               $data[$idx]["data"]["plugin-".$plugin]["head"] = $plugin;
               $data[$idx]["data"]["plugin-".$plugin][$table->getNameKey()] = $this->findDefaultItemListHeader($plugin,$data[$idx]["data"]["plugin-".$plugin],true);
               if (isset($table_data[$plugin]))
-                $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data[$plugin]["data"];
+                $data[$idx]["data"]["plugin-".$plugin]["data"] = isset($table_data[$plugin]["data"]) ? $table_data[$plugin]["data"] : null;
               else
               if ($plugin == $this->mType)
                 $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data;
@@ -883,7 +883,6 @@ class anyTable extends dbTable
           unset($this->mNumResults);
       }
     }
-
     return !$this->isError();
   } // dbSearchList
 
@@ -900,6 +899,12 @@ class anyTable extends dbTable
         $where .= " AND ".$this->mTableNameGroup.".group_id=".$gid." ";
       else
         $where .= " WHERE ".$this->mTableNameGroup.".group_id=".$gid." ";
+    }
+    else {
+      if ($where)
+        $where .= " AND $this->mTableNameGroupLink.group_id is null ";
+      else
+        $where .= " WHERE $this->mTableNameGroupLink.group_id is null ";
     }
     $order_by  = $this->findListOrderBy();
 
