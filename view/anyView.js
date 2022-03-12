@@ -492,9 +492,9 @@ $.any.anyView.prototype.refreshLoop = function (params)
     if (kind == "head")
       ++this.data_level;
 
-    // Refresh top toolbar
+    // Refresh top close button for item
     if (!this.options.isSelectable && kind && this.id_stack && this.id_stack.length==1)
-      this.refreshToolbarTop(parent,data,id,type,kind,edit);
+      this.refreshCloseItemButton(params);
 
     // Refresh header and data for all entries
     let view = this;
@@ -598,26 +598,6 @@ $.any.anyView.prototype.refreshOne = function (parent,data,id,last_type,last_kin
 
   return parent;
 }; // refreshOne
-
-//
-// Display a "close item" button
-//
-$.any.anyView.prototype.refreshToolbarTop = function (parent,data,id,type,kind,edit)
-{
-  if (!parent)
-    return null;
-  // Create cancel/close button for item view
-  if (this.options.item_opening) {
-    let cls_opt = {
-      type:     type,
-      kind:     kind,
-      edit:     false,
-      top_view: this.options.top_view,
-    };
-    this.refreshCloseItemButton(parent,cls_opt);
-    this.options.item_opening = false;
-  }
-}; // refreshToolbarTop
 
 //
 // Display a toolbar for messages and a "new item" button
@@ -2166,25 +2146,42 @@ $.any.anyView.prototype._fileViewClicked = function (event)
 
 // Button in top toolbar for closing item view
 // By default calls closeItem
-$.any.anyView.prototype.refreshCloseItemButton = function (parent,opt)
+$.any.anyView.prototype.refreshCloseItemButton = function (params)
 {
-  let tit_str = i18n.button.buttonCancel;
-  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.base_id+"_cancel_new_icon";
-  if ($("#"+btn_id).length)
-    $("#"+btn_id).remove();
-  let btn = $("<div id='"+btn_id+"' class='any-tool-cancel any-tool-button pointer' title='"+tit_str+"'>"+
-              //tit_str+
-              //btn_str+
-              "<i class='far fa-window-close fa-lg'></i>"+
-              "</div>");
-  let fun = this.option("localCloseItem")
-            ? this.option("localCloseItem")
-            : this.closeItem;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
-  if (parent && parent.length)
-    parent.prev().prepend(btn);
-  return btn;
+  let parent = params && params.parent ? params.parent : null;
+  let type   = params && params.type   ? params.type   : null;
+  let kind   = params && params.kind   ? params.kind   : null;
+  let id_str = params && params.id_str ? params.id_str : null;
+
+  if (!parent)
+    return null;
+  // Create cancel/close button for item view
+  if (this.options.item_opening) {
+    let opt = {
+      type:     type,
+      kind:     kind,
+      edit:     false,
+      top_view: this.options.top_view,
+    };
+    let tit_str = i18n.button.buttonCancel;
+    let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+    let btn_id  = this.base_id+"_cancel_new_icon";
+    if ($("#"+btn_id).length)
+      $("#"+btn_id).remove();
+    let btn = $("<div id='"+btn_id+"' class='any-tool-cancel any-tool-button pointer' title='"+tit_str+"'>"+
+                //tit_str+
+                //btn_str+
+                "<i class='far fa-window-close fa-lg'></i>"+
+                "</div>");
+    let fun = this.option("localCloseItem")
+              ? this.option("localCloseItem")
+              : this.closeItem;
+    btn.off("click").on("click",opt,$.proxy(fun,this));
+    if (parent && parent.length)
+      parent.prev().prepend(btn);
+    this.options.item_opening = false;
+    return btn;
+  }
 }; // refreshCloseItemButton
 
 // Add-button in list table header
@@ -3194,8 +3191,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
     this.refreshData();
   }
 
-  // To make top right close icon appear
-  this.options.item_opening = true;
+  this.options.item_opening = true; // To make top right close icon appear
 
   // Update database
   if (this.model.mode == "remote")
@@ -3319,7 +3315,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
   if (options.parent_view) {
     let view = options.parent_view;
     if (view.options.showToolbar) {
-      view.options.item_opening = true;
+      view.options.item_opening = true; // To make top right close icon appear
       view.refreshToolbarBottom(view.element,view.model.data,view.model.id,view.model.type,view.model.kind);
     }
   }
