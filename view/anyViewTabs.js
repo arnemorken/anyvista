@@ -65,7 +65,7 @@ $.any.anyViewTabs.prototype.refreshLoop = function (params)
     let ev = {};
     ev.data = {};
     ev.data.div_id = this.current_div_id;
-    ev.data.data_level = this.options.data_level;
+    ev.data.data_level = this.data_level;
     ev.data.kind = params.kind;
     this.openTab(ev);
   }
@@ -125,7 +125,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (header_div,data,id,type,ki
         if (this.tabs_list[tabs_id_str]) {
           this.tabs_list[tabs_id_str].append(tab);
           // Bind click on tab
-          let click_opt = { div_id: div_id, data_level: this.options.data_level, kind: kind };
+          let click_opt = { div_id: div_id, data_level: this.data_level, kind: kind };
           tab.off("click");
           tab.on("click",click_opt,$.proxy(this.clickOpenTab,this));
           $("#"+div_id).hide();
@@ -136,7 +136,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (header_div,data,id,type,ki
           let ev = {};
           ev.data = {};
           ev.data.div_id = div_id;
-          ev.data.data_level = this.options.data_level;
+          ev.data.data_level = this.data_level;
           ev.data.kind = kind;
           this.openTab(ev);
           if (this.first_div_id /*|| this.current_div_id*/) {

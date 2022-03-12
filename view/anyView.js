@@ -140,7 +140,7 @@ $.widget("any.anyView", {
     top_view:              null, // The top view for all views in the view tree (used by dialogs and item view)
     main_div:              null, // The main div for this view (used by dialogs)
     base_id:               "",
-    data_level:            0,    // Current "vertical" level in data tree
+    data_level:            0,    // Current "vertical" level in data tree (used for class ids)
     indent_tables:         false,
     indent_level:          -1,
     indent_amount:         20,
@@ -175,6 +175,10 @@ $.widget("any.anyView", {
     this.base_id  = this.options.base_id
                     ? this.options.base_id
                     : this._createBaseId();
+
+    this.data_level = this.options.data_level
+                      ? this.options.data_level
+                      : 0;
 
     this.id_stack = [];
 
@@ -433,8 +437,8 @@ $.any.anyView.prototype.refresh = function (params)
   let edit   = params && params.edit   ? params.edit   : null;
 
   this.options.filters = this._createFilters(this.model); // Create filters if they dont exist yet
-  this.options.data_level = 0;
-  this.id_stack = [];
+  this.data_level = 0;
+  this.id_stack   = [];
 
   if (!parent)
     parent = this.element;
@@ -486,7 +490,7 @@ $.any.anyView.prototype.refreshLoop = function (params)
 
   if (data) {
     if (kind == "head")
-      ++this.options.data_level;
+      ++this.data_level;
 
     // Refresh top toolbar
     if (!this.options.isSelectable && kind && this.id_stack && this.id_stack.length==1)
@@ -513,14 +517,14 @@ $.any.anyView.prototype.refreshLoop = function (params)
       }
     }
     if (kind == "head")
-      --this.options.data_level;
+      --this.data_level;
   } // if data
   else
     parent.empty();
 
   // Refresh bottom toolbar
   if (this.options.showToolbar) {
-    if (!this.options.isSelectable && this.model.type && this.options.data_level==0 && this.id_stack && this.id_stack.length==0 &&
+    if (!this.options.isSelectable && this.model.type && this.data_level==0 && this.id_stack && this.id_stack.length==0 &&
         (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
       this.refreshToolbarBottom(parent,data,this.model.id,this.model.type,this.model.kind,edit);
     }
@@ -628,7 +632,7 @@ $.any.anyView.prototype.refreshToolbarBottom = function (parent,data,id,type,kin
   // Create container
   let con_id_str = this.id_stack.join("_");
   let div_id     = this.base_id+"_"+type+"_"+con_id_str+"_toolbar";
-  let class_id   = "any-toolbar-bottom any-toolbar any-toolbar-"+this.options.data_level;
+  let class_id   = "any-toolbar-bottom any-toolbar any-toolbar-"+this.data_level;
   if ($("#"+div_id).length)
     $("#"+div_id).remove();
   let bardiv   = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
@@ -675,7 +679,7 @@ $.any.anyView.prototype.refreshToolbarBottom = function (parent,data,id,type,kin
 $.any.anyView.prototype.refreshMessageArea = function (parent,opt)
 {
   let div_id   = this.base_id+"_any_message";
-  let class_id = "any-message any-"+opt.kind+"-message any-message-"+this.options.data_level;
+  let class_id = "any-message any-"+opt.kind+"-message any-message-"+this.data_level;
   let msgdiv = $("#"+div_id);
   if (msgdiv.length)
     msgdiv.empty();
@@ -695,7 +699,7 @@ $.any.anyView.prototype.getOrCreateMainContainer = function (parent,type,kind,id
   let con_div = $("#"+div_id);
   if (!con_div.length && parent) {
     // Create new main container
-    let class_id = "any-container any-"+kind+"-container any-"+kind+"-container-"+this.options.data_level;
+    let class_id = "any-container any-"+kind+"-container any-"+kind+"-container-"+this.data_level;
     con_div = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
     parent.append(con_div);
     if (!this.main_div)
@@ -759,7 +763,7 @@ $.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,
   else
   if (haveData) {
     // Create new header container if we have data
-    let class_id = "any-header any-"+kind+"-header any-header-"+this.options.data_level;
+    let class_id = "any-header any-"+kind+"-header any-header-"+this.data_level;
     let pl       = this.options.indent_tables ? this.options.indent_level * this.options.indent_amount : 0;
     let pl_str   = pl > 0 ? "style='margin-left:"+pl+"px;'" : "";
     header_div   = $("<div id='"+div_id+"' class='"+class_id+"' "+pl_str+"></div>");
@@ -834,7 +838,7 @@ $.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,id
     else
     if (haveData) {
       // Create new data container if we have data
-      let class_id = "any-data any-"+kind+"-data any-data-"+this.options.data_level;
+      let class_id = "any-data any-"+kind+"-data any-data-"+this.data_level;
       let pl       = this.options.indent_tables ? this.options.indent_level * this.options.indent_amount : 0;
       let pl_str   = pl > 0 ? "style='margin-left:"+pl+"px;'" : "";
       data_div     = $("<div id='"+div_id+"' class='"+class_id+"' "+pl_str+"></div>");
@@ -862,7 +866,7 @@ $.any.anyView.prototype.getOrCreateTable = function (parent,type,kind,id_str)
   let table  = $("#"+div_id); // Can we reuse list table?
   if (!table.length) {
     // Create the table
-    let class_id = "any-table any-"+kind+"-table any-table-"+this.options.data_level;
+    let class_id = "any-table any-"+kind+"-table any-table-"+this.data_level;
     table = $("<table id='"+div_id+"' class='"+class_id+"'></table>");
     parent.append(table);
   }
@@ -881,7 +885,7 @@ $.any.anyView.prototype.getOrCreateTbody = function (table,type,kind,id_str)
   let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tbody";
   let tbody  = $("#"+div_id); // Can we reuse list tbody?
   if (!tbody.length) {
-    let class_id = "any-"+kind+"-tbody any-tbody-"+this.options.data_level;
+    let class_id = "any-"+kind+"-tbody any-tbody-"+this.data_level;
     tbody = $("<tbody id='"+div_id+"' class='"+class_id+"'></tbody>");
     table.append(tbody);
   }
@@ -1696,10 +1700,10 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,view_id,parent,kin
     main_div:         parent,
     view:             this,
     base_id:          this.base_id,
+    data_level:       this.data_level,
     grouping:         this.options.grouping,
     item_opening:     this.options.item_opening,
     top_view:         this.options.top_view,
-    data_level:       this.options.data_level,
     showHeader:       this.options.showHeader,
     showTableHeader:  this.options.showTableHeader,
     showTableFooter:  this.options.showTableFooter,
@@ -2818,13 +2822,13 @@ $.any.anyView.prototype._doShowItem = function (opt)
   if (!con_div.length)
     con_div = view.element;
   con_div.empty(); // TODO! This should perhaps be done elsewhere
-  view.element  = con_div;
-  view.main_div = null;
+  view.element        = con_div;
+  view.main_div       = null;
+  view.data_level     = 0;
   view.id_stack       = [];
   view.tabs_list      = {};   // TODO! Belongs in Tabs class
   view.first_div_id   = null; // TODO! Belongs in Tabs class
   view.current_div_id = null; // TODO! Belongs in Tabs class
-  view.options.data_level = 0;
   view.options.item_opening = true; // To make top right close icon appear
   if (is_new) {
     view.options.isEditable  = true;
