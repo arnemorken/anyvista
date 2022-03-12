@@ -124,29 +124,29 @@ $.widget("any.anyView", {
     linkIcons:             null,
 
     // Local methods
-    localSelect:           null,
-    localEdit:             null,
-    localUpdate:           null,
-    localRemove:           null,
-    localDelete:           null,
-    localCancel:           null,
-    localNewItem:          null,
-    localCloseItem:        null,
-    localAddListEntry:     null,
+    localSelect:    null,
+    localUpdate:    null,
+    localDelete:    null,
+    localAdd:       null,
+    localRemove:    null,
+    localNew:       null,
+    localEdit:      null,
+    localCancel:    null,
+    localCloseItem: null,
 
     // "Private" and undocumented options:
-    subscribe_default:     true, // The default onModelChange method will be subscribed to.
-    reset_listeners:       true, // The array of listeners will be erased on each call to the constructor.
-    top_view:              null, // The top view for all views in the view tree (used by dialogs and item view)
-    main_div:              null, // The main div for this view (used by dialogs)
-    base_id:               "",
-    data_level:            0,    // Current "vertical" level in data tree (used for class ids)
-    indent_tables:         false,
-    indent_level:          -1,
-    indent_amount:         20,
-    cutoff:                100,
-    item_opening:          false,
-    ref_rec:               0,    // Used to prevent (theoretical) infinite recursion
+    subscribe_default: true, // The default onModelChange method will be subscribed to.
+    reset_listeners:   true, // The array of listeners will be erased on each call to the constructor.
+    top_view:          null, // The top view for all views in the view tree (used by dialogs and item view)
+    main_div:          null, // The main div for this view (used by dialogs)
+    base_id:           "",
+    data_level:        0,    // Current "vertical" level in data tree (used for class ids)
+    indent_tables:     false,
+    indent_level:      -1,
+    indent_amount:     20,
+    cutoff:            100,
+    item_opening:      false,
+    ref_rec:           0,    // Used to prevent (theoretical) infinite recursion
   }, // options
 
   // Constructor
@@ -180,7 +180,7 @@ $.widget("any.anyView", {
                       ? this.options.data_level
                       : 0;
 
-    this.id_stack = [];
+    this.id_stack = []; // Stack of (group) ids
 
     if (this.model && this.options.subscribe_default) {
       if (this.options.reset_listeners)
@@ -2200,8 +2200,8 @@ $.any.anyView.prototype.refreshAddButton = function (parent,opt)
               "<i class='fa fa-plus'></i>"+
               btn_str+
               "</div>");
-  let fun = this.option("localAddListEntry")
-            ? this.option("localAddListEntry")
+  let fun = this.option("localAdd")
+            ? this.option("localAdd")
             : this.addListEntry;
   btn.off("click").on("click", opt, $.proxy(fun,this));
   if (parent && parent.length)
@@ -2370,8 +2370,8 @@ $.any.anyView.prototype.refreshNewItemButton = function (parent,opt)
               "<i class='fas fa-plus-circle fa-lg'></i>"+
               btn_str+
               "</div>");
-  let fun = this.option("localNewItem")
-            ? this.option("localNewItem")
+  let fun = this.option("localNew")
+            ? this.option("localNew")
             : this.showItem;
   btn.off("click").on("click",opt,$.proxy(fun,this));
   if (parent && parent.length)
