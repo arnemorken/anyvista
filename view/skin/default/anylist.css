@@ -71,6 +71,7 @@
 
 .any-paginator-container {
   background:   #eee;
+  display:      inline-block;
 }
 
 .any-paginator-ellipse {
