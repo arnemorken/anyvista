@@ -66,7 +66,7 @@ $.any.anyViewTabs.prototype.refreshLoop = function (params)
     ev.data = {};
     ev.data.div_id = this.current_div_id;
     ev.data.data_level = this.data_level;
-    ev.data.kind = params.kind;
+    ev.data.kind = params && params.kind ? params.kind : null;
     this.openTab(ev);
   }
 }; // refreshLoop
@@ -79,7 +79,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (header_div,data,id,type,ki
   let skip = false;
   if (this.options.grouping == "tabs" && data.grouping == "tabs") {
     id_str += ""; // Make sure its a string
-    let n = id_str ? id_str.lastIndexOf("-") : -1; // TODO! May break for ids containing -
+    let n = id_str ? id_str.lastIndexOf("_") : -1;
     let tabs_id_str = (n>-1) ? id_str.slice(0,n) : ""; // id_str of level above
     if (kind == "list" || kind == "select")
       id_str = tabs_id_str;
