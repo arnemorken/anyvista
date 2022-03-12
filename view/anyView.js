@@ -905,10 +905,10 @@ $.any.anyView.prototype.getOrCreateExtraFoot = function (table,type,kind,id_str)
 {
   if (!type || !kind || (kind != "list" && kind != "select"))
     return null;
-  let foot_div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_footdiv";
-  let foot_div = $("#"+foot_div_id); // Can we reuse footdiv?
+  let foot_div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_extrafoot";
+  let foot_div = $("#"+foot_div_id); // Can we reuse extrafoot?
   if (!foot_div.length) {
-    foot_div = $("<div class='table_footdiv' id='"+foot_div_id+"'></div>");
+    foot_div = $("<div class='table_extrafoot' id='"+foot_div_id+"'></div>");
     foot_div.insertAfter(table);
   }
   return foot_div;
@@ -1013,9 +1013,9 @@ $.any.anyView.prototype.sortTable = function (event)
   let num  = null;
   let table = $("#"+event.data.table_id);
   if (table.length) {
-    let footdiv = table.parent().find(".table_footdiv");
-    if (footdiv.length) {
-      let pager = footdiv.data("pager");
+    let extra_foot = table.parent().find(".table_extrafoot");
+    if (extra_foot.length) {
+      let pager = extra_foot.data("pager");
       if (pager) {
         from = pager.options.itemsPerPage *(pager.currentPage() - 1);
         num  = pager.options.itemsPerPage;
@@ -1080,15 +1080,15 @@ let d = this.model.data;
     let pager = extra_foot.data("pager");
     if (!pager && this.numResults) {
       pager = extra_foot.anyPaginator({ itemsPerPage: this.options.itemsPerPage,
-                                     onClick:      this.pageNumClicked,
-                                     context:      this, // onClick context
-                                     // Set in paginator options that are sent to onClick handler:
-                                     div_info: {
-                                       type:   type,
-                                       kind:   kind,
-                                       id_str: id_str,
-                                     },
-                                  });
+                                        onClick:      this.pageNumClicked,
+                                        context:      this, // onClick context
+                                        // Set in paginator options that are sent to onClick handler:
+                                        div_info: {
+                                          type:   type,
+                                          kind:   kind,
+                                          id_str: id_str,
+                                        },
+                                     });
       pager.numItems(this.numResults);
       pager.currentPage(this.options.currentPage);
       extra_foot.data("pager",pager);
