@@ -176,8 +176,7 @@ $.widget("any.anyView", {
                     ? this.options.base_id
                     : this._createBaseId();
 
-    this.id_stack      = [];
-    this.root_id_stack = [];
+    this.id_stack = [];
 
     if (this.model && this.options.subscribe_default) {
       if (this.options.reset_listeners)
@@ -435,7 +434,7 @@ $.any.anyView.prototype.refresh = function (params)
 
   this.options.filters = this._createFilters(this.model); // Create filters if they dont exist yet
   this.options.data_level = 0;
-  this.id_stack = [...this.root_id_stack];
+  this.id_stack = [];
 
   if (!parent)
     parent = this.element;
@@ -2821,7 +2820,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
   con_div.empty(); // TODO! This should perhaps be done elsewhere
   view.element  = con_div;
   view.main_div = null;
-  view.id_stack       = [...view.root_id_stack];
+  view.id_stack       = [];
   view.tabs_list      = {};   // TODO! Belongs in Tabs class
   view.first_div_id   = null; // TODO! Belongs in Tabs class
   view.current_div_id = null; // TODO! Belongs in Tabs class
