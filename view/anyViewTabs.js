@@ -92,7 +92,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (parent,data,id,type,kind,e
       let pl      = this.options.indent_tables ? lev_tab * this.options.indent_amount : 0;
       let pl_str  = pl > 0 ? "style='margin-left:"+pl+"px;'" : "";
       this.tabs_list[tabs_id_str] = $("<div id='"+tabs_id+"' class='any-tabs-container w3-bar w3-dark-grey' "+pl_str+"></div>");
-      this.tabs_list[tabs_id_str].insertBefore(parent);
+      parent.prepend(this.tabs_list[tabs_id_str]);
     }
     // Get the correct filter
     if (!this.options.filters) {
