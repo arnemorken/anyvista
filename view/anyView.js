@@ -180,8 +180,6 @@ $.widget("any.anyView", {
                       ? this.options.data_level
                       : 0;
 
-    this.id_stack = []; // Stack of (group) ids
-
     if (this.model && this.options.subscribe_default) {
       if (this.options.reset_listeners)
         this.model.cbUnsubscribe(this.onModelChange);
@@ -434,11 +432,11 @@ $.any.anyView.prototype.refresh = function (params)
   let kind   = params && params.kind   ? params.kind   : null;
   let pdata  = params && params.pdata  ? params.pdata  : null;
   let pid    = params && params.pid    ? params.pid    : null;
+  let id_str = params && params.id_str ? params.id_str : "";
   let edit   = params && params.edit   ? params.edit   : null;
 
   this.options.filters = this._createFilters(this.model); // Create filters if they dont exist yet
   this.data_level = 0;
-  this.id_stack   = [];
 
   if (!parent)
     parent = this.element;
@@ -464,6 +462,7 @@ $.any.anyView.prototype.refreshLoop = function (params)
   let kind   = params && params.kind   ? params.kind   : null;
   let pdata  = params && params.pdata  ? params.pdata  : null;
   let pid    = params && params.pid    ? params.pid    : null;
+  let id_str = params && params.id_str ? params.id_str : "";
   let edit   = params && params.edit   ? params.edit   : null;
 
   if (!parent)
@@ -493,7 +492,7 @@ $.any.anyView.prototype.refreshLoop = function (params)
       ++this.data_level;
 
     // Refresh top close button for item
-    if (!this.options.isSelectable && this.options.item_opening && this.id_stack && this.id_stack.length==1)
+    if (!this.options.isSelectable && this.options.item_opening && id_str != "")
       this.refreshCloseItemButton(params);
 
     // Refresh header and data for all entries
@@ -506,19 +505,28 @@ $.any.anyView.prototype.refreshLoop = function (params)
           let curr_type = view._findType(data,prev_type,idc);
           let curr_kind = view._findKind(data,prev_kind,idc);
           if (curr_type && curr_kind) {
-            if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type /*|| (prev_type == "group" && view.model.type == "group")*/))
-              view = view.createView(parent,data,idc,curr_type,curr_kind); // New type to display, create new view
-            if (view)
+            if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type)) {
+              // New type to display, so create new view
+              view = view.createView({ parent: parent,
+                                       data:   data,
+                                       id:     idc,
+                                       type:   curr_type,
+                                       kind:   curr_kind,
+                                       id_str: id_str,
+                                    });
+            }
+            if (view) {
               view.refreshOne({ parent: parent,
                                 data:   data,
                                 id:     idc,
                                 type:   curr_type,
                                 kind:   curr_kind,
                                 edit:   edit,
-                                id_str: "",
+                                id_str: id_str,
                                 pdata:  pdata,
                                 pid:    pid,
                              });
+            }
             prev_type = curr_type;
             prev_kind = curr_kind;
           }
@@ -533,9 +541,9 @@ $.any.anyView.prototype.refreshLoop = function (params)
 
   // Refresh bottom toolbar
   if (this.options.showToolbar) {
-    if (!this.options.isSelectable && this.model.type && this.data_level==0 && this.id_stack && this.id_stack.length==0 &&
+    if (!this.options.isSelectable && this.model.type && this.data_level==0 && id_str == "" &&
         (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
-      this.refreshToolbarBottom(parent,data,this.model.id,this.model.type,this.model.kind,edit);
+      this.refreshToolbarBottom(parent,data,this.model.id,this.model.type,this.model.kind,edit,"");
     }
   }
 
@@ -557,29 +565,24 @@ $.any.anyView.prototype.refreshOne = function (params)
   let kind   = params && params.kind   ? params.kind   : this._findKind(data,null,id);
   let pdata  = params && params.pdata  ? params.pdata  : null;
   let pid    = params && params.pid    ? params.pid    : null;
-  let id_str = params && params.id_str ? params.id_str : null;
+  let id_str = params && params.id_str ? params.id_str : "";
   let edit   = params && params.edit   ? params.edit   : null;
 
   if (!data || (!id && id !== 0) || (typeof id == "string" && id.startsWith("grouping")))
     return null;
 
-  // Create the string used to uniquely identify current data element
-  let the_id = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
-  if (kind != "list" && kind != "select")
-    this.id_stack.push(the_id);
-  id_str = id_str ? id_str : this.id_stack.join("_");
-  if (kind == "list" || kind == "select")
-    id_str += id_str ? "_"+the_id : the_id;
+  let idx = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
+  let the_id_str = id_str || parseInt(id_str) == 0
+                   ? id_str+"_"+idx
+                   : ""+idx;
 
   // Create or get main container for header and data containers
   let con_div = this.getOrCreateMainContainer(parent,type,kind,id_str);
-  if (kind == "head" || (data && data.grouping)) {
-    // Refresh header
-    this.refreshHeader(con_div,data,id,type,kind,edit,id_str);
-  }
+  // Refresh header
+  if (kind == "head" || (data && data.grouping))
+    this.refreshHeader(con_div,data,id,type,kind,edit,the_id_str);
   // Refresh data
-  let data_div = con_div;
-  data_div = this.refreshData(con_div,data,id,type,kind,edit,id_str,pdata,pid);
+  let data_div = this.refreshData(con_div,data,id,type,kind,edit,the_id_str,pdata,pid);
 
   // If we have subdata, make a recursive call
   if (data && data[id] && data[id].data) {
@@ -600,6 +603,7 @@ $.any.anyView.prototype.refreshOne = function (params)
                        pdata:  p_data,
                        pid:    p_id,
                        edit:   edit,
+                       id_str: the_id_str,
                      });
     if ((kind == "list" || kind == "select"))
       --this.options.indent_level;
@@ -609,16 +613,13 @@ $.any.anyView.prototype.refreshOne = function (params)
     con_div.remove();
     con_div = null;
   }
-  if (kind != "list" && kind != "select")
-    this.id_stack.pop();
-
   return parent;
 }; // refreshOne
 
 //
 // Display a toolbar for messages and a "new item" button
 //
-$.any.anyView.prototype.refreshToolbarBottom = function (parent,data,id,type,kind,edit)
+$.any.anyView.prototype.refreshToolbarBottom = function (parent,data,id,type,kind,edit,id_str)
 {
   if (!parent || !type)
     return null;
@@ -626,8 +627,7 @@ $.any.anyView.prototype.refreshToolbarBottom = function (parent,data,id,type,kin
     return null;
 
   // Create container
-  let con_id_str = this.id_stack.join("_");
-  let div_id     = this.base_id+"_"+type+"_"+con_id_str+"_toolbar";
+  let div_id     = this.base_id+"_"+type+"_"+id_str+"_toolbar";
   let class_id   = "any-toolbar-bottom any-toolbar any-toolbar-"+this.data_level;
   if ($("#"+div_id).length)
     $("#"+div_id).remove();
@@ -648,7 +648,7 @@ $.any.anyView.prototype.refreshToolbarBottom = function (parent,data,id,type,kin
                 id:     id, // Find a new id
                 type:   type,
                 kind:   "item",
-                id_str: con_id_str,
+                id_str: id_str,
                 edit:   true,
                 is_new: true,
               };
@@ -690,8 +690,7 @@ $.any.anyView.prototype.refreshMessageArea = function (parent,opt)
 //
 $.any.anyView.prototype.getOrCreateMainContainer = function (parent,type,kind,id_str)
 {
-  let con_id_str = (kind == "list" || kind == "select" ? this.id_stack.join("_") : id_str);
-  let div_id = this.base_id+"_"+type+"_"+kind+"_"+con_id_str+"_container";
+  let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_container";
   let con_div = $("#"+div_id);
   if (!con_div.length && parent) {
     // Create new main container
@@ -753,8 +752,8 @@ $.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,
   let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_header";
   let header_div = $("#"+div_id);
   if (header_div.length) {
-    if (!doNotEmpty)
-      this._emptyDiv(header_div);
+    if (!doNotEmpty && header_div && header_div.length)
+      header_div.empty();
   }
   else
   if (haveData) {
@@ -788,17 +787,17 @@ $.any.anyView.prototype.refreshHeaderEntry = function (header_div,data,id,filter
 $.any.anyView.prototype.refreshData = function (parent,data,id,type,kind,edit,id_str,pdata,pid)
 {
   // Create or get container for data
+  let tab_id_str = id_str;
+  if (kind == "list" || kind == "select") {
+    var n = id_str ? id_str.lastIndexOf("_") : -1;
+    if (n < 0)
+      tab_id_str = "";
+    else
+      tab_id_str = id_str.substring(0,n);
+  }
   let have_data = Object.size(data) > 0;
-  let data_div = this.getOrCreateDataContainer(parent,type,kind,id_str,have_data);
+  let data_div = this.getOrCreateDataContainer(parent,type,kind,tab_id_str,have_data);
   if (kind == "list" || kind == "select" || kind == "item") {
-    let tab_id_str = id_str;
-    if (kind == "list" || kind == "select") {
-      var n = id_str ? id_str.lastIndexOf("_") : -1;
-      if (n < 0)
-        tab_id_str = "";
-      else
-        tab_id_str = id_str.substring(0,n);
-    }
     let table = this.getOrCreateTable(data_div,type,kind,tab_id_str);
     if (table) {
       let thead = table.find("thead").length ? table.find("thead") : null;
@@ -826,30 +825,20 @@ $.any.anyView.prototype.refreshData = function (parent,data,id,type,kind,edit,id
 //
 $.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,id_str,haveData)
 {
-  let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_data";
+  if (!parent)
+    return null;
+  let div_id   = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_data";
   let data_div = $("#"+div_id);
-  if (kind != "list" && kind != "select") {
-    if (data_div.length)
-      this._emptyDiv(data_div);
-    else
-    if (haveData) {
-      // Create new data container if we have data
-      let class_id = "any-data any-"+kind+"-data any-data-"+this.data_level;
-      let pl       = this.options.indent_tables ? this.options.indent_level * this.options.indent_amount : 0;
-      let pl_str   = pl > 0 ? "style='margin-left:"+pl+"px;'" : "";
-      data_div     = $("<div id='"+div_id+"' class='"+class_id+"' "+pl_str+"></div>");
-      parent.append(data_div);
-    }
+  if (!data_div.length && haveData) {
+    // Create new data container if we have data
+    let class_id = "any-data any-"+kind+"-data any-data-"+this.data_level;
+    let pl       = this.options.indent_tables ? this.options.indent_level * this.options.indent_amount : 0;
+    let pl_str   = pl > 0 ? "style='margin-left:"+pl+"px;'" : "";
+    data_div     = $("<div id='"+div_id+"' class='"+class_id+"' "+pl_str+"></div>");
+    parent.append(data_div);
   }
-  else
-    data_div = parent;
   return data_div;
 }; // getOrCreateDataContainer
-
-$.any.anyView.prototype._emptyDiv = function (div)
-{
-  return div && div.length ? div.empty() : null;
-}; // _emptyDiv
 
 //
 // Create a table, or find a table created previously
@@ -915,7 +904,6 @@ $.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
     return null;
   if (!type || !kind || (kind != "list" && kind != "select"))
     return null;
-  id_str = id_str.substr(0,id_str.lastIndexOf("_"));
   let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tfoot";
   let tfoot = $("#"+div_id); // Can we reuse tfoot?
   if (!tfoot.length) {
@@ -1613,8 +1601,15 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,id
 //
 // Create a new model in a new view and return the view
 //
-$.any.anyView.prototype.createView = function (parent,data,id,type,kind)
+$.any.anyView.prototype.createView = function (params)
 {
+  let parent = params && params.parent ? params.parent : null;
+  let data   = params && params.data   ? params.data   : null;
+  let id     = params && params.id     ? params.id     : null;
+  let type   = params && params.type   ? params.type   : null;
+  let kind   = params && params.kind   ? params.kind   : null;
+  let id_str = params && params.id_str ? params.id_str : "";
+
   if (!parent)
     parent = this.element;
   if (!parent)
@@ -1643,7 +1638,6 @@ $.any.anyView.prototype.createView = function (parent,data,id,type,kind)
   }
 
   // Create the view
-  let id_str   = this.id_stack.join("_");
   let view_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_container";
   let view_opt = this.getCreateViewOptions(model,view_id,parent,kind);
   let v_str = view_opt.grouping ? type+"View"+view_opt.grouping.capitalize() : type+"View";
@@ -1660,7 +1654,6 @@ $.any.anyView.prototype.createView = function (parent,data,id,type,kind)
       view = null;
     }
     else {
-      view.id_stack = [...this.id_stack];
       if (this.numResults)
         view.numResults = this.numResults;
     }
@@ -2832,7 +2825,13 @@ $.any.anyView.prototype._doShowItem = function (opt)
   // Create a new display area and display the item data
   item["+0"].data[the_id].item   = type;
   item["+0"].data[the_id].is_new = is_new;
-  let view = this.createView(opt.view,item,the_id,type,kind);
+  let view = this.createView({ parent: opt.view,
+                               data:   item,
+                               id:     the_id,
+                               type:   type,
+                               kind:   kind,
+                               id_str: opt.id_str,
+                            });
   if (!view || !view.options || !view.options.top_view) {
     console.error("View missing. "); // Should never happen TODO! i18n
     return false;
@@ -2844,7 +2843,6 @@ $.any.anyView.prototype._doShowItem = function (opt)
   view.element        = con_div;
   view.main_div       = null;
   view.data_level     = 0;
-  view.id_stack       = [];
   view.tabs_list      = {};   // TODO! Belongs in Tabs class
   view.first_div_id   = null; // TODO! Belongs in Tabs class
   view.current_div_id = null; // TODO! Belongs in Tabs class
@@ -3074,7 +3072,7 @@ $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,
         let kind      = options.kind;
         let type_name = options.type+"_name";
         let the_id    = Number.isInteger(parseInt(options.child_id)) ? parseInt(options.child_id) : options.child_id;
-        let id_str    = view.id_stack.length ? view.id_stack.join("_")+"_"+the_id : "0_"+the_id;
+        let id_str    = "0_"+the_id;
         let data      = serverdata.data;
         let item_id = view.base_id+"_"+options.type+"_"+kind+"_"+id_str+"_parent_id .itemSelect";
         let did_select = "selected='true'";
@@ -3286,7 +3284,14 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
         let new_base_id = parent_view._createBaseId();
         let ll_id       = new_base_id+"_"+list_type+"_link_list";
         let ll_contents = $("<div id='"+ll_id+"'></div>");
-        let select_list_view = parent_view.createView(ll_contents,serverdata.data,null,list_type,"list");
+
+        let select_list_view = parent_view.createView({ parent: ll_contents,
+                                                        data:   serverdata.data,
+                                                        id:     null,
+                                                        type:   list_type,
+                                                        kind:   "list",
+                                                        id_str: options.id_str,
+                                                     });
         if (select_list_view) {
           select_list_view.base_id = new_base_id;
           select_list_view.options.showHeader      = false;
@@ -3338,7 +3343,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
     let view = options.parent_view;
     if (view.options.showToolbar) {
       view.options.item_opening = true; // To make top right close icon appear
-      view.refreshToolbarBottom(view.element,view.model.data,view.model.id,view.model.type,view.model.kind);
+      view.refreshToolbarBottom(view.element,view.model.data,view.model.id,view.model.type,view.model.kind,"");
     }
   }
   return context;
