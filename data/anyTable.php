@@ -815,6 +815,7 @@ class anyTable extends dbTable
 
     // Since a 'LIMIT' operation might apply, we need to search for results for
     // each group seperately rather then using a LEFT JOIN on the group table.
+    // However, if a group_id is specified, we search only in that group.
 
     // Get group data
     $group_table = anyTableFactory::create("group",$this);
@@ -832,9 +833,12 @@ class anyTable extends dbTable
       if (!$simple)
         if (Parameters::get("lt") == "simple")
            $simple = true;
-      foreach ($group_data["group"] as $gid => $group) {
-        // Build and execute the full statement
-        $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$gid);
+      $group_id = Parameters::get("group_id");
+      if ($group_id) {
+        // Build and execute the full statement for data from the given group
+        if ($group_id == "nogroup")
+          $group_id = null;
+        $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$group_id);
         $stmt = $partial_stmt.$limit;
         //elog("dbSearchList1:".$stmt);
         if (!$stmt || !$this->query($stmt))
@@ -842,16 +846,29 @@ class anyTable extends dbTable
         // Get the data
         $s = $this->getRowData($data,"list",$flat,$simple);
         $success = $success || $s;
-      }
-      // Build and execute the full statement for ungrouped data
-      $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,null);
-      $stmt = $partial_stmt.$limit;
-      //elog("dbSearchList2:".$stmt);
-      if (!$stmt || !$this->query($stmt))
-        return false; // An error occured, abort
-      // Get the data
-      $s = $this->getRowData($data,"list",$flat,$simple);
-      $success = $success || $s;
+      } // else
+      else {
+        foreach ($group_data["group"] as $gid => $group) {
+          // Build and execute the full statement
+          $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$gid);
+          $stmt = $partial_stmt.$limit;
+          //elog("dbSearchList2:".$stmt);
+          if (!$stmt || !$this->query($stmt))
+            return false; // An error occured, abort
+          // Get the data
+          $s = $this->getRowData($data,"list",$flat,$simple);
+          $success = $success || $s;
+        }
+        // Build and execute the full statement for ungrouped data
+        $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$group_id);
+        $stmt = $partial_stmt.$limit;
+        //elog("dbSearchList3:".$stmt);
+        if (!$stmt || !$this->query($stmt))
+          return false; // An error occured, abort
+        // Get the data
+        $s = $this->getRowData($data,"list",$flat,$simple);
+        $success = $success || $s;
+      } // else
     }
     if ($success) {
       // Search and get the meta data
