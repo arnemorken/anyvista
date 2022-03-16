@@ -795,7 +795,7 @@
             let err = "";
             if (!opt.id && opt.id != 0)
               err += "Task id missing. ";
-            let elem_id_base = view.getBaseId()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
+            let elem_id_base = view.getIdBase()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
             let nameid1 = elem_id_base+"_task_name .itemEdit";
             let nameid2 = elem_id_base+"_task_name .itemUnedit";
             if (($("#"+nameid1).length != 0 && !$("#"+nameid1).val()) &&

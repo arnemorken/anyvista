@@ -83,7 +83,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (parent,data,id,type,kind,e
       id_str = tabs_id_str;
 
     // Get or create a tabs button container
-    let tabs_id = this.getBaseId()+"_"+type+"_"+kind+"_"+tabs_id_str+"_tabs";
+    let tabs_id = this.getIdBase()+"_"+type+"_"+kind+"_"+tabs_id_str+"_tabs";
     if (!this.tabs_list[tabs_id_str]) {
       this.tabs_list[tabs_id_str] = $("#"+tabs_id);
       if (this.tabs_list[tabs_id_str].length)
@@ -111,7 +111,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (parent,data,id,type,kind,e
     if (filter[name_key] && filter[name_key].DISPLAY) {
       skip = true;
       // Create tab button
-      let btn_id = this.getBaseId()+"_"+type+"_"+kind+"_"+id_str+"_data_tab_btn";
+      let btn_id = this.getIdBase()+"_"+type+"_"+kind+"_"+id_str+"_data_tab_btn";
       if (!$("#"+btn_id).length) {
         let tab_str  = data && data[id] && (data[id][name_key] || data[id][name_key] == "")
                        ? data[id][name_key]
@@ -120,7 +120,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (parent,data,id,type,kind,e
         if (this.tabs_list[tabs_id_str]) {
           this.tabs_list[tabs_id_str].append(tab_btn);
           // Bind click on tab
-          let div_id = this.getBaseId()+"_"+type+"_"+kind+"_"+id_str+"_data";
+          let div_id = this.getIdBase()+"_"+type+"_"+kind+"_"+id_str+"_data";
           let click_opt = { div_id: div_id };
           tab_btn.off("click");
           tab_btn.on("click",click_opt,$.proxy(this.clickOpenTab,this));

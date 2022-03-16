@@ -67,7 +67,7 @@ $.any.documentViewTabs.prototype._uploadClicked = function (event)
                          });
 
     // Empty and disable the view button / input field until the file is actually uploaded
-    let elem_id = this.base_id+"_"+event.data.type+"_"+event.data.kind+"_"+event.data.id_str+"_document_filename";
+    let elem_id = this.id_base+"_"+event.data.type+"_"+event.data.kind+"_"+event.data.id_str+"_document_filename";
     if ($("#"+elem_id).length) {
       let str_deactivated = "File is not yet uploaded"; // TODO i18n
       $("#"+elem_id).find("a").attr("href","");
@@ -77,7 +77,7 @@ $.any.documentViewTabs.prototype._uploadClicked = function (event)
       $("#"+elem_id+" .fa-file").prop("title", str_deactivated);
     }
     // Change the name link
-    elem_id = this.base_id+"_"+event.data.type+"_"+event.data.kind+"_"+event.data.id_str+"_document_name";
+    elem_id = this.id_base+"_"+event.data.type+"_"+event.data.kind+"_"+event.data.id_str+"_document_name";
     if ($("#"+elem_id+" .itemText").length) {
       $("#"+elem_id+" .itemText").text(fname);
       $("#"+elem_id+" .itemText").val(fname);
@@ -149,7 +149,7 @@ $.any.documentViewTabs.prototype.dbDeleteDialog = function (event)
     return false;
   }
 
-  let it_id_base = this.getBaseId()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
+  let it_id_base = this.getIdBase()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
   let docname_el = $("#"+it_id_base+"_document_name .itemText");
   let docname    = docname_el.text();
   let fname_el   = $("#"+it_id_base+"_document_filename .itemText");

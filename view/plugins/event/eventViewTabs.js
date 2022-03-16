@@ -83,7 +83,7 @@ $.any.eventViewTabs.prototype.createExtra = function ()
 $.any.eventViewTabs.prototype.bindCell = function (options,view)
 {
   // Set attended
-  let it_id = this.getBaseId()+"_"+options.type+"_"+options.kind+"_"+options.id_str+"_user_attended"
+  let it_id = this.getIdBase()+"_"+options.type+"_"+options.kind+"_"+options.id_str+"_user_attended"
   let btn = $("#"+it_id);
   if (btn.length) {
     btn.off("click");
@@ -93,7 +93,7 @@ $.any.eventViewTabs.prototype.bindCell = function (options,view)
   let sdate = Date.parse(options.event_date_end);
   let today = Date.now();
   if (sdate < today) {
-    let it_id = this.getBaseId()+"_"+options.type+"_"+options.kind+"_"+options.id_str+"_removeItem_icon"
+    let it_id = this.getIdBase()+"_"+options.type+"_"+options.kind+"_"+options.id_str+"_removeItem_icon"
     let btn = $("#"+it_id);
     if (btn.length)
       btn.hide();

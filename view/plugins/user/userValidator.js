@@ -23,7 +23,7 @@ userValidator.prototype.validateUpdate = function (opt,view)
   if (!opt.id && opt.id != 0)
     err += "Id missing. ";
 
-  let elem_id_base = view.getBaseId()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
+  let elem_id_base = view.getIdBase()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
 
   let login_nameid = elem_id_base+"_user_login .itemEdit";
   let email_nameid = elem_id_base+"_user_email .itemEdit";

@@ -21,7 +21,7 @@ documentValidator.prototype.validateUpdate = function (opt,view)
 {
   let err = "";
 
-  let elem_id_base = view.getBaseId()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
+  let elem_id_base = view.getIdBase()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
 
   let nameid = elem_id_base+"_document_name";
   if ($("#"+nameid).length == 0 || !$("#"+nameid).text())

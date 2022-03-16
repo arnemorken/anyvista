@@ -15,7 +15,7 @@
  *
  * See <a href="../classes/anyModel.html">`anyModel`</a> for a description of the data model class.
  *
- * Note: All jQuery id's in anyList are on the format [base_id]\_[type]\_[kind]\_[id]\_[html_name].
+ * Note: All jQuery id's in anyList are on the format [id_base]\_[type]\_[kind]\_[id]\_[html_name].
  *
  * @class anyView
  * @constructor Sets the view's variables according to `options`, or to default values.
@@ -98,7 +98,7 @@ $.widget("any.anyView", {
     showServerErrors:      false,
     showEmptyRows:         false,
   //showSelectAll:         false, // TODO! NOT IMPLEMENTED
-    showButtonAdd:         1, // 0 == do not show, 1 == first cell, 2 == last cell
+    showButtonAdd:         1,
     showButtonEdit:        true,
     showButtonUpdate:      true,
     showButtonRemove:      true,
@@ -139,7 +139,7 @@ $.widget("any.anyView", {
     reset_listeners:   true, // The array of listeners will be erased on each call to the constructor.
     top_view:          null, // The top view for all views in the view tree (used by dialogs and item view)
     main_div:          null, // The main div for this view (used by dialogs)
-    base_id:           "",
+    id_base:           "",
     data_level:        0,    // Current "vertical" level in data tree (used for class ids)
     indent_tables:     false,
     indent_level:      -1,
@@ -172,15 +172,17 @@ $.widget("any.anyView", {
                     ? this.options.main_div
                     : null;
 
-    this.base_id  = this.options.base_id
-                    ? this.options.base_id
-                    : this._createBaseId();
+    this.id_base  = this.options.id_base
+                    ? this.options.id_base
+                    : this._createIdBase();
 
     this.data_level = this.options.data_level
                       ? this.options.data_level
                       : 0;
 
     this.id_str = "";
+
+    this.group_id = this.options.group_id;
 
     if (this.model && this.options.subscribe_default) {
       if (this.options.reset_listeners)
@@ -218,14 +220,14 @@ $.widget("any.anyView", {
 /////////////////////////
 
 /**
- * @method getBaseId
+ * @method getIdBase
  * @description
- * @return this.baseId
+ * @return this.id_base
  */
-$.any.anyView.prototype.getBaseId = function ()
+$.any.anyView.prototype.getIdBase = function ()
 {
-  return this.base_id;
-}; // getBaseId
+  return this.id_base;
+}; // getIdBase
 
 /**
  * @method getFilter
@@ -255,10 +257,10 @@ $.any.anyView.prototype.getFilter = function (type,kind)
 // Internal methods
 /////////////////////////
 
-$.any.anyView.prototype._createBaseId = function ()
+$.any.anyView.prototype._createIdBase = function ()
 {
-  return "baseId" + 1 + Math.floor(Math.random()*10000000); // Pseudo-unique id
-}; // _createBaseId
+  return "idBase" + 1 + Math.floor(Math.random()*10000000); // Pseudo-unique id
+}; // _createIdBase
 
 $.any.anyView.prototype._createFilters = function (model)
 {
@@ -357,7 +359,7 @@ $.any.anyView.prototype._setPermissions = function ()
  */
 $.any.anyView.prototype.showMessages = function (modelOrString)
 {
-  let div_id = this.base_id+"_any_message";
+  let div_id = this.id_base+"_any_message";
   let msgdiv = $("#"+div_id);
   if (msgdiv.length) {
     msgdiv.empty();
@@ -515,6 +517,8 @@ $.any.anyView.prototype.refreshLoop = function (params)
               // Create or get main container for header and data containers
               let con_div = view.getOrCreateMainContainer(parent,curr_type,curr_kind,view.id_str);
               // Refresh the view for the given id
+              if (curr_type == "group")
+                view.group_id = idc;
               view.refreshOne({ parent: con_div,
                                 data:   data,
                                 id:     idc,
@@ -622,7 +626,7 @@ $.any.anyView.prototype.refreshToolbarBottom = function (parent,data,id,type,kin
     return null;
 
   // Create container
-  let div_id     = this.base_id+"_"+type+"_"+id_str+"_toolbar";
+  let div_id     = this.id_base+"_"+type+"_"+id_str+"_toolbar";
   let class_id   = "any-toolbar-bottom any-toolbar any-toolbar-"+this.data_level;
   if ($("#"+div_id).length)
     $("#"+div_id).remove();
@@ -669,7 +673,7 @@ $.any.anyView.prototype.refreshToolbarBottom = function (parent,data,id,type,kin
 //
 $.any.anyView.prototype.refreshMessageArea = function (parent,opt)
 {
-  let div_id   = this.base_id+"_any_message";
+  let div_id   = this.id_base+"_any_message";
   let class_id = "any-message any-"+opt.kind+"-message any-message-"+this.data_level;
   let msgdiv = $("#"+div_id);
   if (msgdiv.length)
@@ -685,7 +689,7 @@ $.any.anyView.prototype.refreshMessageArea = function (parent,opt)
 //
 $.any.anyView.prototype.getOrCreateMainContainer = function (parent,type,kind,id_str)
 {
-  let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_container";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_container";
   let con_div = $("#"+div_id);
   if (!con_div.length && parent) {
     // Create new main container
@@ -744,7 +748,7 @@ $.any.anyView.prototype.refreshHeader = function (parent,data,id,type,kind,edit,
 //
 $.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,id_str,haveData,doNotEmpty)
 {
-  let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_header";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_header";
   let header_div = $("#"+div_id);
   if (header_div.length) {
     if (!doNotEmpty && header_div && header_div.length)
@@ -822,7 +826,7 @@ $.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,id
 {
   if (!parent)
     return null;
-  let div_id   = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_data";
+  let div_id   = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_data";
   let data_div = $("#"+div_id);
   if (!data_div.length && haveData) {
     // Create new data container if we have data
@@ -842,7 +846,7 @@ $.any.anyView.prototype.getOrCreateTable = function (parent,type,kind,id_str)
 {
   if (!parent)
     return null;
-  let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_table";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_table";
   let table  = $("#"+div_id); // Can we reuse list table?
   if (!table.length) {
     // Create the table
@@ -862,7 +866,7 @@ $.any.anyView.prototype.getOrCreateTbody = function (table,type,kind,id_str)
     return null;
   if (!type || !kind)
     return null;
-  let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tbody";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tbody";
   let tbody  = $("#"+div_id); // Can we reuse list tbody?
   if (!tbody.length) {
     let class_id = "any-"+kind+"-tbody any-tbody-"+this.data_level;
@@ -881,7 +885,7 @@ $.any.anyView.prototype.getOrCreateThead = function (table,type,kind,id_str)
     return null;
   if (!type || !kind || (kind != "list" && kind != "select"))
     return null;
-  let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_thead";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_thead";
   let thead  = $("#"+div_id);
   if (thead.length)
     thead.remove();
@@ -899,7 +903,7 @@ $.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
     return null;
   if (!type || !kind || (kind != "list" && kind != "select"))
     return null;
-  let div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tfoot";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tfoot";
   let tfoot = $("#"+div_id); // Can we reuse tfoot?
   if (!tfoot.length) {
     tfoot = $("<tfoot id='"+div_id+"'></tfoot>");
@@ -915,7 +919,7 @@ $.any.anyView.prototype.getOrCreateExtraFoot = function (table,type,kind,id_str)
 {
   if (!type || !kind || (kind != "list" && kind != "select"))
     return null;
-  let foot_div_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_extrafoot";
+  let foot_div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_extrafoot";
   let foot_div = $("#"+foot_div_id); // Can we reuse extrafoot?
   if (!foot_div.length) {
     foot_div = $("<div class='table_extrafoot' id='"+foot_div_id+"'></div>");
@@ -981,10 +985,11 @@ $.any.anyView.prototype.refreshThead = function (thead,data,id,type,kind,edit,id
         tr.append(th);
         if (this.options.isSortable) {
           th.css("cursor","pointer");
-          let th_opt = { table_id: this.base_id+"_"+type+"_"+kind+"_"+id_str+"_table",
+          let th_opt = { table_id: this.id_base+"_"+type+"_"+kind+"_"+id_str+"_table",
                          filter_id:  filter_id,
                          filter_key: filter_key,
                          type:       type,
+                         group_id:   this.group_id,
                        };
           th.off("click").on("click",th_opt,$.proxy(this.sortTable,this));
         }
@@ -1013,8 +1018,9 @@ $.any.anyView.prototype.sortTable = function (event)
     console.log("sortTable: Missing event or event.data. ");
     return;
   }
-  let type  = event.data.type;
-  let order = event.data.filter_id;
+  let type     = event.data.type;
+  let group_id = event.data.group_id;
+  let order    = event.data.filter_id;
   let last_sort_by = this.options.sortBy;
   this.options.sortBy = order;
   if (this.options.sortBy == last_sort_by)
@@ -1039,6 +1045,7 @@ $.any.anyView.prototype.sortTable = function (event)
   }
   let mod_opt = { context:   this.model,
                   type:      type,
+                  group_id:  group_id,
                   from:      from,
                   num:       num,
                   order:     order,
@@ -1061,13 +1068,13 @@ $.any.anyView.prototype.sortTable = function (event)
 $.any.anyView.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,id_str)
 {
   id_str = id_str.substr(0,id_str.lastIndexOf("_"));
-  let tr_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tr_foot";
+  let tr_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tr_foot";
   let tr    = $("#"+tr_id);
   if (!tr.length) {
     tr = $("<tr id='"+tr_id+"'></tr>");
     tfoot.append(tr);
   }
-  let td_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_td_foot";
+  let td_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_td_foot";
   let td    = $("#"+td_id);
   if (!td.length) {
     let f = this.getFilter(type,kind);
@@ -1114,7 +1121,7 @@ $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kin
     let searcher = extra_foot.data("searcher");
     if (!searcher) {
       let search_box = "Search: <input type='search' style='height:25px;min-height:25px;'>";
-      let searcher_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_searcher_foot";
+      let searcher_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_searcher_foot";
       searcher = $("<div style='display:inline-block;float:right;padding-top:10px;' id='"+searcher_id+"'>"+search_box+"</div>");
       extra_foot.append(searcher);
       let search_opt = {};
@@ -1193,7 +1200,7 @@ $.any.anyView.prototype.refreshListTableDataRow = function (tbody,data,id,type,k
   let row_has_data = this._rowHasData(d,filter);
   if (!row_has_data)
     return null; // Nothing to display
-  let tr_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tr";
+  let tr_id  = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tr";
   let tr = $("#"+tr_id);
   if (tr.length) {
     let td_ids = tr_id+" > td";
@@ -1232,7 +1239,7 @@ $.any.anyView.prototype.refreshListTableDataCells = function (tr,data,id,type,ki
       if (filter_key && filter_key.DISPLAY) {
         let disp_str = filter_key.DISPLAY == 2 || filter_key.DISPLAY == "2" ? "display:none;" : "";
         ++n;
-        let td_id    = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;
+        let td_id    = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;
         let odd_even = this.options.useOddEven ? n%2 ? "any-even" : "any-odd" : "";
         let class_id = "any-list-"+filter_id;
         let pln_str  = this.model.name_key
@@ -1293,13 +1300,13 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (tbody,data,id,type,k
           if (is_hidden && edit) {
             let tr = $("<tr "+display_class+"></tr>");
             let td = $("<td/><td colspan='2' class='td_item'>"+
-                       "<span id='"+this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_key.HTML_TYPE+"' class='pointer hiddenText'>"+
+                       "<span id='"+this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_key.HTML_TYPE+"' class='pointer hiddenText'>"+
                        filter_key.HEADER+
                        "</span>"+
                        "</td>");
             tr.append(td);
             tbody.append(tr);
-            let params   = { panel_id:   this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_key.HTML_TYPE,
+            let params   = { panel_id:   this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_key.HTML_TYPE,
                              start_text: filter_key.HEADER,
                              end_text:   filter_key.HEADER2,
                            };
@@ -1355,7 +1362,7 @@ $.any.anyView.prototype.refreshItemTableDataCells = function (tr,data,id,type,ki
 {
   let class_id_name = "any-item-name-"+filter_id;
   let class_id_val  = "any-item-val-"+filter_id;
-  let td_id         = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;
+  let td_id         = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;
   let td2           = $("<td "+             "class='any-td any-item-name "+class_id_name+"' "+pl_str+">"+filter_key.HEADER+"</td>");
   let td3           = $("<td id= '"+td_id+"' class='any-td any-item-val  "+class_id_val +"'></td>");
   tr.append(td2);
@@ -1367,7 +1374,7 @@ $.any.anyView.prototype.refreshItemTableDataCells = function (tr,data,id,type,ki
 
 $.any.anyView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
 {
-  let td_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_edit"; // First tool cell
+  let td_id  = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_edit"; // First tool cell
   if ($("#"+td_id).length)
     $("#"+td_id).remove();
   let td = $("<td id='"+td_id+"' class='any-td any-td-first'></td>");
@@ -1423,7 +1430,7 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,ki
 
 $.any.anyView.prototype.refreshTableDataLastCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
 {
-  let td_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_unedit"; // Last tool cell
+  let td_id  = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_unedit"; // Last tool cell
   if ($("#"+td_id).length)
     $("#"+td_id).remove();
   let td = $("<td id='"+td_id+"' class='any-td any-td-last'></td>");
@@ -1633,7 +1640,7 @@ $.any.anyView.prototype.createView = function (params)
   }
 
   // Create the view
-  let view_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_container";
+  let view_id  = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_container";
   let view_opt = this.getCreateViewOptions(model,view_id,parent,kind);
   let v_str = view_opt.grouping ? type+"View"+view_opt.grouping.capitalize() : type+"View";
   if (!window[v_str]) {
@@ -1683,7 +1690,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,view_id,parent,kin
     id:               view_id,
     main_div:         parent,
     view:             this,
-    base_id:          this.base_id,
+    id_base:          this.id_base,
     data_level:       this.data_level,
     grouping:         this.options.grouping,
     item_opening:     this.options.item_opening,
@@ -1704,6 +1711,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,view_id,parent,kin
     isSelectable:     this.options.isSelectable,
     itemLinkClicked:  this.options.itemLinkClicked,
     preselected:      this.options.isSelectable ? this.options.preselected : null,
+    group_id:         this.group_id, // Current group id (for table headers)
   };
 }; // getCreateViewOptions
 
@@ -1773,7 +1781,7 @@ $.any.anyView.prototype.getLabelStr = function (type,kind,id,val)
 $.any.anyView.prototype.getTextAreaStr = function (type,kind,id,val,edit,filter_id,id_str)
 {
   if (edit) {
-    let nameid = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;
+    let nameid = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;
     if (typeof tinyMCE !== "undefined" && tinyMCE.EditorManager.get(nameid) !== null &&
         id != "0" && id !== 0) { // TODO! id !== 0 is not the correct test, temporary solution
       tinymce.EditorManager.execCommand('mceRemoveEditor',true, nameid);
@@ -1960,7 +1968,7 @@ $.any.anyView.prototype.getCheckStr = function (type,kind,id,val,edit,filter_key
   else { // noneditable
     let the_id  = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
     let id_str  = ""+the_id;
-    let it_id = this.base_id+"_"+filter_key+"_"+id_str;
+    let it_id = this.id_base+"_"+filter_key+"_"+id_str;
     let check_class = (val == "1") ? "far fa-check-square" : "far fa-square";
     let title   = "Check if attended"; // TODO! Move to event class
     str = "<div class='itemUnedit inlineDiv pointer' "+
@@ -1992,7 +2000,7 @@ $.any.anyView.prototype.getListView = function (type,kind,id,val,edit,filter_key
   let list_model = new window[m_str](model_opt);
 
   // Create the list view
-  let list_view_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+list_type+"_list";
+  let list_view_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+list_type+"_list";
   let view_opt     = this.getListViewOptions(list_model,list_view_id,this);
   let v_str = view_opt.grouping ? list_type.capitalize()+"View"+view_opt.grouping.capitalize() : list_type.capitalize()+"View";
   if (!window[v_str]) {
@@ -2052,7 +2060,7 @@ $.any.anyView.prototype.getListViewOptions = function (model,view_id,view)
 $.any.anyView.prototype.getUploadStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
 {
   // Shows a clickable label that opens a file select dialog when pressed
-  let elem_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id; // element id
+  let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id; // element id
   let name    = data_item[type+"_name"];                                 // real file name from user
   let style   = "style='cursor:pointer;'";
   let title   = "title='Select a new file for upload'"; // TODO i18n
@@ -2113,7 +2121,7 @@ $.any.anyView.prototype._uploadClicked = function (event)
 
 $.any.anyView.prototype.getFileViewStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
 {
-  let elem_id  = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;   // element id
+  let elem_id  = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;   // element id
   let filename = data_item[filter_id] ? data_item[filter_id]          : ""; // local file name on server
   let fileurl  = filename             ? any_defs.uploadURL + filename : ""; // url of server file
   let style    = kind == "list" ? "style='text-align:center;'" : "";
@@ -2168,7 +2176,7 @@ $.any.anyView.prototype.refreshCloseItemButton = function (params)
   };
   let tit_str = i18n.button.buttonCancel;
   //let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.base_id+"_cancel_new_icon";
+  let btn_id  = this.id_base+"_cancel_new_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-tool-cancel any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2192,7 +2200,7 @@ $.any.anyView.prototype.refreshAddButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonAddToList.replace("%%",opt.type);
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_new_line_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_new_line_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-add any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2214,7 +2222,7 @@ $.any.anyView.prototype.refreshSelectButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonSelect;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_select_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_select_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let check_str = opt.checked
@@ -2239,7 +2247,7 @@ $.any.anyView.prototype.refreshEditButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonEdit;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_edit_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_edit_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-edit-icon any-icon pointer' title='"+tit_str+"'>"+
@@ -2264,7 +2272,7 @@ $.any.anyView.prototype.refreshUpdateButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonUpdate;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_update_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_update_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-update-icon any-icon pointer' title='"+tit_str+"'>"+
@@ -2289,7 +2297,7 @@ $.any.anyView.prototype.refreshRemoveButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonRemove;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_remove_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_remove_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-remove-icon any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2313,7 +2321,7 @@ $.any.anyView.prototype.refreshDeleteButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonDelete;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_delete_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_delete_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-delete-icon any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2337,7 +2345,7 @@ $.any.anyView.prototype.refreshCancelButton = function (parent,opt)
 {
   let tit_str = i18n.button.buttonCancel;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_cancel_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_cancel_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-cancel-icon any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2362,7 +2370,7 @@ $.any.anyView.prototype.refreshNewItemButton = function (parent,opt)
 {
   let tit_str = this.options.newButtonLabel ? this.options.newButtonLabel : i18n.button.buttonNew+" "+opt.type;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'> "+/*tit_str+*/"</span>" : "";
-  let btn_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_new_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_new_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-new-icon any-icon pointer' title='"+tit_str+"'>"+
@@ -2387,7 +2395,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (parent,opt)
 
   let tit_str = i18n.button.buttonAddLink+"...";
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.base_id+"_"+opt.type+"_add_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_add_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn     = $("<div id='"+btn_id+"' class='any-tool-addremove any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2403,7 +2411,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (parent,opt)
   if (!opt.edit)
     btn.hide();
 
-  let menu_id = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_link_dropdown";
+  let menu_id = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_link_dropdown";
   opt.element_id = menu_id;
   if ($("#"+menu_id).length)
     $("#"+menu_id).remove();
@@ -2449,7 +2457,7 @@ $.any.anyView.prototype.refreshLinkButton = function (options,onClickMethod)
   let sub     = options.type == options.link_type ? "sub"+options.type : options.link_type;
   let tit_str = sub; //i18n.button.buttonAdd+" "+sub;
   let btn_str = tit_str; //this.option("showButtonLabels") ? tit_str : "";
-  let btn_id  = this.base_id+"_"+options.type+"_"+options.link_type+"_link_icon";
+  let btn_id  = this.id_base+"_"+options.type+"_"+options.link_type+"_link_icon";
   let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-button pointer' title='"+tit_str+"'>"+
               "<div style='display:inline-block;width:20px;'><i class='"+options.link_icon+"'></i></div>..."+
               btn_str+
@@ -2895,10 +2903,10 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
     opt = this.current_edit;
     opt.edit = false;
   }
-  let prefix  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
+  let prefix  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
   let elem_id = opt.kind == "item"
-                ? this.base_id+"_"+opt.type+"_item_"+opt.id_str+"_tbody"
-                : this.base_id+"_"+opt.type+"_list_"+opt.id_str+"_tr";
+                ? this.id_base+"_"+opt.type+"_item_"+opt.id_str+"_tbody"
+                : this.id_base+"_"+opt.type+"_list_"+opt.id_str+"_tr";
   let elem = $("#"+elem_id);
   if (elem.length) {
     if (opt.kind != "item") {
@@ -2982,7 +2990,7 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
 $.any.anyView.prototype._toggleChecked = function (event)
 {
   let opt = event.data;
-  let chk_id  = this.base_id+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_select_icon .check";
+  let chk_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_select_icon .check";
   let check_str = (opt.checked)
                   ? "<i class='far fa-square'></i>"
                   : "<i class='far fa-check-square'></i>";
@@ -3068,7 +3076,7 @@ $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,
         let the_id    = Number.isInteger(parseInt(options.child_id)) ? parseInt(options.child_id) : options.child_id;
         let id_str    = "0_"+the_id;
         let data      = serverdata.data;
-        let item_id = view.base_id+"_"+options.type+"_"+kind+"_"+id_str+"_parent_id .itemSelect";
+        let item_id = view.id_base+"_"+options.type+"_"+kind+"_"+id_str+"_parent_id .itemSelect";
         let did_select = "selected='true'";
         $.each(data,function (id,item) {
           if (parseInt(id) != the_id) {
@@ -3130,19 +3138,19 @@ $.any.anyView.prototype.dbUpdate = function (event)
   for (let filter_id in filter) {
     if (filter.hasOwnProperty(filter_id)) {
       let val = null;
-      let input_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+" .itemEdit";
+      let input_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+" .itemEdit";
       if ($("#"+input_id).length)
         val = $("#"+input_id).val();
       else {
         // Send values marked as dirty to server even if they are not editable
-        input_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+"[dirty='true']";
+        input_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+"[dirty='true']";
         if ($("#"+input_id).length)
           val = $("#"+input_id).val();
       }
       if (val || val == "") {
         data_values[filter_id] = val;
         if (filter_id == "parent_id") {
-          let input_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+" .itemSelect option:selected";
+          let input_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+" .itemSelect option:selected";
           let pname = $("#"+input_id).text();
           data_values["parent_name"] = pname;
         }
@@ -3196,7 +3204,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
   if (item && item[id])
     delete item[id].is_new; // TODO! Neccessary?
   if (kind == "list" || kind == "select") {
-    let tr_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_tr";
+    let tr_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tr";
     let tr    = $("#"+tr_id);
     this.refreshListTableDataRow(tr,indata,id,type,kind,false,id_str,pdata,pid);
   }
@@ -3275,8 +3283,8 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
       let parent_view = options.parent_view ? options.parent_view : this;
       if (parent_view) {
         let list_type   = options.type;
-        let new_base_id = parent_view._createBaseId();
-        let ll_id       = new_base_id+"_"+list_type+"_link_list";
+        let new_id_base = parent_view._createIdBase();
+        let ll_id       = new_id_base+"_"+list_type+"_link_list";
         let ll_contents = $("<div id='"+ll_id+"'></div>");
 
         let select_list_view = parent_view.createView({ parent: ll_contents,
@@ -3287,7 +3295,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                                                         id_str: options.id_str,
                                                      });
         if (select_list_view) {
-          select_list_view.base_id = new_base_id;
+          select_list_view.id_base = new_id_base;
           select_list_view.options.showHeader      = false;
           select_list_view.options.showTableHeader = false;
           select_list_view.options.showTableFooter = false;
@@ -3301,7 +3309,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                 mod_opt.select.add(parseInt(val[select_list_view.model.id_key]));
             }
           select_list_view.model.dataInit(mod_opt);
-          let par_view_id = parent_view.base_id+"_"+self.type+"_head_0_data";
+          let par_view_id = parent_view.id_base+"_"+self.type+"_head_0_data";
           w3_modaldialog({
             parentId:    par_view_id,
             elementId:   "",
@@ -3414,7 +3422,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
                    : "from this list"; // TODO! i18n
       msgstr += " "+lfname;
     }
-    let msg = "<div class='any-confirm-remove-dialog' id='"+this.base_id+"_confirm_remove' style='padding:.8em;'>"+
+    let msg = "<div class='any-confirm-remove-dialog' id='"+this.id_base+"_confirm_remove' style='padding:.8em;'>"+
               msgstr+"?"+
               "</div>";
     let parent_id = this.options.top_view.element.attr("id");
@@ -3487,7 +3495,7 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
     let msgstr = event.data.message
                  ? event.data.message
                  : i18n.message.deleteByName.replace("%%", the_name);
-    let msg = "<div class='any-confirm-delete-dialog' id='"+this.base_id+"_confirm_delete' style='padding:1em;'>"+
+    let msg = "<div class='any-confirm-delete-dialog' id='"+this.id_base+"_confirm_delete' style='padding:1em;'>"+
               msgstr+
               "</div>";
     let parent_id = this.main_div.attr("id");
@@ -3567,7 +3575,7 @@ $.any.anyView.prototype.removeFromView = function (opt)
   let id_str = opt.id_str;
 
   if (kind == "list" || kind == "select") {
-    let elem_id = this.base_id+"_"+type+"_"+kind+"_"+id_str +"_tr";
+    let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str +"_tr";
     let tr = $("#"+elem_id);
     if (tr.length)
       tr.remove();
@@ -3582,7 +3590,7 @@ $.any.anyView.prototype.removeFromView = function (opt)
       for (let new_id in item[id].data) {
         if (item[id].data.hasOwnProperty(new_id)) {
           let the_id = Number.isInteger(parseInt(new_id)) ? parseInt(new_id) : new_id;
-          let elem_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_"+the_id+"_tr";
+          let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+the_id+"_tr";
           let tr      = $("#"+elem_id);
           if (tr.length)
             tr.remove();
@@ -3592,7 +3600,7 @@ $.any.anyView.prototype.removeFromView = function (opt)
   }
   else
   if (kind == "item") {
-    let elem_id = this.base_id+"_"+type+"_"+kind+"_"+id_str+"_container";
+    let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_container";
     let con = $("#"+elem_id);
     if (con.length && con.parent().length && con.parent().parent().length)
       con.parent().parent().remove();
