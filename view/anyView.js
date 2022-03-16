@@ -174,6 +174,8 @@ $.widget("any.anyView", {
 
     this.id_str   = "";
 
+    this.row_no   = 0;
+
     this.data_level = this.options.data_level
                       ? this.options.data_level
                       : 0;
@@ -480,6 +482,7 @@ $.any.anyView.prototype.refreshLoop = function (params)
   }
 
   this.current_edit = null;
+  this.row_no = 0;
 
   if (this.preRefresh)
     this.preRefresh(parent,data,id,type,kind,edit);
@@ -512,6 +515,7 @@ $.any.anyView.prototype.refreshLoop = function (params)
                                        id_str: id_str,
                                     });
               view.id_str = id_str; // Remember the id_str that identifies this view
+              view.row_no = 0; // We need to keep track of row numbers for pagination
             }
             if (view) {
               // Create or get main container for header and data containers
@@ -592,10 +596,6 @@ $.any.anyView.prototype.refreshOne = function (params)
   if (data && data[id] && data[id].data) {
     if ((kind == "list" || kind == "select"))
       ++this.options.indent_level;
-    if (data[id].num_results)
-      this.numResults = data[id].num_results;
-    else
-      delete this.numResults;
     let p_data = data;
     let p_id   = id;
     data = data[id].data;
@@ -799,6 +799,9 @@ $.any.anyView.prototype.refreshData = function (parent,data,id,type,kind,edit,id
   if (kind == "list" || kind == "select" || kind == "item") {
     let table = this.getOrCreateTable(data_div,type,kind,tab_id_str);
     if (table) {
+      let extra_foot = this.getOrCreateExtraFoot(table,type,kind,tab_id_str);
+      if (extra_foot)
+        this.refreshExtraFoot(extra_foot,data,id,type,kind,edit,id_str,pdata,pid);
       let thead = table.find("thead").length ? table.find("thead") : null;
       if (!thead) {
         thead = this.getOrCreateThead(table,type,kind,tab_id_str);
@@ -806,14 +809,28 @@ $.any.anyView.prototype.refreshData = function (parent,data,id,type,kind,edit,id
           this.refreshThead(thead,data,id,type,kind,edit,tab_id_str);
       }
       let tbody = this.getOrCreateTbody(table,type,kind,tab_id_str);
-      if (tbody)
-        this.refreshTbodyRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
+      if (tbody) {
+        let show_row = true;
+        if (this.options.showPaginator && this.numResults > this.options.itemsPerPage) {
+          if (extra_foot && extra_foot.length) {
+            let from = 0;
+            let num  = this.options.itemsPerPage;
+            let pager = extra_foot.data("pager");
+            if (pager) {
+              from = pager.options.itemsPerPage *(pager.currentPage() - 1);
+              num  = pager.options.itemsPerPage;
+              show_row = from <= this.row_no && this.row_no < from + num;
+            }
+          }
+        }
+        if (show_row)
+          this.refreshTbodyRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
+
+        ++this.row_no;
+      }
       let tfoot = this.getOrCreateTfoot(table,type,kind,tab_id_str);
       if (tfoot)
         this.refreshTfoot(tfoot,data,id,type,kind,edit,id_str,pdata,pid);
-      let extra_foot = this.getOrCreateExtraFoot(table,type,kind,tab_id_str);
-      if (extra_foot)
-        this.refreshExtraFoot(extra_foot,data,id,type,kind,edit,id_str,pdata,pid);
     }
   }
   return data_div;
@@ -1097,6 +1114,10 @@ $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kin
 {
   if (this.options.showPaginator) {
     // Initialize paging
+    if (data[id].num_results)
+      this.numResults = data[id].num_results;
+    else
+      this.numResults = this._countData(data);
     let pager = extra_foot.data("pager");
     if (!pager && this.numResults) {
       if (!extra_foot.anyPaginator) {
@@ -1138,6 +1159,20 @@ $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kin
   return extra_foot;
 }; // refreshExtraFoot
 
+$.any.anyView.prototype._countData = function (data)
+{
+  let n = 0;
+  if (data) {
+    for (let id in data) {
+      if (data.hasOwnProperty(id)) {
+        if (!id.startsWith("grouping"))
+          ++n;
+      }
+    }
+  }
+  return n;
+}; // _countData
+
 $.any.anyView.prototype._processSearch = function (event)
 {
   console.log("_processSearch");
@@ -1166,7 +1201,7 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     this.model.dbSearch(mod_opt);
   }
   else {
-    // TODO! Local pagination not implemented yet
+    this.refreshLoop();
   }
 }; // pageNumClicked
 
