@@ -827,27 +827,25 @@ class anyTable extends dbTable
     $limit   = $this->findLimit(); // Same limit for all groups
     $part_stmt = $this->dbPrepareSearchListStmt($skipOwnId);
 
-    if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
-      $this->setError($group_table->mError);
+    if (!$simple)
+      if (Parameters::get("lt") == "simple")
+         $simple = true;
+    $group_id = Parameters::get("group_id");
+    if ($group_id) {
+      // Build and execute the full statement for data from the given group
+      if ($group_id == "nogroup")
+        $group_id = null;
+      $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$group_id);
+      $stmt = $partial_stmt.$limit;
+      //elog("dbSearchList1:".$stmt);
+      if (!$stmt || !$this->query($stmt))
+        return false; // An error occured, abort
+      // Get the data
+      $s = $this->getRowData($data,"list",$flat,$simple);
+      $success = $success || $s;
+    } // else
     else {
-      if (!$simple)
-        if (Parameters::get("lt") == "simple")
-           $simple = true;
-      $group_id = Parameters::get("group_id");
-      if ($group_id) {
-        // Build and execute the full statement for data from the given group
-        if ($group_id == "nogroup")
-          $group_id = null;
-        $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$group_id);
-        $stmt = $partial_stmt.$limit;
-        //elog("dbSearchList1:".$stmt);
-        if (!$stmt || !$this->query($stmt))
-          return false; // An error occured, abort
-        // Get the data
-        $s = $this->getRowData($data,"list",$flat,$simple);
-        $success = $success || $s;
-      } // else
-      else {
+      if ($group_data && $group_data["group"]) {
         foreach ($group_data["group"] as $gid => $group) {
           // Build and execute the full statement
           $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$gid);
@@ -859,17 +857,17 @@ class anyTable extends dbTable
           $s = $this->getRowData($data,"list",$flat,$simple);
           $success = $success || $s;
         }
-        // Build and execute the full statement for ungrouped data
-        $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$group_id);
-        $stmt = $partial_stmt.$limit;
-        //elog("dbSearchList3:".$stmt);
-        if (!$stmt || !$this->query($stmt))
-          return false; // An error occured, abort
-        // Get the data
-        $s = $this->getRowData($data,"list",$flat,$simple);
-        $success = $success || $s;
-      } // else
-    }
+      }
+      // Build and execute the full statement for ungrouped data
+      $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$group_id);
+      $stmt = $partial_stmt.$limit;
+      //elog("dbSearchList3:".$stmt);
+      if (!$stmt || !$this->query($stmt))
+        return false; // An error occured, abort
+      // Get the data
+      $s = $this->getRowData($data,"list",$flat,$simple);
+      $success = $success || $s;
+    } // else
     if ($success) {
       // Search and get the meta data
       if (!$simple)
@@ -894,7 +892,7 @@ class anyTable extends dbTable
         $row = $this->getNext(true);
         if ($row && isset($row["num_results"])) {
           $this->mNumResults = $row["num_results"];
-          //error_log($this->mNumResults);
+          //elog("mNumResults:".$this->mNumResults);
         }
         else
           unset($this->mNumResults);
@@ -918,10 +916,12 @@ class anyTable extends dbTable
         $where .= " WHERE ".$this->mTableNameGroup.".group_id=".$gid." ";
     }
     else {
-      if ($where)
-        $where .= " AND $this->mTableNameGroupLink.group_id is null ";
-      else
-        $where .= " WHERE $this->mTableNameGroupLink.group_id is null ";
+      if ($this->tableExists($this->mTableNameGroupLink)) {
+        if ($where)
+          $where .= " AND $this->mTableNameGroupLink.group_id is null ";
+        else
+          $where .= " WHERE $this->mTableNameGroupLink.group_id is null ";
+      }
     }
     $order_by  = $this->findListOrderBy();
 
