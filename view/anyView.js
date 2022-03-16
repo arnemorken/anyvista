@@ -1028,7 +1028,7 @@ $.any.anyView.prototype.sortTable = function (event)
   let from = null;
   let num  = null;
   let table = $("#"+event.data.table_id);
-  if (table.length) {
+  if (table.length && this.options.showPaginator) {
     let extra_foot = table.parent().find(".table_extrafoot");
     if (extra_foot.length) {
       let pager = extra_foot.data("pager");
