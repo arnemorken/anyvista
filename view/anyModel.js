@@ -342,7 +342,7 @@ anyModel.prototype._dataInitSelect = function ()
  *
  * @return options
  */
- anyModel.prototype.dataInit = function (options)
+anyModel.prototype.dataInit = function (options)
 {
   // Remove encapsulation which may have been set by server
   if (options && options.JSON_CODE)
@@ -420,7 +420,7 @@ anyModel.prototype._dataInitSelect = function ()
  *
  * @throws {CALLBACK_MISSING} If `cbFunction` or `cbContext` are missing.
  */
- anyModel.prototype.cbSubscribe = function (cbFunction,cbContext)
+anyModel.prototype.cbSubscribe = function (cbFunction,cbContext)
 {
   if (!cbFunction || !cbContext)
     throw i18n.error.CALLBACK_MISSING;
@@ -1173,6 +1173,8 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                               Optional. Default: null.
  *        {string}   type:       Item's type.
  *                               Optional. Default: `this.type`.
+ *        {integer}  group_id:   Group id.
+ *                               Optional. Default: undefined.
  *        {boolean}  simple:
  *
  *        {Object}   fields:     An array of strings to be sent to the server, indicating which columns
@@ -1287,6 +1289,14 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += the_id
                ? "&"+id_key+"="+the_id // Item search
                : ""; // List search
+  let the_gid = Number.isInteger(parseInt(options.group_id)) && options.group_id >= 0
+                ? parseInt(options.group_id)
+                : options.group_id
+                  ? options.group_id
+                  : null;
+  param_str += the_gid
+               ? "&group_id="+the_gid // Search specific group
+               : ""; // Search all groups
   param_str += options.simple                       ? "&lt=" + "simple" : "";
   param_str += type == "group" && options.link_type ? "&group_type="+options.link_type : "";
   param_str += options.head                         ? "&head="+options.head : "";
