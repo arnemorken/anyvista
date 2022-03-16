@@ -1099,21 +1099,27 @@ $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kin
     // Initialize paging
     let pager = extra_foot.data("pager");
     if (!pager && this.numResults) {
-      pager = extra_foot.anyPaginator({ itemsPerPage: this.options.itemsPerPage,
-                                        onClick:      this.pageNumClicked,
-                                        context:      this, // onClick context
-                                        // Set in paginator options that are sent to onClick handler:
-                                        div_info: {
-                                          type:   type,
-                                          kind:   kind,
-                                          id_str: id_str,
-                                        },
-                                     });
-      pager.numItems(this.numResults);
-      pager.currentPage(this.options.currentPage);
-      extra_foot.data("pager",pager);
-      if (!pager.options.hideIfOne || this.numResults > pager.options.itemsPerPage)
-        $("#"+pager.container_id).css("display","inline-block");
+      if (!extra_foot.anyPaginator) {
+        console.warn("anyList: anyPaginator missing, cannot paginate data. ");
+      }
+      else
+      {
+        pager = extra_foot.anyPaginator({ itemsPerPage: this.options.itemsPerPage,
+                                          onClick:      this.pageNumClicked,
+                                          context:      this, // onClick context
+                                          // Set in paginator options that are sent to onClick handler:
+                                          div_info: {
+                                            type:   type,
+                                            kind:   kind,
+                                            id_str: id_str,
+                                          },
+                                       });
+        pager.numItems(this.numResults);
+        pager.currentPage(this.options.currentPage);
+        extra_foot.data("pager",pager);
+        if (!pager.options.hideIfOne || this.numResults > pager.options.itemsPerPage)
+          $("#"+pager.container_id).css("display","inline-block");
+      }
     }
   } // if
   if (this.numResults > this.options.showSearcher) {
