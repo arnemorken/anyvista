@@ -1,6 +1,6 @@
 /* jshint sub:true */
 /* jshint esversion: 9 */
-/* globals $,i18n,isFunction,w3_modaldialog,w3_modaldialog_close,tinyMCE,tinymce,isInt */
+/* globals $,i18n,isFunction,w3_modaldialog,w3_modaldialog_close,tinyMCE,tinymce */
 "use strict";
 /****************************************************************************************
  *
@@ -179,6 +179,8 @@ $.widget("any.anyView", {
     this.data_level = this.options.data_level
                       ? this.options.data_level
                       : 0;
+
+    this.id_str = "";
 
     if (this.model && this.options.subscribe_default) {
       if (this.options.reset_listeners)
@@ -426,24 +428,15 @@ $.any.anyView.prototype.onModelChange = function (model)
 $.any.anyView.prototype.refresh = function (params)
 {
   let parent = params && params.parent ? params.parent : null;
-  let data   = params && params.data   ? params.data   : null;
-  let id     = params && params.id     ? params.id     : null;
-  let type   = params && params.type   ? params.type   : null;
-  let kind   = params && params.kind   ? params.kind   : null;
-  let pdata  = params && params.pdata  ? params.pdata  : null;
-  let pid    = params && params.pid    ? params.pid    : null;
-  let id_str = params && params.id_str ? params.id_str : "";
-  let edit   = params && params.edit   ? params.edit   : null;
-
-  this.options.filters = this._createFilters(this.model); // Create filters if they dont exist yet
-  this.data_level = 0;
-
   if (!parent)
     parent = this.element;
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
-  parent.empty();
 
+  this.options.filters = this._createFilters(this.model); // Create filters if they dont exist yet
+  this.data_level = 0;
+
+  parent.empty();
   this.refreshLoop(params);
 
   // Bind key-back on tablets. TODO! Untested
@@ -476,11 +469,13 @@ $.any.anyView.prototype.refreshLoop = function (params)
     throw i18n.error.TOO_MUCH_RECURSION;
   }
 
-  if (this.must_empty) // Paginator button pressed
-    $("#"+this.options.id).empty();
-
   if (!data && this.model)
     data = this.model.data;
+
+  if (this.must_empty) { // Someone thinks we should remove data now
+    this.must_empty.empty();
+    this.must_empty = null;
+  }
 
   this.current_edit = null;
 
@@ -514,18 +509,25 @@ $.any.anyView.prototype.refreshLoop = function (params)
                                        kind:   curr_kind,
                                        id_str: id_str,
                                     });
+              view.id_str = id_str; // Remember the id_str that identifies this view
             }
             if (view) {
-              view.refreshOne({ parent: parent,
+              // Create or get main container for header and data containers
+              let con_div = view.getOrCreateMainContainer(parent,curr_type,curr_kind,view.id_str);
+              // Refresh the view for the given id
+              view.refreshOne({ parent: con_div,
                                 data:   data,
                                 id:     idc,
                                 type:   curr_type,
                                 kind:   curr_kind,
                                 edit:   edit,
-                                id_str: id_str,
+                                id_str: view.id_str,
                                 pdata:  pdata,
                                 pid:    pid,
                              });
+              // Clean up
+              if (!con_div.children().length)
+                con_div.remove();
             }
             prev_type = curr_type;
             prev_kind = curr_kind;
@@ -572,17 +574,15 @@ $.any.anyView.prototype.refreshOne = function (params)
     return null;
 
   let idx = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
-  let the_id_str = id_str || parseInt(id_str) == 0
+  let new_id_str = id_str || parseInt(id_str) == 0
                    ? id_str+"_"+idx
                    : ""+idx;
 
-  // Create or get main container for header and data containers
-  let con_div = this.getOrCreateMainContainer(parent,type,kind,id_str);
   // Refresh header
   if (kind == "head" || (data && data.grouping))
-    this.refreshHeader(con_div,data,id,type,kind,edit,the_id_str);
+    this.refreshHeader(parent,data,id,type,kind,edit,new_id_str);
   // Refresh data
-  let data_div = this.refreshData(con_div,data,id,type,kind,edit,the_id_str,pdata,pid);
+  let data_div = this.refreshData(parent,data,id,type,kind,edit,new_id_str,pdata,pid);
 
   // If we have subdata, make a recursive call
   if (data && data[id] && data[id].data) {
@@ -603,15 +603,10 @@ $.any.anyView.prototype.refreshOne = function (params)
                        pdata:  p_data,
                        pid:    p_id,
                        edit:   edit,
-                       id_str: the_id_str,
+                       id_str: new_id_str,
                      });
     if ((kind == "list" || kind == "select"))
       --this.options.indent_level;
-  }
-  // Clean up
-  if (con_div && !con_div.children().length) {
-    con_div.remove();
-    con_div = null;
   }
   return parent;
 }; // refreshOne
@@ -2160,7 +2155,6 @@ $.any.anyView.prototype.refreshCloseItemButton = function (params)
   let parent = params && params.parent ? params.parent : null;
   let type   = params && params.type   ? params.type   : null;
   let kind   = params && params.kind   ? params.kind   : null;
-  let id_str = params && params.id_str ? params.id_str : null;
 
   if (!parent || !type || !kind)
     return null;
@@ -2173,7 +2167,7 @@ $.any.anyView.prototype.refreshCloseItemButton = function (params)
     top_view: this.options.top_view,
   };
   let tit_str = i18n.button.buttonCancel;
-  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  //let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
   let btn_id  = this.base_id+"_cancel_new_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
