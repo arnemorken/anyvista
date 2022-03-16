@@ -156,10 +156,6 @@ $.widget("any.anyView", {
 
     this.element.addClass("any-data-view");
 
-    this.model = this.options.model
-                 ? this.options.model
-                 : null;
-
     if (this.options.id)
       this.element = $("#"+this.options.id);
     else
@@ -176,13 +172,17 @@ $.widget("any.anyView", {
                     ? this.options.id_base
                     : this._createIdBase();
 
+    this.id_str   = "";
+
     this.data_level = this.options.data_level
                       ? this.options.data_level
                       : 0;
 
-    this.id_str = "";
-
     this.group_id = this.options.group_id;
+
+    this.model = this.options.model
+                 ? this.options.model
+                 : null;
 
     if (this.model && this.options.subscribe_default) {
       if (this.options.reset_listeners)
@@ -1041,7 +1041,7 @@ $.any.anyView.prototype.sortTable = function (event)
         num  = this.options.itemsPerPage;
       }
     }
-    this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty (to avoid flashing)
+    this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty this view (to avoid flashing)
   }
   let mod_opt = { context:   this.model,
                   type:      type,
