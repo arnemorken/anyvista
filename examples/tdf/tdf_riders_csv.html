@@ -12,17 +12,19 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<script src="../../../../../../testserver/javascript/jquery/jquery-3.6.0.min.js"></script>
-<script src="../../../../../../testserver/javascript/jquery/jquery-widget-1.12.1.min.js"></script>
-<link  href="../../../../../../testserver/javascript/w3css/w3.css"           rel="stylesheet"/>
-<link  href="../../../../../../testserver/javascript/fontawesome/fa.min.css" rel="stylesheet"/>
-<link  href="../../view/skin/default/anylist.css"                            rel="stylesheet"/>
+<script src="../../../../../javascript/jquery/jquery-3.6.0.min.js"></script>
+<script src="../../../../../javascript/jquery/jquery-widget-1.12.1.min.js"></script>
+<link  href="../../../../../javascript/w3css/w3.css"           rel="stylesheet"/>
+<link  href="../../../../../javascript/fontawesome/fa.min.css" rel="stylesheet"/>
+<script src="../../../../../javascript/jquery.csv.js"></script>
+<link  href="../../../anyPaginator/anyPaginator.css"           rel="stylesheet"/>
+<script src="../../../anyPaginator/anyPaginator.js"></script>
+<link  href="../../view/skin/default/anylist.css"              rel="stylesheet"/>
 <script src="../../view/functions.js"></script>
 <script src="../../view/anyDefs.js"></script>
 <script src="../../view/anyStrings_en-GB.js"></script>
 <script src="../../view/anyModel.js"></script>
 <script src="../../view/anyView.js"></script>
-<script src="../../../../../../testserver/javascript/jquery.csv.js"></script>
 <style>
 body {
   margin-top: 0;
@@ -42,6 +44,9 @@ body {
 }
 .rider_name-th {
   width: 150px;
+}
+.any-paginator-container {
+  background:     white;
 }
 #any_content {
   font-family:  Arial, Helvetica, sans-serif;
@@ -232,10 +237,14 @@ function table2display()
     //
     // Get data from table
     //
+    let from = data_view.option("itemsPerPage") *(data_view.option("currentPage") - 1);
+    let num  = data_view.option("itemsPerPage");
     let self = data_model;
     data_model.dbSearch({
       head: show_header ? "TDF 2021 riders" : null,  // Add a header to the list
       grouping: false,
+      from: from,
+      num:  num,
       success: function(context,serverdata,options) {
         self.dbSearchSuccess(context,serverdata,options);
         //
