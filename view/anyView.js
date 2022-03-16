@@ -807,7 +807,7 @@ $.any.anyView.prototype.refreshData = function (parent,data,id,type,kind,edit,id
       }
       let tbody = this.getOrCreateTbody(table,type,kind,tab_id_str);
       if (tbody)
-        this.refreshTbody(tbody,data,id,type,kind,edit,id_str,pdata,pid);
+        this.refreshTbodyRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
       let tfoot = this.getOrCreateTfoot(table,type,kind,tab_id_str);
       if (tfoot)
         this.refreshTfoot(tfoot,data,id,type,kind,edit,id_str,pdata,pid);
@@ -1173,14 +1173,14 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
 //
 // Refresh a single table row
 //
-$.any.anyView.prototype.refreshTbody = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.anyView.prototype.refreshTbodyRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
 {
   if (kind == "list" || kind == "select")
     this.refreshListTableDataRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
   else
   if (kind == "item")
       this.refreshItemTableDataRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
-}; // refreshTbody
+}; // refreshTbodyRow
 
 $.any.anyView.prototype.refreshListTableDataRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
 {
