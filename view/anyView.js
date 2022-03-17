@@ -264,7 +264,8 @@ $.any.anyView.prototype._createIdBase = function ()
   return "idBase" + 1 + Math.floor(Math.random()*10000000); // Pseudo-unique id
 }; // _createIdBase
 
-$.any.anyView.prototype._createFilters = function (model)
+// Get filters, or create them if they dont exist yet
+$.any.anyView.prototype._getOrCreateFilters = function (model)
 {
   let type = model ? model.type : null;
   let f = this.options.filters;
@@ -292,7 +293,7 @@ $.any.anyView.prototype._createFilters = function (model)
   f[type] = filt.filters[type]; // Add new filters, but dont overwrite old ones
   filt = null;
   return f;
-}; // _createFilters
+}; // _getOrCreateFilters
 
 $.any.anyView.prototype._findType = function (data,otype,id)
 {
@@ -437,7 +438,7 @@ $.any.anyView.prototype.refresh = function (params)
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
 
-  this.options.filters = this._createFilters(this.model); // Create filters if they dont exist yet
+  this.options.filters = this._getOrCreateFilters(this.model);
   this.data_level = 0;
 
   parent.empty();
@@ -811,7 +812,7 @@ $.any.anyView.prototype.refreshData = function (parent,data,id,type,kind,edit,id
       let tbody = this.getOrCreateTbody(table,type,kind,tab_id_str);
       if (tbody) {
         let show_row = true;
-        if (this.options.showPaginator && this.numResults > this.options.itemsPerPage) {
+        if (this.options.showPaginator && this.num_results > this.options.itemsPerPage) {
           if (extra_foot && extra_foot.length) {
             let from = 0;
             let num  = this.options.itemsPerPage;
@@ -826,7 +827,7 @@ $.any.anyView.prototype.refreshData = function (parent,data,id,type,kind,edit,id
         if (show_row)
           this.refreshTbodyRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
 
-        ++this.row_no;
+        ++this.row_no; // We need to keep track of row numbers for pagination
       }
       let tfoot = this.getOrCreateTfoot(table,type,kind,tab_id_str);
       if (tfoot)
@@ -1076,6 +1077,7 @@ $.any.anyView.prototype.sortTable = function (event)
   } // if remote
   else {
     // TODO! Local sort not implemented yet
+    console.log("sortTable: Local sort not implemented. ");
   }
 }; // sortTable
 
@@ -1115,11 +1117,11 @@ $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kin
   if (this.options.showPaginator) {
     // Initialize paging
     if (data[id].num_results)
-      this.numResults = data[id].num_results;
+      this.num_results = data[id].num_results;
     else
-      this.numResults = this._countData(data);
+      this.num_results = this._countData(data);
     let pager = extra_foot.data("pager");
-    if (!pager && this.numResults) {
+    if (!pager && this.num_results) {
       if (!extra_foot.anyPaginator) {
         console.warn("anyList: anyPaginator missing, cannot paginate data. ");
       }
@@ -1135,15 +1137,15 @@ $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kin
                                             id_str: id_str,
                                           },
                                        });
-        pager.numItems(this.numResults);
+        pager.numItems(this.num_results);
         pager.currentPage(this.options.currentPage);
         extra_foot.data("pager",pager);
-        if (!pager.options.hideIfOne || this.numResults > pager.options.itemsPerPage)
+        if (!pager.options.hideIfOne || this.num_results > pager.options.itemsPerPage)
           $("#"+pager.container_id).css("display","inline-block");
       }
     }
   } // if
-  if (this.numResults > this.options.showSearcher) {
+  if (this.num_results > this.options.showSearcher) {
     // Initialize searching if results span more than one page
     let searcher = extra_foot.data("searcher");
     if (!searcher) {
@@ -1697,8 +1699,8 @@ $.any.anyView.prototype.createView = function (params)
       view = null;
     }
     else {
-      if (this.numResults)
-        view.numResults = this.numResults;
+      if (this.num_results)
+        view.num_results = this.num_results;
     }
   }
   catch (err) {
@@ -1727,7 +1729,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,view_id,parent,kin
 {
   return {
     model:            model,
-    filters:          this._createFilters(model), // Create filter if we don't already have one
+    filters:          this._getOrCreateFilters(model), // Create filter if we don't already have one
     id:               view_id,
     main_div:         parent,
     view:             this,
