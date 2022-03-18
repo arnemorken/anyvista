@@ -174,11 +174,10 @@ $.widget("any.anyView", {
 
     this.id_str   = "";
 
-    this.row_no   = 0;
-
-    this.data_level = this.options.data_level
-                      ? this.options.data_level
-                      : 0;
+    this.data_level  = this.options.data_level
+                       ? this.options.data_level
+                       : 0;
+    this.row_no      = 0;
 
     this.group_id = this.options.group_id;
 
@@ -407,14 +406,15 @@ $.any.anyView.prototype.onModelChange = function (model)
 
 /**
  * @method refresh
- * @description Displays data in a jQuery element.
- *              "Top-level" refresh: Resets filters etc. before displaying.
+ * @description Displays data in a DOM element. If an element matching the type/kind/id combination
+ *              is found in the DOM, that element will be used for display. Otherwise, new elements
+ *              will be created as needed.
  * @params {Object}  params  An object which may contain these elements:
  *
- *         {Object}  parent The element in which to display data. If not given, `this.element` is used.
- *                          Default: null.
- *         {Object}  data   The data to display. If not given, `this.model.data` is used.
- *                          Default: null.
+ *         {Object}  parent The element in which to display data.
+ *                          Default: `this.element`.
+ *         {Object}  data   The data to display / display from.
+ *                          Default: `this.model.data`.
  *         {string}  id     The id of the data to display. If given, only the item with the given id and its
  *                          subdata will be refreshed, otherwise the entire data structure will be refreshed.
  *                          Default: null.
@@ -422,9 +422,12 @@ $.any.anyView.prototype.onModelChange = function (model)
  *                          Default: null.
  *         {string}  kind   The kind of the data to display.
  *                          Default: null.
+ *         {Object}  pdata  The data on the level above `data`.
+ *                          Default: null.
+ *         {string}  pid    The id in `pdata` where `data` may be found (`pdata[pid] == data`).
+ *                          Default: null.
  *         {boolean} edit   If true, the item should be displayed as editable.
- *         {Object}  pdata
- *         {string}  pid
+ *                          Default: false.
  *
  * @return parent
  *
@@ -477,7 +480,8 @@ $.any.anyView.prototype.refreshLoop = function (params)
   if (!data && this.model)
     data = this.model.data;
 
-  if (this.must_empty) { // Someone thinks we should remove data now
+  if (this.must_empty) {
+    // Someone thinks we should remove data from the must_empty element.
     this.must_empty.empty();
     this.must_empty = null;
   }
@@ -964,7 +968,7 @@ $.any.anyView.prototype.refreshThead = function (thead,data,id,type,kind,edit,id
     return null;
   }
   let add_opt = null;
-  if (this.options.showButtonAdd && !this.options.isSelectable && (this.model.data && !this.model.data.groupingForId))
+  if (this.options.showButtonAdd && !this.options.isSelectable && (this.model.data && !this.model.data.grouping_for_id))
     add_opt = { data:       data,
                 id:         "new", // Find a new id
                 type:       type,
@@ -1033,7 +1037,7 @@ $.any.anyView.prototype.refreshThead = function (thead,data,id,type,kind,edit,id
 $.any.anyView.prototype.sortTable = function (event)
 {
   if (!event || !event.data) {
-    console.log("sortTable: Missing event or event.data. ");
+    console.log("sortTable: Missing event or event.data. "); // TODO! i18n
     return;
   }
   let type     = event.data.type;
@@ -3441,8 +3445,8 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   let id_str    = event.data.id_str;
   let pdata     = event.data.pdata;
   let pid       = event.data.pid;
-  let link_id   = pdata && pdata.groupingForId   ? pdata.groupingForId   : pid && pdata[pid] ? pid : null;
-  let link_type = pdata && pdata.groupingForType ? pdata.groupingForType : pid && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
+  let link_id   = pdata && pdata.grouping_for_id   ? pdata.grouping_for_id   : pid && pdata[pid] ? pid : null;
+  let link_type = pdata && pdata.grouping_for_type ? pdata.grouping_for_type : pid && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
   if (!data || !data[id]) {
     console.warn("Data not found ("+type+" id="+id+"). ");
     return null;

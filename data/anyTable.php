@@ -29,10 +29,10 @@
  *              '[key]':       '[value]',   // Optional. One or more key / value pairs.
  *              ...
  *              'data': {    // Optional
- *                'grouping':        'tabs',    // Optional
- *                'groupingForId':   '[id]',    // Optional, but mandatory if both 'grouping' and 'id' is specified.
- *                'groupingForType': '[type]',  // Optional, but mandatory if both 'grouping' and 'id' is specified.
- *                'groupingForName': '[value]', // Optional, but mandatory if both 'grouping' and 'id' is specified.
+ *                'grouping':          'tabs',    // Optional
+ *                'grouping_for_id':   '[id]',    // Optional, but mandatory if both 'grouping' and 'id' is specified.
+ *                'grouping_for_type': '[type]',  // Optional, but mandatory if both 'grouping' and 'id' is specified.
+ *                'grouping_for_name': '[value]', // Optional, but mandatory if both 'grouping' and 'id' is specified.
  *                '+[id]': { // Optional
  *                  'head' | 'item' | 'list': '[type]',         // Mandatory.
  *                  'parent_id':              '[id]',           // Optional. Contains the id of the level above, if of the same type.
@@ -762,9 +762,9 @@ class anyTable extends dbTable
                 $data[$idx]["data"] = array();
               if (isset($grouping) && $grouping)
                 $data[$idx]["data"]['grouping']      = $grouping;
-              $data[$idx]["data"]['groupingForType'] = $table->mListForType;
-              $data[$idx]["data"]['groupingForId']   = $table->mListForId;
-              $data[$idx]["data"]['groupingForName'] = $table->mListForName;
+              $data[$idx]["data"]["grouping_for_type"] = $table->mListForType;
+              $data[$idx]["data"]["grouping_for_id"]   = $table->mListForId;
+              $data[$idx]["data"]["grouping_for_name"] = $table->mListForName;
               $data[$idx]["data"]["plugin-".$plugin] = array();
               $data[$idx]["data"]["plugin-".$plugin]["head"] = $plugin;
               $data[$idx]["data"]["plugin-".$plugin][$table->getNameKey()] = $this->findDefaultItemListHeader($plugin,$data[$idx]["data"]["plugin-".$plugin],true);
@@ -886,7 +886,7 @@ class anyTable extends dbTable
         $count_stmt = "SELECT count(*) AS num_results FROM (".
                       $part_stmt.
                       ") AS dummy";
-        //elog("dbSearchList2:".$count_stmt);
+        //elog("dbSearchList4:".$count_stmt);
         if (!$this->query($count_stmt))
           return false; // An error occured
         $row = $this->getNext(true);
@@ -1534,8 +1534,7 @@ class anyTable extends dbTable
     if ($this->mType != "group") {
       if (isset($grouping) && $grouping && (!isset($this->mId) || $this->mId == "") && !isset($this->mListForId) && $group_table) {
         $this->dbAttachToGroups($group_table->tdata["group"],$data_tree);
-        if (isset($grouping) && $grouping)
-          $group_table->tdata["group"]['grouping'] = $grouping;
+        $group_table->tdata["group"]['grouping'] = $grouping;
         //vlog("buildGroupTreeAndAttach,tdata:",$group_table->tdata);
         $data = $group_table->tdata["group"];
       }

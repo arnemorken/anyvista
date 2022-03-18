@@ -149,10 +149,10 @@
  * A formal description of a data object:
  *
  *        [data_object] = {
- *          grouping:        [grouping_type], // Optional. Default: undefined.
- *          groupingForId:   [id],            // Optional. Default: undefined.
- *          groupingForType: [type],          // Optional. Default: undefined.
- *          groupingForName: [string],        // Optional. Default: undefined.
+ *          grouping:          [grouping_type], // Optional. Default: undefined.
+ *          grouping_for_id:   [id],            // Optional. Default: undefined.
+ *          grouping_for_type: [type],          // Optional. Default: undefined.
+ *          grouping_for_name: [string],        // Optional. Default: undefined.
  *          head | item | list: "[type]",     // Optional, is overridden by a head|item|list specification on level below.
  *          [id]: {                           // Mandatory.
  *            head | item | list: "[type]",   // Optional, overrides a head|item|list specification on level above.
