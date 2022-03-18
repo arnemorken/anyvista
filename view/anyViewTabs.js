@@ -52,10 +52,10 @@ $.any.anyViewTabs.prototype.createView = function (params)
   return view;
 }; // createView
 
-$.any.anyViewTabs.prototype.refresh = function (parent,data,id,type,kind,edit,pdata,pid)
+$.any.anyViewTabs.prototype.refresh = function (params)
 {
   this.tabs_list = {};
-  $.any.anyView.prototype.refresh.call(this,parent,data,id,type,kind,edit,pdata,pid);
+  $.any.anyView.prototype.refresh.call(this,params);
 }; // refresh
 
 $.any.anyViewTabs.prototype.refreshLoop = function (params)
