@@ -1,6 +1,6 @@
 /* jshint sub:true */
 /* jshint esversion: 9 */
-/* globals $,i18n,isFunction,w3_modaldialog,w3_modaldialog_close,tinyMCE,tinymce */
+/* globals $,i18n,any_defs,isFunction,w3_modaldialog,w3_modaldialog_close,tinyMCE,tinymce */
 "use strict";
 /****************************************************************************************
  *
@@ -294,7 +294,7 @@ $.any.anyView.prototype._getOrCreateFilters = function (model)
   return f;
 }; // _getOrCreateFilters
 
-$.any.anyView.prototype._findType = function (data,otype,id)
+$.any.anyView.prototype._findType = function (data,id,otype)
 {
   let type = null;
   if (data) {
@@ -315,7 +315,7 @@ $.any.anyView.prototype._findType = function (data,otype,id)
   return type;
 }; // _findType
 
-$.any.anyView.prototype._findKind = function (data,okind,id)
+$.any.anyView.prototype._findKind = function (data,id,okind)
 {
   let kind = null;
   if (data) {
@@ -415,8 +415,9 @@ $.any.anyView.prototype.onModelChange = function (model)
  *                          Default: `this.element`.
  *         {Object}  data   The data to display / display from.
  *                          Default: `this.model.data`.
- *         {string}  id     The id of the data to display. If given, only the item with the given id and its
- *                          subdata will be refreshed, otherwise the entire data structure will be refreshed.
+ *         {string}  id     The id of the data to display. If given, only the matching item (`data[id]`)
+ *                          and its subdata will be refreshed, otherwise the entire data structure will
+ *                          be refreshed.
  *                          Default: null.
  *         {string}  type   The type of the data to display.
  *                          Default: null.
@@ -458,9 +459,9 @@ $.any.anyView.prototype.refreshLoop = function (params)
 {
   let parent = params && params.parent ? params.parent : null;
   let data   = params && params.data   ? params.data   : null;
-  let id     = params && params.id     ? params.id     : null;
-  let type   = params && params.type   ? params.type   : null;
-  let kind   = params && params.kind   ? params.kind   : null;
+  let id     = params && params.id     ? params.id     : "";
+  let type   = params && params.type   ? params.type   : "";
+  let kind   = params && params.kind   ? params.kind   : "";
   let pdata  = params && params.pdata  ? params.pdata  : null;
   let pid    = params && params.pid    ? params.pid    : null;
   let id_str = params && params.id_str ? params.id_str : "";
@@ -507,8 +508,9 @@ $.any.anyView.prototype.refreshLoop = function (params)
     for (let idc in data) {
       if (data.hasOwnProperty(idc)) {
         if (view && !idc.startsWith("grouping")) {
-          let curr_type = view._findType(data,prev_type,idc);
-          let curr_kind = view._findKind(data,prev_kind,idc);
+          // Find the type and kind of the current data item
+          let curr_type = view._findType(data,idc,prev_type);
+          let curr_kind = view._findKind(data,idc,prev_kind);
           if (curr_type && curr_kind) {
             if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type)) {
               // New type to display, so create new view
@@ -576,8 +578,8 @@ $.any.anyView.prototype.refreshOne = function (params)
   let parent = params && params.parent ? params.parent : null;
   let data   = params && params.data   ? params.data   : null;
   let id     = params && params.id     ? params.id     : null;
-  let type   = params && params.type   ? params.type   : this._findType(data,null,id);
-  let kind   = params && params.kind   ? params.kind   : this._findKind(data,null,id);
+  let type   = params && params.type   ? params.type   : this._findType(data,id,null);
+  let kind   = params && params.kind   ? params.kind   : this._findKind(data,id,null);
   let pdata  = params && params.pdata  ? params.pdata  : null;
   let pid    = params && params.pid    ? params.pid    : null;
   let id_str = params && params.id_str ? params.id_str : "";
@@ -780,7 +782,7 @@ $.any.anyView.prototype.refreshHeaderEntry = function (header_div,data,id,filter
   if (!header_div || !d)
     return null;
   let stylestr = (n==0) ? "style='display:inline-block;'" : "";
-  let div = $("<div "+stylestr+" class='"+filter_id+"'>"+d[filter_id]+"</div>");
+  let div = $("<div class='"+filter_id+"' "+stylestr+">"+d[filter_id]+"</div>");
   header_div.append(div);
   return div;
 }; // refreshHeaderEntry
@@ -1654,7 +1656,7 @@ $.any.anyView.prototype.createView = function (params)
 {
   let parent = params && params.parent ? params.parent : null;
   let data   = params && params.data   ? params.data   : null;
-  let id     = params && params.id     ? params.id     : null;
+  let id     = params && params.id     ? params.id     : "";
   let type   = params && params.type   ? params.type   : null;
   let kind   = params && params.kind   ? params.kind   : null;
   let id_str = params && params.id_str ? params.id_str : "";
@@ -1665,8 +1667,8 @@ $.any.anyView.prototype.createView = function (params)
     return null;
   if (!data)
     return null;
-  type = type ? type : this._findType(data,null,id);
-  kind = kind ? kind : this._findKind(data,null,id);
+  type = type ? type : this._findType(data,id,null);
+  kind = kind ? kind : this._findKind(data,id,null);
   if (!type || !kind)
     return null;
 
