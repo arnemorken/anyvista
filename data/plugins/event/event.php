@@ -51,9 +51,5 @@ var view = new eventViewTabs({ id:           "<?php print $gViewArea;?>",
                                event_date_start: "<?php echo Parameters::get('event_date_start'); ?>",
                                event_date_end:   "<?php echo Parameters::get('event_date_end'); ?>",
                             });
-view.refresh({ parent: null,
-               data:   null,
-               id:     null,
-               type:   "event",
-            });
+view.refresh();
 </script>

@@ -48,9 +48,5 @@ var view = new groupViewTabs({ id:          "<?php print $gViewArea;?>",
                                isRemovable: false,
                                edit:        is_new,
                             });
-view.refresh({ parent: null,
-               data:   null,
-               id:     null,
-               type:   "group",
-            });
+view.refresh();
 </script>
