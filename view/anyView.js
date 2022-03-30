@@ -759,7 +759,8 @@ $.any.anyView.prototype.refreshHeader = function (parent,data,id,type,kind,edit,
 //
 $.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,id_str,haveData,doNotEmpty)
 {
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_header";
+  if (!parent)
+    return null;
   let header_div = $("#"+div_id);
   if (header_div.length) {
     if (!doNotEmpty && header_div && header_div.length)
@@ -782,6 +783,8 @@ $.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,
 //
 $.any.anyView.prototype.refreshHeaderEntry = function (header_div,data,id,filter_id,n)
 {
+  if (!header_div)
+    return null;
   let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null; // TODO! Do this other places in the code too
   if (!header_div || !d)
     return null;
@@ -796,6 +799,9 @@ $.any.anyView.prototype.refreshHeaderEntry = function (header_div,data,id,filter
 //
 $.any.anyView.prototype.refreshData = function (parent,data,id,type,kind,edit,id_str,pdata,pid)
 {
+  if (!data_div || !table)
+    return null;
+
   // Create or get container for data
   let tab_id_str = id_str;
   if (kind == "list" || kind == "select") {
@@ -961,6 +967,8 @@ $.any.anyView.prototype.getOrCreateExtraFoot = function (table,type,kind,id_str)
 //
 $.any.anyView.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_str)
 {
+  if (!thead)
+    return null;
   if (!this.options.filters) {
     this.model.error = type.capitalize()+" "+kind+" "+i18n.error.FILTERS_MISSING;
     console.error(this.model.error);
@@ -1124,6 +1132,8 @@ $.any.anyView.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,id
 //
 $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kind,edit,id_str)
 {
+  if (!extra_foot)
+    return null;
   if (this.options.showPaginator) {
     // Initialize paging
     if (data[id].num_results)
