@@ -1430,7 +1430,7 @@ class anyTable extends dbTable
   } // getRowMetaData
 
   //
-  // Build the group tree. List data are grouped, item data are not.
+  // Build the data group tree for all groups. List data are grouped, item data are not.
   //
   protected function buildGroupTreeAndAttach(&$data,$kind,$group_table,$group_data)
   {
@@ -1438,24 +1438,6 @@ class anyTable extends dbTable
       return;
 
     //vlog("buildGroupTreeAndAttach,data before building tree:",$data);
-    $is_list = (!isset($this->mId) || $this->mId == "");
-    /* TODO! Page links not implemented yet
-    //
-    // Initialize page links
-    //
-    if ($is_list) {
-      $from = Parameters::get("from") !== null && Parameters::get("from") !== "" ? Parameters::get("from") : 0;
-      $to   = Parameters::get("to")   !== null && Parameters::get("to")   !== "" ? Parameters::get("to")   : $this->mPageSize;
-      foreach ($data as $gidx => $grp) {
-        $data[$gidx]["page_links"]["from"] = $from;
-        $data[$gidx]["page_links"]["to"]   = $to;
-        $data[$gidx]["page_links"]["num"]  = 0;
-      }
-    }
-    */
-    //
-    // Build data tree for all groups
-    //
     $grouping = Parameters::get("grouping");
     $this->mRecDepth = 0;
     if ($kind == "item") {
@@ -1470,7 +1452,6 @@ class anyTable extends dbTable
       $data_tree = array();
       foreach ($data as $gidx => $grp) {
         if (!empty($data[$gidx])) {
-          $num = 0; // Used by page links
           $ngidx = is_int($gidx) ? "+".$gidx : $gidx;
           $data_tree[$ngidx] = array();
           if ($grouping) {
@@ -1512,16 +1493,12 @@ class anyTable extends dbTable
                 $data_tree[$ngidx][$this->mNameKey] = null;
             }
           } // if grouping
+          $num = 0; // Used by page links
           $data_tree[$ngidx]["data"] = array();
           $dt = &$data_tree[$ngidx]["data"];
           $dt = $this->buildDataTree($data[$gidx],null,false,$num);
           if ($dt === null)
             unset($dt);
-          /* TODO! Page links not implemented yet
-          $dt["page_links"]["from"] = $data[$gidx]["page_links"]["from"];
-          $dt["page_links"]["to"]   = $data[$gidx]["page_links"]["to"];
-          $dt["page_links"]["num"]  = $num-1;
-          */
         }
       }
     }
@@ -1543,8 +1520,10 @@ class anyTable extends dbTable
       //vlog("buildGroupTreeAndAttach,data1:",$data);
     }
     else {
+      $is_list = (!isset($this->mId) || $this->mId == "");
       if ($is_list && $data_tree) {
-        if ($is_list && !isset($this->mListForType)) { // Add the "other" category
+        if ($is_list && !isset($this->mListForType)) {
+          // Add the "other" category
           if (isset($data_tree["group"]) && $data_tree["group"] !== null) {
             foreach ($data_tree["group"] as $gidx => &$group) {
               if (isset($data_tree["group"][$gidx]["group"])) {
@@ -1564,7 +1543,7 @@ class anyTable extends dbTable
   } // buildGroupTreeAndAttach
 
   // Overridden in group table
-  protected function dbSearchGroupInfo($type=null)
+  protected function dbSearchGroupInfo($type=null,$group_id=null)
   {
     // Get group tree and append data to it
     $num = 0;
@@ -1608,33 +1587,34 @@ class anyTable extends dbTable
           $pid = $subdata["parent_id"];
           unset($subdata["parent_id"]);
         }
-        if (!isset($subdata["parent_id"]))
-          $subdata["parent_id"] = NULL;
-        if ($subdata["parent_id"] == $parentId) {
-          if ($getPageLinks && $subdata["parent_id"] === null) {
-            $num++; // "Top-level" item, so we count it
-          }
-          if (!$getPageLinks || ($num > $flatdata["page_links"]["from"] && $num <= $flatdata["page_links"]["to"])) {
-            if (isset($subdata[$id_name]) && $subdata[$id_name] != "")
-              $children = $this->buildDataTree($flatdata,$subdata[$id_name],$getPageLinks,$num);
-            else
-              $children = null;
-            if ($this->mRecDepth > $this->mLastNumRows + $this->mRecMax)
-              break; // Break recursion
-            if ($children) {
-              $subdata["data"] = $children;
+        if (is_array($subdata)) {
+          if (!isset($subdata["parent_id"]))
+            $subdata["parent_id"] = NULL;
+          if ($subdata["parent_id"] == $parentId) {
+            if ($getPageLinks && $subdata["parent_id"] === null) {
+              $num++; // "Top-level" item, so we count it
             }
-            if ($parent_not_in_group)
+            if (!$getPageLinks || ($num > $flatdata["page_links"]["from"] && $num <= $flatdata["page_links"]["to"])) {
+              if (isset($subdata[$id_name]) && $subdata[$id_name] != "")
+                $children = $this->buildDataTree($flatdata,$subdata[$id_name],$getPageLinks,$num);
+              else
+                $children = null;
+              if ($this->mRecDepth > $this->mLastNumRows + $this->mRecMax)
+                break; // Break recursion
+              if ($children) {
+                $subdata["data"] = $children;
+              }
+              if ($parent_not_in_group)
+                $subdata["parent_id"] = $pid;
+              $retval[$idx] = $subdata;
+              unset($subdata);
+            } // if getPageLinks
+          } // if subdata
+          else {
+            if ($pid != null)
               $subdata["parent_id"] = $pid;
-            $retval[$idx] = $subdata;
-            unset($subdata);
-          } // if getPageLinks
-        } // if subdata
-        else {
-          if ($pid != null)
-            $subdata["parent_id"] = $pid;
-        }
-      } // if page_links
+          }
+        } // if is_array
     } // foreach
     return $retval;
   } // buildDataTree
@@ -1661,14 +1641,6 @@ class anyTable extends dbTable
               foreach ($data_tree[$idx]["data"] as $id => $obj)
                 $group_tree[$gid]["data"][$id] = $data_tree[$idx]["data"][$id];
             }
-            /* TODO! Page links not implemented yet
-            if (isset($data_tree[$idx]["page_links"]) && $data_tree[$idx]["page_links"] != "") {
-              $group_tree[$gid]["page_links"]["from"] = $data_tree[$idx]["page_links"]["from"];
-              $group_tree[$gid]["page_links"]["to"]   = $data_tree[$idx]["page_links"]["to"];
-              $group_tree[$gid]["page_links"]["num"]  = $data_tree[$idx]["page_links"]["num"];
-              unset($data_tree[$idx]["page_links"]);
-            }
-            */
           }
         } // if group_tree
         else
