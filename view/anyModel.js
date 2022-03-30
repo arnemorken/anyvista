@@ -979,12 +979,12 @@ anyModel.prototype.dataUpdateLinkList = function (options)
             indata.grouping = this.grouping ? this.grouping : "tabs";
             indata.grouping_for_id   = this.id;
             indata.grouping_for_type = this.type;
-            let obj = this.dataInsert({ data:   this.data,
-                                        id:     ins_id,
-                                        type:   options.type,
-                                        indata: item[id] ? item[id] : item["+"+id],
-                                        new_id: id,
-                                     });
+            this.dataInsert({ data:   this.data,
+                              id:     ins_id,
+                              type:   options.type,
+                              indata: item[id] ? item[id] : item["+"+id],
+                              new_id: id,
+                           });
           }
           else
             console.warn("Couldn't add item for "+type+" "+id+" (not found in indata). "); // TODO i18n
@@ -1297,7 +1297,7 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += the_gid
                ? "&group_id="+the_gid // Search specific group
                : ""; // Search all groups
-  param_str += options.simple                       ? "&lt=" + "simple" : "";
+  param_str += options.simple                       ? "&lt=simple" : "";
   param_str += type == "group" && options.link_type ? "&group_type="+options.link_type : "";
   param_str += options.head                         ? "&head="+options.head : "";
   param_str += options.grouping                     ? "&grouping="+options.grouping : "";
