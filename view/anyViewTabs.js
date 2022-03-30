@@ -1,6 +1,6 @@
 /* jshint sub:true */
 /* jshint esversion: 6 */
-/* globals $,i18n */
+/* globals $,i18n,anyView */
 "use strict";
 /****************************************************************************************
  *
@@ -27,11 +27,11 @@ $.widget("any.anyViewTabs", $.any.anyView, {
 
   // "Constructor"
   _create: function() {
-    this.element.addClass("any-datatabs-view");
     this.tabs_list      = {};
     this.first_div_id   = null;
     this.current_div_id = null;
     this._super();
+    this.element.addClass("any-datatabs-view");
   },
 
   _destroy: function() {
