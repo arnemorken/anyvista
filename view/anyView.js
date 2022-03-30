@@ -442,7 +442,6 @@ $.any.anyView.prototype.refresh = function (params)
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
 
-  this.options.filters = this._getOrCreateFilters(this.model);
   this.data_level = 0;
 
   parent.empty();
@@ -497,11 +496,17 @@ $.any.anyView.prototype.refreshLoop = function (params)
     if (kind == "head")
       ++this.data_level;
 
+    // Find the filters to use
+    this.options.filters = this._getOrCreateFilters(this.model);
+
     // Refresh top close button for item
     if (!this.options.isSelectable && this.options.item_opening && id_str != "")
       this.refreshCloseItemButton(params);
 
-    // Refresh header and data for all entries
+    // Create or get main container for header and data
+    let con_div = this.getOrCreateMainContainer(parent,type,kind,con_id_str);
+
+    // Loop over all entries and refresh
     let view = this;
     let prev_type = type;
     let prev_kind = kind;
@@ -525,9 +530,7 @@ $.any.anyView.prototype.refreshLoop = function (params)
               view.row_no = 0; // We need to keep track of row numbers for pagination
             }
             if (view) {
-              // Create or get main container for header and data containers
-              let con_div = view.getOrCreateMainContainer(parent,curr_type,curr_kind,view.id_str);
-              // Refresh the view for the given id
+            // Refresh a single list row or a single item
               if (curr_type == "group")
                 view.group_id = idc;
               view.refreshOne({ parent: con_div,
@@ -540,16 +543,17 @@ $.any.anyView.prototype.refreshLoop = function (params)
                                 pdata:  pdata,
                                 pid:    pid,
                              });
-              // Clean up
-              if (!con_div.children().length)
-                con_div.remove();
-            }
+            } // if view
             prev_type = curr_type;
             prev_kind = curr_kind;
-          }
+          } // if view
         }
-      }
+      } // for
     }
+    // Clean up
+    if (!con_div.children().length)
+      con_div.remove();
+
     if (kind == "head")
       --this.data_level;
   } // if data
