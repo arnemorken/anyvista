@@ -1775,6 +1775,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,view_id,parent,kin
     itemLinkClicked:  this.options.itemLinkClicked,
     preselected:      this.options.isSelectable ? this.options.preselected : null,
     group_id:         this.group_id, // Current group id (for table headers)
+    currentPage:      this.options.currentPage,
   };
 }; // getCreateViewOptions
 
