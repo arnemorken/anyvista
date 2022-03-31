@@ -815,40 +815,37 @@ $.any.anyView.prototype.refreshData = function (parent,data,id,type,kind,edit,id
   let data_div = this.getOrCreateDataContainer(parent,type,kind,tab_id_str,have_data);
   if (kind == "list" || kind == "select" || kind == "item") {
     let table = this.getOrCreateTable(data_div,type,kind,tab_id_str);
-    if (table) {
-      let extra_foot = this.getOrCreateExtraFoot(table,type,kind,tab_id_str);
-      if (extra_foot)
-        this.refreshExtraFoot(extra_foot,data,id,type,kind,edit,id_str,pdata,pid);
-      let thead = table.find("thead").length ? table.find("thead") : null;
-      if (!thead) {
-        thead = this.getOrCreateThead(table,type,kind,tab_id_str);
-        if (thead)
-          this.refreshThead(thead,data,id,type,kind,edit,tab_id_str);
-      }
-      let tbody = this.getOrCreateTbody(table,type,kind,tab_id_str);
-      if (tbody) {
-        let show_row = true;
-        if (this.options.showPaginator && this.num_results > this.options.itemsPerPage) {
-          if (extra_foot && extra_foot.length) {
-            let from = 0;
-            let num  = this.options.itemsPerPage;
-            let pager = extra_foot.data("pager");
-            if (pager) {
-              from = pager.options.itemsPerPage *(pager.currentPage() - 1);
-              num  = pager.options.itemsPerPage;
-              show_row = from <= this.row_no && this.row_no < from + num;
-            }
+    let extra_foot = this.getOrCreateExtraFoot(table,type,kind,tab_id_str);
+    if (extra_foot)
+      this.refreshExtraFoot(extra_foot,data,id,type,kind,edit,id_str,pdata,pid);
+    let thead = table.find("thead").length ? table.find("thead") : null;
+    if (!thead) {
+      thead = this.getOrCreateThead(table,type,kind,tab_id_str);
+      if (thead)
+        this.refreshThead(thead,data,id,type,kind,edit,tab_id_str);
+    }
+    let tbody = this.getOrCreateTbody(table,type,kind,tab_id_str);
+    if (tbody) {
+      let show_row = true;
+      if (this.options.showPaginator && this.num_results > this.options.itemsPerPage) {
+        if (extra_foot && extra_foot.length) {
+          let from = 0;
+          let num  = this.options.itemsPerPage;
+          let pager = extra_foot.data("pager");
+          if (pager) {
+            from = pager.options.itemsPerPage *(pager.currentPage() - 1);
+            num  = pager.options.itemsPerPage;
+            show_row = from <= this.row_no && this.row_no < from + num;
           }
         }
-        if (show_row)
-          this.refreshTbodyRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
-
-        ++this.row_no; // We need to keep track of row numbers for pagination
       }
-      let tfoot = this.getOrCreateTfoot(table,type,kind,tab_id_str);
-      if (tfoot)
-        this.refreshTfoot(tfoot,data,id,type,kind,edit,id_str,pdata,pid);
+      if (show_row)
+        this.refreshTbodyRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
+       ++this.row_no; // We need to keep track of row numbers for pagination
     }
+    let tfoot = this.getOrCreateTfoot(table,type,kind,tab_id_str);
+    if (tfoot)
+      this.refreshTfoot(tfoot,data,id,type,kind,edit,id_str,pdata,pid);
   }
   return data_div;
 }; // refreshData
@@ -951,12 +948,12 @@ $.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
 //
 $.any.anyView.prototype.getOrCreateExtraFoot = function (table,type,kind,id_str)
 {
-  if (!type || !kind || (kind != "list" && kind != "select"))
+  if (!table || !type || !kind || (kind != "list" && kind != "select"))
     return null;
   let foot_div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_extrafoot";
   let foot_div = $("#"+foot_div_id); // Can we reuse extrafoot?
   if (!foot_div.length) {
-    foot_div = $("<div class='table_extrafoot' id='"+foot_div_id+"'></div>");
+    foot_div = $("<div id='"+foot_div_id+"' class='table_extrafoot'></div>");
     foot_div.insertAfter(table);
   }
   return foot_div;
@@ -1150,6 +1147,7 @@ $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kin
         pager = extra_foot.anyPaginator({ itemsPerPage: this.options.itemsPerPage,
                                           onClick:      this.pageNumClicked,
                                           context:      this, // onClick context
+                                          hideGoto:     true,
                                           // Set in paginator options that are sent to onClick handler:
                                           div_info: {
                                             type:   type,
