@@ -818,9 +818,10 @@ class anyTable extends dbTable
     // However, if a group_id is specified, we search only in that group.
 
     // Get group data
+    $group_id    = Parameters::get("group_id");
     $group_table = anyTableFactory::create("group",$this);
     $group_data = $group_table
-                  ? $group_table->dbSearchGroupInfo($this->mType)
+                  ? $group_table->dbSearchGroupInfo($this->mType,$group_id)
                   : null;
     //vlog("dbSearchList,group_data:",$group_data);
     $success = false;
@@ -830,7 +831,6 @@ class anyTable extends dbTable
     if (!$simple)
       if (Parameters::get("lt") == "simple")
          $simple = true;
-    $group_id = Parameters::get("group_id");
     if ($group_id) {
       // Build and execute the full statement for data from the given group
       if ($group_id == "nogroup")
@@ -868,6 +868,7 @@ class anyTable extends dbTable
       $s = $this->getRowData($data,"list",$flat,$simple);
       $success = $success || $s;
     } // else
+
     if ($success) {
       // Search and get the meta data
       if (!$simple)
@@ -1126,9 +1127,10 @@ class anyTable extends dbTable
         $this->dbSearchMeta($data,"list",true); // TODO! WHERE wp_usermeta.user_id IN ({ids})
 
       // Get group data
+      $group_id    = Parameters::get("group_id");
       $group_table = anyTableFactory::create("group",$this);
       $group_data = $group_table
-                    ? $group_table->dbSearchGroupInfo($this->mType)
+                    ? $group_table->dbSearchGroupInfo($this->mType,$group_id)
                     : null;
       //vlog("dbSearchListFromIds,group_data:",$group_data);
       if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
