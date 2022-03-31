@@ -24,7 +24,7 @@ jsFiddle examples coming soon.
 
 The library is currently in the last stages of development. Find it at Github: https://github.com/arnemorken/anylist/.
 
-**First beta release planned for March 2022.**
+**First beta release planned for April 2022.**
 
 # Usage
 
