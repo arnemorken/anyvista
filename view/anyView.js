@@ -175,11 +175,9 @@ $.widget("any.anyView", {
                     ? this.options.id_base
                     : this._createIdBase();
 
-    this.id_str   = "";
-
-    this.data_level  = this.options.data_level
-                       ? this.options.data_level
-                       : 0;
+    this.data_level = this.options.data_level
+                      ? this.options.data_level
+                      : 0;
 
     this.group_id = this.options.group_id; // TODO! Can we get rid of this?
 
@@ -387,7 +385,7 @@ $.any.anyView.prototype.showMessages = function (modelOrString)
 /**
  * @method onModelChange
  * @description Default callback method.
- *              Calls `this.refreshLoop` to refresh the view after model has changed.
+ *              Calls `this.refresh` to refresh the view after model has changed.
  *              Normally, it is not neccessary to call this method directly.
  *              Override in derived classes if necessary.
  * @param {Object} model The model to refresh.
@@ -401,7 +399,7 @@ $.any.anyView.prototype.onModelChange = function (model)
     this.model = model;
     this._setPermissions(); // Model permissions may have changed
   }
-  this.refreshLoop();
+  this.refresh();
   this.showMessages(model);
   return this;
 }; // onModelChange
@@ -438,58 +436,38 @@ $.any.anyView.prototype.onModelChange = function (model)
  */
 $.any.anyView.prototype.refresh = function (params)
 {
-  let parent = params && params.parent ? params.parent : null;
-  if (!parent)
-    parent = this.element;
-  if (!parent)
-    throw i18n.error.VIEW_AREA_MISSING;
-
-  this.data_level = 0;
-
-  parent.empty();
-  this.refreshLoop(params);
-
-  // Bind key-back on tablets. TODO! Untested
-  //document.addEventListener("backbutton", $.proxy(this._processKeyup,this), false);
-}; // refresh
-
-//
-// Main refresh loop
-//
-$.any.anyView.prototype.refreshLoop = function (params)
-{
-  let parent = params && params.parent ? params.parent : null;
-  let data   = params && params.data   ? params.data   : null;
-  let id     = params && params.id     ? params.id     : "";
-  let type   = params && params.type   ? params.type   : "";
-  let kind   = params && params.kind   ? params.kind   : "";
-  let pdata  = params && params.pdata  ? params.pdata  : null;
-  let pid    = params && params.pid    ? params.pid    : null;
-  let id_str = params && params.id_str ? params.id_str : "";
-  let edit   = params && params.edit   ? params.edit   : null;
-
-  if (!parent)
-    parent = this.element;
-  if (!parent)
-    throw i18n.error.VIEW_AREA_MISSING;
+  let parent     = params && params.parent     ? params.parent        : this.element;
+  let data       = params && params.data       ? params.data          : this.model && this.model.data ? this.model.data : null;
+  let id         = params && params.id         ? params.id            : "";
+  let type       = params && params.type       ? params.type          : this.model && this.model.type ? this.model.type : "";
+  let kind       = params && params.kind       ? params.kind          : "";
+  let pdata      = params && params.pdata      ? params.pdata         : null;
+  let pid        = params && params.pid        ? params.pid           : "";
+  let edit       = params && params.edit       ? params.edit          : false;
+  let con_id_str = params && params.con_id_str ? ""+params.con_id_str : ""; // Id string for containers and table
+  let acc_id_str = params && params.acc_id_str ? ""+params.acc_id_str : ""; // Id string accumulated through recursion
+  let from       = params && params.from       ? params.from          : 1;
+  let num        = params && params.num        ? params.num           : this.options.itemsPerPage;
 
   ++this.options.ref_rec;
   if (this.options.ref_rec > ANY_MAX_REF_REC) {
     this.options.ref_rec = 0;
     throw i18n.error.TOO_MUCH_RECURSION;
   }
+  if (!parent)
+    throw i18n.error.VIEW_AREA_MISSING; // Should never happen
 
-  if (!data && this.model)
-    data = this.model.data;
-
+  if (!params) {
+    // Top level display of the model, so clear everything
+    parent.empty();
+    this.data_level   = 0;
+    this.current_edit = null;
+  }
   if (this.must_empty) {
     // Someone thinks we should remove data from the must_empty element.
     this.must_empty.empty();
     this.must_empty = null;
   }
-
-  this.current_edit = null;
-  this.row_no = 0;
 
   if (this.preRefresh)
     this.preRefresh(parent,data,id,type,kind,edit);
@@ -502,69 +480,101 @@ $.any.anyView.prototype.refreshLoop = function (params)
     this.options.filters = this._getOrCreateFilters(this.model);
 
     // Refresh top close button for item
-    if (!this.options.isSelectable && this.options.item_opening && id_str != "")
+    if (!this.options.isSelectable && this.options.item_opening && con_id_str != "")
       this.refreshCloseItemButton(params);
-
-    // Create or get main container for header and data
-    let con_div = this.getOrCreateMainContainer(parent,type,kind,con_id_str);
 
     // Loop over all entries and refresh
     let view = this;
     let prev_type = type;
     let prev_kind = kind;
+    let row_no = 0;
     for (let idc in data) {
       if (data.hasOwnProperty(idc)) {
         if (view && !idc.startsWith("grouping")) {
           // Find the type and kind of the current data item
           let curr_type = view._findType(data,idc,prev_type);
           let curr_kind = view._findKind(data,idc,prev_kind);
-          if (curr_type && curr_kind) {
-            if ((prev_type || curr_type != view.model.type) && (prev_type != curr_type)) {
-              // New type to display, so create new view
-              view = view.createView({ parent: parent,
-                                       data:   data,
-                                       id:     idc,
-                                       type:   curr_type,
-                                       kind:   curr_kind,
-                                       id_str: id_str,
-                                    });
-              view.id_str = id_str; // Remember the id_str that identifies this view
-              view.row_no = 0; // We need to keep track of row numbers for pagination
+          // Skip the current data item if we could not determine its type or kind
+          if (!curr_type || !curr_kind) {
+            console.warn("Could not determine the type or kind of data with id "+idc+ "("+type+","+kind+")"); // TODO! i18n
+            continue;
+          }
+          // Find identifier strings for containers and rows
+          let idx = Number.isInteger(parseInt(idc)) ? parseInt(idc) : idc;
+          let new_acc_id_str = acc_id_str
+                               ? acc_id_str+"_"+idx
+                               : ""+idx;
+          let new_con_id_str = curr_kind == "list"
+                               ? con_id_str
+                               : new_acc_id_str;
+          // Create new view whenever we encounter a new type or a new kind
+          let the_parent = parent;
+          if (prev_type != curr_type || prev_kind != curr_kind) {
+            // Check to see if the new type/kind is contained within a list.
+            // In that case, create a new row to contain the new container.
+            if (prev_kind == "list") {
+              let f = view.getFilter(prev_type,prev_kind);
+              let max_num_cols = f ? Object.size(f) : 5;
+              let row_id = view.id_base+"_"+curr_type+"_"+curr_kind+"_"+new_acc_id_str+"_tr";
+              let new_tr  = $("<tr id='"+row_id+"'><td style='padding-left:"+view.options.indent_amount+"px;' colspan='"+max_num_cols+"' class='any-td any-list-td'></td></tr>"); // TODO! CSS
+              let tbody = $("#"+view.id_base+"_"+prev_type+"_"+prev_kind+"_"+acc_id_str+"_tbody");
+              if (tbody.length)
+                tbody.append(new_tr);
+              else {
+                let tr = $("#"+view.id_base+"_"+prev_type+"_"+prev_kind+"_"+acc_id_str+"_tr");
+                if (tr.length)
+                  new_tr.insertAfter(tr);
+              }
+              if (new_tr) {
+                the_parent = new_tr.find("td");
+                if (!the_parent.length)
+                  the_parent = parent;
+              }
             }
-            if (view) {
-            // Refresh a single list row or a single item
-              if (curr_type == "group")
-                view.group_id = idc;
-              view.refreshOne({ parent: con_div,
-                                data:   data,
-                                id:     idc,
-                                type:   curr_type,
-                                kind:   curr_kind,
-                                edit:   edit,
-                                id_str: view.id_str,
-                                pdata:  pdata,
-                                pid:    pid,
+            view = view.createView({ parent: the_parent,
+                                     data:   data,
+                                     id:     idc,
+                                     type:   curr_type,
+                                     kind:   curr_kind,
+                                     id_str: new_con_id_str,
+                                  });
+          }
+          if (view) {
+            ++row_no;
+            if (from == -1 || from <= row_no && row_no < from + num) {
+              // Refresh a single list row or a single item
+              view.refreshOne({ parent:         the_parent,
+                                data:           data,
+                                id:             idc,
+                                type:           type,
+                                kind:           kind,
+                                curr_type:      curr_type,
+                                curr_kind:      curr_kind,
+                                new_con_id_str: new_con_id_str,
+                                new_acc_id_str: new_acc_id_str,
+                                pdata:          pdata,
+                                pid:            pid,
+                                edit:           edit,
                              });
-            } // if view
-            prev_type = curr_type;
-            prev_kind = curr_kind;
+            }
           } // if view
-        }
-      } // for
-    }
+          prev_type = curr_type;
+          prev_kind = curr_kind;
+        } // if view
+      }
+    } // for
+
     // Clean up
-    if (!con_div.children().length)
-      con_div.remove();
+    if (!parent.children().length)
+      parent.remove();
 
     if (kind == "head")
       --this.data_level;
   } // if data
-  else
-    parent.empty();
 
   // Refresh bottom toolbar
   if (this.options.showToolbar) {
-    if (!this.options.isSelectable && this.model.type && this.data_level==0 && id_str == "" &&
+    if (!this.options.isSelectable && this.model.type && this.data_level==0 && con_id_str == "" &&
         (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
       this.refreshToolbarBottom(parent,data,this.model.id,this.model.type,this.model.kind,edit,"");
     }
@@ -573,59 +583,87 @@ $.any.anyView.prototype.refreshLoop = function (params)
   if (this.postRefresh)
     this.postRefresh(parent,data,id,type,kind,edit);
 
+  // Bind key-back on tablets. TODO! Untested
+  //document.addEventListener("backbutton", $.proxy(this._processKeyup,this), false);
+
   return parent;
-}; // refreshLoop
+}; // refresh
 
 //
 // Refresh header and data for one list entry or one item
 //
 $.any.anyView.prototype.refreshOne = function (params)
 {
-  let parent = params && params.parent ? params.parent : null;
-  let data   = params && params.data   ? params.data   : null;
-  let id     = params && params.id     ? params.id     : null;
-  let type   = params && params.type   ? params.type   : this._findType(data,id,null);
-  let kind   = params && params.kind   ? params.kind   : this._findKind(data,id,null);
-  let pdata  = params && params.pdata  ? params.pdata  : null;
-  let pid    = params && params.pid    ? params.pid    : null;
-  let id_str = params && params.id_str ? params.id_str : "";
-  let edit   = params && params.edit   ? params.edit   : null;
+  let parent         = params.parent;
+  let data           = params.data;
+  let id             = params.id;
+  let type           = params.type;
+  let kind           = params.kind;
+  let curr_type      = params.curr_type;
+  let curr_kind      = params.curr_kind;
+  let new_con_id_str = params.new_con_id_str;
+  let new_acc_id_str = params.new_acc_id_str;
+  let pdata          = params.pdata;
+  let pid            = params.pid;
+  let edit           = params.edit;
 
-  if (!data || (!id && id !== 0) || (typeof id == "string" && id.startsWith("grouping")))
-    return null;
+  let new_params = {
+    parent: parent,
+    data:   data,
+    id:     id,
+    type:   curr_type,
+    kind:   curr_kind,
+    ptype:  type,
+    pkind:  kind,
+    edit:   edit,
+    con_id_str: new_con_id_str,
+    acc_id_str: new_acc_id_str,
+    pdata:  pdata,
+    pid:    pid,
+    doNotEmpty: false,
+  };
 
-  let idx = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
-  let new_id_str = id_str || parseInt(id_str) == 0
-                   ? id_str+"_"+idx
-                   : ""+idx;
+  if (curr_type == "group")
+    this.group_id = id;
 
   // Refresh header
-  if (kind == "head" || (data && data.grouping))
-    this.refreshHeader(parent,data,id,type,kind,edit,new_id_str);
+  let have_data = Object.size(data) > 0;
+  new_params.header_div = this.getOrCreateHeaderContainer(parent,curr_type,curr_kind,new_con_id_str,have_data,false);
+  if (curr_kind == "head" || (data && data.grouping))
+    this.refreshHeader(new_params);
+
   // Refresh data
-  let data_div = this.refreshData(parent,data,id,type,kind,edit,new_id_str,pdata,pid);
+  new_params.data_div = this.getOrCreateDataContainer(parent,curr_type,curr_kind,new_con_id_str,have_data);
+  new_params.table    = this.getOrCreateTable(new_params.data_div,curr_type,curr_kind,new_con_id_str);
+  if (curr_kind == "list" || curr_kind == "select" || curr_kind == "item")
+    this.refreshData(new_params);
 
   // If we have subdata, make a recursive call
   if (data && data[id] && data[id].data) {
-    if ((kind == "list" || kind == "select"))
+    if ((curr_kind == "list" || curr_kind == "select"))
       ++this.options.indent_level;
-    let p_data = data;
-    let p_id   = id;
-    data = data[id].data;
-    this.refreshLoop({ parent: data_div,
-                       data:   data,
-                       id:     null,
-                       type:   type,
-                       kind:   kind,
-                       pdata:  p_data,
-                       pid:    p_id,
-                       edit:   edit,
-                       id_str: new_id_str,
-                     });
+    this.refresh({ parent: new_params.data_div,
+                   data:   data[id].data,
+                   id:     null,
+                   type:   curr_type,
+                   kind:   curr_kind,
+                   pdata:  data,
+                   pid:    id,
+                   edit:   edit,
+                   con_id_str: new_con_id_str,
+                   acc_id_str: new_acc_id_str,
+                });
     if ((kind == "list" || kind == "select"))
       --this.options.indent_level;
   }
-  return parent;
+  // Clean up
+  if (!new_params.header_div.children().length)
+    new_params.header_div.remove();
+  if (!new_params.data_div.children().length)
+    new_params.data_div.remove();
+  if (!new_params.table.children().length)
+    new_params.table.remove();
+  return this;
 }; // refreshOne
 
 //
@@ -698,27 +736,17 @@ $.any.anyView.prototype.refreshMessageArea = function (parent,opt)
 }; // refreshMessageArea
 
 //
-// Get the current main div, or create a new one if it does not exist
-//
-$.any.anyView.prototype.getOrCreateMainContainer = function (parent,type,kind,id_str)
-{
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_container";
-  let con_div = $("#"+div_id);
-  if (!con_div.length && parent) {
-    // Create new main container
-    let class_id = "any-container any-"+kind+"-container any-"+kind+"-container-"+this.data_level;
-    con_div = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
-    parent.append(con_div);
-  }
-  return con_div;
-}; // getOrCreateMainContainer
-
-//
 // Refresh the header for an object.
 //
-$.any.anyView.prototype.refreshHeader = function (parent,data,id,type,kind,edit,id_str,doNotEmpty)
+$.any.anyView.prototype.refreshHeader = function (params)
 {
-  if (!data || !this.options.showHeader)
+  let data       = params.data;
+  let id         = params.id;
+  let type       = params.type;
+  let kind       = params.kind;
+  let header_div = params.header_div;
+
+  if (!data || !this.options.showHeader || !header_div)
     return null;
 
   // Get the correct filter
@@ -734,10 +762,7 @@ $.any.anyView.prototype.refreshHeader = function (parent,data,id,type,kind,edit,
     console.warn(this.model.message);
     return null;
   }
-  // Create or get container for header
-  let have_data = Object.size(data) > 0;
-  let header_div = this.getOrCreateHeaderContainer(parent,type,kind,id_str,have_data,doNotEmpty);
-  // Create the header "cells"
+  // Create the header entries
   header_div.empty();
   let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null; // TODO! Do this other places in the code too
   let n = 0;
@@ -757,10 +782,11 @@ $.any.anyView.prototype.refreshHeader = function (parent,data,id,type,kind,edit,
 //
 // Get the current header div, or create a new one if it does not exist
 //
-$.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,id_str,haveData,doNotEmpty)
+$.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,con_id_str,haveData,doNotEmpty)
 {
   if (!parent)
     return null;
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_header";
   let header_div = $("#"+div_id);
   if (header_div.length) {
     if (!doNotEmpty && header_div && header_div.length)
@@ -797,67 +823,76 @@ $.any.anyView.prototype.refreshHeaderEntry = function (header_div,data,id,filter
 //
 // Refresh the data for an object.
 //
-$.any.anyView.prototype.refreshData = function (parent,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.anyView.prototype.refreshData = function (params)
 {
+  if (!params)
+    return null;
+
+  let data       = params.data;
+  let id         = params.id;
+  let type       = params.type;
+  let kind       = params.kind;
+  let edit       = params.edit;
+  let con_id_str = params.con_id_str;
+  let acc_id_str = params.acc_id_str;
+  let pdata      = params.pdata;
+  let pid        = params.pid;
+  let data_div   = params.data_div;
+  let table      = params.table;
+
   if (!data_div || !table)
     return null;
 
   // Create or get container for data
-  let tab_id_str = id_str;
-  if (kind == "list" || kind == "select") {
-    var n = id_str ? id_str.lastIndexOf("_") : -1;
-    if (n < 0)
-      tab_id_str = "";
-    else
-      tab_id_str = id_str.substring(0,n);
+  let extra_foot = this.getOrCreateExtraFoot(table,type,kind,con_id_str);
+  if (extra_foot)
+    this.refreshExtraFoot(extra_foot,data,id,type,kind,edit,con_id_str,pdata,pid);
+  let thead = table.find("thead").length ? table.find("thead") : null;
+  if (!thead) {
+    thead = this.getOrCreateThead(table,type,kind,con_id_str);
+    if (thead)
+      this.refreshThead(thead,data,id,type,kind,edit,con_id_str);
   }
-  let have_data = Object.size(data) > 0;
-  let data_div = this.getOrCreateDataContainer(parent,type,kind,tab_id_str,have_data);
-  if (kind == "list" || kind == "select" || kind == "item") {
-    let table = this.getOrCreateTable(data_div,type,kind,tab_id_str);
-    let extra_foot = this.getOrCreateExtraFoot(table,type,kind,tab_id_str);
-    if (extra_foot)
-      this.refreshExtraFoot(extra_foot,data,id,type,kind,edit,id_str,pdata,pid);
-    let thead = table.find("thead").length ? table.find("thead") : null;
-    if (!thead) {
-      thead = this.getOrCreateThead(table,type,kind,tab_id_str);
-      if (thead)
-        this.refreshThead(thead,data,id,type,kind,edit,tab_id_str);
-    }
-    let tbody = this.getOrCreateTbody(table,type,kind,tab_id_str);
-    if (tbody) {
-      let show_row = true;
-      if (this.options.showPaginator && this.num_results > this.options.itemsPerPage) {
-        if (extra_foot && extra_foot.length) {
-          let from = 0;
-          let num  = this.options.itemsPerPage;
-          let pager = extra_foot.data("pager");
-          if (pager) {
-            from = pager.options.itemsPerPage *(pager.currentPage() - 1);
-            num  = pager.options.itemsPerPage;
-            show_row = from <= this.row_no && this.row_no < from + num;
-          }
-        }
-      }
-      if (show_row)
-        this.refreshTbodyRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
-       ++this.row_no; // We need to keep track of row numbers for pagination
-    }
-    let tfoot = this.getOrCreateTfoot(table,type,kind,tab_id_str);
-    if (tfoot)
-      this.refreshTfoot(tfoot,data,id,type,kind,edit,id_str,pdata,pid);
-  }
+  let tbody = this.getOrCreateTbody(table,type,kind,con_id_str);
+  if (tbody)
+    this.refreshTbodyRow(tbody,data,id,type,kind,edit,acc_id_str,pdata,pid);
+  let tfoot = this.getOrCreateTfoot(table,type,kind,con_id_str);
+  if (tfoot)
+    this.refreshTfoot(tfoot,data,id,type,kind,edit,con_id_str,pdata,pid);
+  // Clean up
+  if (extra_foot && !extra_foot.children().length)
+    extra_foot.remove();
+  if (thead && !thead.children().length)
+    thead.remove();
+  if (tbody && !tbody.children().length)
+    tbody.remove();
+  if (tfoot && !tfoot.children().length)
+    tfoot.remove();
   return data_div;
 }; // refreshData
+
+$.any.anyView.prototype._countData = function (data)
+{
+  let n = 0;
+  if (data) {
+    for (let id in data) {
+      if (data.hasOwnProperty(id)) {
+        if (!id.startsWith("grouping"))
+          ++n;
+      }
+    }
+  }
+  return n;
+}; // _countData
 
 //
 // Get the current data div, or create a new one if it does not exist
 //
-$.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,id_str,haveData)
+$.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,con_id_str,haveData)
 {
   if (!parent)
     return null;
-  let div_id   = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_data";
+  let div_id   = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_data";
   let data_div = $("#"+div_id);
   if (!data_div.length && haveData) {
     // Create new data container if we have data
@@ -873,11 +908,11 @@ $.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,id
 //
 // Create a table, or find a table created previously
 //
-$.any.anyView.prototype.getOrCreateTable = function (parent,type,kind,id_str)
+$.any.anyView.prototype.getOrCreateTable = function (parent,type,kind,con_id_str)
 {
   if (!parent)
     return null;
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_table";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_table";
   let table  = $("#"+div_id); // Can we reuse list table?
   if (!table.length) {
     // Create the table
@@ -891,13 +926,13 @@ $.any.anyView.prototype.getOrCreateTable = function (parent,type,kind,id_str)
 //
 // Create a tbody, or find a tbody created previously
 //
-$.any.anyView.prototype.getOrCreateTbody = function (table,type,kind,id_str)
+$.any.anyView.prototype.getOrCreateTbody = function (table,type,kind,con_id_str)
 {
   if (!table)
     return null;
   if (!type || !kind)
     return null;
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tbody";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_tbody";
   let tbody  = $("#"+div_id); // Can we reuse list tbody?
   if (!tbody.length) {
     let class_id = "any-"+kind+"-tbody any-tbody-"+this.data_level;
@@ -910,13 +945,13 @@ $.any.anyView.prototype.getOrCreateTbody = function (table,type,kind,id_str)
 //
 // Create a thead, or find a thead created previously
 //
-$.any.anyView.prototype.getOrCreateThead = function (table,type,kind,id_str)
+$.any.anyView.prototype.getOrCreateThead = function (table,type,kind,con_id_str)
 {
   if (!this.options.showTableHeader || !table)
     return null;
   if (!type || !kind || (kind != "list" && kind != "select"))
     return null;
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_thead";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_thead";
   let thead  = $("#"+div_id);
   if (thead.length)
     thead.remove();
@@ -928,13 +963,13 @@ $.any.anyView.prototype.getOrCreateThead = function (table,type,kind,id_str)
 //
 // Create a tfoot, or find a tfoot created previously
 //
-$.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
+$.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,con_id_str)
 {
   if (!this.options.showTableFooter || !table)
     return null;
   if (!type || !kind || (kind != "list" && kind != "select"))
     return null;
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tfoot";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_tfoot";
   let tfoot = $("#"+div_id); // Can we reuse tfoot?
   if (!tfoot.length) {
     tfoot = $("<tfoot id='"+div_id+"'></tfoot>");
@@ -946,11 +981,11 @@ $.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
 //
 // Create a special footer to contain pager, search box, etc.
 //
-$.any.anyView.prototype.getOrCreateExtraFoot = function (table,type,kind,id_str)
+$.any.anyView.prototype.getOrCreateExtraFoot = function (table,type,kind,con_id_str)
 {
   if (!table || !type || !kind || (kind != "list" && kind != "select"))
     return null;
-  let foot_div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_extrafoot";
+  let foot_div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_extrafoot";
   let foot_div = $("#"+foot_div_id); // Can we reuse extrafoot?
   if (!foot_div.length) {
     foot_div = $("<div id='"+foot_div_id+"' class='table_extrafoot'></div>");
@@ -962,7 +997,7 @@ $.any.anyView.prototype.getOrCreateExtraFoot = function (table,type,kind,id_str)
 //
 // Refresh a table header
 //
-$.any.anyView.prototype.refreshThead = function (thead,data,id,type,kind,edit,id_str)
+$.any.anyView.prototype.refreshThead = function (thead,data,id,type,kind,edit,con_id_str)
 {
   if (!thead)
     return null;
@@ -984,7 +1019,7 @@ $.any.anyView.prototype.refreshThead = function (thead,data,id,type,kind,edit,id
                 id:         "new", // Find a new id
                 type:       type,
                 kind:       kind,
-                id_str:     id_str,
+                id_str:     con_id_str,
                 filter:     filter,
                 isEditable: true,
                 is_new:     true,
@@ -1018,7 +1053,7 @@ $.any.anyView.prototype.refreshThead = function (thead,data,id,type,kind,edit,id
         tr.append(th);
         if (this.options.isSortable) {
           th.css("cursor","pointer");
-          let th_opt = { table_id: this.id_base+"_"+type+"_"+kind+"_"+id_str+"_table",
+          let th_opt = { table_id: this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_table",
                          filter_id:  filter_id,
                          filter_key: filter_key,
                          type:       type,
@@ -1099,16 +1134,18 @@ $.any.anyView.prototype.sortTable = function (event)
 //
 // Refresh the table footer
 //
-$.any.anyView.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,id_str)
+$.any.anyView.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,con_id_str)
 {
-  id_str = id_str.substr(0,id_str.lastIndexOf("_"));
-  let tr_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tr_foot";
+  if (!tfoot || !con_id_str)
+    return null;
+  con_id_str = con_id_str.substr(0,con_id_str.lastIndexOf("_"));
+  let tr_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_tr_foot";
   let tr    = $("#"+tr_id);
   if (!tr.length) {
     tr = $("<tr id='"+tr_id+"'></tr>");
     tfoot.append(tr);
   }
-  let td_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_td_foot";
+  let td_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_td_foot";
   let td    = $("#"+td_id);
   if (!td.length) {
     let f = this.getFilter(type,kind);
@@ -1127,13 +1164,11 @@ $.any.anyView.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,id
 //
 // Refresh the extra table footer
 //
-$.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kind,edit,id_str)
+$.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kind,edit,con_id_str,pdata,pid)
 {
   if (!extra_foot)
     return null;
-  let num_results = data && data.grouping_num_results
-                    ? data.grouping_num_results
-                    : this._countData(data);
+  let num_results = data && data.grouping_num_results ? data.grouping_num_results : this._countData(data);
   if (this.options.showPaginator && num_results > this.options.itemsPerPage) {
     // Initialize paging
     let pager = extra_foot.data("pager");
@@ -1148,9 +1183,10 @@ $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kin
                                           hideGoto:     true,
                                           // Set in paginator options that are sent to onClick handler:
                                           div_info: {
-                                            type:   type,
-                                            kind:   kind,
-                                            id_str: id_str,
+                                            type:       type,
+                                            kind:       kind,
+                                            con_id_str: con_id_str,
+                                            group_id:   pid,
                                           },
                                        });
         pager.numItems(num_results);
@@ -1166,8 +1202,8 @@ $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kin
     let searcher = extra_foot.data("searcher");
     if (!searcher) {
       let search_box = "Search: <input type='search' style='height:25px;min-height:25px;'>";
-      let searcher_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_searcher_foot";
-      searcher = $("<div style='display:inline-block;float:right;padding-top:10px;' id='"+searcher_id+"'>"+search_box+"</div>");
+      let searcher_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_searcher_foot";
+      searcher = $("<div style='display:inline-block;float:right;padding-top:10px;' id='"+searcher_id+"'>"+search_box+"</div>"); // TODO! CSS
       extra_foot.append(searcher);
       let search_opt = {};
       searcher.off("keyup").on("keyup", search_opt, $.proxy(this._processSearch,this));
@@ -1205,38 +1241,44 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     console.error("System error: Pager or pager options missing for pageNumClicked. "); // TODO! i18n
     return;
   }
-  this.row_no = 0;
   this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty (to avoid flashing)
   this.options.currentPage = pager.currentPage();
-  let from = pager.options.itemsPerPage *(pager.currentPage() - 1);
+  let from = pager.options.itemsPerPage *(pager.currentPage() - 1) + 1;
   let num  = pager.options.itemsPerPage;
-  let mod_opt = { context: this.model,
-                  type:    pager.options.div_info.type,
-                  from:    from,
-                  num:     num,
+  let mod_opt = { from:      from,
+                  num:       num,
+                  context:   this.model,
+                  type:      pager.options.div_info.type,
+                  group_id:  pager.options.div_info.group_id,
+                  grouping:  this.options.grouping,
+                  order:     this.options.order,
+                  direction: this.options.direction,
+                  head:      this.options.grouping == "tabs",
+                //simple:    true, // TODO! Does not work correctly with this option
                 };
   if (this.model.mode == "remote") {
     this.options.ref_rec = 0;
+    mod_opt.from -= 1; // from is 0-based on server
     this.model.dbSearch(mod_opt);
   }
   else {
-    this.refreshLoop();
+    this.refresh({from:from,num:num});
   }
 }; // pageNumClicked
 
 //
 // Refresh a single table row
 //
-$.any.anyView.prototype.refreshTbodyRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.anyView.prototype.refreshTbodyRow = function (tbody,data,id,type,kind,edit,acc_id_str,pdata,pid)
 {
   if (kind == "list" || kind == "select")
-    this.refreshListTableDataRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
+    this.refreshListTableDataRow(tbody,data,id,type,kind,edit,acc_id_str,pdata,pid);
   else
   if (kind == "item")
-      this.refreshItemTableDataRow(tbody,data,id,type,kind,edit,id_str,pdata,pid);
+      this.refreshItemTableDataRow(tbody,data,id,type,kind,edit,acc_id_str,pdata,pid);
 }; // refreshTbodyRow
 
-$.any.anyView.prototype.refreshListTableDataRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.anyView.prototype.refreshListTableDataRow = function (tbody,data,id,type,kind,edit,acc_id_str,pdata,pid)
 {
   if (!tbody || !data || !data[id])
     return null;
@@ -1260,7 +1302,7 @@ $.any.anyView.prototype.refreshListTableDataRow = function (tbody,data,id,type,k
   let row_has_data = this._rowHasData(d,filter);
   if (!row_has_data)
     return null; // Nothing to display
-  let tr_id  = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tr";
+  let tr_id  = this.id_base+"_"+type+"_"+kind+"_"+acc_id_str+"_tr";
   let tr = $("#"+tr_id);
   if (tr.length) {
     let td_ids = tr_id+" > td";
@@ -1272,13 +1314,13 @@ $.any.anyView.prototype.refreshListTableDataRow = function (tbody,data,id,type,k
   }
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
       (this.options.isEditable && (this.options.showButtonEdit || this.options.showButtonUpdate)))
-    this.refreshTableDataFirstCell(tr,data,id,type,kind,filter,edit,id_str,true,pdata,pid);
+    this.refreshTableDataFirstCell(tr,data,id,type,kind,filter,edit,acc_id_str,true,pdata,pid);
 
-  this.refreshListTableDataCells(tr,data,id,type,kind,filter,edit,id_str,true,pdata,pid);
+  this.refreshListTableDataCells(tr,data,id,type,kind,filter,edit,acc_id_str,true,pdata,pid);
 
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
       (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonDelete || this.options.showButtonCancel)))
-    this.refreshTableDataLastCell(tr,data,id,type,kind,filter,edit,id_str,true,pdata,pid);
+    this.refreshTableDataLastCell(tr,data,id,type,kind,filter,edit,acc_id_str,true,pdata,pid);
 
   // Clean up
   if (!tr.children().length || (!row_has_data && !this.options.showEmptyRows))
@@ -1286,7 +1328,7 @@ $.any.anyView.prototype.refreshListTableDataRow = function (tbody,data,id,type,k
   return tr;
 }; // refreshListTableDataRow
 
-$.any.anyView.prototype.refreshListTableDataCells = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
+$.any.anyView.prototype.refreshListTableDataCells = function (tr,data,id,type,kind,filter,edit,acc_id_str,isEditable,pdata,pid)
 {
   if (!filter || !tr|| !data || !data[id])
     return false;
@@ -1299,7 +1341,7 @@ $.any.anyView.prototype.refreshListTableDataCells = function (tr,data,id,type,ki
       if (filter_key && filter_key.DISPLAY) {
         let disp_str = filter_key.DISPLAY == 2 || filter_key.DISPLAY == "2" ? "display:none;" : "";
         ++n;
-        let td_id    = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;
+        let td_id    = this.id_base+"_"+type+"_"+kind+"_"+acc_id_str+"_"+filter_id;
         let odd_even = this.options.useOddEven ? n%2 ? "any-even" : "any-odd" : "";
         let class_id = "any-list-"+filter_id;
         let pln_str  = this.model.name_key
@@ -1308,16 +1350,16 @@ $.any.anyView.prototype.refreshListTableDataCells = function (tr,data,id,type,ki
         let style_str = disp_str || pln_str ? "style='"+disp_str+pln_str+"'" : "";
         let td  = $("<td id='"+td_id+"' class='any-td any-list-td "+odd_even+" "+class_id+"' "+style_str+"></td>");
         tr.append(td);
-        let str = this.createCellEntry(id,type,kind,id_str,filter_id,filter_key,data[id],edit);
+        let str = this.createCellEntry(id,type,kind,acc_id_str,filter_id,filter_key,data[id],edit);
         td.append(str);
-        this.initTableDataCell(td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
+        this.initTableDataCell(td_id,data,id,type,kind,acc_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
       }
     }
   }
   return true;
 }; // refreshListTableDataCells
 
-$.any.anyView.prototype.refreshItemTableDataRow = function (tbody,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.anyView.prototype.refreshItemTableDataRow = function (tbody,data,id,type,kind,edit,acc_id_str,pdata,pid)
 {
   if (!tbody || !data || !data[id])
     return null;
@@ -1360,13 +1402,13 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (tbody,data,id,type,k
           if (is_hidden && edit) {
             let tr = $("<tr "+display_class+"></tr>");
             let td = $("<td/><td colspan='2' class='td_item'>"+
-                       "<span id='"+this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_key.HTML_TYPE+"' class='pointer hiddenText'>"+
+                       "<span id='"+this.id_base+"_"+type+"_"+kind+"_"+acc_id_str+"_"+filter_key.HTML_TYPE+"' class='pointer hiddenText'>"+
                        filter_key.HEADER+
                        "</span>"+
                        "</td>");
             tr.append(td);
             tbody.append(tr);
-            let params   = { panel_id:   this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_key.HTML_TYPE,
+            let params   = { panel_id:   this.id_base+"_"+type+"_"+kind+"_"+acc_id_str+"_"+filter_key.HTML_TYPE,
                              start_text: filter_key.HEADER,
                              end_text:   filter_key.HEADER2,
                            };
@@ -1398,15 +1440,15 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (tbody,data,id,type,k
         if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
             (this.options.isEditable && (this.options.showButtonEdit || this.options.showButtonUpdate))) {
           if (n == 1)
-            this.refreshTableDataFirstCell(tr,data,id,type,kind,filter,edit,id_str,true,pdata,pid);
+            this.refreshTableDataFirstCell(tr,data,id,type,kind,filter,edit,acc_id_str,true,pdata,pid);
           else
             tr.append("<td/>");
         }
-        this.refreshItemTableDataCells(tr,data,id,type,kind,filter,filter_id,filter_key,id_str,pl_str,n,edit,true,pdata,pid);
+        this.refreshItemTableDataCells(tr,data,id,type,kind,filter,filter_id,filter_key,acc_id_str,pl_str,n,edit,true,pdata,pid);
         if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
             (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonDelete || this.options.showButtonCancel))) {
           if (n == 1)
-            this.refreshTableDataLastCell(tr,data,id,type,kind,filter,edit,id_str,true,pdata,pid);
+            this.refreshTableDataLastCell(tr,data,id,type,kind,filter,edit,acc_id_str,true,pdata,pid);
           else
             tr.append("<td/>");
         }
@@ -1418,23 +1460,23 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (tbody,data,id,type,k
   return tbody;
 }; // refreshItemTableDataRow
 
-$.any.anyView.prototype.refreshItemTableDataCells = function (tr,data,id,type,kind,filter,filter_id,filter_key,id_str,pl_str,n,edit,isEditable,pdata,pid)
+$.any.anyView.prototype.refreshItemTableDataCells = function (tr,data,id,type,kind,filter,filter_id,filter_key,acc_id_str,pl_str,n,edit,isEditable,pdata,pid)
 {
   let class_id_name = "any-item-name-"+filter_id;
   let class_id_val  = "any-item-val-"+filter_id;
-  let td_id         = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;
+  let td_id         = this.id_base+"_"+type+"_"+kind+"_"+acc_id_str+"_"+filter_id;
   let td2           = $("<td "+             "class='any-td any-item-name "+class_id_name+"' "+pl_str+">"+filter_key.HEADER+"</td>");
   let td3           = $("<td id= '"+td_id+"' class='any-td any-item-val  "+class_id_val +"'></td>");
   tr.append(td2);
   tr.append(td3);
-  let str = this.createCellEntry(id,type,kind,id_str,filter_id,filter_key,data[id],edit);
+  let str = this.createCellEntry(id,type,kind,acc_id_str,filter_id,filter_key,data[id],edit);
   td3.append(str);
-  this.initTableDataCell(td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
+  this.initTableDataCell(td_id,data,id,type,kind,acc_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
 }; // refreshItemTableDataCells
 
-$.any.anyView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
+$.any.anyView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,kind,filter,edit,acc_id_str,isEditable,pdata,pid)
 {
-  let td_id  = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_edit"; // First tool cell
+  let td_id  = this.id_base+"_"+type+"_"+kind+"_"+acc_id_str+"_edit"; // First tool cell
   if ($("#"+td_id).length)
     $("#"+td_id).remove();
   let td = $("<td id='"+td_id+"' class='any-td any-td-first'></td>");
@@ -1445,7 +1487,7 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,ki
                     id:         id,
                     type:       type,
                     kind:       kind,
-                    id_str:     id_str,
+                    id_str:     acc_id_str,
                     filter:     filter,
                     isEditable: isEditable,
                     checked:    checked,
@@ -1461,7 +1503,7 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,ki
                       id:         id,
                       type:       type,
                       kind:       kind,
-                      id_str:     id_str,
+                      id_str:     acc_id_str,
                       filter:     filter,
                       isEditable: isEditable,
                       edit:       edit,
@@ -1476,7 +1518,7 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,ki
                       type:       type,
                       kind:       kind,
                       filter:     filter,
-                      id_str:     id_str,
+                      id_str:     acc_id_str,
                       is_new:     data && data[id] ? data[id].is_new : false,
                       isEditable: isEditable,
                       edit:       edit,
@@ -1488,9 +1530,9 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,ki
   }
 }; // refreshTableDataFirstCell
 
-$.any.anyView.prototype.refreshTableDataLastCell = function (tr,data,id,type,kind,filter,edit,id_str,isEditable,pdata,pid)
+$.any.anyView.prototype.refreshTableDataLastCell = function (tr,data,id,type,kind,filter,edit,acc_id_str,isEditable,pdata,pid)
 {
-  let td_id  = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_unedit"; // Last tool cell
+  let td_id  = this.id_base+"_"+type+"_"+kind+"_"+acc_id_str+"_unedit"; // Last tool cell
   if ($("#"+td_id).length)
     $("#"+td_id).remove();
   let td = $("<td id='"+td_id+"' class='any-td any-td-last'></td>");
@@ -1503,7 +1545,7 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (tr,data,id,type,kin
                      id:         id,
                      type:       type,
                      kind:       kind,
-                     id_str:     id_str,
+                     id_str:     acc_id_str,
                      filter:     filter,
                      isEditable: true,
                      edit:       edit,
@@ -1538,7 +1580,7 @@ $.any.anyView.prototype._rowHasData = function (data,filter)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid)
+$.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,acc_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid)
 {
   if (!filter_key || !td_id)
     return;
@@ -1548,7 +1590,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,id
         id:         id,
         type:       type,
         kind:       kind,
-        id_str:     id_str,
+        id_str:     acc_id_str,
         filter:     filter,
         filter_id:  filter_id,
         isEditable: isEditable,
@@ -2073,7 +2115,7 @@ $.any.anyView.prototype.getListView = function (type,kind,id,val,edit,filter_key
       view = null;
     }
     if (view && view.refresh)
-      view.refreshLoop();
+      view.refresh();
   }
   catch (err) {
     console.error("Couldn't create list view "+v_str+": "+err);
@@ -2647,7 +2689,13 @@ $.any.anyView.prototype.addListEntry = function (event)
   let is_new = event.data.is_new;
   if (event.data.edit && (event.data.new_id || event.data.new_id === 0)) {
     this.model.dataDelete({id:event.data.new_id});
-    this.refreshData(this.element,this.model.data,pid,type);
+    let new_params = {
+      parent: this.element,
+      data:   this.model.data,
+      id:     pid,
+      type:   type,
+    };
+    this.refreshData(new_params);
   }
   // Get a new id (from database, if we use that) and add a new empty item to the data model.
   let the_data = this.model.dataSearch({ type: type,
@@ -2993,7 +3041,18 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
           this.current_edit = null;
         }
       }
-      this.refreshData(this.element,opt.data,opt.id,opt.type,opt.kind,opt.edit,opt.id_str,opt.pdata,opt.pid);
+      let new_params = {
+        parent: this.element,
+        data:   opt.data,
+        id:     opt.id,
+        type:   opt.type,
+        kind:   opt.kind,
+        edit:   opt.edit,
+        id_str: opt.id_str,
+        pdata:  opt.pdata,
+        pid:    opt.pid,
+      };
+      this.refreshData(new_params);
     }
     else {
       this.refreshItemTableDataRow(elem,opt.data,opt.id,opt.type,opt.kind,opt.edit,opt.id_str,opt.pdata,opt.pid);
@@ -3234,8 +3293,18 @@ $.any.anyView.prototype.dbUpdate = function (event)
       if (head_item && head_item["+0"]) {
         if (data_values[this.model.name_key]) {
           head_item["+0"][this.model.name_key] = data_values[this.model.name_key];
-          let con_div = this.getOrCreateMainContainer(null,type,kind,id_str);
-          this.refreshHeader(con_div,this.model.data,"0",type,"head",false,"0",true); // TODO! Does not work?
+          let con_div = this.element; // TODO! UNTESTED!
+          let new_params = {
+            parent: con_div,
+            data:   this.model.data,
+            id:     "0",
+            type:   type,
+            kind:   "head",
+            edit:   false,
+            id_str: "0",
+            doNotEmpty: true,
+          };
+          this.refreshHeader(new_params); // TODO! Does not work?
         }
       }
     }
@@ -3272,7 +3341,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
   }
   else {
     this.options.isDeletable = this.options.isEditable;
-    this.refreshData();
+    this.refreshData(); // TODO! refresh() ?
   }
 
   this.options.item_opening = true; // To make top right close icon appear
