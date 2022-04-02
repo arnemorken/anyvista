@@ -141,7 +141,6 @@ $.widget("any.anyView", {
     subscribe_default: true, // The default onModelChange method will be subscribed to.
     reset_listeners:   true, // The array of listeners will be erased on each call to the constructor.
     top_view:          null, // The top view for all views in the view tree (used by dialogs and item view)
-    main_div:          null, // The main div for this view (used by dialogs)
     id_base:           "",
     data_level:        0,    // Current "vertical" level in data tree (used for class ids)
     indent_tables:     false,
@@ -169,10 +168,6 @@ $.widget("any.anyView", {
 
     if (!this.options.top_view)
       this.options.top_view = this;
-
-    this.main_div = this.options.main_div
-                    ? this.options.main_div
-                    : null;
 
     this.id_base  = this.options.id_base
                     ? this.options.id_base
@@ -713,8 +708,6 @@ $.any.anyView.prototype.getOrCreateMainContainer = function (parent,type,kind,id
     let class_id = "any-container any-"+kind+"-container any-"+kind+"-container-"+this.data_level;
     con_div = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
     parent.append(con_div);
-    if (!this.main_div)
-      this.main_div = parent;
   }
   return con_div;
 }; // getOrCreateMainContainer
@@ -1137,19 +1130,17 @@ $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kin
 {
   if (!extra_foot)
     return null;
-  if (this.options.showPaginator) {
+  let num_results = data && data.grouping_num_results
+                    ? data.grouping_num_results
+                    : this._countData(data);
+  if (this.options.showPaginator && num_results > this.options.itemsPerPage) {
     // Initialize paging
-    if (data[id].num_results)
-      this.num_results = data[id].num_results;
-    else
-      this.num_results = this._countData(data);
     let pager = extra_foot.data("pager");
-    if (!pager && this.num_results) {
+    if (!pager) {
       if (!extra_foot.anyPaginator) {
         console.warn("anyList: anyPaginator missing, cannot paginate data. ");
       }
-      else
-      {
+      else {
         pager = extra_foot.anyPaginator({ itemsPerPage: this.options.itemsPerPage,
                                           onClick:      this.pageNumClicked,
                                           context:      this, // onClick context
@@ -1161,15 +1152,15 @@ $.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kin
                                             id_str: id_str,
                                           },
                                        });
-        pager.numItems(this.num_results);
+        pager.numItems(num_results);
         pager.currentPage(this.options.currentPage);
         extra_foot.data("pager",pager);
-        if (!pager.options.hideIfOne || this.num_results > pager.options.itemsPerPage)
+        if (!pager.options.hideIfOne || num_results > pager.options.itemsPerPage)
           $("#"+pager.container_id).css("display","inline-block");
       }
     }
   } // if
-  if (this.num_results > this.options.showSearcher) {
+  if (this.options.showSearcher && num_results > this.options.itemsPerPage) {
     // Initialize searching if results span more than one page
     let searcher = extra_foot.data("searcher");
     if (!searcher) {
@@ -1213,6 +1204,7 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     console.error("System error: Pager or pager options missing for pageNumClicked. "); // TODO! i18n
     return;
   }
+  this.row_no = 0;
   this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty (to avoid flashing)
   this.options.currentPage = pager.currentPage();
   let from = pager.options.itemsPerPage *(pager.currentPage() - 1);
@@ -1708,7 +1700,7 @@ $.any.anyView.prototype.createView = function (params)
 
   // Create the view
   let view_id  = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_container";
-  let view_opt = this.getCreateViewOptions(model,view_id,parent,kind);
+  let view_opt = this.getCreateViewOptions(model,parent,kind);
   let v_str = view_opt.grouping ? type+"View"+view_opt.grouping.capitalize() : type+"View";
   if (!window[v_str]) {
     let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
@@ -1721,10 +1713,6 @@ $.any.anyView.prototype.createView = function (params)
     if (!Object.keys(view).length) {
       console.error("Couldn't create view "+v_str+" with id "+view_opt.id);
       view = null;
-    }
-    else {
-      if (this.num_results)
-        view.num_results = this.num_results;
     }
   }
   catch (err) {
@@ -1749,19 +1737,20 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
   };
 }; // getCreateModelOptions
 
-$.any.anyView.prototype.getCreateViewOptions = function(model,view_id,parent,kind)
+$.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind)
 {
   return {
     model:            model,
     filters:          this._getOrCreateFilters(model), // Create filter if we don't already have one
-    id:               view_id,
-    main_div:         parent,
+    id:               parent.attr("id"),
     view:             this,
     id_base:          this.id_base,
     data_level:       this.data_level,
+    group_id:         this.group_id, // Current group id (for table headers)
     grouping:         this.options.grouping,
     item_opening:     this.options.item_opening,
     top_view:         this.options.top_view,
+    currentPage:      this.options.currentPage,
     showHeader:       this.options.showHeader,
     showTableHeader:  this.options.showTableHeader,
     showTableFooter:  this.options.showTableFooter,
@@ -1778,8 +1767,6 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,view_id,parent,kin
     isSelectable:     this.options.isSelectable,
     itemLinkClicked:  this.options.itemLinkClicked,
     preselected:      this.options.isSelectable ? this.options.preselected : null,
-    group_id:         this.group_id, // Current group id (for table headers)
-    currentPage:      this.options.currentPage,
   };
 }; // getCreateViewOptions
 
@@ -2461,6 +2448,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (parent,opt)
   if (!this.model.plugins || !this.options.linkIcons)
     return;
 
+  opt.top_view = parent.parent();
   let tit_str = i18n.button.buttonAddLink+"...";
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
   let btn_id  = this.id_base+"_"+opt.type+"_add_icon";
@@ -2548,17 +2536,19 @@ $.any.anyView.prototype.showLinkMenu = function (event)
     if (elem.className.indexOf("w3-show") == -1 && event.data.edit !== false && event.which !== 27) {
       elem.className += " w3-show";
       dd_menu.show();
-      // Clicking off the menu (inside main_div) will hide it
-      let opt2 = {...event.data};
-      opt2.edit    = false;
-      opt2.elem    = elem;
-      opt2.dd_menu = dd_menu;
-      this.main_div.off("click").on("click", opt2,
-        function(e) {
-          e.data.elem.className = elem.className.replace(" w3-show", "");
-          e.data.dd_menu.hide();
-        }
-      );
+      // Clicking off the menu (inside this.element) will hide it
+      if (this.element && this.element.length) {
+        let opt2 = {...event.data};
+        opt2.edit    = false;
+        opt2.elem    = elem;
+        opt2.dd_menu = dd_menu;
+        this.element.off("click").on("click", opt2,
+          function(e) {
+            e.data.elem.className = elem.className.replace(" w3-show", "");
+            e.data.dd_menu.hide();
+          }
+        );
+      }
     }
     else {
       elem.className = elem.className.replace(" w3-show", "");
@@ -2895,7 +2885,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
   // Create a new display area and display the item data
   item["+0"].data[the_id].item   = type;
   item["+0"].data[the_id].is_new = is_new;
-  let view = this.createView({ parent: opt.view,
+  let view = this.createView({ parent: opt.view.element,
                                data:   item,
                                id:     the_id,
                                type:   type,
@@ -2906,16 +2896,19 @@ $.any.anyView.prototype._doShowItem = function (opt)
     console.error("View missing. "); // Should never happen TODO! i18n
     return false;
   }
-  let con_div = $("#"+view.options.top_view.element.attr("id"));
-  if (!con_div.length)
-    con_div = view.element;
-  con_div.empty(); // TODO! This should perhaps be done elsewhere
-  view.element        = con_div;
-  view.main_div       = null;
-  view.data_level     = 0;
-  view.tabs_list      = {};   // TODO! Belongs in Tabs class
-  view.first_div_id   = null; // TODO! Belongs in Tabs class
-  view.current_div_id = null; // TODO! Belongs in Tabs class
+  let top_view = view.options.top_view;
+  top_view.data_level   = 0;  // TODO! Belongs in Tabs class
+  top_view.tabs_list    = {}; // TODO! Belongs in Tabs class
+  top_view.first_div_id = {}; // TODO! Belongs in Tabs class
+  let top_div = $("#"+top_view.element.attr("id"));
+  if (!top_div.length)
+    top_div = view.element;
+  top_div.empty(); // TODO! This should perhaps be done elsewhere
+
+  view.element      = top_div;
+  view.data_level   = 0;
+  view.tabs_list    = {};   // TODO! Belongs in Tabs class
+  view.first_div_id = null; // TODO! Belongs in Tabs class
   view.options.item_opening = true; // To make top right close icon appear
   if (is_new) {
     view.options.isEditable  = true;
@@ -2936,13 +2929,13 @@ $.any.anyView.prototype._doShowItem = function (opt)
     // Local refresh
     if (is_new)
       the_id = "+0";
-    view.refreshLoop({ parent: con_div,
-                       data:   item,
-                       id:     the_id,
-                       type:   type,
-                       kind:   "item",
-                       edit:   is_new,
-                     });
+    view.refresh({ parent: top_div,
+                   data:   item,
+                   id:     the_id,
+                   type:   type,
+                   kind:   "item",
+                   edit:   is_new,
+                });
   } // else
   return true;
 }; // _doShowItem
@@ -3382,7 +3375,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             parentId:    par_view_id,
             elementId:   "",
             heading:     "Select "+list_type+"s to add / remove", // TODO! i18n
-            contents:    select_list_view.main_div,
+            contents:    select_list_view.element,
             width:       "25em", // TODO! css
             ok:          true,
             cancel:      true,
@@ -3493,29 +3486,28 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
     let msg = "<div class='any-confirm-remove-dialog' id='"+this.id_base+"_confirm_remove' style='padding:.8em;'>"+
               msgstr+"?"+
               "</div>";
-    let parent_id = this.options.top_view.element.attr("id");
-    if (!parent_id)
-      parent_id = this.options.main_div.attr("id");
-    w3_modaldialog({parentId:    parent_id,
-                    elementId:   "",
-                    heading:     kind == "item" ? i18n.button.buttonRemove : i18n.button.buttonRemoveFromList.replace("%%",type),
-                    contents:    msg,
-                    width:       "25em",
-                    ok:          true,
-                    cancel:      true,
-                    okFunction:  this.dbUpdateLinkList,
-                    context:     this,
-                    // Sent to okFunction:
-                    type:        type,
-                    kind:        kind,
-                    id:          id,
-                    data:        data,
-                    id_str:      id_str,
-                    link_type:   link_type,
-                    link_id:     link_id,
-                    select:      new Set(),
-                    unselect:    new Set().add(id),
-                  });
+    let parent_id = this.element.attr("id");
+    if (parent_id)
+      w3_modaldialog({parentId:    parent_id,
+                      elementId:   "",
+                      heading:     kind == "item" ? i18n.button.buttonRemove : i18n.button.buttonRemoveFromList.replace("%%",type),
+                      contents:    msg,
+                      width:       "25em",
+                      ok:          true,
+                      cancel:      true,
+                      okFunction:  this.dbUpdateLinkList,
+                      context:     this,
+                      // Sent to okFunction:
+                      type:        type,
+                      kind:        kind,
+                      id:          id,
+                      data:        data,
+                      id_str:      id_str,
+                      link_type:   link_type,
+                      link_id:     link_id,
+                      select:      new Set(),
+                      unselect:    new Set().add(id),
+                    });
   }
   return this;
 }; // dbRemoveDialog
@@ -3566,23 +3558,24 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
     let msg = "<div class='any-confirm-delete-dialog' id='"+this.id_base+"_confirm_delete' style='padding:1em;'>"+
               msgstr+
               "</div>";
-    let parent_id = this.main_div.attr("id");
-    w3_modaldialog({parentId:   parent_id,
-                    elementId:  "",
-                    heading:    i18n.button.buttonDelete,
-                    contents:   msg,
-                    width:      "25em",
-                    ok:         true,
-                    cancel:     true,
-                    okFunction: this.dbDelete,
-                    context:    this,
-                    // Sent to okFunction dbDelete:
-                    data:       data,
-                    id:         id,
-                    type:       type,
-                    kind:       kind,
-                    id_str:     id_str,
-                  });
+    let parent_id = this.element.attr("id");
+    if (parent_id)
+      w3_modaldialog({parentId:   parent_id,
+                      elementId:  "",
+                      heading:    i18n.button.buttonDelete,
+                      contents:   msg,
+                      width:      "25em",
+                      ok:         true,
+                      cancel:     true,
+                      okFunction: this.dbDelete,
+                      context:    this,
+                      // Sent to okFunction dbDelete:
+                      data:       data,
+                      id:         id,
+                      type:       type,
+                      kind:       kind,
+                      id_str:     id_str,
+                    });
   }
   return true;
 }; // dbDeleteDialog
