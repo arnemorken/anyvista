@@ -760,7 +760,7 @@ class anyTable extends dbTable
                 $data[$idx] = array();
               if (!isset($data[$idx]["data"]))
                 $data[$idx]["data"] = array();
-              if (isset($grouping) && $grouping)
+              if (isset($grouping) && $grouping && $grouping != "undefined")
                 $data[$idx]["data"]['grouping']      = $grouping;
               $data[$idx]["data"]["grouping_for_type"] = $table->mListForType;
               $data[$idx]["data"]["grouping_for_id"]   = $table->mListForId;
@@ -1472,7 +1472,7 @@ class anyTable extends dbTable
         if (!empty($data[$gidx])) {
           $ngidx = is_int($gidx) ? "+".$gidx : $gidx;
           $data_tree[$ngidx] = array();
-          if ($grouping) {
+          if ($grouping && $grouping != "undefined") {
             $k = isset($this->mId) && $this->mId != ""
                  ? "item"
                  : (isset($data_tree[$ngidx]["list"]) && $data_tree[$ngidx]["list"] != "group"
@@ -1498,7 +1498,7 @@ class anyTable extends dbTable
                 $data_tree[$ngidx]["group_type"] = $this->mType;
               else
                 $data_tree[$ngidx]["group_type"] = $gidx;
-              if (isset($grouping) && $grouping)
+              if (isset($grouping) && $grouping && $grouping != "undefined")
                 $data_tree['grouping'] = $grouping;
               $data_tree[$ngidx]["group_name"] = $gname;
               $data_tree[$ngidx]["group_id"] = $ngidx;
@@ -1533,7 +1533,7 @@ class anyTable extends dbTable
     // Build group tree and stick data tree to it
     //
     if ($this->mType != "group") {
-      if (isset($grouping) && $grouping && (!isset($this->mId) || $this->mId == "") && !isset($this->mListForId) && $group_table) {
+      if (isset($grouping) && $grouping && $grouping != "undefined" && (!isset($this->mId) || $this->mId == "") && !isset($this->mListForId) && $group_table) {
         $this->dbAttachToGroups($group_table->tdata["group"],$data_tree);
         $group_table->tdata["group"]['grouping'] = $grouping;
         //vlog("buildGroupTreeAndAttach,tdata:",$group_table->tdata);
