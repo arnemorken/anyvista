@@ -220,7 +220,8 @@ class groupTable extends anyTable
     //vlog("dbSearchGroupTree,data_tree:",$data_tree);
 
     // Add the default "nogroup" group
-    if ($type) {
+    $group_id = Parameters::get("group_id");
+    if ((!$group_id || $group_id == "nogroup") && $type) {
       $data_tree["group"]["nogroup"]["group_type"] = $type;
       $data_tree["group"]["nogroup"]["group_id"]   = "nogroup";
       $data_tree["group"]["nogroup"]["group_name"] = $this->findDefaultHeader($type);
