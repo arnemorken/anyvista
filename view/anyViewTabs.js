@@ -54,36 +54,38 @@ $.any.anyViewTabs.prototype.createView = function (params)
 
 $.any.anyViewTabs.prototype.refresh = function (params)
 {
-  this.tabs_list = {};
   $.any.anyView.prototype.refresh.call(this,params);
-}; // refresh
-
-$.any.anyViewTabs.prototype.refreshLoop = function (params)
-{
-  $.any.anyView.prototype.refreshLoop.call(this,params);
   if (this.current_div_id) {
     let ev = {};
     ev.data = {};
     ev.data.div_id = this.current_div_id;
     this.openTab(ev);
   }
-}; // refreshLoop
+}; // refresh
 
-$.any.anyViewTabs.prototype.refreshHeader = function (parent,data,id,type,kind,edit,id_str,doNotEmpty)
+$.any.anyViewTabs.prototype.refreshHeader = function (params)
 {
+  let parent     = params.parent;
+  let data       = params.data;
+  let id         = params.id;
+  let type       = params.type;
+  let kind       = params.kind;
+  let con_id_str = params.con_id_str;
+  let prev_type  = params.ptype;
+  let prev_kind  = params.pkind;
+
   if (!parent || !data || !this.options.showHeader)
     return null;
 
   let skip = false;
   if (this.options.grouping == "tabs" && data.grouping == "tabs") {
-    id_str += ""; // Make sure its a string
-    let n = id_str ? id_str.lastIndexOf("_") : -1;
-    let tabs_id_str = (n>-1) ? id_str.slice(0,n) : ""; // id_str of level above
+    con_id_str += ""; // Make sure its a string
+    let n = con_id_str ? con_id_str.lastIndexOf("_") : -1;
+    let tabs_id_str = (n>-1) ? con_id_str.slice(0,n) : ""; // con_id_str of level above
     if (kind == "list" || kind == "select")
-      id_str = tabs_id_str;
-
+      con_id_str = tabs_id_str;
     // Get or create a tabs button container
-    let tabs_id = this.getIdBase()+"_"+type+"_"+kind+"_"+tabs_id_str+"_tabs";
+    let tabs_id = this.getIdBase()+"_"+prev_type+"_"+prev_kind+"_"+tabs_id_str+"_tabs";
     if (!this.tabs_list[tabs_id_str]) {
       this.tabs_list[tabs_id_str] = $("#"+tabs_id);
       if (this.tabs_list[tabs_id_str].length)
@@ -92,7 +94,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (parent,data,id,type,kind,e
       let pl      = this.options.indent_tables ? lev_tab * this.options.indent_amount : 0;
       let pl_str  = pl > 0 ? "style='margin-left:"+pl+"px;'" : "";
       this.tabs_list[tabs_id_str] = $("<div id='"+tabs_id+"' class='any-tabs-container w3-bar w3-dark-grey' "+pl_str+"></div>");
-      parent.prepend(this.tabs_list[tabs_id_str]);
+      parent.append(this.tabs_list[tabs_id_str]);
     }
     // Get the correct filter
     if (!this.options.filters) {
@@ -111,7 +113,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (parent,data,id,type,kind,e
     if (filter[name_key] && filter[name_key].DISPLAY) {
       skip = true;
       // Create tab button
-      let btn_id = this.getIdBase()+"_"+type+"_"+kind+"_"+id_str+"_data_tab_btn";
+      let btn_id = this.getIdBase()+"_"+type+"_"+kind+"_"+con_id_str+"_data_tab_btn";
       if (!$("#"+btn_id).length) {
         let tab_str  = data && data[id] && (data[id][name_key] || data[id][name_key] == "")
                        ? data[id][name_key]
@@ -120,7 +122,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (parent,data,id,type,kind,e
         if (this.tabs_list[tabs_id_str]) {
           this.tabs_list[tabs_id_str].append(tab_btn);
           // Bind click on tab
-          let div_id = this.getIdBase()+"_"+type+"_"+kind+"_"+id_str+"_data";
+          let div_id = this.getIdBase()+"_"+type+"_"+kind+"_"+con_id_str+"_data";
           let click_opt = { div_id: div_id };
           tab_btn.off("click");
           tab_btn.on("click",click_opt,$.proxy(this.clickOpenTab,this));
@@ -134,14 +136,14 @@ $.any.anyViewTabs.prototype.refreshHeader = function (parent,data,id,type,kind,e
     }
   }
   if (!skip) // TODO: Should just skip the name, not the rest of the header
-    return $.any.anyView.prototype.refreshHeader.call(this,parent,data,id,type,kind,edit,id_str,doNotEmpty);
+    return $.any.anyView.prototype.refreshHeader.call(this,params);
   return null;
 }; // refreshHeader
 
-$.any.anyViewTabs.prototype.refreshData = function (parent,data,id,type,kind,edit,id_str,pdata,pid)
+$.any.anyViewTabs.prototype.refreshData = function (params)
 {
-  let data_div = $.any.anyView.prototype.refreshData.call(this,parent,data,id,type,kind,edit,id_str,pdata,pid);
-  if (kind == "head" || (data && data.grouping)) {
+  let data_div = $.any.anyView.prototype.refreshData.call(this,params);
+  if (params.pkind == "head") {
     let div_id   = data_div.attr('id');
     let ev = {};
     ev.data = {};
@@ -169,7 +171,7 @@ $.any.anyViewTabs.prototype.openTab = function (event)
   let btn = $("#"+event.data.div_id+"_tab_btn");
   btn.addClass("w3-blue");
   let tab_area = $("#"+event.data.div_id);
-  tab_area.parent().parent().find(".any-head-data").hide();
+  tab_area.parent().find(".any-head-data").hide();
   tab_area.show();
   tab_area.children().show();
   return true;
