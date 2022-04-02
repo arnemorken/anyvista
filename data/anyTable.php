@@ -826,7 +826,6 @@ class anyTable extends dbTable
     //vlog("dbSearchList,group_data:",$group_data);
     $success = false;
     $limit   = $this->findLimit(); // Same limit for all groups
-    $part_stmt = $this->dbPrepareSearchListStmt($skipOwnId);
 
     if (!$simple)
       if (Parameters::get("lt") == "simple")
@@ -835,37 +834,21 @@ class anyTable extends dbTable
       // Build and execute the full statement for data from the given group
       if ($group_id == "nogroup")
         $group_id = null;
-      $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$group_id);
-      $stmt = $partial_stmt.$limit;
-      //elog("dbSearchList1:".$stmt);
-      if (!$stmt || !$this->query($stmt))
-        return false; // An error occured, abort
-      // Get the data
-      $s = $this->getRowData($data,"list",$flat,$simple);
+      $s = $this->dbExecListStmt($data,$group_id,$limit,$skipOwnId,$flat,$simple);
       $success = $success || $s;
-    } // else
+    } // if
     else {
       if ($group_data && $group_data["group"]) {
         foreach ($group_data["group"] as $gid => $group) {
-          // Build and execute the full statement
-          $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$gid);
-          $stmt = $partial_stmt.$limit;
-          //elog("dbSearchList2:".$stmt);
-          if (!$stmt || !$this->query($stmt))
-            return false; // An error occured, abort
-          // Get the data
-          $s = $this->getRowData($data,"list",$flat,$simple);
+          // Build and execute the full statement for a group
+          if ($gid == "nogroup")
+            $gid = null;
+          $s = $this->dbExecListStmt($data,$gid,$limit,$skipOwnId,$flat,$simple);
           $success = $success || $s;
         }
       }
       // Build and execute the full statement for ungrouped data
-      $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$group_id);
-      $stmt = $partial_stmt.$limit;
-      //elog("dbSearchList3:".$stmt);
-      if (!$stmt || !$this->query($stmt))
-        return false; // An error occured, abort
-      // Get the data
-      $s = $this->getRowData($data,"list",$flat,$simple);
+      $s = $this->dbExecListStmt($data,null,$limit,$skipOwnId,$flat,$simple);
       $success = $success || $s;
     } // else
 
@@ -881,26 +864,45 @@ class anyTable extends dbTable
       // Build the data tree unless its a 'simple' list
       if (!$simple)
         $this->buildGroupTreeAndAttach($data,"list",$group_table,$group_data);
-
-      if ($limit != "") {
-        // We should count how many rows would have been returned without LIMIT
-        $count_stmt = "SELECT count(*) AS num_results FROM (".
-                      $part_stmt.
-                      ") AS dummy";
-        //elog("dbSearchList4:".$count_stmt);
-        if (!$this->query($count_stmt))
-          return false; // An error occured
-        $row = $this->getNext(true);
-        if ($row && isset($row["num_results"])) {
-          $this->mNumResults = $row["num_results"];
-          //elog("mNumResults:".$this->mNumResults);
-        }
-        else
-          unset($this->mNumResults);
-      }
     }
     return !$this->isError();
   } // dbSearchList
+
+  protected function dbExecListStmt(&$data,$gid=null,$limit=null,$skipOwnId=false,$flat=false,$simple=false)
+  {
+    // Build and execute the full statement for a group
+    $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$gid);
+    $stmt = $partial_stmt.$limit;
+    //elog("dbExecListStmt1:".$stmt);
+    if (!$stmt || !$this->query($stmt))
+      return false; // An error occured, abort
+    // Get the data
+    $s = $this->getRowData($data,"list",$flat,$simple);
+    if ($limit != "") {
+      // We should count how many rows would have been returned without LIMIT
+      $part_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$gid);
+      $count_stmt = "SELECT count(*) AS num_results FROM (".
+                    $part_stmt.
+                    ") AS dummy";
+      //elog("dbExecListStmt2:".$count_stmt);
+      if (!$this->query($count_stmt))
+        return false; // An error occured
+      $row = $this->getNext(true);
+      if ($row && isset($row["num_results"])) {
+        if (!$gid)
+          $gr_idx = "nogroup";
+        else
+        if (is_int(intval($gid)))
+          $gr_idx = intval($gid);
+        else
+          $gr_idx = $gid;
+        $data[$gr_idx]["grouping_num_results"] = $row["num_results"];
+      }
+      else
+        unset($this->mNumResults);
+    } // if
+    return $s;
+  } // dbExecListStmt
 
   protected function dbPrepareSearchListStmt($skipOwnId=false,$gid=null)
   {
