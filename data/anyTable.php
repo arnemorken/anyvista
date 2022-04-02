@@ -843,7 +843,10 @@ class anyTable extends dbTable
           // Build and execute the full statement for a group
           if ($gid == "nogroup")
             $gid = null;
-          $s = $this->dbExecListStmt($data,$gid,$limit,$skipOwnId,$flat,$simple);
+          $gidx = $this->mType == "group"
+                  ? $group["group_type"]
+                  : $gid;
+          $s = $this->dbExecListStmt($data,$gidx,$limit,$skipOwnId,$flat,$simple);
           $success = $success || $s;
         }
       }
@@ -888,9 +891,12 @@ class anyTable extends dbTable
       if (!$this->query($count_stmt))
         return false; // An error occured
       $row = $this->getNext(true);
-      if ($row && isset($row["num_results"])) {
+      if ($row && isset($row["num_results"]) && $row["num_results"] != "0") {
         if (!$gid)
           $gr_idx = "nogroup";
+        else
+        if ($this->mType == "group")
+          $gr_idx = $gid;
         else
         if (is_int(intval($gid)))
           $gr_idx = intval($gid);
@@ -913,10 +919,18 @@ class anyTable extends dbTable
     $left_join = $this->findListLeftJoin($gid);
     $where     = $this->findListWhere($skipOwnId);
     if ($gid) {
-      if ($where)
-        $where .= " AND ".$this->mTableNameGroup.".group_id=".$gid." ";
-      else
-        $where .= " WHERE ".$this->mTableNameGroup.".group_id=".$gid." ";
+      if ($this->mType == "group") {
+        if ($where)
+          $where .= " AND ".$this->mTableNameGroup.".group_type='".$gid."' ";
+        else
+          $where .= " WHERE ".$this->mTableNameGroup.".group_type='".$gid."' ";
+      }
+      else {
+        if ($where)
+          $where .= " AND ".$this->mTableNameGroup.".group_id='".$gid."' ";
+        else
+          $where .= " WHERE ".$this->mTableNameGroup.".group_id='".$gid."' ";
+      }
     }
     else {
       if ($this->tableExists($this->mTableNameGroupLink)) {
