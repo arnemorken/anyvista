@@ -218,11 +218,11 @@ function table2display()
   doLog("Reading data from table...");
   $( document ).ready(function() {
     let data_model = new anyModel({type:   "rider",
-                                       mode:   "remote",
-                                       fields: ["rider_id","r_id","rank","rider_name","rider_no",
-                                                "times","gap","team","year","distance","num_stages","total_sec",
-                                                "gap_sec","result_type"],
-                                     });
+                                   mode:   "remote",
+                                   fields: ["rider_id","r_id","rank","rider_name","rider_no",
+                                            "times","gap","team","year","distance","num_stages","total_sec",
+                                            "gap_sec","result_type"],
+                                 });
     //
     // Create data view.
     // The view should always be created before any calls to model methods are made,
@@ -289,11 +289,11 @@ function csv2display()
       //
       // Create data view
       //
-      let data_view  = new anyView({ model:   data_model,
-                                     filters: all_filters,
-                                     id:      "any_result",
-                                     isEditable: false,
-                                  });
+      let data_view = new anyView({ model:   data_model,
+                                    filters: all_filters,
+                                    id:      "any_result",
+                                    isEditable: false,
+                                 });
       //
       // Insert in data model
       //
