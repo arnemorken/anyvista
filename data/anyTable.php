@@ -1695,17 +1695,6 @@ class anyTable extends dbTable
           $hdr = $this->findDefaultListHeader($this->mType);
         $d[$this->mNameKey] = $hdr;
         $d["data"]          = $inData;
-        if (isset($this->mNumResults) && isset($d["data"]["nogroup"]))
-          $d["data"]["nogroup"]["num_results"] = $this->mNumResults;
-        if (isset($d["data"])) {
-          foreach ($d["data"] as &$data_obj) {
-            if ((gettype($data_obj) == "array" || gettype($data_obj) == "object") && isset($data_obj["data"])) {
-              //vlog("data_obj:",$data_obj["data"]);
-              $data_obj["data"]["grouping_num_results"] = count($data_obj["data"]);
-            }
-          }
-//vlog("data:",$d["data"]);
-        }
       }
       else {
         // Item
