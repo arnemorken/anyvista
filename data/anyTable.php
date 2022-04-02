@@ -1501,6 +1501,12 @@ class anyTable extends dbTable
           $data_tree[$ngidx]["data"] = array();
           $dt = &$data_tree[$ngidx]["data"];
           $dt = $this->buildDataTree($data[$gidx],null,false,$num);
+          // Preserve "grouping_" values
+          foreach ($data[$gidx] as $idx => $val) {
+            $has_grouping_data = (strpos($idx,"grouping") === 0);
+            if ($has_grouping_data && is_array($dt))
+              $dt[$idx] = $data[$gidx][$idx];
+          }
           if ($dt === null)
             unset($dt);
         }
