@@ -33,40 +33,42 @@
  *                                         the direction of the sort wil be displayed. Default: true.
  *        {boolean} confirmRemove:         A remove confirmation dialog will be displayed. Default: true.
  *        {boolean} confirmDelete:         A delete confirmation dialog will be displayed. Default: true.
- *        (boolean) showHeader:            If false, all headers will be suppressed. Default: true.
- *        (boolean) showTableHeader:       Whether to show headers for list tables. Default: true.
- *        (boolean) showTableFooter:       Whether to show footers for list tables. Default: true.
- *        (boolean) showSearcher:          Whether to show a search field for list tables. Default: false.
- *        (boolean) showPaginator:         Whether to show paginator buttons for list tables. Default: true.
- *        (boolean) showToolbar:           Will show a toolbar at the bottom. Default: true.
- *        (boolean) showMessages:          Will show a message field in a toolbar. Default: false.
- *        (boolean) showServerErrors:      If true, errors from a server will be shown directly.
- *        (boolean) showEmptyRows:         Shows empty rows in non-edit mode. Default: false.
- *        (boolean) showSelectAll:         If isSelectable is true, a button for selecting all rows will be shown. Default: false.
- *        (integer) showButtonAdd:         If isEditable is true, a button for adding new rows may be shown in list table headers. Possible values:
+ *        {boolean} showHeader:            If false, all headers will be suppressed. Default: true.
+ *        {boolean} showTableHeader:       Whether to show headers for list tables. Default: true.
+ *        {boolean} showTableFooter:       Whether to show footers for list tables. Default: true.
+ *        {boolean} showSearcher:          Whether to show a search field for list tables. Default: false.
+ *        {boolean} showPaginator:         Whether to show paginator buttons for list tables. Default: true.
+ *        {boolean} showToolbar:           Will show a toolbar at the bottom. Default: true.
+ *        {boolean} showMessages:          Will show a message field in a toolbar. Default: false.
+ *        {boolean} showServerErrors:      If true, errors from a server will be shown directly. Default: false.
+ *        {boolean} showServerMessages:    If true, messages from a server will be shown directly. Default: true.
+ *        {boolean} showEmptyRows:         Shows empty rows in non-edit mode. Default: false.
+ *        {boolean} showSelectAll:         If isSelectable is true, a button for selecting all rows will be shown. Default: false.
+ *        {integer} showButtonAdd:         If isEditable is true, a button for adding new rows may be shown in list table headers. Possible values:
  *                                         0: Do not show an add button. 1: Show button in first column. 2: Show button in last column. Default: 0.
- *        (boolean) showButtonEdit:        If isEditable is true, will show an edit button in front of each list table row. Default: true.
- *        (boolean) showButtonUpdate:      If isEditable is true, will show an update button in front of each list table row in edit-mode. Default: true.
- *        (boolean) showButtonRemove:      If isEditable is true, will show a remove button after each list table row. Default: false.
- *        (boolean) showButtonDelete:      If isEditable is true, will show a delete button after each list table row in edit-mode. Default: false.
- *        (boolean) showButtonCancel:      If isEditable is true, will show a cancel button after each list table row in edit-mode. Default: true.
- *        (boolean) showButtonNew:         If isEditable is true, will show a button for adding a new item. Default: false.
- *        (boolean) showButtonAddLink:     Will show a button for adding links to an item. Default: true.
+ *        {boolean} showButtonEdit:        If isEditable is true, will show an edit button in front of each list table row. Default: true.
+ *        {boolean} showButtonUpdate:      If isEditable is true, will show an update button in front of each list table row in edit-mode. Default: true.
+ *        {boolean} showButtonRemove:      If isEditable is true, will show a remove button after each list table row. Default: false.
+ *        {boolean} showButtonDelete:      If isEditable is true, will show a delete button after each list table row in edit-mode. Default: false.
+ *        {boolean} showButtonCancel:      If isEditable is true, will show a cancel button after each list table row in edit-mode. Default: true.
+ *        {boolean} showButtonNew:         If isEditable is true, will show a button for adding a new item. Default: false.
+ *        {boolean} showButtonAddLink:     Will show a button for adding links to an item. Default: true.
  *        {boolean} showButtonLabels:      Will show labels for buttons on the button panel. Default: false.
  *        {boolean} onEnterCallDatabase:   Pressing enter will update the database with the value of the row being edited. Default: true.
  *        {boolean} onEnterInsertNew:      A new row will be inserted when pressing enter while editing a list. Default: false.
  *        {boolean} onEnterMoveFocus:      Pressing enter will move the focus to the next input element if editing an item. Default: True.
  *        {boolean} onEscRemoveEmpty:      The current row being edited in a list will be removed when pressing the Esc key if the row is empty. Default: true.
  *        {boolean} onFocusoutRemoveEmpty: The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
- *        {boolean} onUpdateEndEdit:       NOT IMPLEMENTED. Pressing the update button will close the element currently being edited for editing. Default: true.
+ *        {boolean} onUpdateEndEdit:       Pressing the update button will close the element currently being edited for editing. Default: true.
  *        {boolean} useOddEven:            If true, tags for odd and even columns will be generated for list entries. Default: false.
- *        (integer) currentPage:           The current page to show. Only applicable for "list" and "select" kinds.
- *        (integer) itemsPerPage:          The number of rows to show per page. Only applicable for "list" and "select" kinds.
+ *        {integer} itemsPerPage:          The number of rows to show per page. Only applicable for "list" and "select" kinds.
+ *        {integer} currentPage:           The current page to show. Only applicable for "list" and "select" kinds.
  *        {string}  grouping:              How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
  *        {string}  sortBy:                The filter id of the table header that the table should be sorted by. Only valid if isSortable is `true`. Default: "".
  *        {string}  sortDirection:         Whether the sorting of tables should be ascending (`ASC`) or descending (`DESC`). Only valid if isSortable is `true`. Default: "`ASC`".
  *        {boolean} refresh:               If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
  *        {boolean} uploadDirect:          If true, the selected file will be uploaded without the user having to press the "edit" and "update" buttons. Default: true.
+ *        {object}  linkIcons:             Icons to use in the link popup menu. Default: null.
  *
  * @example
  *      new anyView({filters:my_filters,id:"my_content"});
@@ -91,11 +93,12 @@ $.widget("any.anyView", {
     showHeader:            true,
     showTableHeader:       true,
     showTableFooter:       true,
-    showSearcher:          20,
+    showSearcher:          true,
     showPaginator:         true,
     showToolbar:           true,
     showMessages:          true,
     showServerErrors:      false,
+  //showServerMessages:    true,  // TODO! NOT IMPLEMENTED
     showEmptyRows:         false,
   //showSelectAll:         false, // TODO! NOT IMPLEMENTED
     showButtonAdd:         1,
@@ -154,12 +157,15 @@ $.widget("any.anyView", {
     if (typeof i18n === "undefined")
       throw ANY_LOCALE_NOT_FOUND;
 
+    if (this.options.id && $("#"+this.options.id).length)
+      this.element = $("#"+this.options.id);
+
+    if (!this.element || !this.element.length)
+      throw VIEW_AREA_MISSING;
+
     this.element.addClass("any-data-view");
 
-    if (this.options.id)
-      this.element = $("#"+this.options.id);
-    else
-      this.options.id = this.element.attr("id");
+    this.options.id = this.element.attr("id");
 
     if (!this.options.top_view)
       this.options.top_view = this;
