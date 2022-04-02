@@ -8,7 +8,7 @@ anyList can read complex data structures from Ajax, inline code or indeed any da
 
 anyList can also be used as a Wordpress plugin. 
 
-Early versions of the library is already been used in both commercial and non-commercial projects - see screenshots below:
+Early versions of the library is already being used in both commercial and non-commercial projects - see screenshots below:
 
 **Example 1: "Rulletour", a free online bicycle tournament:**
 
@@ -85,12 +85,12 @@ my_view.refresh();
 
 7. As an alternative  to the last step, one could do this:
 ```js
-$("#minimal_foo_list").anyView({
+$("#myview").anyView({
   model:   my_model,
   filters: my_filters,
-  id:      "minimal_foo_list", // Id of div in which to display result
+  id:      "myview", // Id of div in which to display result
 });
-$("#minimal_foo_list").anyView("refresh");
+$("#myview").anyView("refresh");
 ```
 
 The above will produce an output like this:
