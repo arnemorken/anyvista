@@ -246,15 +246,13 @@ function table2display()
       from: from,
       num:  num,
       success: function(context,serverdata,options) {
-        doLog("Displaying...");
-        self.dbSearchSuccess(context,serverdata,options);
         //
         // Display data
         //
+        doLog("Displaying...");
+        self.dbSearchSuccess(context,serverdata,options);
         if (self.error)
           $("#any_result").html("<span style='color:red'>"+self.error+"</span>");
-        else
-          data_view.refresh();
         console.log("Done.");
       },
       fail: function(context,jqXHR) {
