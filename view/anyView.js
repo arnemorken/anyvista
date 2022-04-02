@@ -61,6 +61,7 @@
  *        {boolean} onFocusoutRemoveEmpty: The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
  *        {boolean} onUpdateEndEdit:       Pressing the update button will close the element currently being edited for editing. Default: true.
  *        {boolean} useOddEven:            If true, tags for odd and even columns will be generated for list entries. Default: false.
+ *        {string}  defaultKind:           The default kind to use. One of `head`. `list` or `item`. Default: `list`.
  *        {integer} itemsPerPage:          The number of rows to show per page. Only applicable for "list" and "select" kinds.
  *        {integer} currentPage:           The current page to show. Only applicable for "list" and "select" kinds.
  *        {string}  grouping:              How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
@@ -117,8 +118,9 @@ $.widget("any.anyView", {
     onFocusoutRemoveEmpty: true,
   //onUpdateEndEdit:       true, // TODO! NOT IMPLEMENTED
     useOddEven:            true,
-    currentPage:           1,
+    defaultKind:           "list",
     itemsPerPage:          20,
+    currentPage:           1,
     grouping:              "",
     sortBy:                "",
     sortDirection:         "ASC",
@@ -178,9 +180,8 @@ $.widget("any.anyView", {
     this.data_level  = this.options.data_level
                        ? this.options.data_level
                        : 0;
-    this.row_no      = 0;
 
-    this.group_id = this.options.group_id;
+    this.group_id = this.options.group_id; // TODO! Can we get rid of this?
 
     this.model = this.options.model
                  ? this.options.model
@@ -331,7 +332,7 @@ $.any.anyView.prototype._findKind = function (data,id,okind)
   if (!kind && okind != "head")
     kind = okind;
   if (!kind)
-    kind = "list"; // Default
+    kind = this.options.defaultKind; // If not found, set default
   if (kind == "list" && this.options.isSelectable)
     kind = "select";
   return kind;
