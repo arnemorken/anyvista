@@ -1587,7 +1587,8 @@ class anyTable extends dbTable
     $type_list = $this->mType;
     $id_name   = $this->mType."_id";
     foreach ($flatdata as $idx => &$subdata) {
-      if ($idx != "page_links") {
+      $has_grouping_data = (strpos($idx,"grouping") === 0);
+      if (!$has_grouping_data) {
         $parent_not_in_group = isset($subdata["parent_id"]) &&
                                $subdata["parent_id"] != "" &&
                                !isset($flatdata[$subdata["parent_id"]]) &&
@@ -1625,6 +1626,7 @@ class anyTable extends dbTable
               $subdata["parent_id"] = $pid;
           }
         } // if is_array
+      } // if has_grouping_data
     } // foreach
     return $retval;
   } // buildDataTree
