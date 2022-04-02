@@ -312,8 +312,8 @@ function csv2display()
       //
       // Display data
       //
-      doLog("Displaying...");
-      data_view.refresh();
+      doLog("",true);
+      data_view.refresh({from:1,num:20});
       console.log("Done.");
     }); // done
   });
