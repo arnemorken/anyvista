@@ -125,7 +125,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (params)
           let div_id = this.getIdBase()+"_"+type+"_"+kind+"_"+con_id_str+"_data";
           let click_opt = { div_id: div_id };
           tab_btn.off("click");
-          tab_btn.on("click",click_opt,$.proxy(this.clickOpenTab,this));
+          tab_btn.on("click",click_opt,$.proxy(this.openTab,this));
           $("#"+div_id).hide();
           // Remember which tab should get focus
           let ntab = this.tabs_list[tabs_id_str].children().length;
@@ -147,26 +147,20 @@ $.any.anyViewTabs.prototype.refreshData = function (params)
     let div_id   = data_div.attr('id');
     let ev = {};
     ev.data = {};
-    ev.data.div_id = div_id;
-    this.openTab(ev);
-    if (this.first_div_id) {
+    if (this.first_div_id)
       ev.data.div_id = this.first_div_id;
-      this.openTab(ev);
-    }
+    else
+      ev.data.div_id = div_id;
+    this.openTab(ev);
   }
   return data_div;
 }; // refreshData
 
-$.any.anyViewTabs.prototype.clickOpenTab = function (event)
-{
-  this.current_div_id = event.data.div_id;
-  this.openTab(event);
-}; // clickOpenTab
-
 $.any.anyViewTabs.prototype.openTab = function (event)
 {
-  if (!event)
+  if (!event || !event.data || event.data.div_id == this.current_div_id)
     return false;
+  this.current_div_id = event.data.div_id;
   $(".anyTabButton").removeClass("w3-blue");
   let btn = $("#"+event.data.div_id+"_tab_btn");
   btn.addClass("w3-blue");
