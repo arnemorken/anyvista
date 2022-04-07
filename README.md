@@ -83,7 +83,7 @@ let my_view  = new anyView({
 my_view.refresh();
 ```
 
-7. As an alternative  to the last step, one could do this:
+As an alternative  to the last step, one could do this:
 ```js
 $("#myview").anyView({
   model:   my_model,
@@ -97,7 +97,7 @@ The above will produce an output like this:
 
 ![alt text](https://raw.githubusercontent.com/arnemorken/anylist/main/examples/hello_world/hello_list_uneditable.png)
 
-To make the view editable, give the following option to the anyView constructor:
+To make the view editable, give the following extra option to the anyView constructor:
 ```js
   ...
   isEditable: true,
