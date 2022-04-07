@@ -843,22 +843,56 @@ $.any.anyView.prototype.refreshData = function (params)
   if (!data_div || !table)
     return null;
 
-  // Create or get container for data
   let extra_foot = this.getOrCreateExtraFoot(table,type,kind,con_id_str);
-  if (extra_foot)
-    this.refreshExtraFoot(extra_foot,data,id,type,kind,edit,con_id_str,pdata,pid);
+  if (extra_foot) {
+    this.refreshExtraFoot({ parent:     extra_foot,
+                            data:       data,
+                            id:         id,
+                            type:       type,
+                            kind:       kind,
+                            edit:       edit,
+                            con_id_str: con_id_str,
+                            pdata:      pdata,
+                            pid:        pid,
+                         });
+  }
   let thead = table.find("thead").length ? table.find("thead") : null;
   if (!thead) {
     thead = this.getOrCreateThead(table,type,kind,con_id_str);
     if (thead)
-      this.refreshThead(thead,data,id,type,kind,edit,con_id_str);
+      this.refreshThead({ parent:     thead,
+                          data:       data,
+                          id:         id,
+                          type:       type,
+                          kind:       kind,
+                          edit:       edit,
+                          con_id_str: con_id_str,
+                       });
   }
   let tbody = this.getOrCreateTbody(table,type,kind,con_id_str);
-  if (tbody)
-    this.refreshTbodyRow(tbody,data,id,type,kind,edit,acc_id_str,pdata,pid);
+  if (tbody) {
+    this.refreshTbodyRow({ parent:     tbody,
+                           data:       data,
+                           id:         id,
+                           type:       type,
+                           kind:       kind,
+                           edit:       edit,
+                           acc_id_str: acc_id_str,
+                           pdata:      pdata,
+                           pid:        pid,
+                        });
+  }
   let tfoot = this.getOrCreateTfoot(table,type,kind,con_id_str);
-  if (tfoot)
-    this.refreshTfoot(tfoot,data,id,type,kind,edit,con_id_str,pdata,pid);
+  if (tfoot) {
+    this.refreshTfoot({ parent:     tfoot,
+                        data:       data,
+                        id:         id,
+                        type:       type,
+                        kind:       kind,
+                        edit:       edit,
+                        con_id_str: con_id_str,
+                     });
+  }
   // Clean up
   if (extra_foot && !extra_foot.children().length)
     extra_foot.remove();
@@ -870,20 +904,6 @@ $.any.anyView.prototype.refreshData = function (params)
     tfoot.remove();
   return data_div;
 }; // refreshData
-
-$.any.anyView.prototype._countData = function (data)
-{
-  let n = 0;
-  if (data) {
-    for (let id in data) {
-      if (data.hasOwnProperty(id)) {
-        if (!id.startsWith("grouping"))
-          ++n;
-      }
-    }
-  }
-  return n;
-}; // _countData
 
 //
 // Get the current data div, or create a new one if it does not exist
@@ -997,10 +1017,19 @@ $.any.anyView.prototype.getOrCreateExtraFoot = function (table,type,kind,con_id_
 //
 // Refresh a table header
 //
-$.any.anyView.prototype.refreshThead = function (thead,data,id,type,kind,edit,con_id_str)
+$.any.anyView.prototype.refreshThead = function (params)
 {
-  if (!thead)
+  if (!params || ! params.parent)
     return null;
+
+  let thead      = params.parent;
+  let data       = params.data;
+  let id         = params.id;
+  let type       = params.type;
+  let kind       = params.kind;
+  let edit       = params.edit;
+  let con_id_str = params.con_id_str;
+
   if (!this.options.filters) {
     this.model.error = type.capitalize()+" "+kind+" "+i18n.error.FILTERS_MISSING;
     console.error(this.model.error);
@@ -1134,10 +1163,19 @@ $.any.anyView.prototype.sortTable = function (event)
 //
 // Refresh the table footer
 //
-$.any.anyView.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,con_id_str)
+$.any.anyView.prototype.refreshTfoot = function (params)
 {
-  if (!tfoot || !con_id_str)
+  if (!params || !params.parent || !params.con_id_str)
     return null;
+
+  let tfoot      = params.parent;
+  let data       = params.data;
+  let id         = params.id;
+  let type       = params.type;
+  let kind       = params.kind;
+  let edit       = params.edit;
+  let con_id_str = params.con_id_str;
+
   con_id_str = con_id_str.substr(0,con_id_str.lastIndexOf("_"));
   let tr_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_tr_foot";
   let tr    = $("#"+tr_id);
@@ -1164,10 +1202,21 @@ $.any.anyView.prototype.refreshTfoot = function (tfoot,data,id,type,kind,edit,co
 //
 // Refresh the extra table footer
 //
-$.any.anyView.prototype.refreshExtraFoot = function (extra_foot,data,id,type,kind,edit,con_id_str,pdata,pid)
+$.any.anyView.prototype.refreshExtraFoot = function (params)
 {
-  if (!extra_foot)
+  if (!params || !params.parent)
     return null;
+
+  let extra_foot = params.parent;
+  let data       = params.data;
+  let id         = params.id;
+  let type       = params.type;
+  let kind       = params.kind;
+  let edit       = params.edit;
+  let con_id_str = params.con_id_str;
+  let pdata      = params.pdata;
+  let pid        = params.pid;
+
   let num_results = data && data.grouping_num_results ? data.grouping_num_results : this._countData(data);
   if (this.options.showPaginator && num_results > this.options.itemsPerPage) {
     // Initialize paging
@@ -1269,8 +1318,21 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
 //
 // Refresh a single table row
 //
-$.any.anyView.prototype.refreshTbodyRow = function (tbody,data,id,type,kind,edit,acc_id_str,pdata,pid)
+$.any.anyView.prototype.refreshTbodyRow = function (params)
 {
+  if (!params || !params.parent)
+    return null;
+
+  let tbody      = params.parent;
+  let data       = params.data;
+  let id         = params.id;
+  let type       = params.type;
+  let kind       = params.kind;
+  let edit       = params.edit;
+  let acc_id_str = params.acc_id_str;
+  let pdata      = params.pdata;
+  let pid        = params.pid;
+
   if (kind == "list" || kind == "select")
     this.refreshListTableDataRow(tbody,data,id,type,kind,edit,acc_id_str,pdata,pid);
   else
