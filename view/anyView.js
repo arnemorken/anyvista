@@ -551,13 +551,13 @@ $.any.anyView.prototype.refresh = function (params)
   if (this.options.showToolbar) {
     if (!this.options.isSelectable && this.model.type && this.data_level==0 && con_id_str == "" &&
         (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
-      this.refreshToolbarBottom({ parent: parent,
-                                  data:   data,
-                                  id:     this.model.id,
-                                  type:   this.model.type,
-                                  kind:   this.model.kind,
-                                  edit:   edit,
-                                  id_str: "",
+      this.refreshToolbarBottom({ parent:     parent,
+                                  data:       data,
+                                  id:         this.model.id,
+                                  type:       this.model.type,
+                                  kind:       this.model.kind,
+                                  edit:       edit,
+                                  con_id_str: "",
                                });
     }
   }
@@ -2840,7 +2840,7 @@ $.any.anyView.prototype._processKeyup = function (event)
                       type:       event.data.type,
                       kind:       event.data.kind,
                       filter:     event.data.filter,
-                      id_str:     event.data.id_str,
+                      acc_id_str: event.data.acc_id_str,
                       is_new:     data && data[id] ? data[id].is_new : false,
                       isEditable: event.data.isEditable,
                       edit:       event.data.edit,
@@ -2854,12 +2854,12 @@ $.any.anyView.prototype._processKeyup = function (event)
       let kind = event.data.kind;
       if (kind == "list" || kind == "select") {
         if (this.options.onEnterInsertNew) {
-          if (ev.data.id_str) {
-            let n = ev.data.id_str.lastIndexOf("_");
+          if (ev.data.acc_id_str) {
+            let n = ev.data.acc_id_str.lastIndexOf("_");
             if (n>-1)
-              ev.data.id_str = ev.data.id_str.slice(0,n);
+              ev.data.acc_id_str = ev.data.acc_id_str.slice(0,n);
             else
-              ev.data.id_str = "";
+              ev.data.acc_id_str = "";
           }
           this.addListEntry(ev);
         }
@@ -3146,13 +3146,14 @@ $.any.anyView.prototype._doShowItem = function (opt)
   // Create a new display area and display the item data
   item["+0"].data[the_id].item   = type;
   item["+0"].data[the_id].is_new = is_new;
-  let view = this.createView({ parent: opt.view.element,
-                               data:   item,
-                               id:     the_id,
-                               type:   type,
-                               kind:   kind,
-                               id_str: opt.id_str,
-                            });
+  let view = this.createView({
+               parent: opt.view.element,
+               data:   item,
+               id:     the_id,
+               type:   type,
+               kind:   kind,
+               acc_id_str: opt.acc_id_str,
+             });
   if (!view || !view.options || !view.options.top_view) {
     console.error("View missing. "); // Should never happen TODO! i18n
     return false;
@@ -3224,7 +3225,7 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
     opt = this.current_edit;
     opt.edit = false;
   }
-  let prefix  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.con_id_str;
+  let prefix  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str;
   let elem_id = opt.kind == "item"
                 ? this.id_base+"_"+opt.type+"_item_"+opt.acc_id_str+"_tbody"
                 : this.id_base+"_"+opt.type+"_list_"+opt.acc_id_str+"_tr";
@@ -3253,19 +3254,20 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
         }
       }
       let new_params = {
-        parent: this.element,
-        data:   opt.data,
-        id:     opt.id,
-        type:   opt.type,
-        kind:   opt.kind,
-        edit:   opt.edit,
-        id_str: opt.acc_id_str,
-        pdata:  opt.pdata,
-        pid:    opt.pid,
+        parent:     this.element,
+        data:       opt.data,
+        id:         opt.id,
+        type:       opt.type,
+        kind:       opt.kind,
+        edit:       opt.edit,
+        con_id_str: opt.con_id_str,
+        acc_id_str: opt.acc_id_str,
+        pdata:      opt.pdata,
+        pid:        opt.pid,
       };
       let have_data = Object.size(opt.data) > 0;
-      new_params.data_div = this.getOrCreateDataContainer(this.element,opt.type,opt.kind,opt.acc_id_str,have_data);
-      new_params.table    = this.getOrCreateTable(new_params.data_div,opt.type,opt.kind,opt.acc_id_str);
+      new_params.data_div = this.getOrCreateDataContainer(this.element,opt.type,opt.kind,opt.con_id_str,have_data);
+      new_params.table    = this.getOrCreateTable(new_params.data_div,opt.type,opt.kind,opt.con_id_str);
       this.refreshData(new_params);
     }
     else {
@@ -3291,7 +3293,8 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
       type:       opt.type,
       kind:       opt.kind,
       filter:     opt.filter,
-      id_str:     opt.acc_id_str,
+      con_id_str: opt.con_id_str,
+      acc_id_str: opt.acc_id_str,
       is_new:     opt.is_new,
       isEditable: opt.isEditable,
       edit:       true,
@@ -3697,13 +3700,13 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
     let view = options.parent_view;
     if (view.options.showToolbar) {
       view.options.item_opening = true; // To make top right close icon appear
-      view.refreshToolbarBottom({ parent: view.element,
-                                  data:   view.model.data,
-                                  id:     view.model.id,
-                                  type:   view.model.type,
-                                  kind:   view.model.kind,
-                                  edit:   false,
-                                  id_str: "",
+      view.refreshToolbarBottom({ parent:     view.element,
+                                  data:       view.model.data,
+                                  id:         view.model.id,
+                                  type:       view.model.type,
+                                  kind:       view.model.kind,
+                                  edit:       false,
+                                  con_id_str: "",
                                });
     }
   }
