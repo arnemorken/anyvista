@@ -709,28 +709,29 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
     this.showMessages();
   }
   if (this.options.showButtonNew) {
-    // Create a "new item" button
-    let opt = { data:   data,
-                id:     id, // Find a new id
-                type:   type,
-                kind:   "item",
-                id_str: id_str,
-                edit:   true,
-                is_new: true,
+    // Create a "new item"  button
+    let opt = { parent:     bardiv,
+                data:       data,
+                id:         id, // Find a new id
+                type:       type,
+                kind:       "item",
+                con_id_str: con_id_str,
+                edit:       true,
+                is_new:     true,
               };
-    this.refreshNewItemButton(bardiv,opt);
+    this.refreshNewItemButton(opt);
   }
   if (this.options.showButtonAddLink && this.model.id) {
     // Create an "add link" button
-    let opt = {
-      data:   data,
-      id:     id,
-      type:   type,
-      kind:   "item",
-      id_str: id,
-      edit:   true,
-    };
-    this.refreshAddLinkButton(bardiv,opt);
+    let opt = { parent: bardiv,
+                data:   data,
+                id:     id,
+                type:   type,
+                kind:   "item",
+                id_str: id,
+                edit:   true,
+              };
+    this.refreshAddLinkButton(opt);
   }
   return bardiv;
 }; // refreshToolbarBottom
@@ -1079,8 +1080,10 @@ $.any.anyView.prototype.refreshThead = function (params)
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
       (this.options.isEditable && (this.options.showButtonAdd || this.options.showButtonEdit || this.options.showButtonUpdate))) {
     let th = $("<th class='any-th any-list-th any-tools-first-th'></th>");
-    if (add_opt && this.options.showButtonAdd == 1)
-      this.refreshAddButton(th,add_opt);
+    if (add_opt && this.options.showButtonAdd == 1) {
+      add_opt.parent = th;
+      this.refreshAddButton(add_opt);
+    }
     tr.append(th);
   }
   // Table header cells
@@ -1117,8 +1120,10 @@ $.any.anyView.prototype.refreshThead = function (params)
   // Last tool cell for editable list
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) || this.options.isEditable) {
     let th  = $("<th class='any-th any-list-th any-tools-last-th'></th>");
-    if (add_opt && this.options.showButtonAdd == 2)
-      this.refreshAddButton(th,add_opt);
+    if (add_opt && this.options.showButtonAdd == 2) {
+      add_opt.parent = th;
+      this.refreshAddButton(add_opt);
+    }
     tr.append(th);
   }
   // Clean up
@@ -1565,49 +1570,55 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (tr,data,id,type,ki
   tr.append(td);
   if (this.options.isSelectable && (kind == "list" || kind == "select")) {
     let checked = this.model.select.has(parseInt(id));
-    let sel_opt = { data:       data,
+    let sel_opt = { parent:     td,
+                    data:       data,
                     id:         id,
                     type:       type,
                     kind:       kind,
-                    id_str:     acc_id_str,
+                    con_id_str: con_id_str,
+                    acc_id_str: acc_id_str,
                     filter:     filter,
                     isEditable: isEditable,
                     checked:    checked,
                     pdata:      pdata,
                     pid:        pid,
                   };
-    this.refreshSelectButton(td,sel_opt);
+    this.refreshSelectButton(sel_opt);
   }
   else
   if (this.options.isEditable || edit || isEditable) {
     if (this.options.showButtonEdit) {
-      let edt_opt = { data:       data,
+      let edt_opt = { parent:     td,
+                      data:       data,
                       id:         id,
                       type:       type,
                       kind:       kind,
-                      id_str:     acc_id_str,
+                      con_id_str: con_id_str,
+                      acc_id_str: acc_id_str,
                       filter:     filter,
                       isEditable: isEditable,
                       edit:       edit,
                       pdata:      pdata,
                       pid:        pid,
                     };
-      this.refreshEditButton(td,edt_opt);
+      this.refreshEditButton(edt_opt);
     }
     if (this.options.showButtonUpdate) {
-      let upd_opt = { indata:     data,
+      let upd_opt = { parent:     td,
+                      indata:     data,
                       id:         id,
                       type:       type,
                       kind:       kind,
                       filter:     filter,
-                      id_str:     acc_id_str,
+                      con_id_str: con_id_str,
+                      acc_id_str: acc_id_str,
                       is_new:     data && data[id] ? data[id].is_new : false,
                       isEditable: isEditable,
                       edit:       edit,
                       pdata:      pdata,
                       pid:        pid,
                     };
-      this.refreshUpdateButton(td,upd_opt);
+      this.refreshUpdateButton(upd_opt);
     }
   }
 }; // refreshTableDataFirstCell
@@ -1623,7 +1634,8 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (tr,data,id,type,kin
   }
   else
   if (this.options.isEditable || edit || isEditable) {
-    let last_opt = { data:       data,
+    let last_opt = { parent:     td,
+                     data:       data,
                      id:         id,
                      type:       type,
                      kind:       kind,
@@ -1636,11 +1648,11 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (tr,data,id,type,kin
                    };
     last_opt.isEditable = isEditable;
     if (this.options.showButtonRemove && this.options.isRemovable && id && kind == "list")
-      this.refreshRemoveButton(td,last_opt);
+      this.refreshRemoveButton(last_opt);
     if (this.options.showButtonDelete && this.options.isDeletable && id)
-      this.refreshDeleteButton(td,last_opt);
+      this.refreshDeleteButton(last_opt);
     if (this.options.showButtonCancel && isEditable && edit)
-      this.refreshCancelButton(td,last_opt);
+      this.refreshCancelButton(last_opt);
   }
 }; // refreshTableDataLastCell
 
@@ -2376,11 +2388,13 @@ $.any.anyView.prototype.refreshCloseItemButton = function (params)
 
 // Add-button in list table header
 // By default calls addListEntry
-$.any.anyView.prototype.refreshAddButton = function (parent,opt)
+$.any.anyView.prototype.refreshAddButton = function (opt)
 {
+  let parent  = opt.parent;
+
   let tit_str = i18n.button.buttonAddToList.replace("%%",opt.type);
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_new_line_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.con_id_str+"_new_line_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-add any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2398,11 +2412,13 @@ $.any.anyView.prototype.refreshAddButton = function (parent,opt)
 
 // Select-button in first list table cell
 // By default calls _toggleChecked
-$.any.anyView.prototype.refreshSelectButton = function (parent,opt)
+$.any.anyView.prototype.refreshSelectButton = function (opt)
 {
+  let parent  = opt.parent;
+
   let tit_str = i18n.button.buttonSelect;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_select_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_select_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let check_str = opt.checked
@@ -2423,11 +2439,13 @@ $.any.anyView.prototype.refreshSelectButton = function (parent,opt)
 
 // Edit-button in first list or item table cell
 // By default calls toggleEdit
-$.any.anyView.prototype.refreshEditButton = function (parent,opt)
+$.any.anyView.prototype.refreshEditButton = function (opt)
 {
+  let parent  = opt.parent;
+
   let tit_str = i18n.button.buttonEdit;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_edit_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_edit_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-edit-icon any-icon pointer' title='"+tit_str+"'>"+
@@ -2448,11 +2466,13 @@ $.any.anyView.prototype.refreshEditButton = function (parent,opt)
 
 // Update-button in first list or item table cell
 // By default calls dbUpdate
-$.any.anyView.prototype.refreshUpdateButton = function (parent,opt)
+$.any.anyView.prototype.refreshUpdateButton = function (opt)
 {
+  let parent  = opt.parent;
+
   let tit_str = i18n.button.buttonUpdate;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_update_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_update_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-update-icon any-icon pointer' title='"+tit_str+"'>"+
@@ -2473,11 +2493,13 @@ $.any.anyView.prototype.refreshUpdateButton = function (parent,opt)
 
 // Remove-button in last list or item table cell
 // By default calls dbRemoveDialog
-$.any.anyView.prototype.refreshRemoveButton = function (parent,opt)
+$.any.anyView.prototype.refreshRemoveButton = function (opt)
 {
+  let parent  = opt.parent;
+
   let tit_str = i18n.button.buttonRemove;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_remove_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_remove_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-remove-icon any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2497,11 +2519,13 @@ $.any.anyView.prototype.refreshRemoveButton = function (parent,opt)
 
 // Delete-button in last list or item table cell
 // By default calls dbDeleteDialog
-$.any.anyView.prototype.refreshDeleteButton = function (parent,opt)
+$.any.anyView.prototype.refreshDeleteButton = function (opt)
 {
+  let parent  = opt.parent;
+
   let tit_str = i18n.button.buttonDelete;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_delete_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_delete_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-delete-icon any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2521,11 +2545,13 @@ $.any.anyView.prototype.refreshDeleteButton = function (parent,opt)
 
 // Cancel-button in last list or item table cell
 // By default calls toggleEdit
-$.any.anyView.prototype.refreshCancelButton = function (parent,opt)
+$.any.anyView.prototype.refreshCancelButton = function (opt)
 {
+  let parent  = opt.parent;
+
   let tit_str = i18n.button.buttonCancel;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_cancel_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_cancel_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-cancel-icon any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2546,11 +2572,13 @@ $.any.anyView.prototype.refreshCancelButton = function (parent,opt)
 
 // Button in bottom toolbar for opening a new empty item view
 // By default calls showItem
-$.any.anyView.prototype.refreshNewItemButton = function (parent,opt)
+$.any.anyView.prototype.refreshNewItemButton = function (opt)
 {
+  let parent  = opt.parent;
+
   let tit_str = this.options.newButtonLabel ? this.options.newButtonLabel : i18n.button.buttonNew+" "+opt.type;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'> "+/*tit_str+*/"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_new_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.con_id_str+"_new_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-new-icon any-icon pointer' title='"+tit_str+"'>"+
@@ -2568,10 +2596,12 @@ $.any.anyView.prototype.refreshNewItemButton = function (parent,opt)
 
 // Button in bottom toolbar for displaying a menu for adding links
 // By default calls showLinkMenu
-$.any.anyView.prototype.refreshAddLinkButton = function (parent,opt)
+$.any.anyView.prototype.refreshAddLinkButton = function (opt)
 {
   if (!this.model.plugins || !this.options.linkIcons)
     return;
+
+  let parent  = opt.parent;
 
   opt.top_view = parent.parent();
   let tit_str = i18n.button.buttonAddLink+"...";
@@ -2592,7 +2622,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (parent,opt)
   if (!opt.edit)
     btn.hide();
 
-  let menu_id = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str+"_link_dropdown";
+  let menu_id = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.con_id_str+"_link_dropdown";
   opt.element_id = menu_id;
   if ($("#"+menu_id).length)
     $("#"+menu_id).remove();
@@ -3095,10 +3125,10 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
     opt = this.current_edit;
     opt.edit = false;
   }
-  let prefix  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
+  let prefix  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.con_id_str;
   let elem_id = opt.kind == "item"
-                ? this.id_base+"_"+opt.type+"_item_"+opt.id_str+"_tbody"
-                : this.id_base+"_"+opt.type+"_list_"+opt.id_str+"_tr";
+                ? this.id_base+"_"+opt.type+"_item_"+opt.acc_id_str+"_tbody"
+                : this.id_base+"_"+opt.type+"_list_"+opt.acc_id_str+"_tr";
   let elem = $("#"+elem_id);
   if (elem.length) {
     if (opt.kind != "item") {
@@ -3130,14 +3160,17 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
         type:   opt.type,
         kind:   opt.kind,
         edit:   opt.edit,
-        id_str: opt.id_str,
+        id_str: opt.acc_id_str,
         pdata:  opt.pdata,
         pid:    opt.pid,
       };
+      let have_data = Object.size(opt.data) > 0;
+      new_params.data_div = this.getOrCreateDataContainer(this.element,opt.type,opt.kind,opt.acc_id_str,have_data);
+      new_params.table    = this.getOrCreateTable(new_params.data_div,opt.type,opt.kind,opt.acc_id_str);
       this.refreshData(new_params);
     }
     else {
-      this.refreshItemTableDataRow(elem,opt.data,opt.id,opt.type,opt.kind,opt.edit,opt.id_str,opt.pdata,opt.pid);
+      this.refreshItemTableDataRow(elem,opt.data,opt.id,opt.type,opt.kind,opt.edit,opt.acc_id_str,opt.pdata,opt.pid);
     }
   }
   let edit_icon   = prefix+"_edit .any-edit-icon";
@@ -3159,7 +3192,7 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
       type:       opt.type,
       kind:       opt.kind,
       filter:     opt.filter,
-      id_str:     opt.id_str,
+      id_str:     opt.acc_id_str,
       is_new:     opt.is_new,
       isEditable: opt.isEditable,
       edit:       true,
