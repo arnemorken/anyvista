@@ -543,18 +543,18 @@ $.any.anyView.prototype.refresh = function (params)
             ++row_no;
             if (from == -1 || from <= row_no && row_no < from + num) {
               // Refresh a single list row or a single item
-              view.refreshOne({ parent:         the_parent,
-                                data:           data,
-                                id:             idc,
-                                type:           type,
-                                kind:           kind,
-                                curr_type:      curr_type,
-                                curr_kind:      curr_kind,
-                                new_con_id_str: new_con_id_str,
-                                new_acc_id_str: new_acc_id_str,
-                                pdata:          pdata,
-                                pid:            pid,
-                                edit:           edit,
+              view.refreshOne({ parent:     the_parent,
+                                data:       data,
+                                id:         idc,
+                                type:       type,
+                                kind:       kind,
+                                curr_type:  curr_type,
+                                curr_kind:  curr_kind,
+                                con_id_str: new_con_id_str,
+                                acc_id_str: new_acc_id_str,
+                                pdata:      pdata,
+                                pid:        pid,
+                                edit:       edit,
                              });
             }
           } // if view
@@ -594,32 +594,32 @@ $.any.anyView.prototype.refresh = function (params)
 //
 $.any.anyView.prototype.refreshOne = function (params)
 {
-  let parent         = params.parent;
-  let data           = params.data;
-  let id             = params.id;
-  let type           = params.type;
-  let kind           = params.kind;
-  let curr_type      = params.curr_type;
-  let curr_kind      = params.curr_kind;
-  let new_con_id_str = params.new_con_id_str;
-  let new_acc_id_str = params.new_acc_id_str;
-  let pdata          = params.pdata;
-  let pid            = params.pid;
-  let edit           = params.edit;
+  let parent     = params.parent;
+  let data       = params.data;
+  let id         = params.id;
+  let type       = params.type;
+  let kind       = params.kind;
+  let curr_type  = params.curr_type;
+  let curr_kind  = params.curr_kind;
+  let con_id_str = params.con_id_str;
+  let acc_id_str = params.acc_id_str;
+  let pdata      = params.pdata;
+  let pid        = params.pid;
+  let edit       = params.edit;
 
   let new_params = {
-    parent: parent,
-    data:   data,
-    id:     id,
-    type:   curr_type,
-    kind:   curr_kind,
-    ptype:  type,
-    pkind:  kind,
-    edit:   edit,
-    con_id_str: new_con_id_str,
-    acc_id_str: new_acc_id_str,
-    pdata:  pdata,
-    pid:    pid,
+    parent:     parent,
+    data:       data,
+    id:         id,
+    type:       curr_type,
+    kind:       curr_kind,
+    ptype:      type,
+    pkind:      kind,
+    edit:       edit,
+    con_id_str: con_id_str,
+    acc_id_str: acc_id_str,
+    pdata:      pdata,
+    pid:        pid,
     doNotEmpty: false,
   };
 
@@ -628,13 +628,13 @@ $.any.anyView.prototype.refreshOne = function (params)
 
   // Refresh header
   let have_data = Object.size(data) > 0;
-  new_params.header_div = this.getOrCreateHeaderContainer(parent,curr_type,curr_kind,new_con_id_str,have_data,false);
+  new_params.header_div = this.getOrCreateHeaderContainer(parent,curr_type,curr_kind,con_id_str,have_data,false);
   if (curr_kind == "head" || (data && data.grouping))
     this.refreshHeader(new_params);
 
   // Refresh data
-  new_params.data_div = this.getOrCreateDataContainer(parent,curr_type,curr_kind,new_con_id_str,have_data);
-  new_params.table    = this.getOrCreateTable(new_params.data_div,curr_type,curr_kind,new_con_id_str);
+  new_params.data_div = this.getOrCreateDataContainer(parent,curr_type,curr_kind,con_id_str,have_data);
+  new_params.table    = this.getOrCreateTable(new_params.data_div,curr_type,curr_kind,con_id_str);
   if (curr_kind == "list" || curr_kind == "select" || curr_kind == "item")
     this.refreshData(new_params);
 
@@ -642,16 +642,16 @@ $.any.anyView.prototype.refreshOne = function (params)
   if (data && data[id] && data[id].data) {
     if ((curr_kind == "list" || curr_kind == "select"))
       ++this.options.indent_level;
-    this.refresh({ parent: new_params.data_div,
-                   data:   data[id].data,
-                   id:     null,
-                   type:   curr_type,
-                   kind:   curr_kind,
-                   pdata:  data,
-                   pid:    id,
-                   edit:   edit,
-                   con_id_str: new_con_id_str,
-                   acc_id_str: new_acc_id_str,
+    this.refresh({ parent:     new_params.data_div,
+                   data:       data[id].data,
+                   id:         null,
+                   type:       curr_type,
+                   kind:       curr_kind,
+                   pdata:      data,
+                   pid:        id,
+                   edit:       edit,
+                   con_id_str: con_id_str,
+                   acc_id_str: acc_id_str,
                 });
     if ((kind == "list" || kind == "select"))
       --this.options.indent_level;
