@@ -404,6 +404,10 @@ $.any.anyView.prototype.onModelChange = function (model)
   return this;
 }; // onModelChange
 
+/////////////////////////////////////////////////////////////////////////////////////////////
+// Refreshments
+/////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
  * @method refresh
  * @description Displays data in a DOM element. If an element matching the type/kind/id combination
@@ -1133,57 +1137,6 @@ $.any.anyView.prototype.refreshThead = function (params)
     thead.remove();
 }; // refreshThead
 
-$.any.anyView.prototype.sortTable = function (event)
-{
-  if (!event || !event.data) {
-    console.log("sortTable: Missing event or event.data. "); // TODO! i18n
-    return;
-  }
-  let type     = event.data.type;
-  let group_id = event.data.group_id;
-  let order    = event.data.filter_id;
-  let last_sort_by = this.options.sortBy;
-  this.options.sortBy = order;
-  if (this.options.sortBy == last_sort_by)
-    this.options.sortDirection = this.options.sortDirection == "ASC" ? "DESC" : "ASC";
-  let from = null;
-  let num  = null;
-  let table = $("#"+event.data.table_id);
-  if (table.length && this.options.showPaginator) {
-    let extra_foot = table.parent().find(".table_extrafoot");
-    if (extra_foot.length) {
-      let pager = extra_foot.data("pager");
-      if (pager) {
-        from = pager.options.itemsPerPage *(pager.currentPage() - 1);
-        num  = pager.options.itemsPerPage;
-      }
-      else {
-        from = 0;
-        num  = this.options.itemsPerPage;
-      }
-    }
-    this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty this view (to avoid flashing)
-  }
-  let mod_opt = { context:   this.model,
-                  type:      type,
-                  group_id:  group_id,
-                  from:      from,
-                  num:       num,
-                  order:     order,
-                  direction: this.options.sortDirection,
-                };
-  if (this.model.mode == "remote") {
-    // Remote search, let the database do the sorting.
-    // Will (normally) call refresh via onModelChange
-    this.options.ref_rec = 0;
-    this.model.dbSearch(mod_opt);
-  } // if remote
-  else {
-    // TODO! Local sort not implemented yet
-    console.log("sortTable: Local sort not implemented. ");
-  }
-}; // sortTable
-
 //
 // Refresh the table footer
 //
@@ -1241,7 +1194,17 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
   let pdata      = params.pdata;
   let pid        = params.pid;
 
-  let num_results = data && data.grouping_num_results ? data.grouping_num_results : this._countData(data);
+  let num_results = 0;
+  if (data && data.grouping_num_results)
+    num_results = data.grouping_num_results
+  else {
+    for (let id in data) {
+      if (data.hasOwnProperty(id)) {
+        if (!id.startsWith("grouping"))
+          ++num_results;
+      }
+    }
+  }
   if (this.options.showPaginator && num_results > this.options.itemsPerPage) {
     // Initialize paging
     let pager = extra_foot.data("pager");
@@ -1285,59 +1248,6 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
   } // if
   return extra_foot;
 }; // refreshExtraFoot
-
-$.any.anyView.prototype._countData = function (data)
-{
-  let n = 0;
-  if (data) {
-    for (let id in data) {
-      if (data.hasOwnProperty(id)) {
-        if (!id.startsWith("grouping"))
-          ++n;
-      }
-    }
-  }
-  return n;
-}; // _countData
-
-$.any.anyView.prototype._processSearch = function (event)
-{
-  console.log("_processSearch");
-}; // _processSearch
-
-//
-// Refresh when a paginator is activated
-//
-$.any.anyView.prototype.pageNumClicked = function (pager)
-{
-  if (!pager || !pager.options || !pager.options.div_info) {
-    console.error("System error: Pager or pager options missing for pageNumClicked. "); // TODO! i18n
-    return;
-  }
-  this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty (to avoid flashing)
-  this.options.currentPage = pager.currentPage();
-  let from = pager.options.itemsPerPage *(pager.currentPage() - 1) + 1;
-  let num  = pager.options.itemsPerPage;
-  let mod_opt = { from:      from,
-                  num:       num,
-                  context:   this.model,
-                  type:      pager.options.div_info.type,
-                  group_id:  pager.options.div_info.group_id,
-                  grouping:  this.options.grouping,
-                  order:     this.options.order,
-                  direction: this.options.direction,
-                  head:      this.options.grouping == "tabs",
-                //simple:    true, // TODO! Does not work correctly with this option
-                };
-  if (this.model.mode == "remote") {
-    this.options.ref_rec = 0;
-    mod_opt.from -= 1; // from is 0-based on server
-    this.model.dbSearch(mod_opt);
-  }
-  else {
-    this.refresh({from:from,num:num});
-  }
-}; // pageNumClicked
 
 //
 // Refresh a single table row
@@ -1799,6 +1709,7 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
   }
 }; // refreshTableDataLastCell
 
+// Helper function for refreshListTableDataRow and refreshItemTableDataRow
 $.any.anyView.prototype._rowHasData = function (data,filter)
 {
   let row_has_data = false;
@@ -1814,6 +1725,376 @@ $.any.anyView.prototype._rowHasData = function (data,filter)
   }
   return row_has_data;
 }; // _rowHasData
+
+//
+// Buttons
+//
+
+// Button in top toolbar for closing item view
+// By default calls closeItem
+$.any.anyView.prototype.refreshCloseItemButton = function (params)
+{
+  let parent = params && params.parent ? params.parent : null;
+  let type   = params && params.type   ? params.type   : null;
+  let kind   = params && params.kind   ? params.kind   : null;
+
+  if (!parent || !type || !kind)
+    return null;
+
+  // Create cancel/close button for item view
+  let opt = {
+    type:     type,
+    kind:     kind,
+    edit:     false,
+    top_view: this.options.top_view,
+  };
+  let tit_str = i18n.button.buttonCancel;
+  //let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.id_base+"_cancel_new_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-tool-cancel any-tool-button pointer' title='"+tit_str+"'>"+
+              //tit_str+
+              //btn_str+
+              "<i class='far fa-window-close fa-lg'></i>"+
+              "</div>");
+  let fun = this.option("localCloseItem")
+            ? this.option("localCloseItem")
+            : this.closeItem;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  if (parent && parent.length)
+    parent.prev().prepend(btn);
+  this.options.item_opening = false;
+  return btn;
+}; // refreshCloseItemButton
+
+// Add-button in list table header
+// By default calls addListEntry
+$.any.anyView.prototype.refreshAddButton = function (opt)
+{
+  let parent  = opt.parent;
+
+  let tit_str = i18n.button.buttonAddToList.replace("%%",opt.type);
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.con_id_str+"_new_line_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-add any-tool-button pointer' title='"+tit_str+"'>"+
+              "<i class='fa fa-plus'></i>"+
+              btn_str+
+              "</div>");
+  let fun = this.option("localAdd")
+            ? this.option("localAdd")
+            : this.addListEntry;
+  btn.off("click").on("click", opt, $.proxy(fun,this));
+  if (parent && parent.length)
+    parent.append(btn);
+  return btn;
+}; // refreshAddButton
+
+// Select-button in first list table cell
+// By default calls _toggleChecked
+$.any.anyView.prototype.refreshSelectButton = function (opt)
+{
+  let parent  = opt.parent;
+
+  let tit_str = i18n.button.buttonSelect;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_select_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let check_str = opt.checked
+                  ? "<i class='far fa-check-square'></i>"
+                  : "<i class='far fa-square'></i>";
+  let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-select-icon any-icon pointer' title='"+tit_str+"'>"+
+              "<span class='check'>"+check_str+"</span>"+
+              btn_str+
+              "</div>");
+  if (parent && parent.length)
+    parent.append(btn);
+  let fun = this.option("localSelect")
+            ? this.option("localSelect")
+            : this._toggleChecked;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  return btn;
+}; // refreshSelectButton
+
+// Edit-button in first list or item table cell
+// By default calls toggleEdit
+$.any.anyView.prototype.refreshEditButton = function (opt)
+{
+  let parent  = opt.parent;
+
+  let tit_str = i18n.button.buttonEdit;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_edit_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-edit-icon any-icon pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-pencil-alt'></i>"+
+              btn_str+
+              "</div>");
+  if (parent && parent.length)
+    parent.append(btn);
+  if (opt.edit)
+    btn.hide();
+  opt.edit = !opt.edit;
+  let fun = this.option("localEdit")
+            ? this.option("localEdit")
+            : this.toggleEdit;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  return btn;
+}; // refreshEditButton
+
+// Update-button in first list or item table cell
+// By default calls dbUpdate
+$.any.anyView.prototype.refreshUpdateButton = function (opt)
+{
+  let parent  = opt.parent;
+
+  let tit_str = i18n.button.buttonUpdate;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_update_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-update-icon any-icon pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-check'></i>"+
+              btn_str+
+              "</div>");
+  if (parent && parent.length)
+    parent.append(btn);
+  if (!opt.edit)
+    btn.hide();
+  opt.edit = !opt.edit;
+  let fun = this.option("localUpdate")
+            ? this.option("localUpdate")
+            : this.dbUpdate;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  return btn;
+}; // refreshUpdateButton
+
+// Remove-button in last list or item table cell
+// By default calls dbRemoveDialog
+$.any.anyView.prototype.refreshRemoveButton = function (opt)
+{
+  let parent  = opt.parent;
+
+  let tit_str = i18n.button.buttonRemove;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_remove_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-remove-icon any-tool-button pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-times'></i>"+
+              btn_str+
+              "</div>");
+  let fun = this.option("localRemove")
+            ? this.option("localRemove")
+            : this.dbRemoveDialog;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  if (parent && parent.length)
+    parent.append(btn);
+  if (opt.edit)
+    btn.hide();
+  return btn;
+}; // refreshRemoveButton
+
+// Delete-button in last list or item table cell
+// By default calls dbDeleteDialog
+$.any.anyView.prototype.refreshDeleteButton = function (opt)
+{
+  let parent  = opt.parent;
+
+  let tit_str = i18n.button.buttonDelete;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_delete_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-delete-icon any-tool-button pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-trash-alt'></i>"+
+              btn_str+
+              "</div>");
+  let fun = this.option("localDelete")
+            ? this.option("localDelete")
+            : this.dbDeleteDialog;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  if (parent && parent.length)
+    parent.append(btn);
+  if (!opt.edit)
+    btn.hide();
+  return btn;
+}; // refreshDeleteButton
+
+// Cancel-button in last list or item table cell
+// By default calls toggleEdit
+$.any.anyView.prototype.refreshCancelButton = function (opt)
+{
+  let parent  = opt.parent;
+
+  let tit_str = i18n.button.buttonCancel;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_cancel_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-cancel-icon any-tool-button pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-ban'></i>"+
+              btn_str+
+              "</div>");
+  let fun = this.option("localCancel")
+            ? this.option("localCancel")
+            : this.toggleEdit;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  if (parent && parent.length)
+    parent.append(btn);
+  if (!opt.edit)
+    btn.hide();
+  opt.edit = false;
+  return btn;
+}; // refreshCancelButton
+
+// Button in bottom toolbar for opening a new empty item view
+// By default calls showItem
+$.any.anyView.prototype.refreshNewItemButton = function (opt)
+{
+  let parent  = opt.parent;
+
+  let tit_str = this.options.newButtonLabel ? this.options.newButtonLabel : i18n.button.buttonNew+" "+opt.type;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'> "+/*tit_str+*/"</span>" : "";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.con_id_str+"_new_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-new-icon any-icon pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-plus-circle fa-lg'></i>"+
+              btn_str+
+              "</div>");
+  let fun = this.option("localNew")
+            ? this.option("localNew")
+            : this.showItem;
+  btn.off("click").on("click",opt,$.proxy(fun,this));
+  if (parent && parent.length)
+    parent.append(btn);
+  return btn;
+}; // refreshNewItemButton
+
+// Button in bottom toolbar for displaying a menu for adding links
+// By default calls showLinkMenu
+$.any.anyView.prototype.refreshAddLinkButton = function (opt)
+{
+  if (!this.model.plugins || !this.options.linkIcons)
+    return;
+
+  let parent  = opt.parent;
+
+  opt.top_view = parent.parent();
+  let tit_str = i18n.button.buttonAddLink+"...";
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.id_base+"_"+opt.type+"_add_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn     = $("<div id='"+btn_id+"' class='any-tool-addremove any-tool-button pointer' title='"+tit_str+"'>"+
+                  "<i class='fa fa-plus'></i>&nbsp;"+i18n.message.addRemove+
+                  btn_str+
+                  "</div>");
+  let fun = this.option("localShowLinkMenu")
+            ? this.option("localShowLinkMenu")
+            : this.showLinkMenu;
+  btn.off("click").on("click", opt, $.proxy(fun,this));
+  if (parent && parent.length)
+    parent.append(btn);
+  if (!opt.edit)
+    btn.hide();
+
+  let menu_id = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.con_id_str+"_link_dropdown";
+  opt.element_id = menu_id;
+  if ($("#"+menu_id).length)
+    $("#"+menu_id).remove();
+  let dd_menu = $("<div "+
+                  "class='w3-dropdown-content w3-bar-block w3-border any-link-menu' "+
+                  "id='"+menu_id+"'>"+
+                  "</div>");
+  btn.append(dd_menu);
+  dd_menu.hide();
+
+  // Pressing ESC (27) will hide the menu
+  let self = this;
+  window.onkeydown = function(e) {
+    if (e.keyCode == 27) {
+      e.data = {};
+      e.data.element_id = opt.element_id;
+      self.showLinkMenu(e);
+    }
+  };
+
+  // Add the clickable menu entries
+  for (let plugin_type in this.options.linkIcons) {
+    if (this.options.linkIcons.hasOwnProperty(plugin_type)) {
+      let plugin_opt = { data:      opt.data,
+                         id:        opt.id,
+                         type:      opt.type,
+                         link_type: plugin_type,
+                         link_icon: this.options.linkIcons[plugin_type],
+                       };
+      let link_btn = this.refreshLinkButton(plugin_opt,this.dbSearchLinks);
+      dd_menu.append(link_btn); // Subevents
+    }
+  }
+  return btn;
+}; // refreshAddLinkButton
+
+// Button in menu for adding a link
+// By default calls dbSearchLinks
+$.any.anyView.prototype.refreshLinkButton = function (options,onClickMethod)
+{
+  if (!this.model)
+    throw i18n.error.MODEL_MISSING;
+  let sub     = options.type == options.link_type ? "sub"+options.type : options.link_type;
+  let tit_str = sub; //i18n.button.buttonAdd+" "+sub;
+  let btn_str = tit_str; //this.option("showButtonLabels") ? tit_str : "";
+  let btn_id  = this.id_base+"_"+options.type+"_"+options.link_type+"_link_icon";
+  let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-button pointer' title='"+tit_str+"'>"+
+              "<div style='display:inline-block;width:20px;'><i class='"+options.link_icon+"'></i></div>..."+
+              btn_str+
+              "</div><br/>");
+  let fun = onClickMethod
+            ? onClickMethod
+            : this.dbSearchLinks;
+  btn.unbind("click");
+  btn.bind("click", options, $.proxy(fun,this));
+  return btn;
+}; // refreshLinkButton
+
+// Display or hide the link menu
+$.any.anyView.prototype.showLinkMenu = function (event)
+{
+  let dd_menu = $("#"+event.data.element_id);
+  let elem = document.getElementById(event.data.element_id);
+  if (elem) {
+    // TODO! w3-show should not be hardcoded
+    if (elem.className.indexOf("w3-show") == -1 && event.data.edit !== false && event.which !== 27) {
+      elem.className += " w3-show";
+      dd_menu.show();
+      // Clicking off the menu (inside this.element) will hide it
+      if (this.element && this.element.length) {
+        let opt2 = {...event.data};
+        opt2.edit    = false;
+        opt2.elem    = elem;
+        opt2.dd_menu = dd_menu;
+        this.element.off("click").on("click", opt2,
+          function(e) {
+            e.data.elem.className = elem.className.replace(" w3-show", "");
+            e.data.dd_menu.hide();
+          }
+        );
+      }
+    }
+    else {
+      elem.className = elem.className.replace(" w3-show", "");
+      dd_menu.hide();
+    }
+  }
+  event.preventDefault();
+  return false;
+}; // showLinkMenu
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2487,375 +2768,95 @@ $.any.anyView.prototype._fileViewClicked = function (event)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-//
-// Buttons
-//
-
-// Button in top toolbar for closing item view
-// By default calls closeItem
-$.any.anyView.prototype.refreshCloseItemButton = function (params)
+$.any.anyView.prototype.sortTable = function (event)
 {
-  let parent = params && params.parent ? params.parent : null;
-  let type   = params && params.type   ? params.type   : null;
-  let kind   = params && params.kind   ? params.kind   : null;
-
-  if (!parent || !type || !kind)
-    return null;
-
-  // Create cancel/close button for item view
-  let opt = {
-    type:     type,
-    kind:     kind,
-    edit:     false,
-    top_view: this.options.top_view,
-  };
-  let tit_str = i18n.button.buttonCancel;
-  //let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_cancel_new_icon";
-  if ($("#"+btn_id).length)
-    $("#"+btn_id).remove();
-  let btn = $("<div id='"+btn_id+"' class='any-tool-cancel any-tool-button pointer' title='"+tit_str+"'>"+
-              //tit_str+
-              //btn_str+
-              "<i class='far fa-window-close fa-lg'></i>"+
-              "</div>");
-  let fun = this.option("localCloseItem")
-            ? this.option("localCloseItem")
-            : this.closeItem;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
-  if (parent && parent.length)
-    parent.prev().prepend(btn);
-  this.options.item_opening = false;
-  return btn;
-}; // refreshCloseItemButton
-
-// Add-button in list table header
-// By default calls addListEntry
-$.any.anyView.prototype.refreshAddButton = function (opt)
-{
-  let parent  = opt.parent;
-
-  let tit_str = i18n.button.buttonAddToList.replace("%%",opt.type);
-  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.con_id_str+"_new_line_icon";
-  if ($("#"+btn_id).length)
-    $("#"+btn_id).remove();
-  let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-add any-tool-button pointer' title='"+tit_str+"'>"+
-              "<i class='fa fa-plus'></i>"+
-              btn_str+
-              "</div>");
-  let fun = this.option("localAdd")
-            ? this.option("localAdd")
-            : this.addListEntry;
-  btn.off("click").on("click", opt, $.proxy(fun,this));
-  if (parent && parent.length)
-    parent.append(btn);
-  return btn;
-}; // refreshAddButton
-
-// Select-button in first list table cell
-// By default calls _toggleChecked
-$.any.anyView.prototype.refreshSelectButton = function (opt)
-{
-  let parent  = opt.parent;
-
-  let tit_str = i18n.button.buttonSelect;
-  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_select_icon";
-  if ($("#"+btn_id).length)
-    $("#"+btn_id).remove();
-  let check_str = opt.checked
-                  ? "<i class='far fa-check-square'></i>"
-                  : "<i class='far fa-square'></i>";
-  let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-select-icon any-icon pointer' title='"+tit_str+"'>"+
-              "<span class='check'>"+check_str+"</span>"+
-              btn_str+
-              "</div>");
-  if (parent && parent.length)
-    parent.append(btn);
-  let fun = this.option("localSelect")
-            ? this.option("localSelect")
-            : this._toggleChecked;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
-  return btn;
-}; // refreshSelectButton
-
-// Edit-button in first list or item table cell
-// By default calls toggleEdit
-$.any.anyView.prototype.refreshEditButton = function (opt)
-{
-  let parent  = opt.parent;
-
-  let tit_str = i18n.button.buttonEdit;
-  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_edit_icon";
-  if ($("#"+btn_id).length)
-    $("#"+btn_id).remove();
-  let btn = $("<div id='"+btn_id+"' class='any-edit-icon any-icon pointer' title='"+tit_str+"'>"+
-              "<i class='fas fa-pencil-alt'></i>"+
-              btn_str+
-              "</div>");
-  if (parent && parent.length)
-    parent.append(btn);
-  if (opt.edit)
-    btn.hide();
-  opt.edit = !opt.edit;
-  let fun = this.option("localEdit")
-            ? this.option("localEdit")
-            : this.toggleEdit;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
-  return btn;
-}; // refreshEditButton
-
-// Update-button in first list or item table cell
-// By default calls dbUpdate
-$.any.anyView.prototype.refreshUpdateButton = function (opt)
-{
-  let parent  = opt.parent;
-
-  let tit_str = i18n.button.buttonUpdate;
-  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_update_icon";
-  if ($("#"+btn_id).length)
-    $("#"+btn_id).remove();
-  let btn = $("<div id='"+btn_id+"' class='any-update-icon any-icon pointer' title='"+tit_str+"'>"+
-              "<i class='fas fa-check'></i>"+
-              btn_str+
-              "</div>");
-  if (parent && parent.length)
-    parent.append(btn);
-  if (!opt.edit)
-    btn.hide();
-  opt.edit = !opt.edit;
-  let fun = this.option("localUpdate")
-            ? this.option("localUpdate")
-            : this.dbUpdate;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
-  return btn;
-}; // refreshUpdateButton
-
-// Remove-button in last list or item table cell
-// By default calls dbRemoveDialog
-$.any.anyView.prototype.refreshRemoveButton = function (opt)
-{
-  let parent  = opt.parent;
-
-  let tit_str = i18n.button.buttonRemove;
-  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_remove_icon";
-  if ($("#"+btn_id).length)
-    $("#"+btn_id).remove();
-  let btn = $("<div id='"+btn_id+"' class='any-remove-icon any-tool-button pointer' title='"+tit_str+"'>"+
-              "<i class='fas fa-times'></i>"+
-              btn_str+
-              "</div>");
-  let fun = this.option("localRemove")
-            ? this.option("localRemove")
-            : this.dbRemoveDialog;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
-  if (parent && parent.length)
-    parent.append(btn);
-  if (opt.edit)
-    btn.hide();
-  return btn;
-}; // refreshRemoveButton
-
-// Delete-button in last list or item table cell
-// By default calls dbDeleteDialog
-$.any.anyView.prototype.refreshDeleteButton = function (opt)
-{
-  let parent  = opt.parent;
-
-  let tit_str = i18n.button.buttonDelete;
-  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_delete_icon";
-  if ($("#"+btn_id).length)
-    $("#"+btn_id).remove();
-  let btn = $("<div id='"+btn_id+"' class='any-delete-icon any-tool-button pointer' title='"+tit_str+"'>"+
-              "<i class='fas fa-trash-alt'></i>"+
-              btn_str+
-              "</div>");
-  let fun = this.option("localDelete")
-            ? this.option("localDelete")
-            : this.dbDeleteDialog;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
-  if (parent && parent.length)
-    parent.append(btn);
-  if (!opt.edit)
-    btn.hide();
-  return btn;
-}; // refreshDeleteButton
-
-// Cancel-button in last list or item table cell
-// By default calls toggleEdit
-$.any.anyView.prototype.refreshCancelButton = function (opt)
-{
-  let parent  = opt.parent;
-
-  let tit_str = i18n.button.buttonCancel;
-  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.acc_id_str+"_cancel_icon";
-  if ($("#"+btn_id).length)
-    $("#"+btn_id).remove();
-  let btn = $("<div id='"+btn_id+"' class='any-cancel-icon any-tool-button pointer' title='"+tit_str+"'>"+
-              "<i class='fas fa-ban'></i>"+
-              btn_str+
-              "</div>");
-  let fun = this.option("localCancel")
-            ? this.option("localCancel")
-            : this.toggleEdit;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
-  if (parent && parent.length)
-    parent.append(btn);
-  if (!opt.edit)
-    btn.hide();
-  opt.edit = false;
-  return btn;
-}; // refreshCancelButton
-
-// Button in bottom toolbar for opening a new empty item view
-// By default calls showItem
-$.any.anyView.prototype.refreshNewItemButton = function (opt)
-{
-  let parent  = opt.parent;
-
-  let tit_str = this.options.newButtonLabel ? this.options.newButtonLabel : i18n.button.buttonNew+" "+opt.type;
-  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'> "+/*tit_str+*/"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.con_id_str+"_new_icon";
-  if ($("#"+btn_id).length)
-    $("#"+btn_id).remove();
-  let btn = $("<div id='"+btn_id+"' class='any-new-icon any-icon pointer' title='"+tit_str+"'>"+
-              "<i class='fas fa-plus-circle fa-lg'></i>"+
-              btn_str+
-              "</div>");
-  let fun = this.option("localNew")
-            ? this.option("localNew")
-            : this.showItem;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
-  if (parent && parent.length)
-    parent.append(btn);
-  return btn;
-}; // refreshNewItemButton
-
-// Button in bottom toolbar for displaying a menu for adding links
-// By default calls showLinkMenu
-$.any.anyView.prototype.refreshAddLinkButton = function (opt)
-{
-  if (!this.model.plugins || !this.options.linkIcons)
+  if (!event || !event.data) {
+    console.log("sortTable: Missing event or event.data. "); // TODO! i18n
     return;
-
-  let parent  = opt.parent;
-
-  opt.top_view = parent.parent();
-  let tit_str = i18n.button.buttonAddLink+"...";
-  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_add_icon";
-  if ($("#"+btn_id).length)
-    $("#"+btn_id).remove();
-  let btn     = $("<div id='"+btn_id+"' class='any-tool-addremove any-tool-button pointer' title='"+tit_str+"'>"+
-                  "<i class='fa fa-plus'></i>&nbsp;"+i18n.message.addRemove+
-                  btn_str+
-                  "</div>");
-  let fun = this.option("localShowLinkMenu")
-            ? this.option("localShowLinkMenu")
-            : this.showLinkMenu;
-  btn.off("click").on("click", opt, $.proxy(fun,this));
-  if (parent && parent.length)
-    parent.append(btn);
-  if (!opt.edit)
-    btn.hide();
-
-  let menu_id = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.con_id_str+"_link_dropdown";
-  opt.element_id = menu_id;
-  if ($("#"+menu_id).length)
-    $("#"+menu_id).remove();
-  let dd_menu = $("<div "+
-                  "class='w3-dropdown-content w3-bar-block w3-border any-link-menu' "+
-                  "id='"+menu_id+"'>"+
-                  "</div>");
-  btn.append(dd_menu);
-  dd_menu.hide();
-
-  // Pressing ESC (27) will hide the menu
-  let self = this;
-  window.onkeydown = function(e) {
-    if (e.keyCode == 27) {
-      e.data = {};
-      e.data.element_id = opt.element_id;
-      self.showLinkMenu(e);
-    }
-  };
-
-  // Add the clickable menu entries
-  for (let plugin_type in this.options.linkIcons) {
-    if (this.options.linkIcons.hasOwnProperty(plugin_type)) {
-      let plugin_opt = { data:      opt.data,
-                         id:        opt.id,
-                         type:      opt.type,
-                         link_type: plugin_type,
-                         link_icon: this.options.linkIcons[plugin_type],
-                       };
-      let link_btn = this.refreshLinkButton(plugin_opt,this.dbSearchLinks);
-      dd_menu.append(link_btn); // Subevents
-    }
   }
-  return btn;
-}; // refreshAddLinkButton
-
-// Button in menu for adding a link
-// By default calls dbSearchLinks
-$.any.anyView.prototype.refreshLinkButton = function (options,onClickMethod)
-{
-  if (!this.model)
-    throw i18n.error.MODEL_MISSING;
-  let sub     = options.type == options.link_type ? "sub"+options.type : options.link_type;
-  let tit_str = sub; //i18n.button.buttonAdd+" "+sub;
-  let btn_str = tit_str; //this.option("showButtonLabels") ? tit_str : "";
-  let btn_id  = this.id_base+"_"+options.type+"_"+options.link_type+"_link_icon";
-  let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-button pointer' title='"+tit_str+"'>"+
-              "<div style='display:inline-block;width:20px;'><i class='"+options.link_icon+"'></i></div>..."+
-              btn_str+
-              "</div><br/>");
-  let fun = onClickMethod
-            ? onClickMethod
-            : this.dbSearchLinks;
-  btn.unbind("click");
-  btn.bind("click", options, $.proxy(fun,this));
-  return btn;
-}; // refreshLinkButton
-
-// Display or hide the link menu
-$.any.anyView.prototype.showLinkMenu = function (event)
-{
-  let dd_menu = $("#"+event.data.element_id);
-  let elem = document.getElementById(event.data.element_id);
-  if (elem) {
-    // TODO! w3-show should not be hardcoded
-    if (elem.className.indexOf("w3-show") == -1 && event.data.edit !== false && event.which !== 27) {
-      elem.className += " w3-show";
-      dd_menu.show();
-      // Clicking off the menu (inside this.element) will hide it
-      if (this.element && this.element.length) {
-        let opt2 = {...event.data};
-        opt2.edit    = false;
-        opt2.elem    = elem;
-        opt2.dd_menu = dd_menu;
-        this.element.off("click").on("click", opt2,
-          function(e) {
-            e.data.elem.className = elem.className.replace(" w3-show", "");
-            e.data.dd_menu.hide();
-          }
-        );
+  let type     = event.data.type;
+  let group_id = event.data.group_id;
+  let order    = event.data.filter_id;
+  let last_sort_by = this.options.sortBy;
+  this.options.sortBy = order;
+  if (this.options.sortBy == last_sort_by)
+    this.options.sortDirection = this.options.sortDirection == "ASC" ? "DESC" : "ASC";
+  let from = null;
+  let num  = null;
+  let table = $("#"+event.data.table_id);
+  if (table.length && this.options.showPaginator) {
+    let extra_foot = table.parent().find(".table_extrafoot");
+    if (extra_foot.length) {
+      let pager = extra_foot.data("pager");
+      if (pager) {
+        from = pager.options.itemsPerPage *(pager.currentPage() - 1);
+        num  = pager.options.itemsPerPage;
+      }
+      else {
+        from = 0;
+        num  = this.options.itemsPerPage;
       }
     }
-    else {
-      elem.className = elem.className.replace(" w3-show", "");
-      dd_menu.hide();
-    }
+    this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty this view (to avoid flashing)
   }
-  event.preventDefault();
-  return false;
-}; // showLinkMenu
+  let mod_opt = { context:   this.model,
+                  type:      type,
+                  group_id:  group_id,
+                  from:      from,
+                  num:       num,
+                  order:     order,
+                  direction: this.options.sortDirection,
+                };
+  if (this.model.mode == "remote") {
+    // Remote search, let the database do the sorting.
+    // Will (normally) call refresh via onModelChange
+    this.options.ref_rec = 0;
+    this.model.dbSearch(mod_opt);
+  } // if remote
+  else {
+    // TODO! Local sort not implemented yet
+    console.log("sortTable: Local sort not implemented. ");
+  }
+}; // sortTable
+
+$.any.anyView.prototype._processSearch = function (event)
+{
+  console.log("_processSearch");
+}; // _processSearch
+
+//
+// Refresh when a paginator is activated
+//
+$.any.anyView.prototype.pageNumClicked = function (pager)
+{
+  if (!pager || !pager.options || !pager.options.div_info) {
+    console.error("System error: Pager or pager options missing for pageNumClicked. "); // TODO! i18n
+    return;
+  }
+  this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty (to avoid flashing)
+  this.options.currentPage = pager.currentPage();
+  let from = pager.options.itemsPerPage *(pager.currentPage() - 1) + 1;
+  let num  = pager.options.itemsPerPage;
+  let mod_opt = { from:      from,
+                  num:       num,
+                  context:   this.model,
+                  type:      pager.options.div_info.type,
+                  group_id:  pager.options.div_info.group_id,
+                  grouping:  this.options.grouping,
+                  order:     this.options.order,
+                  direction: this.options.direction,
+                  head:      this.options.grouping == "tabs",
+                //simple:    true, // TODO! Does not work correctly with this option
+                };
+  if (this.model.mode == "remote") {
+    this.options.ref_rec = 0;
+    mod_opt.from -= 1; // from is 0-based on server
+    this.model.dbSearch(mod_opt);
+  }
+  else {
+    this.refresh({from:from,num:num});
+  }
+}; // pageNumClicked
 
 ///////////////////////////////////////////////////////////////////////////////
 
