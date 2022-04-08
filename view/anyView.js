@@ -1210,7 +1210,7 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
     if (!searcher) {
       let search_box = "Search: <input type='search' style='height:25px;min-height:25px;'>";
       let searcher_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_searcher_foot";
-      searcher = $("<div style='display:inline-block;float:right;padding-top:10px;' id='"+searcher_id+"'>"+search_box+"</div>"); // TODO! CSS
+      searcher = $("<div id='"+searcher_id+"' style='display:inline-block;float:right;padding-top:10px;'>"+search_box+"</div>"); // TODO! CSS
       extra_foot.append(searcher);
       let search_opt = {};
       searcher.off("keyup").on("keyup", search_opt, $.proxy(this._processSearch,this));
@@ -1346,7 +1346,7 @@ $.any.anyView.prototype.refreshListTableDataCells = function (params)
         tr.append(td);
         let str = this.getCellEntryStr(id,type,kind,acc_id_str,filter_id,filter_key,data[id],edit);
         td.append(str);
-        this.initTableDataCell(td_id,data,id,type,kind,acc_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
+        this.initTableDataCell(td_id,data,id,type,kind,con_id_str,acc_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
       }
     }
   }
@@ -1511,7 +1511,7 @@ $.any.anyView.prototype.refreshItemTableDataCells = function (params)
   tr.append(td3);
   let str = this.getCellEntryStr(id,type,kind,acc_id_str,filter_id,filter_key,data[id],edit);
   td3.append(str);
-  this.initTableDataCell(td_id,data,id,type,kind,acc_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
+  this.initTableDataCell(td_id,data,id,type,kind,con_id_str,acc_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
 }; // refreshItemTableDataCells
 
 $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
@@ -2024,7 +2024,7 @@ $.any.anyView.prototype.showLinkMenu = function (event)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,acc_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid)
+$.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,con_id_str,acc_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid)
 {
   if (!filter_key || !td_id)
     return;
@@ -2034,15 +2034,16 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,ac
         id:         id,
         type:       type,
         kind:       kind,
-        id_str:     acc_id_str,
+        edit:       edit,
+        con_id_str: con_id_str,
+        acc_id_str: acc_id_str,
         filter:     filter,
         filter_id:  filter_id,
         isEditable: isEditable,
-        edit:       edit,
         pdata:      pdata,
         pid:        pid,
         plugins:    this.model.plugins,
-  };
+      };
   // Bind a method that is called while clicking on the text link, file view or file name (in non-edit mode)
   if (["link", "upload", "fileview"].includes(filter_key.HTML_TYPE)) {
     let link_elem = $("#"+td_id);
@@ -3177,25 +3178,26 @@ $.any.anyView.prototype._doShowItem = function (opt)
   }
   if (view.model.mode == "remote" && !is_new) {
     // Remote search, will (normally) call refresh via onModelChange
-    let mod_opt = { context:  view.model,
-                    id:       the_id,
-                    type:     type,
-                    head:     true,
-                    grouping: this.options.grouping,
-                  };
-    view.model.dbSearch(mod_opt);
+    view.model.dbSearch({
+      context:  view.model,
+      id:       the_id,
+      type:     type,
+      head:     true,
+      grouping: this.options.grouping,
+    });
   }
   else {
     // Local refresh
     if (is_new)
       the_id = "+0";
-    view.refresh({ parent: top_div,
-                   data:   item,
-                   id:     the_id,
-                   type:   type,
-                   kind:   "item",
-                   edit:   is_new,
-                });
+    view.refresh({
+      parent: top_div,
+      data:   item,
+      id:     the_id,
+      type:   type,
+      kind:   "item",
+      edit:   is_new,
+    });
   } // else
   return true;
 }; // _doShowItem
@@ -3719,21 +3721,20 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
   this.removeFromView(opt);
 
   // Update database
-  let mod_opt = {
-    type:      opt.type,
-    id:        opt.id,
-    data:      opt.data,
-    link_type: opt.link_type,
-    link_id:   opt.link_id,
-    select:    opt.select,
-    unselect:  opt.unselect,
-    name_key:  opt.name_key,
-    view:      opt.view, // Refresh only this view
-    head:      true,
-    grouping:  this.options.grouping,
-  };
   this.options.item_opening = true; // To make top right close icon appear
-  if (!this.model.dbUpdateLinkList(mod_opt)) // TODO! What if mode == "local"?
+  if (!this.model.dbUpdateLinkList({ // TODO! What if mode == "local"?
+        type:      opt.type,
+        id:        opt.id,
+        data:      opt.data,
+        link_type: opt.link_type,
+        link_id:   opt.link_id,
+        select:    opt.select,
+        unselect:  opt.unselect,
+        name_key:  opt.name_key,
+        view:      opt.view, // Refresh only this view
+        head:      true,
+        grouping:  this.options.grouping,
+      }))
     return false;
 
   return true;
