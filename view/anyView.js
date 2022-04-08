@@ -1309,51 +1309,28 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     tr = $("<tr id='"+tr_id+"'></tr>");
     tbody.append(tr);
   }
+  let btn_opt = { parent:     tr,
+                  data:       data,
+                  id:         id,
+                  type:       type,
+                  kind:       kind,
+                  filter:     filter,
+                  edit:       edit,
+                  con_id_str: con_id_str,
+                  acc_id_str: acc_id_str,
+                  isEditable: true,
+                  pdata:      pdata,
+                  pid:        pid,
+                };
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
       (this.options.isEditable && (this.options.showButtonEdit || this.options.showButtonUpdate))) {
-    this.refreshTableDataFirstCell({ parent:     tr,
-                                     data:       data,
-                                     id:         id,
-                                     type:       type,
-                                     kind:       kind,
-                                     filter:     filter,
-                                     edit:       edit,
-                                     con_id_str: con_id_str,
-                                     acc_id_str: acc_id_str,
-                                     isEditable: true,
-                                     pdata:      pdata,
-                                     pid:        pid,
-                                  });
+    this.refreshTableDataFirstCell(btn_opt);
   }
-  this.refreshListTableDataCells({ parent:     tr,
-                                   data:       data,
-                                   id:         id,
-                                   type:       type,
-                                   kind:       kind,
-                                   filter:     filter,
-                                   edit:       edit,
-                                   con_id_str: con_id_str,
-                                   acc_id_str: acc_id_str,
-                                   isEditable: true,
-                                   pdata:      pdata,
-                                   pid:        pid,
-                                });
+  this.refreshListTableDataCells(btn_opt);
 
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
       (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonDelete || this.options.showButtonCancel))) {
-    this.refreshTableDataLastCell({ parent:     tr,
-                                    data:       data,
-                                    id:         id,
-                                    type:       type,
-                                    kind:       kind,
-                                    filter:     filter,
-                                    edit:       edit,
-                                    con_id_str: con_id_str,
-                                    acc_id_str: acc_id_str,
-                                    isEditable: true,
-                                    pdata:      pdata,
-                                    pid:        pid,
-                                 });
+    this.refreshTableDataLastCell(btn_opt);
   }
   // Clean up
   if (!tr.children().length || (!row_has_data && !this.options.showEmptyRows))
@@ -1396,7 +1373,7 @@ $.any.anyView.prototype.refreshListTableDataCells = function (params)
         let style_str = disp_str || pln_str ? "style='"+disp_str+pln_str+"'" : "";
         let td  = $("<td id='"+td_id+"' class='any-td any-list-td "+odd_even+" "+class_id+"' "+style_str+"></td>");
         tr.append(td);
-        let str = this.createCellEntry(id,type,kind,acc_id_str,filter_id,filter_key,data[id],edit);
+        let str = this.getCellEntryStr(id,type,kind,acc_id_str,filter_id,filter_key,data[id],edit);
         td.append(str);
         this.initTableDataCell(td_id,data,id,type,kind,acc_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
       }
@@ -1494,58 +1471,36 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
         // Normal row:
         let tr = $("<tr "+display_class+"></tr>");
         tbody.append(tr);
+        let cell_opt = { parent:     tr,
+                         data:       data,
+                         id:         id,
+                         type:       type,
+                         kind:       kind,
+                         filter:     filter,
+                         edit:       edit,
+                         con_id_str: con_id_str,
+                         acc_id_str: acc_id_str,
+                         isEditable: true,
+                         pdata:      pdata,
+                         pid:        pid,
+                         // The options below are only used by refreshItemTableDataCells
+                         filter_id:  filter_id,
+                         filter_key: filter_key,
+                         pl_str:     pl_str,
+                         n:          n,
+                       };
         if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
             (this.options.isEditable && (this.options.showButtonEdit || this.options.showButtonUpdate))) {
           if (n == 1)
-            this.refreshTableDataFirstCell({ parent:     tr,
-                                             data:       data,
-                                             id:         id,
-                                             type:       type,
-                                             kind:       kind,
-                                             filter:     filter,
-                                             edit:       edit,
-                                             con_id_str: con_id_str,
-                                             acc_id_str: acc_id_str,
-                                             isEditable: true,
-                                             pdata:      pdata,
-                                             pid:        pid,
-                                          });
+            this.refreshTableDataFirstCell(cell_opt);
           else
             tr.append("<td/>");
         }
-        this.refreshItemTableDataCells({ parent:     tr,
-                                         data:       data,
-                                         id:         id,
-                                         type:       type,
-                                         kind:       kind,
-                                         filter:     filter,
-                                         filter_id:  filter_id,
-                                         filter_key: filter_key,
-                                         edit:       edit,
-                                         con_id_str: con_id_str,
-                                         acc_id_str: acc_id_str,
-                                         isEditable: true,
-                                         pdata:      pdata,
-                                         pid:        pid,
-                                         pl_str:     pl_str,
-                                         n:          n,
-                                      });
+        this.refreshItemTableDataCells(cell_opt);
         if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
             (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonDelete || this.options.showButtonCancel))) {
           if (n == 1)
-            this.refreshTableDataLastCell({ parent:     tr,
-                                            data:       data,
-                                            id:         id,
-                                            type:       type,
-                                            kind:       kind,
-                                            filter:     filter,
-                                            edit:       edit,
-                                            con_id_str: con_id_str,
-                                            acc_id_str: acc_id_str,
-                                            isEditable: true,
-                                            pdata:      pdata,
-                                            pid:        pid,
-                                         });
+            this.refreshTableDataLastCell(cell_opt);
           else
             tr.append("<td/>");
         }
@@ -1583,7 +1538,7 @@ $.any.anyView.prototype.refreshItemTableDataCells = function (params)
   let td3           = $("<td id= '"+td_id+"' class='any-td any-item-val  "+class_id_val +"'></td>");
   tr.append(td2);
   tr.append(td3);
-  let str = this.createCellEntry(id,type,kind,acc_id_str,filter_id,filter_key,data[id],edit);
+  let str = this.getCellEntryStr(id,type,kind,acc_id_str,filter_id,filter_key,data[id],edit);
   td3.append(str);
   this.initTableDataCell(td_id,data,id,type,kind,acc_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
 }; // refreshItemTableDataCells
@@ -2337,7 +2292,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind)
 // Methods that create cell items
 //
 
-$.any.anyView.prototype.createCellEntry = function (id,type,kind,id_str,filter_id,filter_key,data_item,edit)
+$.any.anyView.prototype.getCellEntryStr = function (id,type,kind,id_str,filter_id,filter_key,data_item,edit)
 {
   if (!filter_id || !filter_key)
     return "";
@@ -2376,7 +2331,7 @@ $.any.anyView.prototype.createCellEntry = function (id,type,kind,id_str,filter_i
   if (!val)
     val = "";
   return val;
-}; // createCellEntry
+}; // getCellEntryStr
 
 $.any.anyView.prototype.getHtmlStr = function (type,kind,id,val,edit)
 {
