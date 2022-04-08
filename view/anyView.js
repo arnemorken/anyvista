@@ -576,7 +576,14 @@ $.any.anyView.prototype.refresh = function (params)
   if (this.options.showToolbar) {
     if (!this.options.isSelectable && this.model.type && this.data_level==0 && con_id_str == "" &&
         (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
-      this.refreshToolbarBottom(parent,data,this.model.id,this.model.type,this.model.kind,edit,"");
+      this.refreshToolbarBottom({ parent: parent,
+                                  data:   data,
+                                  id:     this.model.id,
+                                  type:   this.model.type,
+                                  kind:   this.model.kind,
+                                  edit:   edit,
+                                  id_str: "",
+                               });
     }
   }
 
@@ -669,16 +676,24 @@ $.any.anyView.prototype.refreshOne = function (params)
 //
 // Display a toolbar for messages and a "new item" button
 //
-$.any.anyView.prototype.refreshToolbarBottom = function (parent,data,id,type,kind,edit,id_str)
+$.any.anyView.prototype.refreshToolbarBottom = function (params)
 {
+  let parent     = params.parent;
+  let data       = params.data;
+  let id         = params.id;
+  let type       = params.type;
+  let kind       = params.kind;
+  let edit       = params.edit;
+  let con_id_str = params.con_id_str;
+
   if (!parent || !type)
     return null;
   if (!this.options.showMessages && !this.options.showButtonNew && !this.options.showButtonAddLink)
     return null;
 
   // Create container
-  let div_id     = this.id_base+"_"+type+"_"+id_str+"_toolbar";
-  let class_id   = "any-toolbar-bottom any-toolbar any-toolbar-"+this.data_level;
+  let div_id   = this.id_base+"_"+type+"_"+con_id_str+"_toolbar";
+  let class_id = "any-toolbar-bottom any-toolbar any-toolbar-"+this.data_level;
   if ($("#"+div_id).length)
     $("#"+div_id).remove();
   let bardiv   = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
@@ -686,10 +701,11 @@ $.any.anyView.prototype.refreshToolbarBottom = function (parent,data,id,type,kin
 
   if (this.options.showMessages) {
     // Create a message area
-    let opt = { type: type,
-                kind: kind,
+    let opt = { parent: bardiv,
+                type:   type,
+                kind:   kind,
               };
-    this.refreshMessageArea(bardiv,opt);
+    this.refreshMessageArea(opt);
     this.showMessages();
   }
   if (this.options.showButtonNew) {
@@ -722,8 +738,10 @@ $.any.anyView.prototype.refreshToolbarBottom = function (parent,data,id,type,kin
 //
 // A message area
 //
-$.any.anyView.prototype.refreshMessageArea = function (parent,opt)
+$.any.anyView.prototype.refreshMessageArea = function (opt)
 {
+  let parent = opt.parent;
+
   let div_id   = this.id_base+"_any_message";
   let class_id = "any-message any-"+opt.kind+"-message any-message-"+this.data_level;
   let msgdiv = $("#"+div_id);
@@ -877,6 +895,7 @@ $.any.anyView.prototype.refreshData = function (params)
                            type:       type,
                            kind:       kind,
                            edit:       edit,
+                           con_id_str: con_id_str,
                            acc_id_str: acc_id_str,
                            pdata:      pdata,
                            pid:        pid,
@@ -1329,6 +1348,7 @@ $.any.anyView.prototype.refreshTbodyRow = function (params)
   let type       = params.type;
   let kind       = params.kind;
   let edit       = params.edit;
+  let con_id_str = params.con_id_str;
   let acc_id_str = params.acc_id_str;
   let pdata      = params.pdata;
   let pid        = params.pid;
@@ -3538,7 +3558,14 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
     let view = options.parent_view;
     if (view.options.showToolbar) {
       view.options.item_opening = true; // To make top right close icon appear
-      view.refreshToolbarBottom(view.element,view.model.data,view.model.id,view.model.type,view.model.kind,"");
+      view.refreshToolbarBottom({ parent: view.element,
+                                  data:   view.model.data,
+                                  id:     view.model.id,
+                                  type:   view.model.type,
+                                  kind:   view.model.kind,
+                                  edit:   false,
+                                  id_str: "",
+                               });
     }
   }
   return context;
