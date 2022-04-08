@@ -4,7 +4,7 @@
 "use strict";
 /****************************************************************************************
  *
- * anyList is copyright (C) 2011-2021 Arne D. Morken and Balanse Software.
+ * anyList is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
  *
  * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
  * Get licences here: http://balanse.info/anylist/license/ (coming soon).
@@ -162,7 +162,7 @@ $.widget("any.anyView", {
       this.element = $("#"+this.options.id);
 
     if (!this.element || !this.element.length)
-      throw VIEW_AREA_MISSING;
+      throw i18n.error.VIEW_AREA_MISSING;
 
     this.element.addClass("any-data-view");
 
@@ -208,13 +208,12 @@ $.widget("any.anyView", {
 
   // Destructor
   _destroy: function() {
-    this.model               = null;
-    this.options.main_view   = null;
-    this.options.top_view    = null;
-    this.options             = null;
     this.element.removeClass("any-data-view");
+    this.options.top_view = null;
+    this.options          = null;
+    this.model            = null;
   },
-}); // View widget constructor
+}); // anyView widget constructor
 
 ///////////////////////////////////////////////////////////////////////////////
 // Getters
@@ -238,7 +237,7 @@ $.any.anyView.prototype.getIdBase = function ()
  *         and kind ("item", "list", "head" or "select")).
  *         If only `type` is given, the filters of the given type are returned.
  *         If both `type` and `kind` are given, the filter of the given type and kind is returned.
- *         Returns null if `this.options.filters` does not exist.
+ *         If no filters exist, `null` is returned.
  * @param {String} type Object type (e.g. "event"). Optional, but mandatory if `kind` is given.
  * @param {String} kind "item", "list", "head" or "select". Ignored if `type` is not given.
  */
@@ -382,8 +381,8 @@ $.any.anyView.prototype.onModelChange = function (model)
 /**
  * @method refresh
  * @description Displays data in a DOM element. If an element matching the type/kind/id combination
- *              is found in the DOM, that element will be used for display. Otherwise, new elements
- *              will be created as needed.
+ *              is found in the DOM, that element will be used for displaying the data. Otherwise,
+ *              new elements will be created as needed.
  * @params {Object}  params  An object which may contain these elements:
  *
  *         {Object}  parent The element in which to display data.
@@ -658,7 +657,6 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
   let id         = params.id;
   let type       = params.type;
   let kind       = params.kind;
-  let edit       = params.edit;
   let con_id_str = params.con_id_str;
 
   if (!parent || !type)
@@ -1020,10 +1018,8 @@ $.any.anyView.prototype.refreshThead = function (params)
 
   let thead      = params.parent;
   let data       = params.data;
-  let id         = params.id;
   let type       = params.type;
   let kind       = params.kind;
-  let edit       = params.edit;
   let con_id_str = params.con_id_str;
 
   if (!this.options.filters) {
@@ -1118,11 +1114,8 @@ $.any.anyView.prototype.refreshTfoot = function (params)
     return null;
 
   let tfoot      = params.parent;
-  let data       = params.data;
-  let id         = params.id;
   let type       = params.type;
   let kind       = params.kind;
-  let edit       = params.edit;
   let con_id_str = params.con_id_str;
 
   con_id_str = con_id_str.substr(0,con_id_str.lastIndexOf("_"));
@@ -1158,17 +1151,15 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
 
   let extra_foot = params.parent;
   let data       = params.data;
-  let id         = params.id;
   let type       = params.type;
   let kind       = params.kind;
-  let edit       = params.edit;
   let con_id_str = params.con_id_str;
   let pdata      = params.pdata;
   let pid        = params.pid;
 
   let num_results = 0;
   if (data && data.grouping_num_results)
-    num_results = data.grouping_num_results
+    num_results = data.grouping_num_results;
   else {
     for (let id in data) {
       if (data.hasOwnProperty(id)) {
@@ -1619,6 +1610,7 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
                      id:         id,
                      type:       type,
                      kind:       kind,
+                     con_id_str: con_id_str,
                      acc_id_str: acc_id_str,
                      filter:     filter,
                      isEditable: true,
@@ -2158,7 +2150,6 @@ $.any.anyView.prototype.createView = function (params)
   let id         = params && params.id         ? params.id         : "";
   let type       = params && params.type       ? params.type       : null;
   let kind       = params && params.kind       ? params.kind       : null;
-  let con_id_str = params && params.con_id_str ? params.con_id_str : "";
 
   if (!parent)
     parent = this.element;
@@ -2173,7 +2164,7 @@ $.any.anyView.prototype.createView = function (params)
 
   // Create a new model
   let model_opt = this.getCreateModelOptions(data,id,type,kind);
-  let m_str = type+"Model";
+  let m_str     = type+"Model";
   if (!window[m_str]) {
     let def_str = "anyModel";
     console.warn("Model class "+m_str+" not found, using "+def_str+". "); // TODO! i18n
@@ -2188,9 +2179,8 @@ $.any.anyView.prototype.createView = function (params)
   }
 
   // Create the view
-  let view_id  = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_container";
   let view_opt = this.getCreateViewOptions(model,parent,kind);
-  let v_str = view_opt.grouping ? type+"View"+view_opt.grouping.capitalize() : type+"View";
+  let v_str    = view_opt.grouping ? type+"View"+view_opt.grouping.capitalize() : type+"View";
   if (!window[v_str]) {
     let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
     console.warn("View class "+v_str+" not found, using "+def_str+". "); // TODO! i18n
