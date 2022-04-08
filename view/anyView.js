@@ -216,9 +216,9 @@ $.widget("any.anyView", {
   },
 }); // View widget constructor
 
-/////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // Getters
-/////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 /**
  * @method getIdBase
@@ -254,9 +254,9 @@ $.any.anyView.prototype.getFilter = function (type,kind)
   return this.options.filters;
 }; // getFilter
 
-/////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // Internal methods
-/////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 $.any.anyView.prototype._createIdBase = function ()
 {
@@ -350,37 +350,8 @@ $.any.anyView.prototype._setPermissions = function ()
 }; // _setPermissions
 
 ///////////////////////////////////////////////////////////////////////////////
-
-/**
- * @method showMessages
- * @description Shows errors and/or messages.
- * @param {Object} modelOrString If a string, the message/error to display.
- *                               If a model, the model from which to display a message/error.
- *                               If null, `this.model` is assumed.
- * @return `this`.
- */
-$.any.anyView.prototype.showMessages = function (modelOrString)
-{
-  let div_id = this.id_base+"_any_message";
-  let msgdiv = $("#"+div_id);
-  if (msgdiv.length) {
-    msgdiv.empty();
-    if (!modelOrString)
-      modelOrString = this.model;
-    let close_icon = "<span id='"+div_id+"_close' style='padding-right:5px;' class='far fa-window-close'></span>";
-    if (typeof modelOrString == "object") {
-      let err = this.options.showServerErrors && modelOrString.error_server ? modelOrString.error_server : modelOrString.error;
-      if (err || modelOrString.message)
-        msgdiv.append(close_icon+"<span style='color:red;'>"+err+"</span> "+modelOrString.message);
-    }
-    else
-    if (typeof modelOrString == "string") {
-        msgdiv.append(close_icon+"<span style='color:red;'>"+modelOrString+"</span>");
-    }
-    $("#"+div_id+"_close").off("click").on("click",function(event) { let msgdiv = $("#"+div_id); msgdiv.empty(); });
-  }
-  return this;
-}; // showMessages
+// The onModelChange method
+///////////////////////////////////////////////////////////////////////////////
 
 /**
  * @method onModelChange
@@ -404,9 +375,9 @@ $.any.anyView.prototype.onModelChange = function (model)
   return this;
 }; // onModelChange
 
-/////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // Refreshments
-/////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 /**
  * @method refresh
@@ -2287,10 +2258,8 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind)
 }; // getCreateViewOptions
 
 ///////////////////////////////////////////////////////////////////////////////
-
-//
 // Methods that create cell items
-//
+///////////////////////////////////////////////////////////////////////////////
 
 $.any.anyView.prototype.getCellEntryStr = function (id,type,kind,id_str,filter_id,filter_key,data_item,edit)
 {
@@ -2722,6 +2691,37 @@ $.any.anyView.prototype._fileViewClicked = function (event)
 }; // _fileViewClicked
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @method showMessages
+ * @description Shows errors and/or messages.
+ * @param {Object} modelOrString If a string, the message/error to display.
+ *                               If a model, the model from which to display a message/error.
+ *                               If null, `this.model` is assumed.
+ * @return `this`.
+ */
+$.any.anyView.prototype.showMessages = function (modelOrString)
+{
+  let div_id = this.id_base+"_any_message";
+  let msgdiv = $("#"+div_id);
+  if (msgdiv.length) {
+    msgdiv.empty();
+    if (!modelOrString)
+      modelOrString = this.model;
+    let close_icon = "<span id='"+div_id+"_close' style='padding-right:5px;' class='far fa-window-close'></span>";
+    if (typeof modelOrString == "object") {
+      let err = this.options.showServerErrors && modelOrString.error_server ? modelOrString.error_server : modelOrString.error;
+      if (err || modelOrString.message)
+        msgdiv.append(close_icon+"<span style='color:red;'>"+err+"</span> "+modelOrString.message);
+    }
+    else
+    if (typeof modelOrString == "string") {
+        msgdiv.append(close_icon+"<span style='color:red;'>"+modelOrString+"</span>");
+    }
+    $("#"+div_id+"_close").off("click").on("click",function(event) { let msgdiv = $("#"+div_id); msgdiv.empty(); });
+  }
+  return this;
+}; // showMessages
 
 $.any.anyView.prototype.sortTable = function (event)
 {
@@ -3207,8 +3207,6 @@ $.any.anyView.prototype.closeItem = function (event)
     this.options.top_view.refresh();
 }; // closeItem
 
-///////////////////////////////////////////////////////////////////////////////
-
 $.any.anyView.prototype.toggleEdit = function (event)
 {
   if (!event || !event.data)
@@ -3320,8 +3318,6 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
   return this;
 }; // doToggleEdit
 
-///////////////////////////////////////////////////////////////////////////////
-
 $.any.anyView.prototype._toggleChecked = function (event)
 {
   let opt = event.data;
@@ -3343,6 +3339,8 @@ $.any.anyView.prototype._toggleChecked = function (event)
   }
 }; // _toggleChecked
 
+///////////////////////////////////////////////////////////////////////////////
+// Methods that call db methods
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -3429,8 +3427,6 @@ $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,
     }
   }
 }; // createParentDropdownMenu
-
-///////////////////////////////////////////////////////////////////////////////
 
 $.any.anyView.prototype.dbUpdate = function (event)
 {
@@ -3585,8 +3581,6 @@ $.any.anyView.prototype.validateUpdate = function (data)
 {
   return "";
 }; // validateUpdate
-
-///////////////////////////////////////////////////////////////////////////////
 
 /**
  * @method dbSearchLinks
@@ -3745,8 +3739,6 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
   return true;
 }; // dbUpdateLinkList
 
-///////////////////////////////////////////////////////////////////////////////
-
 $.any.anyView.prototype.dbRemoveDialog = function (event)
 {
   if (!this.model)
@@ -3813,8 +3805,6 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   }
   return this;
 }; // dbRemoveDialog
-
-///////////////////////////////////////////////////////////////////////////////
 
 /**
  * @method dbDeleteDialog
@@ -3973,15 +3963,13 @@ $.any.anyView.prototype.removeFromView = function (opt)
 
 })($);
 
-/////////////////////////////////////////////////////////////////////////////
-//
+///////////////////////////////////////////////////////////////////////////////
 // This can be used to instantiate anyView:
-//
+///////////////////////////////////////////////////////////////////////////////
 var anyView = function (options)
 {
   if (!options)
     return null;
   return $.any.anyView(options);
 };
-/////////////////////////////////////////////////////////////////////////////
 //@ sourceURL=anyView.js
