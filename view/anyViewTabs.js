@@ -52,17 +52,6 @@ $.any.anyViewTabs.prototype.createView = function (params)
   return view;
 }; // createView
 
-$.any.anyViewTabs.prototype.refresh = function (params)
-{
-  $.any.anyView.prototype.refresh.call(this,params);
-  if (this.current_div_id) {
-    let ev = {};
-    ev.data = {};
-    ev.data.div_id = this.current_div_id;
-    this.openTab(ev);
-  }
-}; // refresh
-
 $.any.anyViewTabs.prototype.refreshHeader = function (params)
 {
   let parent     = params.parent;
@@ -160,13 +149,18 @@ $.any.anyViewTabs.prototype.openTab = function (event)
   if (!event || !event.data || event.data.div_id == this.current_div_id)
     return false;
   this.current_div_id = event.data.div_id;
-  $(".anyTabButton").removeClass("w3-blue");
-  let btn = $("#"+event.data.div_id+"_tab_btn");
-  btn.addClass("w3-blue");
   let tab_area = $("#"+event.data.div_id);
-  tab_area.parent().find(".any-head-data").hide();
-  tab_area.show();
-  tab_area.children().show();
+  if (tab_area.length) {
+    $(".anyTabButton").removeClass("w3-blue"); // TODO! Too general
+    let btn = $("#"+event.data.div_id+"_tab_btn");
+    btn.addClass("w3-blue");
+    let tabs_view = tab_area.parent().find(".any-datatabs-view");
+    if (tabs_view.length) {
+      tabs_view.hide();
+      tab_area.show();
+      tab_area.children().show();
+    }
+  }
   return true;
 }; // openTab
 
