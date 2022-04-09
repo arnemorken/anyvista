@@ -588,6 +588,9 @@ $.any.anyView.prototype.refreshOne = function (params)
   let pid        = params.pid;
   let edit       = params.edit;
 
+  if (curr_type == "group")
+    this.group_id = id;
+
   let new_params = {
     parent:     parent,
     data:       data,
@@ -603,9 +606,6 @@ $.any.anyView.prototype.refreshOne = function (params)
     pid:        pid,
     doNotEmpty: false,
   };
-
-  if (curr_type == "group")
-    this.group_id = id;
 
   // Refresh header
   let have_data = Object.size(data) > 0;
@@ -2856,7 +2856,8 @@ $.any.anyView.prototype._processKeyup = function (event)
         }
         else
         if (this.options.onEnterMoveFocus) {
-          // TODO! Enter in a list input field should optionally move to next row and start editing it, unless onEnterInsertNew or onEnterCallDatabase are true
+          // TODO! Enter in a list input field should optionally move to next row and start editing it, unless onEnterInsertNew or onEnterCallDatabase are true.
+          // TODO! Also make TAB (optionally) move to next field.
         }
       }
       else
@@ -2889,9 +2890,12 @@ $.any.anyView.prototype.addListEntry = function (event)
   let type       = event.data.type;
   let acc_id_str = event.data.acc_id_str;
   let filter     = event.data.filter;
+  let edit       = event.data.edit;
+  let new_id     = event.data.new_id;
   let is_new     = event.data.is_new;
-  if (event.data.edit && (event.data.new_id || event.data.new_id === 0)) {
-    this.model.dataDelete({id:event.data.new_id});
+
+  if (edit && (new_id || new_id === 0)) {
+    this.model.dataDelete({ id: new_id });
     let new_params = {
       parent: this.element,
       data:   this.model.data,
@@ -3567,10 +3571,10 @@ $.any.anyView.prototype.dbUpdate = function (event)
   // Update database
   if (this.model.mode == "remote")
     return this.model.dbUpdate(event.data);
-  else {
-    delete item[id].is_new;
-    delete item[id].dirty;
-  }
+
+  delete item[id].is_new;
+  delete item[id].dirty;
+  return true;
 }; // dbUpdate
 
 // Override this in derived classes
@@ -3913,7 +3917,7 @@ $.any.anyView.prototype.dbDelete = function (opt)
   return true;
 }; // dbDelete
 
-// Remove a row (and subrows, id any) from a list, or the main container of an item
+// Remove a row (and subrows, if any) from a list, or the main container of an item
 // Must be called after deleting or removing data.
 $.any.anyView.prototype.removeFromView = function (opt)
 {

@@ -144,13 +144,12 @@ $.any.anyViewTabs.prototype.refreshData = function (params)
 {
   let data_div = $.any.anyView.prototype.refreshData.call(this,params);
   if (params.pkind == "head") {
-    let div_id   = data_div.attr('id');
-    let ev = {};
-    ev.data = {};
-    if (this.first_div_id)
-      ev.data.div_id = this.first_div_id;
-    else
-      ev.data.div_id = div_id;
+    let ev = { data: {
+                 div_id: this.first_div_id
+                         ? this.first_div_id
+                         : data_div.attr('id'),
+               }
+             };
     this.openTab(ev);
   }
   return data_div;
@@ -170,16 +169,7 @@ $.any.anyViewTabs.prototype.openTab = function (event)
   tab_area.children().show();
   return true;
 }; // openTab
-/*
-$.any.anyViewTabs.prototype.getWidgetName = function()
-{
-  let d = this.element.data();
-  let k = Object.keys(d);
-  if (k.length)
-    return k[0];
-  return "";
-}; // getWidgetName
-*/
+
 })($);
 
 /////////////////////////////////////////////////////////////////////////////
