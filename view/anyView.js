@@ -2824,35 +2824,20 @@ $.any.anyView.prototype._processKeyup = function (event)
   else
   if (event.which == 13) { // enter
     if (event.data) {
-      let data = event.data.data;
-      let id   = event.data.id;
-      let upd_opt = { indata:     data,
-                      id:         event.data.id,
-                      type:       event.data.type,
-                      kind:       event.data.kind,
-                      filter:     event.data.filter,
-                      acc_id_str: event.data.acc_id_str,
-                      is_new:     data && data[id] ? data[id].is_new : false,
-                      isEditable: event.data.isEditable,
-                      edit:       event.data.edit,
-                      pdata:      event.data.pdata,
-                      pid:        event.data.pid,
-                    };
-      let ev = {};
-      ev.data = { ...upd_opt };
+      let data   = event.data.data;
+      let id     = event.data.id;
+      let is_new = event.data.is_new ? event.data.is_new : data && data[id] ? data[id].is_new : false
+      event.data.is_new = is_new;
+      event.data.indata = event.data.data;
       if (this.options.onEnterCallDatabase)
-        this.dbUpdate(ev);
+        this.dbUpdate(event);
       let kind = event.data.kind;
       if (kind == "list" || kind == "select") {
         if (this.options.onEnterInsertNew) {
-          if (ev.data.acc_id_str) {
-            let n = ev.data.acc_id_str.lastIndexOf("_");
-            if (n>-1)
-              ev.data.acc_id_str = ev.data.acc_id_str.slice(0,n);
-            else
-              ev.data.acc_id_str = "";
-          }
-          this.addListEntry(ev);
+          // Add a new row to the list
+          event.data.is_new = true;
+          event.data.new_id = null;
+          this.addListEntry(event);
         }
         else
         if (this.options.onEnterMoveFocus) {
