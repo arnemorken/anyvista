@@ -1393,8 +1393,7 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
   if (!row_has_data)
     return null; // Nothing to display
 
-  let the_id     = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
-  let row_id_str = con_id_str+(con_id_str?"_":"")+the_id;
+  let row_id_str = con_id_str; // Note! con_id_str == row_id_str for kind == item
 
   let pl     = this.options.indent_level * this.options.indent_amount;
   let pl_str = pl > 0 ? "style='padding-left:"+pl+"px;'" : "";
