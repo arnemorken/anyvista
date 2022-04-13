@@ -194,9 +194,9 @@ class groupTable extends anyTable
       $where = "WHERE group_type='".$type."' ";
     if ($group_id)
       if ($where == null)
-        $where .= "WHERE group_id='".$group_id."' ";
+        $where .= "WHERE group_id=CAST(".$group_id." AS INT) ";
       else
-        $where .= "AND group_id='".$group_id."' ";
+        $where .= "AND group_id=CAST(".$group_id." AS INT) ";
     $stmt .= $where."ORDER BY group_sort_order,group_id,group_type";
     //error_log("dbSearchGroupInfo:".$stmt);
     if (!$this->tableExists($this->getTableName()) || !$this->query($stmt))
@@ -217,7 +217,7 @@ class groupTable extends anyTable
     $data_tree = array();
     $data_tree["group"] = array();
     $data_tree["group"] = $this->buildDataTree($data["group"],null,false,$num);
-    //vlog("dbSearchGroupTree,data_tree:",$data_tree);
+    //vlog("dbSearchGroupInfo,data_tree1:",$data_tree);
 
     // Add the default "nogroup" group
     $group_id = Parameters::get("group_id");
@@ -227,10 +227,10 @@ class groupTable extends anyTable
       $data_tree["group"]["nogroup"]["group_name"] = $this->findDefaultHeader($type);
       $data_tree["group"]["nogroup"]["head"]       = "group";
     }
-    //error_log("dbSearchGroupInfo,data_tree:".var_export($data_tree,true));
+    //error_log("dbSearchGroupInfo,data_tree2:".var_export($data_tree,true));
     $this->tdata = $data_tree;
 
-    return $data;
+    return $this->tdata;
   } // dbSearchGroupInfo
 
 } // class groupTable

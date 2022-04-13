@@ -927,9 +927,9 @@ class anyTable extends dbTable
       }
       else {
         if ($where)
-          $where .= " AND ".$this->mTableNameGroup.".group_id='".$gid."' ";
+          $where .= " AND ".$this->mTableNameGroup.".group_id=CAST(".$gid." AS INT) ";
         else
-          $where .= " WHERE ".$this->mTableNameGroup.".group_id='".$gid."' ";
+          $where .= " WHERE ".$this->mTableNameGroup.".group_id=CAST(".$gid." AS INT) ";
       }
     }
     else {
