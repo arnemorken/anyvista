@@ -417,11 +417,11 @@ $.any.anyView.prototype.refresh = function (params)
   let id         = params && params.id         ? params.id            : "";
   let type       = params && params.type       ? params.type          : this.model && this.model.type ? this.model.type : "";
   let kind       = params && params.kind       ? params.kind          : "";
+  let con_id_str = params && params.con_id_str ? ""+params.con_id_str : ""; // Id string for containers and table
+  let row_id_str = params && params.row_id_str ? ""+params.row_id_str : ""; // Id string accumulated through recursion
   let pdata      = params && params.pdata      ? params.pdata         : null;
   let pid        = params && params.pid        ? params.pid           : "";
   let edit       = params && params.edit       ? params.edit          : false;
-  let con_id_str = params && params.con_id_str ? ""+params.con_id_str : ""; // Id string for containers and table
-  let row_id_str = params && params.row_id_str ? ""+params.row_id_str : ""; // Id string accumulated through recursion
   let from       = params && params.from       ? params.from          : 1;
   let num        = params && params.num        ? params.num           : this.options.itemsPerPage;
 
@@ -522,19 +522,20 @@ $.any.anyView.prototype.refresh = function (params)
             if (from == -1 || from <= row_no && row_no < from + num) {
               // Refresh a single list row or a single item
               view.con_id_str = new_con_id_str; // Remember con_id_str for this view, in case missing from params
-              view.refreshOne({ parent:     the_parent,
-                                data:       data,
-                                id:         idc,
-                                type:       type,
-                                kind:       kind,
-                                curr_type:  curr_type,
-                                curr_kind:  curr_kind,
-                                con_id_str: new_con_id_str,
-                                row_id_str: new_row_id_str,
-                                pdata:      pdata,
-                                pid:        pid,
-                                edit:       edit,
-                             });
+              view.refreshOne({
+                 parent:     the_parent,
+                 data:       data,
+                 id:         idc,
+                 type:       type,
+                 kind:       kind,
+                 curr_type:  curr_type,
+                 curr_kind:  curr_kind,
+                 con_id_str: new_con_id_str,
+                 row_id_str: new_row_id_str,
+                 pdata:      pdata,
+                 pid:        pid,
+                 edit:       edit,
+              });
             }
           } // if view
           prev_type = curr_type;
@@ -555,14 +556,15 @@ $.any.anyView.prototype.refresh = function (params)
   if (this.options.showToolbar) {
     if (!this.options.isSelectable && this.model.type && this.data_level==0 && con_id_str == "" &&
         (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
-      this.refreshToolbarBottom({ parent:     parent,
-                                  data:       data,
-                                  id:         this.model.id,
-                                  type:       this.model.type,
-                                  kind:       this.model.kind,
-                                  edit:       edit,
-                                  con_id_str: "",
-                               });
+      this.refreshToolbarBottom({
+         parent:     parent,
+         data:       data,
+         id:         this.model.id,
+         type:       this.model.type,
+         kind:       this.model.kind,
+         edit:       edit,
+         con_id_str: "",
+      });
     }
   }
 
@@ -678,37 +680,40 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
 
   if (this.options.showMessages) {
     // Create a message area
-    let opt = { parent: bardiv,
-                type:   type,
-                kind:   kind,
-              };
+    let opt = {
+      parent: bardiv,
+      type:   type,
+      kind:   kind,
+    };
     this.refreshMessageArea(opt);
     this.showMessages();
   }
   if (this.options.showButtonNew) {
     // Create a "new item"  button
-    let opt = { parent:     bardiv,
-                data:       data,
-                id:         id, // Find a new id
-                type:       type,
-                kind:       "item",
-                con_id_str: con_id_str,
-                edit:       true,
-                is_new:     true,
-              };
+    let opt = {
+      parent:     bardiv,
+      data:       data,
+      id:         id, // Find a new id
+      type:       type,
+      kind:       "item",
+      con_id_str: con_id_str,
+      edit:       true,
+      is_new:     true,
+    };
     this.refreshNewItemButton(opt);
   }
   if (this.options.showButtonAddLink && this.model.id) {
     // Create an "add link" button
     let the_id = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
-    let opt = { parent:     bardiv,
-                data:       data,
-                id:         id,
-                type:       type,
-                kind:       "item",
-                con_id_str: the_id,
-                edit:       true,
-              };
+    let opt = {
+      parent:     bardiv,
+      data:       data,
+      id:         id,
+      type:       type,
+      kind:       "item",
+      con_id_str: the_id,
+      edit:       true,
+    };
     this.refreshAddLinkButton(opt);
   }
   return bardiv;
@@ -841,53 +846,57 @@ $.any.anyView.prototype.refreshData = function (params)
 
   let extra_foot = this.getOrCreateExtraFoot(table,type,kind,con_id_str);
   if (extra_foot) {
-    this.refreshExtraFoot({ parent:     extra_foot,
-                            data:       data,
-                            id:         id,
-                            type:       type,
-                            kind:       kind,
-                            edit:       edit,
-                            con_id_str: con_id_str,
-                            pdata:      pdata,
-                            pid:        pid,
-                         });
+    this.refreshExtraFoot({
+       parent:     extra_foot,
+       data:       data,
+       id:         id,
+       type:       type,
+       kind:       kind,
+       edit:       edit,
+       con_id_str: con_id_str,
+       pdata:      pdata,
+       pid:        pid,
+    });
   }
   let thead = table.find("thead").length ? table.find("thead") : null;
   if (!thead) {
     thead = this.getOrCreateThead(table,type,kind,con_id_str);
     if (thead)
-      this.refreshThead({ parent:     thead,
-                          data:       data,
-                          id:         id,
-                          type:       type,
-                          kind:       kind,
-                          edit:       edit,
-                          con_id_str: con_id_str,
-                       });
+      this.refreshThead({
+         parent:     thead,
+         data:       data,
+         id:         id,
+         type:       type,
+         kind:       kind,
+         edit:       edit,
+         con_id_str: con_id_str,
+      });
   }
   let tbody = this.getOrCreateTbody(table,type,kind,con_id_str);
   if (tbody) {
-    this.refreshTbodyRow({ parent:     tbody,
-                           data:       data,
-                           id:         id,
-                           type:       type,
-                           kind:       kind,
-                           edit:       edit,
-                           con_id_str: con_id_str,
-                           pdata:      pdata,
-                           pid:        pid,
-                        });
+    this.refreshTbodyRow({
+       parent:     tbody,
+       data:       data,
+       id:         id,
+       type:       type,
+       kind:       kind,
+       edit:       edit,
+       con_id_str: con_id_str,
+       pdata:      pdata,
+       pid:        pid,
+    });
   }
   let tfoot = this.getOrCreateTfoot(table,type,kind,con_id_str);
   if (tfoot) {
-    this.refreshTfoot({ parent:     tfoot,
-                        data:       data,
-                        id:         id,
-                        type:       type,
-                        kind:       kind,
-                        edit:       edit,
-                        con_id_str: con_id_str,
-                     });
+    this.refreshTfoot({
+       parent:     tfoot,
+       data:       data,
+       id:         id,
+       type:       type,
+       kind:       kind,
+       edit:       edit,
+       con_id_str: con_id_str,
+    });
   }
   // Clean up
   if (extra_foot && !extra_foot.children().length)
@@ -1038,16 +1047,17 @@ $.any.anyView.prototype.refreshThead = function (params)
   }
   let add_opt = null;
   if (this.options.showButtonAdd && !this.options.isSelectable && (this.model.data && !this.model.data.grouping_for_id))
-    add_opt = { data:       data,
-                id:         "new", // Find a new id
-                type:       type,
-                kind:       kind,
-                con_id_str: con_id_str,
-                filter:     filter,
-                isEditable: true,
-                is_new:     true,
-                edit:       true,
-              };
+    add_opt = {
+      data:       data,
+      id:         "new", // Find a new id
+      type:       type,
+      kind:       kind,
+      con_id_str: con_id_str,
+      filter:     filter,
+      isEditable: true,
+      is_new:     true,
+      edit:       true,
+    };
   let tr = $("<tr></tr>");
   thead.append(tr);
   // First tool cell for editable list
@@ -1178,18 +1188,19 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
         console.warn("anyList: anyPaginator missing, cannot paginate data. ");
       }
       else {
-        pager = extra_foot.anyPaginator({ itemsPerPage: this.options.itemsPerPage,
-                                          onClick:      this.pageNumClicked,
-                                          context:      this, // onClick context
-                                          hideGoto:     true,
-                                          // Set in paginator options that are sent to onClick handler:
-                                          div_info: {
-                                            type:       type,
-                                            kind:       kind,
-                                            con_id_str: con_id_str,
-                                            group_id:   pid,
-                                          },
-                                       });
+        pager = extra_foot.anyPaginator({
+                   itemsPerPage: this.options.itemsPerPage,
+                   onClick:      this.pageNumClicked,
+                   context:      this, // onClick context
+                   hideGoto:     true,
+                   // Set in paginator options that are sent to onClick handler:
+                   div_info: {
+                     type:       type,
+                     kind:       kind,
+                     con_id_str: con_id_str,
+                     group_id:   pid,
+                   },
+                });
         pager.numItems(num_results);
         pager.currentPage(this.options.currentPage);
         extra_foot.data("pager",pager);
@@ -1277,28 +1288,29 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     tr = $("<tr id='"+tr_id+"'></tr>");
     tbody.append(tr);
   }
-  let btn_opt = { parent:     tr,
-                  data:       data,
-                  id:         id,
-                  type:       type,
-                  kind:       kind,
-                  filter:     filter,
-                  edit:       edit,
-                  con_id_str: con_id_str,
-                  row_id_str: row_id_str,
-                  isEditable: true,
-                  pdata:      pdata,
-                  pid:        pid,
-                };
+  let cell_opt = {
+    parent:     tr,
+    data:       data,
+    id:         id,
+    type:       type,
+    kind:       kind,
+    filter:     filter,
+    edit:       edit,
+    con_id_str: con_id_str,
+    row_id_str: row_id_str,
+    isEditable: true,
+    pdata:      pdata,
+    pid:        pid,
+  };
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
       (this.options.isEditable && (this.options.showButtonEdit || this.options.showButtonUpdate))) {
-    this.refreshTableDataFirstCell(btn_opt);
+    this.refreshTableDataFirstCell(cell_opt);
   }
-  this.refreshListTableDataCells(btn_opt);
+  this.refreshListTableDataCells(cell_opt);
 
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
       (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonDelete || this.options.showButtonCancel))) {
-    this.refreshTableDataLastCell(btn_opt);
+    this.refreshTableDataLastCell(cell_opt);
   }
   // Clean up
   if (!tr.children().length || (!row_has_data && !this.options.showEmptyRows))
@@ -1441,24 +1453,25 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
         // Normal row:
         let tr = $("<tr "+display_class+"></tr>");
         tbody.append(tr);
-        let cell_opt = { parent:     tr,
-                         data:       data,
-                         id:         id,
-                         type:       type,
-                         kind:       kind,
-                         filter:     filter,
-                         edit:       edit,
-                         con_id_str: con_id_str,
-                         row_id_str: row_id_str,
-                         isEditable: true,
-                         pdata:      pdata,
-                         pid:        pid,
-                         // The options below are only used by refreshItemTableDataCells
-                         filter_id:  filter_id,
-                         filter_key: filter_key,
-                         pl_str:     pl_str,
-                         n:          n,
-                       };
+        let cell_opt = {
+          parent:     tr,
+          data:       data,
+          id:         id,
+          type:       type,
+          kind:       kind,
+          filter:     filter,
+          edit:       edit,
+          con_id_str: con_id_str,
+          row_id_str: row_id_str,
+          isEditable: true,
+          pdata:      pdata,
+          pid:        pid,
+          // The options below are only used by refreshItemTableDataCells
+          filter_id:  filter_id,
+          filter_key: filter_key,
+          pl_str:     pl_str,
+          n:          n,
+        };
         if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
             (this.options.isEditable && (this.options.showButtonEdit || this.options.showButtonUpdate))) {
           if (n == 1)
@@ -1535,54 +1548,57 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
   tr.append(td);
   if (this.options.isSelectable && (kind == "list" || kind == "select")) {
     let checked = this.model.select.has(parseInt(id));
-    let sel_opt = { parent:     td,
-                    data:       data,
-                    id:         id,
-                    type:       type,
-                    kind:       kind,
-                    con_id_str: con_id_str,
-                    row_id_str: row_id_str,
-                    filter:     filter,
-                    isEditable: isEditable,
-                    checked:    checked,
-                    pdata:      pdata,
-                    pid:        pid,
-                  };
+    let sel_opt = {
+      parent:     td,
+      data:       data,
+      id:         id,
+      type:       type,
+      kind:       kind,
+      con_id_str: con_id_str,
+      row_id_str: row_id_str,
+      filter:     filter,
+      isEditable: isEditable,
+      checked:    checked,
+      pdata:      pdata,
+      pid:        pid,
+    };
     this.refreshSelectButton(sel_opt);
   }
   else
   if (this.options.isEditable || edit || isEditable) {
     if (this.options.showButtonEdit) {
-      let edt_opt = { parent:     td,
-                      data:       data,
-                      id:         id,
-                      type:       type,
-                      kind:       kind,
-                      con_id_str: con_id_str,
-                      row_id_str: row_id_str,
-                      filter:     filter,
-                      isEditable: isEditable,
-                      edit:       edit,
-                      pdata:      pdata,
-                      pid:        pid,
-                    };
+      let edt_opt = {
+        parent:     td,
+        data:       data,
+        id:         id,
+        type:       type,
+        kind:       kind,
+        con_id_str: con_id_str,
+        row_id_str: row_id_str,
+        filter:     filter,
+        isEditable: isEditable,
+        edit:       edit,
+        pdata:      pdata,
+        pid:        pid,
+      };
       this.refreshEditButton(edt_opt);
     }
     if (this.options.showButtonUpdate) {
-      let upd_opt = { parent:     td,
-                      indata:     data,
-                      id:         id,
-                      type:       type,
-                      kind:       kind,
-                      filter:     filter,
-                      con_id_str: con_id_str,
-                      row_id_str: row_id_str,
-                      is_new:     data && data[id] ? data[id].is_new : false,
-                      isEditable: isEditable,
-                      edit:       edit,
-                      pdata:      pdata,
-                      pid:        pid,
-                    };
+      let upd_opt = {
+        parent:     td,
+        indata:     data,
+        id:         id,
+        type:       type,
+        kind:       kind,
+        filter:     filter,
+        con_id_str: con_id_str,
+        row_id_str: row_id_str,
+        is_new:     data && data[id] ? data[id].is_new : false,
+        isEditable: isEditable,
+        edit:       edit,
+        pdata:      pdata,
+        pid:        pid,
+      };
       this.refreshUpdateButton(upd_opt);
     }
   }
@@ -1612,19 +1628,20 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
   }
   else
   if (this.options.isEditable || edit || isEditable) {
-    let last_opt = { parent:     td,
-                     data:       data,
-                     id:         id,
-                     type:       type,
-                     kind:       kind,
-                     con_id_str: con_id_str,
-                     row_id_str: row_id_str,
-                     filter:     filter,
-                     isEditable: true,
-                     edit:       edit,
-                     pdata:      pdata,
-                     pid:        pid,
-                   };
+    let last_opt = {
+      parent:     td,
+      data:       data,
+      id:         id,
+      type:       type,
+      kind:       kind,
+      con_id_str: con_id_str,
+      row_id_str: row_id_str,
+      filter:     filter,
+      isEditable: true,
+      edit:       edit,
+      pdata:      pdata,
+      pid:        pid,
+    };
     last_opt.isEditable = isEditable;
     if (this.options.showButtonRemove && this.options.isRemovable && id && kind == "list")
       this.refreshRemoveButton(last_opt);
@@ -2084,7 +2101,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,co
         }
         else
         if (!edit) {
-          // A link click in edit mode opens the item view window
+          // A link click in non-edit mode opens the item view window
           let fun = this.options.itemLinkClicked
                     ? this.options.itemLinkClicked
                     : this.itemLinkClicked;
@@ -2783,14 +2800,15 @@ $.any.anyView.prototype.sortTable = function (event)
     }
     this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty this view (to avoid flashing)
   }
-  let mod_opt = { context:   this.model,
-                  type:      type,
-                  group_id:  group_id,
-                  from:      from,
-                  num:       num,
-                  order:     order,
-                  direction: this.options.sortDirection,
-                };
+  let mod_opt = {
+    context:   this.model,
+    type:      type,
+    group_id:  group_id,
+    from:      from,
+    num:       num,
+    order:     order,
+    direction: this.options.sortDirection,
+  };
   if (this.model.mode == "remote") {
     // Remote search, let the database do the sorting.
     // Will (normally) call refresh via onModelChange
@@ -2821,17 +2839,18 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
   this.options.currentPage = pager.currentPage();
   let from = pager.options.itemsPerPage *(pager.currentPage() - 1) + 1;
   let num  = pager.options.itemsPerPage;
-  let mod_opt = { from:      from,
-                  num:       num,
-                  context:   this.model,
-                  type:      pager.options.div_info.type,
-                  group_id:  pager.options.div_info.group_id,
-                  grouping:  this.options.grouping,
-                  order:     this.options.order,
-                  direction: this.options.direction,
-                  head:      this.options.grouping == "tabs",
-                //simple:    true, // TODO! Does not work correctly with this option
-                };
+  let mod_opt = {
+    from:      from,
+    num:       num,
+    context:   this.model,
+    type:      pager.options.div_info.type,
+    group_id:  pager.options.div_info.group_id,
+    grouping:  this.options.grouping,
+    order:     this.options.order,
+    direction: this.options.direction,
+    head:      this.options.grouping == "tabs",
+  //simple:    true, // TODO! Does not work correctly with this option
+  };
   if (this.model.mode == "remote") {
     this.options.ref_rec = 0;
     mod_opt.from -= 1; // from is 0-based on server
@@ -2927,11 +2946,12 @@ $.any.anyView.prototype.addListEntry = function (event)
     this.refreshData(new_params);
   }
   // Get a new id (from database, if we use that) and add a new empty item to the data model.
-  let the_data = this.model.dataSearch({ type: type,
-                                         id:   pid,
-                                         data: this.model.data,
-                                         parent: true,
-                                      }); // Find the place to add the new item
+  let the_data = this.model.dataSearch({
+                    type: type,
+                    id:   pid,
+                    data: this.model.data,
+                    parent: true,
+                 }); // Find the place to add the new item
   if (is_new) {
     if (this.model.mode != "remote") {
       let new_id = this.model.dataSearchNextId(type);
@@ -3033,18 +3053,20 @@ $.any.anyView.prototype._addListEntry = function (opt)
   }
   let the_data = opt.data ? opt.data : this.model.data;
   if (new_id || new_id===0)
-    this.model.dataInsert({ type:   opt.type,
-                            id:     null,
-                            data:   the_data,
-                            indata: indata,
-                            new_id: new_id,
-                         });
+    this.model.dataInsert({
+       type:   opt.type,
+       id:     null,
+       data:   the_data,
+       indata: indata,
+       new_id: new_id,
+    });
   else
-    this.model.dataUpdate({ type:   opt.type,
-                            id:     opt.id,
-                            data:   the_data,
-                            indata: indata,
-                         });
+    this.model.dataUpdate({
+       type:   opt.type,
+       id:     opt.id,
+       data:   the_data,
+       indata: indata,
+    });
   opt.new_id = null; // Important! To make addListEntry work with id == 0
 
   this.refreshOne({ parent:     this.element,
@@ -3068,7 +3090,7 @@ $.any.anyView.prototype.itemLinkClicked = function (event)
   return this.showItem(event);
 }; // itemLinkClicked
 
-// Open a (possibly new and empty) item view.
+// Find and open a (possibly new and empty) item view.
 $.any.anyView.prototype.showItem = function (event)
 {
   event.data.view = this;
@@ -3089,11 +3111,12 @@ $.any.anyView.prototype.showItem = function (event)
       return this._doShowItem(event.data);
     }
     else { // remote
-      this.model.dbSearchNextId({ type:    type,
-                                  is_new:  true,
-                                  success: this._foundNextIdFromDB,
-                                  context: this,
-                               }); // TODO! Asynchronous database call
+      this.model.dbSearchNextId({
+         type:    type,
+         is_new:  true,
+         success: this._foundNextIdFromDB,
+         context: this,
+      }); // TODO! Asynchronous database call
     }
   }
   else
@@ -3124,13 +3147,14 @@ $.any.anyView.prototype._foundNextIdFromDB = function (context,serverdata,option
   }
 }; // _foundNextIdFromDB
 
+// Open a (possibly new and empty) item view.
 $.any.anyView.prototype._doShowItem = function (opt)
 {
-  let data   = opt.data;
-  let id     = opt.id;
-  let type   = opt.head ? opt.head : opt.item ? opt.item : opt.list ? opt.list : opt.type ? opt.type : "";
-  let kind   = "item";
-  let is_new = opt.is_new != undefined ? opt.is_new : false;
+  let data     = opt.data;
+  let id       = opt.id;
+  let type     = opt.head ? opt.head : opt.item ? opt.item : opt.list ? opt.list : opt.type ? opt.type : "";
+  let kind     = "item";
+  let is_new   = opt.is_new != undefined ? opt.is_new : false;
   let name_key = this.model.name_key ? this.model.name_key : type+"_name";
   let the_item = null;
   if (!is_new)
@@ -3206,8 +3230,9 @@ $.any.anyView.prototype._doShowItem = function (opt)
     view.options.isDeletable = false;
     view.options.isRemovable = false;
   }
+  // Display the item data
   if (view.model.mode == "remote" && !is_new) {
-    // Remote search, will (normally) call refresh via onModelChange
+    // Remote search: Will (normally) call refresh via onModelChange
     view.model.dbSearch({
       context:  view.model,
       id:       the_id,
@@ -3217,7 +3242,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
     });
   }
   else {
-    // Local refresh
+    // Local refresh: Display the empty data structure just created
     if (is_new)
       the_id = "+0";
     view.refresh({
@@ -3256,8 +3281,8 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
   }
   let prefix  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.row_id_str;
   let elem_id = opt.kind == "item"
-                ? this.id_base+"_"+opt.type+"_item_"+opt.row_id_str+"_tbody"
-                : this.id_base+"_"+opt.type+"_list_"+opt.row_id_str+"_tr";
+                ? prefix+"_tbody"
+                : prefix+"_tr";
   let elem = $("#"+elem_id);
   if (elem.length) {
     if (opt.kind != "item") {
@@ -3274,10 +3299,11 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
           }
         }
         if (this.model && is_empty) {
-          this.model.dataDelete({ data: opt.data,
-                                  type: opt.type,
-                                  id:   opt.id,
-                               });
+          this.model.dataDelete({
+             data: opt.data,
+             type: opt.type,
+             id:   opt.id,
+          });
           elem.remove();
           this.current_edit = null;
         }
@@ -3532,10 +3558,11 @@ $.any.anyView.prototype.dbUpdate = function (event)
       }
     }
   }
-  this.model.dataUpdate({ type:   type,
-                          id:     id,
-                          indata: data_values,
-                       });
+  this.model.dataUpdate({
+     type:   type,
+     id:     id,
+     indata: data_values,
+  });
   if (data_values["parent_name"])
     delete data_values["parent_name"]; // TODO! Why?
   if (id || id === 0) { // TODO!
@@ -3566,18 +3593,20 @@ $.any.anyView.prototype.dbUpdate = function (event)
     // Make sure the items original model is also updated
     if (this.options.view && this.options.view != this) { // TODO! no view here
       if (!event.data.is_new)
-        this.options.view.model.dataUpdate({ type:   type,
-                                             id:     id,
-                                             indata: data_values,
-                                          });
+        this.options.view.model.dataUpdate({
+           type:   type,
+           id:     id,
+           indata: data_values,
+        });
       else {
         let dv = {};
         dv[id] = data_values;
-        this.options.view.model.dataInsert({ type:   type,
-                                             id:     pid,
-                                             indata: dv,
-                                             new_id: id,
-                                          });
+        this.options.view.model.dataInsert({
+           type:   type,
+           id:     pid,
+           indata: dv,
+           new_id: id,
+        });
         }
     }
     */
@@ -3592,20 +3621,21 @@ $.any.anyView.prototype.dbUpdate = function (event)
     let tr_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_tr";
     let tr    = $("#"+tr_id);
     if (!tr.length) {
-      console.error("anyList: Could find row "+tr_id);
+      console.error("dbUpdate: Could find row "+tr_id);
       return false;
     }
-    let params = { parent:     tr.parent(),
-                   data:       indata,
-                   id:         id,
-                   type:       type,
-                   kind:       kind,
-                   edit:       false,
-                   con_id_str: con_id_str,
-                   row_id_str: row_id_str,
-                   pdata:      pdata,
-                   pid:        pid,
-                 };
+    let params = {
+      parent:     tr.parent(),
+      data:       indata,
+      id:         id,
+      type:       type,
+      kind:       kind,
+      edit:       false,
+      con_id_str: con_id_str,
+      row_id_str: row_id_str,
+      pdata:      pdata,
+      pid:        pid,
+    };
     this.refreshListTableDataRow(params);
   }
   else {
@@ -3686,13 +3716,14 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
         let ll_id       = new_id_base+"_"+list_type+"_link_list";
         let ll_contents = $("<div id='"+ll_id+"'></div>");
 
-        let select_list_view = parent_view.createView({ parent:     ll_contents,
-                                                        data:       serverdata.data,
-                                                        id:         null,
-                                                        type:       list_type,
-                                                        kind:       "list",
-                                                        row_id_str: options.row_id_str,
-                                                     });
+        let select_list_view = parent_view.createView({
+                                  parent:     ll_contents,
+                                  data:       serverdata.data,
+                                  id:         null,
+                                  type:       list_type,
+                                  kind:       "list",
+                                  row_id_str: options.row_id_str,
+                               });
         if (select_list_view) {
           select_list_view.id_base = new_id_base;
           select_list_view.options.showHeader      = false;
@@ -3729,13 +3760,14 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             unselect:    select_list_view.model.unselect,
             name_key:    select_list_view.model.name_key,
           });
-          select_list_view.refresh({ parent: ll_contents,
-                                     data:   serverdata.data,
-                                     id:     null,
-                                     type:   list_type,
-                                     kind:   "list",
-                                     edit:   false,
-                                  });
+          select_list_view.refresh({
+             parent: ll_contents,
+             data:   serverdata.data,
+             id:     null,
+             type:   list_type,
+             kind:   "list",
+             edit:   false,
+          });
         }
       } // if parent_view
     }
@@ -3744,14 +3776,15 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
     let view = options.parent_view;
     if (view.options.showToolbar) {
       view.options.item_opening = true; // To make top right close icon appear
-      view.refreshToolbarBottom({ parent:     view.element,
-                                  data:       view.model.data,
-                                  id:         view.model.id,
-                                  type:       view.model.type,
-                                  kind:       view.model.kind,
-                                  edit:       false,
-                                  con_id_str: "",
-                               });
+      view.refreshToolbarBottom({
+         parent:     view.element,
+         data:       view.model.data,
+         id:         view.model.id,
+         type:       view.model.type,
+         kind:       view.model.kind,
+         edit:       false,
+         con_id_str: "",
+      });
     }
   }
   return context;
@@ -3770,18 +3803,18 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
   // Update database
   this.options.item_opening = true; // To make top right close icon appear
   if (!this.model.dbUpdateLinkList({ // TODO! What if mode == "local"?
-        type:      opt.type,
-        id:        opt.id,
-        data:      opt.data,
-        link_type: opt.link_type,
-        link_id:   opt.link_id,
-        select:    opt.select,
-        unselect:  opt.unselect,
-        name_key:  opt.name_key,
-        view:      opt.view, // Refresh only this view
-        head:      true,
-        grouping:  this.options.grouping,
-      }))
+         type:      opt.type,
+         id:        opt.id,
+         data:      opt.data,
+         link_type: opt.link_type,
+         link_id:   opt.link_id,
+         select:    opt.select,
+         unselect:  opt.unselect,
+         name_key:  opt.name_key,
+         view:      opt.view, // Refresh only this view
+         head:      true,
+         grouping:  this.options.grouping,
+       }))
     return false;
 
   return true;
@@ -3830,26 +3863,27 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
               "</div>";
     let parent_id = this.element.attr("id");
     if (parent_id)
-      w3_modaldialog({parentId:    parent_id,
-                      elementId:   "",
-                      heading:     kind == "item" ? i18n.button.buttonRemove : i18n.button.buttonRemoveFromList.replace("%%",type),
-                      contents:    msg,
-                      width:       "25em",
-                      ok:          true,
-                      cancel:      true,
-                      okFunction:  this.dbUpdateLinkList,
-                      context:     this,
-                      // Sent to okFunction:
-                      type:        type,
-                      kind:        kind,
-                      id:          id,
-                      data:        data,
-                      row_id_str:  row_id_str,
-                      link_type:   link_type,
-                      link_id:     link_id,
-                      select:      new Set(),
-                      unselect:    new Set().add(id),
-                    });
+      w3_modaldialog({
+        parentId:   parent_id,
+        elementId:  "",
+        heading:    kind == "item" ? i18n.button.buttonRemove : i18n.button.buttonRemoveFromList.replace("%%",type),
+        contents:   msg,
+        width:      "25em",
+        ok:         true,
+        cancel:     true,
+        okFunction: this.dbUpdateLinkList,
+        context:    this,
+        // Sent to okFunction:
+        type:       type,
+        kind:       kind,
+        id:         id,
+        data:       data,
+        row_id_str: row_id_str,
+        link_type:  link_type,
+        link_id:    link_id,
+        select:     new Set(),
+        unselect:   new Set().add(id),
+      });
   }
   return this;
 }; // dbRemoveDialog
@@ -3877,10 +3911,11 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
   let kind       = event.data.kind;
   let row_id_str = event.data.row_id_str;
 
-  let item = this.model.dataSearch({ type: type,
-                                     id:   id,
-                                     data: data,
-                                  });
+  let item = this.model.dataSearch({
+                type: type,
+                id:   id,
+                data: data,
+             });
   if (!item || !item[id])
     throw i18n.error.SYSTEM_ERROR; // Should never happen
 
@@ -3900,22 +3935,23 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
               "</div>";
     let parent_id = this.element.attr("id");
     if (parent_id)
-      w3_modaldialog({parentId:   parent_id,
-                      elementId:  "",
-                      heading:    i18n.button.buttonDelete,
-                      contents:   msg,
-                      width:      "25em",
-                      ok:         true,
-                      cancel:     true,
-                      okFunction: this.dbDelete,
-                      context:    this,
-                      // Sent to okFunction dbDelete:
-                      data:       data,
-                      id:         id,
-                      type:       type,
-                      kind:       kind,
-                      row_id_str: row_id_str,
-                    });
+      w3_modaldialog({
+        parentId:   parent_id,
+        elementId:  "",
+        heading:    i18n.button.buttonDelete,
+        contents:   msg,
+        width:      "25em",
+        ok:         true,
+        cancel:     true,
+        okFunction: this.dbDelete,
+        context:    this,
+        // Sent to okFunction dbDelete:
+        data:       data,
+        id:         id,
+        type:       type,
+        kind:       kind,
+        row_id_str: row_id_str,
+      });
   }
   return true;
 }; // dbDeleteDialog
@@ -3965,8 +4001,8 @@ $.any.anyView.prototype.dbDelete = function (opt)
   return true;
 }; // dbDelete
 
-// Remove a row (and subrows, if any) from a list, or the main container of an item
-// Must be called after deleting or removing data.
+// Remove a row (and subrows, if any) from a list, or the main container of an item.
+// Does not  remove from memory (data structure).
 $.any.anyView.prototype.removeFromView = function (opt)
 {
   let data       = opt.data;
@@ -3981,12 +4017,13 @@ $.any.anyView.prototype.removeFromView = function (opt)
     if (tr.length)
       tr.remove();
     // Remove subrows, if any
-    let item = this.model.dataSearch({ data: data,
-                                       id:   id,
-                                       type: type,
-                                    });
+    let item = this.model.dataSearch({
+                 data: data,
+                 id:   id,
+                 type: type,
+               });
     if (!item || !item[id])
-      return false;
+      return null; // Should never happen
     if (item[id].data) {
       for (let new_id in item[id].data) {
         if (item[id].data.hasOwnProperty(new_id)) {
