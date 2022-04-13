@@ -1861,7 +1861,7 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
     if (Object.size(serverdata.data) == 0)
-      serverdata.data = null;
+      serverdata.data = options.data ? options.data : self.model.data;
     self.message = serverdata.message;
     if (serverdata.error) {
       self.error_server = serverdata.error;
