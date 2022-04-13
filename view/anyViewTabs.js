@@ -27,9 +27,7 @@ $.widget("any.anyViewTabs", $.any.anyView, {
 
   // "Constructor"
   _create: function() {
-    this.tabs_list      = {};
-    this.first_div_id   = null;
-    this.current_div_id = null;
+    this.resetTabs();
     this._super();
     this.element.addClass("any-datatabs-view");
   },
@@ -41,13 +39,18 @@ $.widget("any.anyViewTabs", $.any.anyView, {
   }
 }); // ViewTabs widget constructor
 
+$.any.anyViewTabs.prototype.resetTabs = function (params)
+{
+  this.tabs_list = {};
+}; // resetTabs
+
 $.any.anyViewTabs.prototype.createView = function (params)
 {
   let view = $.any.anyView.prototype.createView.call(this,params);
   if (view) {
-    view.tabs_list      = this.tabs_list;
-    view.first_div_id   = this.first_div_id;
-    view.current_div_id = this.current_div_id;
+    view.tabs_list          = this.tabs_list;
+    view.tabs_list["first"] = this.tabs_list["first"];
+    view.tabs_list["curr"]  = this.tabs_list["curr"];
   }
   return view;
 }; // createView
@@ -73,7 +76,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (params)
     let tabs_id_str = (n>-1) ? con_id_str.slice(0,n) : ""; // con_id_str of level above
     if (kind == "list" || kind == "select")
       con_id_str = tabs_id_str;
-    // Get or create a tabs button container
+    // Get or create a container for the tabs button
     let tabs_id = this.getIdBase()+"_"+prev_type+"_"+prev_kind+"_"+tabs_id_str+"_tabs";
     if (!this.tabs_list[tabs_id_str]) {
       this.tabs_list[tabs_id_str] = $("#"+tabs_id);
@@ -114,15 +117,18 @@ $.any.anyViewTabs.prototype.refreshHeader = function (params)
           let div_id = this.getIdBase()+"_"+type+"_"+kind+"_"+con_id_str+"_data";
           let click_opt = { div_id: div_id };
           tab_btn.off("click");
-          tab_btn.on("click",click_opt,$.proxy(this.openTab,this));
+          tab_btn.on("click",click_opt,$.proxy(this.clickOpenTab,this));
           $("#"+div_id).hide();
-          // Remember which tab should get focus
+          // Remember which tab is the first
           let ntab = this.tabs_list[tabs_id_str].children().length;
-          if (ntab<2)
-            this.first_div_id = div_id;
+          if (ntab<2) {
+            this.tabs_list["first"] = div_id;
+            this.tabs_list["curr"]  = div_id;
+          }
         }
       }
     }
+    this.openTab(); // Open first tab
   }
   if (!skip) // TODO: Should just skip the name, not the rest of the header
     return $.any.anyView.prototype.refreshHeader.call(this,params);
@@ -131,31 +137,34 @@ $.any.anyViewTabs.prototype.refreshHeader = function (params)
 
 $.any.anyViewTabs.prototype.refreshData = function (params)
 {
-  let data_div = $.any.anyView.prototype.refreshData.call(this,params);
-  if (params.pkind == "head") {
-    let ev = { data: {
-                 div_id: this.first_div_id
-                         ? this.first_div_id
-                         : data_div.attr('id'),
-               }
-             };
-    this.openTab(ev);
-  }
-  return data_div;
+  let parent = $.any.anyView.prototype.refreshData.call(this,params);
+  let ev = {
+    data: {
+      div_id: this.tabs_list["curr"],
+    }
+  };
+  this.openTab(ev);
+  return parent;
 }; // refreshData
+
+$.any.anyViewTabs.prototype.clickOpenTab = function (event)
+{
+  if (event && event.data)
+    this.tabs_list["curr"] = event.data.div_id;
+  else
+    this.tabs_list["curr"] = this.tabs_list["first"];
+  this.openTab(event);
+}; // clickOpenTab
 
 $.any.anyViewTabs.prototype.openTab = function (event)
 {
-  if (!event || !event.data || event.data.div_id == this.current_div_id)
-    return false;
-  this.current_div_id = event.data.div_id;
-  let tab_area = $("#"+event.data.div_id);
+  let tab_area = $("#"+this.tabs_list["curr"]);
   if (tab_area.length) {
-    $(".anyTabButton").removeClass("w3-blue"); // TODO! Too general
-    let btn = $("#"+event.data.div_id+"_tab_btn");
-    btn.addClass("w3-blue");
     let tabs_view = tab_area.parent().find(".any-datatabs-view");
     if (tabs_view.length) {
+      $(".anyTabButton").removeClass("w3-blue"); // TODO! Too general
+      let btn = $("#"+this.tabs_list["curr"]+"_tab_btn");
+      btn.addClass("w3-blue");
       tabs_view.hide();
       tab_area.show();
       tab_area.children().show();

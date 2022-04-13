@@ -509,13 +509,15 @@ $.any.anyView.prototype.refresh = function (params)
                   the_parent = parent;
               }
             }
-            view = view.createView({ parent:     the_parent,
-                                     data:       data,
-                                     id:         idc,
-                                     type:       curr_type,
-                                     kind:       curr_kind,
-                                     con_id_str: new_con_id_str,
-                                  });
+            view = view.createView({
+                      parent:     the_parent,
+                      data:       data,
+                      id:         idc,
+                      type:       curr_type,
+                      kind:       curr_kind,
+                      con_id_str: new_con_id_str,
+                      data_level: this.data_level,
+                   });
           }
           if (view) {
             ++row_no;
@@ -629,17 +631,19 @@ $.any.anyView.prototype.refreshOne = function (params)
   if (data && data[id] && data[id].data) {
     if ((curr_kind == "list" || curr_kind == "select"))
       ++this.options.indent_level;
-    this.refresh({ parent:     new_params.data_div,
-                   data:       data[id].data,
-                   id:         null,
-                   type:       curr_type,
-                   kind:       curr_kind,
-                   pdata:      data,
-                   pid:        id,
-                   edit:       edit,
-                   con_id_str: con_id_str,
-                   row_id_str: row_id_str,
-                });
+    this.refresh({
+       parent:     new_params.data_div,
+       data:       data[id].data,
+       id:         null,
+       type:       curr_type,
+       kind:       curr_kind,
+       con_id_str: con_id_str,
+       row_id_str: row_id_str,
+       pdata:      data,
+       pid:        id,
+       edit:       edit,
+       is_head:    kind == "head",
+    });
     if ((kind == "list" || kind == "select"))
       --this.options.indent_level;
   }
@@ -2046,19 +2050,20 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,co
     return;
 
   let init_opt = {
-        data:       data,
-        id:         id,
-        type:       type,
-        kind:       kind,
-        edit:       edit,
-        row_id_str: row_id_str,
-        filter:     filter,
-        filter_id:  filter_id,
-        isEditable: isEditable,
-        pdata:      pdata,
-        pid:        pid,
-        plugins:    this.model.plugins,
-      };
+    data:       data,
+    id:         id,
+    type:       type,
+    kind:       kind,
+    edit:       edit,
+    con_id_str: con_id_str,
+    row_id_str: row_id_str,
+    filter:     filter,
+    filter_id:  filter_id,
+    isEditable: isEditable,
+    pdata:      pdata,
+    pid:        pid,
+    plugins:    this.model.plugins,
+  };
   // Bind a method that is called while clicking on the text link, file view or file name (in non-edit mode)
   if (["link", "upload", "fileview"].includes(filter_key.HTML_TYPE)) {
     let link_elem = $("#"+td_id);
@@ -2172,6 +2177,7 @@ $.any.anyView.prototype.createView = function (params)
   let id         = params && params.id         ? params.id         : "";
   let type       = params && params.type       ? params.type       : null;
   let kind       = params && params.kind       ? params.kind       : null;
+  let data_level = params && params.data_level ? params.data_level : 0;
 
   if (!parent)
     parent = this.element;
@@ -2201,7 +2207,7 @@ $.any.anyView.prototype.createView = function (params)
   }
 
   // Create the view
-  let view_opt = this.getCreateViewOptions(model,parent,kind);
+  let view_opt = this.getCreateViewOptions(model,parent,kind,data_level);
   let v_str    = view_opt.grouping ? type+"View"+view_opt.grouping.capitalize() : type+"View";
   if (!window[v_str]) {
     let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
@@ -2238,7 +2244,7 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
   };
 }; // getCreateModelOptions
 
-$.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind)
+$.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_level)
 {
   return {
     model:            model,
@@ -2246,7 +2252,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind)
     id:               parent.attr("id"),
     view:             this,
     id_base:          this.id_base,
-    data_level:       this.data_level,
+    data_level:       data_level || data_level==0 ? data_level : this.data_level,
     group_id:         this.group_id, // Current group id (for table headers)
     grouping:         this.options.grouping,
     item_opening:     this.options.item_opening,
@@ -2888,6 +2894,7 @@ $.any.anyView.prototype._processKeyup = function (event)
         this.dbUpdate(event);
       let kind = event.data.kind;
       if (kind == "list" || kind == "select") {
+        this.current_edit = null;
         if (this.options.onEnterInsertNew) {
           // Add a new row to the list
           event.data.is_new = true;
@@ -2926,13 +2933,14 @@ $.any.anyView.prototype._processKeyup = function (event)
 $.any.anyView.prototype.addListEntry = function (event)
 {
   let id         = event.data.id;
-  let pid        = event.data.pid;
   let type       = event.data.type;
   let con_id_str = event.data.con_id_str;
   let filter     = event.data.filter;
   let edit       = event.data.edit;
   let new_id     = event.data.new_id;
   let is_new     = event.data.is_new;
+  let pdata      = event.data.pdata;
+  let pid        = event.data.pid;
 
   if (edit && (new_id || new_id === 0)) {
     this.model.dataDelete({ id: new_id });
@@ -2941,6 +2949,8 @@ $.any.anyView.prototype.addListEntry = function (event)
       data:   this.model.data,
       id:     pid,
       type:   type,
+      pdata:  pdata,
+      pid:    pid,
     };
     this.refreshData(new_params);
   }
@@ -2957,15 +2967,18 @@ $.any.anyView.prototype.addListEntry = function (event)
       if (new_id >= 0) {
         // Find a new row_id_str
         let the_id = Number.isInteger(parseInt(new_id)) ? parseInt(new_id) : new_id;
-        row_id_str = con_id_str ? con_id_str+"_"+the_id : ""+the_id;
-        this._addListEntry({ data:       the_data,
-                             new_id:     new_id,
-                             type:       type,
-                             kind:       "list",
-                             con_id_str: con_id_str,
-                             row_id_str: row_id_str,
-                             filter:     filter,
-                          });
+        let row_id_str = con_id_str ? con_id_str+"_"+the_id : ""+the_id;
+        this._addListEntry({
+           data:       the_data,
+           new_id:     new_id,
+           type:       type,
+           kind:       "list",
+           con_id_str: con_id_str,
+           row_id_str: row_id_str,
+           filter:     filter,
+           pdata:      pdata,
+           pid:        pid,
+        });
       }
       else {
         this.model.error = "Next id not found. "; // TODO! i18n
@@ -2973,14 +2986,21 @@ $.any.anyView.prototype.addListEntry = function (event)
         return false;
       }
     }
-    else // remote
-      this.model.dbSearchNextId({ type:       type,
-                                  success:    this._addListEntryFromDB,
-                                  context:    this,
-                                  data:       the_data,
-                                  con_id_str: con_id_str,
-                                  row_id_str: row_id_str,
-                               });
+    else { // remote
+      // Find a new row_id_str
+      let the_id = Number.isInteger(parseInt(new_id)) ? parseInt(new_id) : new_id;
+      let row_id_str = con_id_str ? con_id_str+"_"+the_id : ""+the_id;
+      this.model.dbSearchNextId({
+         type:       type,
+         success:    this._addListEntryFromDB,
+         context:    this,
+         data:       the_data,
+         con_id_str: con_id_str,
+         row_id_str: row_id_str,
+         pdata:      pdata,
+         pid:        pid,
+      });
+    }
   }
   else
     console.error("Item "+id+" not found. "); // TODO! i18n
@@ -3014,8 +3034,10 @@ $.any.anyView.prototype._addListEntryFromDB = function (context,serverdata,optio
       if (typeof serverdata.new_id == "string")
         if (serverdata.new_id.length && serverdata.new_id[0] != "+")
           serverdata.new_id = "+"+serverdata.new_id;
-      serverdata.data   = options.data ? options.data : view.model.data;
+      serverdata.data   = options.data  ? options.data  : view.model.data;
       serverdata.filter = view.getFilter(serverdata.type,serverdata.kind);
+      serverdata.pdata  = options.pdata ? options.pdata : null;
+      serverdata.pid    = options.pid   ? options.pid   : null;
       view._addListEntry(serverdata);
     }
   }
@@ -3029,6 +3051,8 @@ $.any.anyView.prototype._addListEntry = function (opt)
   let type       = opt.type;
   let kind       = opt.kind;
   let filter     = opt.filter;
+  let pdata      = opt.pdata;
+  let pid        = opt.pid;
 
   let indata = {};
   if ((new_id || new_id===0) && !indata[new_id])  { // New row
@@ -3068,17 +3092,20 @@ $.any.anyView.prototype._addListEntry = function (opt)
     });
   opt.new_id = null; // Important! To make addListEntry work with id == 0
 
-  this.refreshOne({ parent:     this.element,
-                    data:       opt.data,
-                    id:         new_id,
-                    type:       type,
-                    kind:       kind,
-                    curr_type:  type,
-                    curr_kind:  kind,
-                    con_id_str: con_id_str,
-                    row_id_str: row_id_str,
-                    edit:       true,
-                 });
+  this.refreshOne({
+     parent:     this.element,
+     data:       opt.data,
+     id:         new_id,
+     type:       type,
+     kind:       kind,
+     curr_type:  type,
+     curr_kind:  kind,
+     con_id_str: con_id_str,
+     row_id_str: row_id_str,
+     edit:       true,
+     pdata:      pdata,
+     pid:        pid,
+  });
 }; // _addListEntry
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3086,6 +3113,9 @@ $.any.anyView.prototype._addListEntry = function (opt)
 // Default action when clicking on a name link.
 $.any.anyView.prototype.itemLinkClicked = function (event)
 {
+  this.data_level = 0;
+  if (this.resetTabs)
+    this.resetTabs(); // TODO! Calling method in tabs class!
   return this.showItem(event);
 }; // itemLinkClicked
 
@@ -3155,74 +3185,86 @@ $.any.anyView.prototype._doShowItem = function (opt)
   let kind     = "item";
   let is_new   = opt.is_new != undefined ? opt.is_new : false;
   let name_key = this.model.name_key ? this.model.name_key : type+"_name";
-  let the_item = null;
-  if (!is_new)
-    the_item = this.model.dataSearch({ type:type, id:id });
+
+  // Determine the id and the data to display - new or existing
+  let the_data = null;
+  if (is_new)
+    the_data = data;
   else
-    the_item = data;
-  let the_id    = the_item ? the_item[id] ? id : the_item["+"+id] ? "+"+id : null : null;
+    the_data = this.model.dataSearch({ type:type, id:id });
+  let the_id = null;
+  if (the_data && the_data[id])
+    the_id = id;
+  else
+  if (the_data && the_data["+"+id])
+    the_id = "+"+id;
   if (!the_id && is_new)
     the_id = id;
   if (!the_id) {
     console.error("System error: Could not find id. "); // Should never happen TODO! i18n
     return false;
   }
+
+  // Find the item name
   let item_name = null;
   if (the_id && !is_new)
-    item_name = the_item[the_id][name_key];
+    item_name = the_data[the_id][name_key];
   else
     item_name = i18n.message.newType.replace("%%",type); // Edit new
-  let item = {
+
+  // Create a new item
+  let the_item = {
     "+0": { // Header
       head: type,
       [name_key]: item_name,
       data: {},
     },
   };
-  if (!is_new) {
-    // Create a new item filled with data copied from original data structure
-    item["+0"].data[the_id] = data && data[the_id] ? $.extend(true, {}, data[the_id]) : null;
-    if (item["+0"].data[the_id].head)
-      delete item["+0"].data[the_id].head;
-    if (item["+0"].data[the_id].list)
-      delete item["+0"].data[the_id].list;
-  }
-  else {
-    // Create a new item with empty data for displayable entries
-    item["+0"].data[the_id] = {};
+  if (is_new) {
+    // Fill the item with empty data for all displayable entries
+    the_item["+0"].data[the_id] = {};
     let filter = this.getFilter(type,"item");
     for (let filter_id in filter)
       if (filter[filter_id].DISPLAY)
-        item["+0"].data[the_id][filter_id] = "";
+        the_item["+0"].data[the_id][filter_id] = "";
   }
-  // Create a new display area and display the item data
-  item["+0"].data[the_id].item   = type;
-  item["+0"].data[the_id].is_new = is_new;
+  else {
+    // Fill the item with data copied from original data structure
+    the_item["+0"].data[the_id] = (the_data && the_data[the_id])
+                                  ? $.extend(true, {}, the_data[the_id])
+                                  : null;
+    if (the_item["+0"].data[the_id].head)
+      delete the_item["+0"].data[the_id].head; // TODO! Why?
+    if (the_item["+0"].data[the_id].list)
+      delete the_item["+0"].data[the_id].list; // TODO! Why?
+  }
+  the_item["+0"].data[the_id].item   = type;
+  the_item["+0"].data[the_id].is_new = is_new;
+
+  // Create and prepare a new display area
   let view = this.createView({
-               parent: opt.view.element,
-               data:   item,
-               id:     the_id,
-               type:   type,
-               kind:   kind,
-               row_id_str: opt.row_id_str,
-             });
+    parent:     this.element,
+    data:       the_item,
+    id:         the_id,
+    type:       type,
+    kind:       kind,
+    row_id_str: opt.row_id_str,
+    data_level: 0, // Reset data_level for the new view
+  });
   if (!view || !view.options || !view.options.top_view) {
-    console.error("View missing. "); // Should never happen TODO! i18n
+    console.error("System error: View missing. "); // Should never happen TODO! i18n
     return false;
   }
-  let top_view = view.options.top_view;
-  top_view.data_level   = 0;  // TODO! Belongs in Tabs class
-  top_view.tabs_list    = {}; // TODO! Belongs in Tabs class
-  top_view.first_div_id = {}; // TODO! Belongs in Tabs class
-  let top_div = $("#"+top_view.element.attr("id"));
-  if (!top_div.length)
-    top_div = view.element;
-  top_div.empty(); // TODO! This should perhaps be done elsewhere
-
-  view.element      = top_div;
-  view.data_level   = 0;
-  view.tabs_list    = {};   // TODO! Belongs in Tabs class
-  view.first_div_id = null; // TODO! Belongs in Tabs class
+  let top_view = this.options.top_view;
+  if (top_view) {
+    if (top_view.resetTabs)
+      top_view.resetTabs(); // TODO! Calling method in tabs class!
+    if (top_view.element && top_view.element.length) {
+      top_view.element.empty();
+      view.element = top_view.element;
+    }
+  }
+  // Set the state of the new view
   view.options.item_opening = true; // To make top right close icon appear
   if (is_new) {
     view.options.isEditable  = true;
@@ -3245,8 +3287,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
     if (is_new)
       the_id = "+0";
     view.refresh({
-      parent: top_div,
-      data:   item,
+      data:   the_item,
       id:     the_id,
       type:   type,
       kind:   "item",
