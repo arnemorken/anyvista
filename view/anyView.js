@@ -480,7 +480,7 @@ $.any.anyView.prototype.refresh = function (params)
           let new_row_id_str = row_id_str
                                ? row_id_str+"_"+idx
                                : ""+idx;
-          let new_con_id_str = curr_kind == "list"
+          let new_con_id_str = curr_kind == "list" || curr_kind == "select"
                                ? view.con_id_str
                                  ? view.con_id_str
                                  : con_id_str
@@ -490,7 +490,7 @@ $.any.anyView.prototype.refresh = function (params)
           if (prev_type != curr_type || prev_kind != curr_kind) {
             // Check to see if the new type/kind is contained within a list.
             // In that case, create a new row to contain the new container.
-            if (prev_kind == "list") {
+            if (prev_kind == "list" || prev_kind == "select") {
               let f = view.getFilter(prev_type,prev_kind);
               let max_num_cols = f ? Object.size(f) : 5;
               let row_id = view.id_base+"_"+curr_type+"_"+curr_kind+"_"+new_row_id_str+"_tr";
@@ -3800,14 +3800,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             unselect:    select_list_view.model.unselect,
             name_key:    select_list_view.model.name_key,
           });
-          select_list_view.refresh({
-             parent: ll_contents,
-             data:   serverdata.data,
-             id:     null,
-             type:   list_type,
-             kind:   "list",
-             edit:   false,
-          });
+          select_list_view.refresh();
         }
       } // if parent_view
     }
