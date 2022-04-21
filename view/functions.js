@@ -101,7 +101,7 @@ function w3_modaldialog(options)
                       can_btn_str+
                       "</div>";
   let con = (typeof contents == "string") ? contents : "<div id='"+parentId+"_dialog' style='padding-top:.7em;padding-bottom:.7em;border-top:1px solid #aaa;border-bottom:1px solid #aaa;'></div>";
-  let str = "<div class='w3-modal' style='z-index:9999;padding-bottom:1em;' id='"+dia_id+"'>"+
+  let str = "<div id='"+dia_id+"' class='w3-modal' style='z-index:9999;padding-bottom:1em;'>"+
             "<div class='w3-modal-content' style='width:"+width+";border:1px solid #555;overflow-x:auto;'>"+
             // Header
             "<header class='w3-container'>"+
