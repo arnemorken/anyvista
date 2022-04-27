@@ -905,12 +905,6 @@ $.any.anyView.prototype.refreshData = function (params)
   // Clean up
   if (extra_foot && !extra_foot.children().length)
     extra_foot.remove();
-  if (thead && !thead.children().length)
-    thead.remove();
-  if (tbody && !tbody.children().length)
-    tbody.remove();
-  if (tfoot && !tfoot.children().length)
-    tfoot.remove();
   return data_div;
 }; // refreshData
 
