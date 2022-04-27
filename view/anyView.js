@@ -3715,7 +3715,9 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
    success:     this.dbUpdateLinkListDialog, // Call the view success handler
    parent_view: this,
    head:        true,
-   grouping:    this.options.grouping,
+   grouping:    null,
+   from:        0,
+   num:         this.options.itemsPerPage,
   };
   return this.model.dbSearch(options); // TODO! What if mode == "local"?
 }; // dbSearchLinks
@@ -3760,6 +3762,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                                });
         if (select_list_view) {
           select_list_view.id_base = new_id_base;
+          select_list_view.options.grouping        = null;
           select_list_view.options.showHeader      = false;
           select_list_view.options.showTableHeader = false;
           select_list_view.options.showTableFooter = false;
