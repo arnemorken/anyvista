@@ -813,6 +813,9 @@ class anyTable extends dbTable
         $this->mOrderDir = ltrim(Parameters::get("dir"));
     }
 
+    if (!$simple && Parameters::get("lt") == "simple")
+      $simple = true;
+
     // Since a 'LIMIT' operation might apply, we need to search for results for
     // each group seperately rather then using a LEFT JOIN on the group table.
     // However, if a group_id is specified, we search only in that group.
@@ -825,11 +828,8 @@ class anyTable extends dbTable
                   : null;
     //vlog("dbSearchList,group_data:",$group_data);
     $success = false;
-    $limit   = $this->findLimit(); // Same limit for all groups
+    $limit   = !$simple ? $this->findLimit() : ""; // Same limit for all groups
 
-    if (!$simple)
-      if (Parameters::get("lt") == "simple")
-         $simple = true;
     if ($group_id) {
       // Build and execute the full statement for data from the given group
       if ($group_id == "nogroup")
@@ -1246,9 +1246,9 @@ class anyTable extends dbTable
         $idx  = "+".$idx;
         if ($kind == "list") {
           if (!$simple)
-            $data[$gidx][$idx][$kind] = $this->mType;
+            $data[$gidx][$idx][$kind] = $this->mType; // Index by group id
           else
-            $data[$idx][$kind] = $this->mType;
+            $data[$idx][$kind] = $this->mType; // Do not index by group id
         }
         else // kind == "item"
           $data[$idx][$kind] = $this->mType;
