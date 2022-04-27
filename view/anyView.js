@@ -2848,9 +2848,9 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     order:     this.options.order,
     direction: this.options.direction,
     head:      this.options.grouping == "tabs",
-  //simple:    true, // TODO! Does not work correctly with this option
+    simple:    this.options.grouping === null,
   };
-  if (this.model.mode == "remote") {
+  if (this.model.mode == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
     this.options.ref_rec = 0;
     mod_opt.from -= 1; // from is 0-based on server
     this.model.dbSearch(mod_opt);
