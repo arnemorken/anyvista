@@ -4,11 +4,11 @@
 
 A Javascript library for displaying editable or non-editable items and lists of almost any combination of HTML elements, freely mixing lists and items of different types, interacting with lists and list items and using predefined or user defined plugins. Can be used in apps or web pages, with or without a database back-end.
 
-anyList can read complex data structures from Ajax, inline code or indeed any data source, as long as it follows a certain flexible data format, and display the data in beautiful tables. 
+anyList can read complex data structures and display them in beautiful tables. The data may be read from Ajax, inline code or indeed any data source, as long as it follows a certain flexible data format.
 
 anyList can also be used as a Wordpress plugin. 
 
-Early versions of the library is already being used in both commercial and non-commercial projects - see screenshots below:
+Early versions of the library are already being used in both commercial and non-commercial projects - see screenshots below:
 
 **Example 1: "Rulletour", a free online bicycle tournament:**
 
@@ -24,7 +24,7 @@ jsFiddle examples coming soon.
 
 The library is currently in the last stages of development. Find it at Github: https://github.com/arnemorken/anylist/.
 
-**First beta release planned for April 2022.**
+**First beta release planned for May 2022.**
 
 # Usage
 
