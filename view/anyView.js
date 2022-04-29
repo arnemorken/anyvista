@@ -553,7 +553,7 @@ $.any.anyView.prototype.refresh = function (params)
   } // if data
 
   // Refresh bottom toolbar
-  if (this.options.showToolbar) {
+  if (this.options.showToolbar && this.options.data_level == 0) {
     if (!this.options.isSelectable && this.model.type && this.data_level==0 && con_id_str == "" &&
         (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
       this.refreshToolbarBottom({
