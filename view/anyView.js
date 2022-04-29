@@ -435,9 +435,7 @@ $.any.anyView.prototype.refresh = function (params)
 
   if (!params) {
     // Top level display of the model, so clear everything
-    parent.empty();
-    this.data_level   = 0;
-    this.current_edit = null;
+    this._clearBeforeRefresh(parent);
   }
   if (this.must_empty) {
     // Someone thinks we should remove data from the must_empty element.
@@ -578,6 +576,13 @@ $.any.anyView.prototype.refresh = function (params)
 
   return parent;
 }; // refresh
+
+$.any.anyView.prototype._clearBeforeRefresh = function (parent)
+{
+  parent.empty();
+  this.data_level   = 0;
+  this.current_edit = null;
+}; // _clearBeforeRefresh
 
 //
 // Refresh header and data for one list entry or one item

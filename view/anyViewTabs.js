@@ -39,6 +39,12 @@ $.widget("any.anyViewTabs", $.any.anyView, {
   }
 }); // ViewTabs widget constructor
 
+$.any.anyViewTabs.prototype._clearBeforeRefresh = function (parent)
+{
+  $.any.anyView.prototype._clearBeforeRefresh.call(this,parent);
+  this.resetTabs();
+}; // _clearBeforeRefresh
+
 $.any.anyViewTabs.prototype.resetTabs = function (params)
 {
   this.tabs_list = {};
