@@ -1092,6 +1092,14 @@ class anyTable extends dbTable
       else
         $where .= " AND (".$skip_str.") ";
     }
+    $term = Parameters::get("term");
+    if ($term) {
+      $term_str = $this->getTableName().".".$this->mNameKey." LIKE '%".$term."%'";
+      if ($where === null)
+        $where  = "WHERE (".$term_str.") ";
+      else
+        $where .= " AND (".$term_str.") ";
+    }
     return $where;
   } // findListWhere
 
