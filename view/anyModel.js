@@ -1190,6 +1190,8 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                               Optional. Default: `undefined`.
  *        (string)   order:      Tell the server how to order the results.
  *                               Optional. Default: undefined (server decides).
+ *        (string)   term:       A string to search for.
+ *                               Optional. Default: `undefined`.
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
  *        {Function} success:    Method to call on success.
@@ -1255,13 +1257,18 @@ anyModel.prototype.dbSearch = function (options)
  * @description Builds a POST string for dbSearch to be sent to server.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer} id:     Item's id. If specified, the server will search for an item with this id,
- *                          if not specified, the server will search for a list of items of the specified type,
- *                          Optional. Default: null.
- *        {integer} type:   Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
- *                          be used as the id_key instead of the value in `this.id_key` when calling the server.
- *                          Optional. Default: `this.type`.
+ *        {integer} id:
+ *        {integer} type:
+ *        {integer} group_id:
  *        {boolean} simple:
+ *        {integer} link_type:
+ *        {string}  head:
+ *        {string}  grouping:
+ *        {integer} from:
+ *        {integer} num:
+ *        {string}  order:
+ *        {string}  direction:
+ *        {string}  term:
  *
  * @return The complete URL for dbSearch or null on error (missing type or id_key).
  */
@@ -1304,7 +1311,8 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += options.from || options.from==0      ? "&from="+options.from : "";
   param_str += options.num                          ? "&num=" +options.num : "";
   param_str += options.order                        ? "&order="+options.order : "";
-  param_str += options.direction                    ? "&dir="  +options.direction: "";
+  param_str += options.direction                    ? "&dir="  +options.direction : "";
+  param_str += options.term                         ? "&term=" +options.term : "";
   return this._getDataSourceName() + param_str;
 }; // dbSearchGetURL
 
