@@ -1216,12 +1216,17 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
     // Initialize searching if results span more than one page
     let searcher = extra_foot.data("searcher");
     if (!searcher) {
-      let search_box = "Search: <input type='search' style='height:25px;min-height:25px;'>";
+      let search_box_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_search_box";
+      let search_box    = "Search: <input id='"+search_box_id+"' type='search' style='height:25px;min-height:25px;'>";
       let searcher_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_searcher_foot";
       searcher = $("<div id='"+searcher_id+"' style='display:inline-block;float:right;padding-top:10px;'>"+search_box+"</div>"); // TODO! CSS
       extra_foot.append(searcher);
-      let search_opt = {};
-      searcher.off("keyup").on("keyup", search_opt, $.proxy(this._processSearch,this));
+      let search_opt = { data: data,
+                         type: type,
+                         group_id: pid,
+                         inp_id: search_box_id,
+                       };
+      searcher.off("keypress").on("keypress", search_opt, $.proxy(this._processSearch,this));
     }
     extra_foot.data("searcher",searcher);
   } // if
@@ -2827,7 +2832,11 @@ $.any.anyView.prototype.sortTable = function (event)
 
 $.any.anyView.prototype._processSearch = function (event)
 {
-  console.log("_processSearch");
+  if (event.keyCode == 13) {
+    let search_opt = event.data;
+    search_opt.term = $("#"+search_opt.inp_id).val();
+    this.model.dbSearch(search_opt);
+  }
 }; // _processSearch
 
 //
