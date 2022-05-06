@@ -192,11 +192,12 @@ class groupTable extends anyTable
     $where = "";
     if ($type && $type != "group")
       $where = "WHERE group_type='".$type."' ";
-    if ($group_id)
+    if ($group_id && $group_id != "nogroup") {
       if ($where == null)
         $where .= "WHERE group_id=CAST(".$group_id." AS INT) ";
       else
         $where .= "AND group_id=CAST(".$group_id." AS INT) ";
+    }
     $stmt .= $where."ORDER BY group_sort_order,group_id,group_type";
     //error_log("dbSearchGroupInfo:".$stmt);
     if (!$this->tableExists($this->getTableName()) || !$this->query($stmt))

@@ -1055,7 +1055,7 @@ class anyTable extends dbTable
   {
     $where = null;
     $link_table = $this->findLinkTableName($this->mListForType);
-    if (!$skipOwnId && isset($this->mListForType) && isset($this->mListForId) && $link_table !== null && $this->tableExists($link_table)) {
+    if (!$skipOwnId && isset($this->mListForType) && isset($this->mListForId) && $this->mListForId != "nogroup" && $link_table !== null && $this->tableExists($link_table)) {
       $where_id = $link_table.".".$this->mListForType."_id='".$this->mListForId."' ";
       $where = "WHERE ".$where_id;
     }
@@ -1085,7 +1085,7 @@ class anyTable extends dbTable
           $where .= " AND ".$gstr;
       }
     }
-    if ($skipOwnId) {
+    if ($skipOwnId && $this->mId != "nogroup") {
       $skip_str = $this->getTableName().".".$this->mIdKeyTable." != '".$this->mId."'";
       if ($where === null)
         $where  = "WHERE (".$skip_str.") ";
