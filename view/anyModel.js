@@ -1110,7 +1110,7 @@ anyModel.prototype.dbCreate = function (options)
     tab.table = options.table;
     $.getJSON(url,tab) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
-      return self.success ? self.success(self,serverdata,options) : false;
+      return self.success ? self.success(self.context,serverdata,options) : false;
     })
     .fail(function(jqXHR,textStatus,error) {
       return self.fail    ? self.fail   (self,jqXHR) : false;
@@ -1139,7 +1139,7 @@ anyModel.prototype.dbCreate = function (options)
  */
 anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
 {
-  let self = context;
+  let self = context ? context : this;
   self.last_db_command = "cre";
   if (serverdata) {
     if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
@@ -1235,7 +1235,7 @@ anyModel.prototype.dbSearch = function (options)
       item_to_send = null;
     $.getJSON(url,item_to_send) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
-      return self.success ? self.success(self,serverdata,options) : false;
+      return self.success ? self.success(self.context,serverdata,options) : false;
     })
     .fail(function(jqXHR,textStatus,error) {
       return self.fail    ? self.fail   (self,jqXHR) : false;
@@ -1327,7 +1327,7 @@ anyModel.prototype.dbSearchGetURL = function (options)
  */
 anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
 {
-  let self = context;
+  let self = context ? context : this;
   self.last_db_command = "sea";
 
   if (serverdata) {
@@ -1400,7 +1400,7 @@ anyModel.prototype.dbSearchNextId = function (options)
       return false;
     $.getJSON(url) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
-      return self.success ? self.success(self,serverdata,options) : false;
+      return self.success ? self.success(self.context,serverdata,options) : false;
     })
     .fail(function(jqXHR,textStatus,error) {
       return self.fail    ? self.fail   (self,jqXHR) : false;
@@ -1459,7 +1459,7 @@ anyModel.prototype.dbSearchNextIdGetURL = function (options)
  */
 anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
 {
-  let self = context;
+  let self = context ? context : this;
   self.last_db_command = "sea";
   if (serverdata) {
     if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
@@ -1582,7 +1582,7 @@ anyModel.prototype.dbUpdate = function (options)
       item_to_send.fields = this.fields;
     $.getJSON(url,item_to_send) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
-      return self.success ? self.success(self,serverdata,options) : false;
+      return self.success ? self.success(self.context,serverdata,options) : false;
     })
     .fail(function(jqXHR,textStatus,error) {
       return self.fail    ? self.fail   (self,jqXHR) : false;
@@ -1675,7 +1675,7 @@ anyModel.prototype.dbUpdateGetURL = function (options)
  */
 anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
 {
-  let self = context;
+  let self = context ? context : this;
   self.last_db_command = "upd";
   if (serverdata) {
     if (serverdata.JSON_CODE)
@@ -1790,7 +1790,7 @@ anyModel.prototype.dbUpdateLinkList = function (options)
       return false;
     $.getJSON(url) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
-      return self.success ? self.success(self,serverdata,options) : false;
+      return self.success ? self.success(self.context,serverdata,options) : false;
     })
     .fail(function(jqXHR,textStatus,error) {
       return self.fail    ? self.fail   (self,jqXHR) : false;
@@ -1863,7 +1863,7 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
 // Default success callback method for dbUpdateLinkList
 anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,options)
 {
-  let self = context;
+  let self = context ? context : this;
   self.last_db_command = "updlink";
   if (serverdata) {
     if (serverdata.JSON_CODE)
@@ -2012,7 +2012,7 @@ anyModel.prototype.dbDeleteGetURL = function (options)
 // Default success callback method for dbDelete
 anyModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
 {
-  let self = context;
+  let self = context ? context : this;
   self.last_db_command = "del";
 
   if (serverdata) {
@@ -2038,7 +2038,7 @@ anyModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
 // Default fail callback for all db* methods
 anyModel.prototype._dbFail = function (context,jqXHR)
 {
-  let self = context;
+  let self = context ? context : this;
   if (!self)
     return false; // Should never happen
   if (jqXHR) {
