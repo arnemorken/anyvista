@@ -2835,9 +2835,62 @@ $.any.anyView.prototype._processSearch = function (event)
   if (event.keyCode == 13) {
     let search_opt = event.data;
     search_opt.term = $("#"+search_opt.inp_id).val();
+    search_opt.success = this.searchSuccess;
+    search_opt.context = this;
     this.model.dbSearch(search_opt);
   }
 }; // _processSearch
+
+$.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
+{
+  let self = context ? context : this;
+  options.auto_refresh = false;
+  self.model.dbSearchSuccess(self.model,serverdata,options); // Initialize model without calling refresh
+  if (self.model.data) {
+    let list_type   = options.type;
+    let new_id_base = self._createIdBase();
+    let ll_id       = new_id_base+"_"+list_type+"_search_list";
+    let ll_contents = $("<div id='"+ll_id+"'></div>");
+
+    let search_view = self.createView({
+                         parent:     ll_contents,
+                         data:       self.model.data,
+                         id:         null,
+                         type:       list_type,
+                         kind:       "list",
+                         row_id_str: options.row_id_str, // TODO!
+                      });
+    if (search_view) {
+      search_view.id_base = new_id_base;
+      search_view.options.grouping        = null;
+      search_view.options.showHeader      = false;
+      search_view.options.showTableHeader = true;
+      search_view.options.showTableFooter = true;
+      let par_view_id = self.id_base+"_"+self.model.type+"_head_0_data";
+      w3_modaldialog({
+        parentId:    par_view_id,
+        elementId:   "",
+        heading:     list_type+" search results", // TODO! i18n
+        contents:    search_view.element,
+        width:       "30em", // TODO! css
+        ok:          true,
+        cancel:      false,
+        okFunction:  self.searchSuccessOk,
+        context:     self,
+        // Sent to okFunction:
+        type:        self.type,
+        data:        self.data,
+      });
+      search_view.refresh();
+    } // if search_view
+  } // if self.model.data
+}; // searchSuccess
+
+$.any.anyView.prototype.searchSuccessOk = function (opt)
+{
+  // Close dialog
+  w3_modaldialog_close(opt);
+}; // searchSuccessOk
 
 //
 // Refresh when a paginator is activated
@@ -3017,7 +3070,7 @@ $.any.anyView.prototype.addListEntry = function (event)
 
 $.any.anyView.prototype._addListEntryFromDB = function (context,serverdata,options)
 {
-  let self = context;
+  let self = context ? context : this;
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
@@ -3162,7 +3215,7 @@ $.any.anyView.prototype.showItem = function (event)
 
 $.any.anyView.prototype._foundNextIdFromDB = function (context,serverdata,options)
 {
-  let self = context;
+  let self = context ? context : this;
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
@@ -3501,7 +3554,7 @@ $.any.anyView.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
 // Create the dropdown menu to select parent from.
 $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,options)
 {
-  let self = context;
+  let self = context ? context : this;
   self.last_db_command = "sea";
 
   if (serverdata) {
@@ -3740,7 +3793,7 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
 // Note: The 'this' context is here the calling model! Use options.parent_view for view methods!
 $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
 {
-  let self = context;
+  let self = context ? context : this;
   self.last_db_command = "sea";
 
   if (serverdata) {
