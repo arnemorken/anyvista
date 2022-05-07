@@ -3229,7 +3229,7 @@ $.any.anyView.prototype._foundNextIdFromDB = function (context,serverdata,option
     if (self.error_server)
       console.error("anyView._foundNextIdFromDB: "+self.error_server);
     let view = options.context ? options.context : null;
-    self.dbSearchNextIdSuccess(self,serverdata,options);
+    self.model.dbSearchNextIdSuccess(self.model,serverdata,options);
     if (view) {
       serverdata.view = view;
       view._doShowItem(serverdata);
