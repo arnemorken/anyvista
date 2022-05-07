@@ -39,12 +39,6 @@ $.widget("any.anyViewTabs", $.any.anyView, {
   }
 }); // ViewTabs widget constructor
 
-$.any.anyViewTabs.prototype._clearBeforeRefresh = function (parent)
-{
-  $.any.anyView.prototype._clearBeforeRefresh.call(this,parent);
-  this.resetTabs();
-}; // _clearBeforeRefresh
-
 $.any.anyViewTabs.prototype.resetTabs = function (params)
 {
   this.tabs_list = {};
@@ -86,13 +80,15 @@ $.any.anyViewTabs.prototype.refreshHeader = function (params)
     let tabs_id = this.getIdBase()+"_"+prev_type+"_"+prev_kind+"_"+tabs_id_str+"_tabs";
     if (!this.tabs_list[tabs_id_str]) {
       this.tabs_list[tabs_id_str] = $("#"+tabs_id);
-      if (this.tabs_list[tabs_id_str].length)
-        this.tabs_list[tabs_id_str].remove();
       let lev_tab = this.options.indent_level + (kind && kind != "head" ? 1 : 0);
       let pl      = this.options.indent_tables ? lev_tab * this.options.indent_amount : 0;
       let pl_str  = pl > 0 ? "style='margin-left:"+pl+"px;'" : "";
-      this.tabs_list[tabs_id_str] = $("<div id='"+tabs_id+"' class='any-tabs-container w3-bar w3-dark-grey' "+pl_str+"></div>");
-      parent.append(this.tabs_list[tabs_id_str]);
+      let temp = $("<div id='"+tabs_id+"' class='any-tabs-container w3-bar w3-dark-grey' "+pl_str+"></div>");
+      if (this.tabs_list[tabs_id_str].length)
+        temp.insertAfter(this.tabs_list[tabs_id_str]);
+      else
+        parent.append(temp);
+      this.tabs_list[tabs_id_str] = temp;
     }
     // Get the correct filter
     if (!this.options.filters) {

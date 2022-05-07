@@ -580,7 +580,6 @@ $.any.anyView.prototype.refresh = function (params)
 $.any.anyView.prototype._clearBeforeRefresh = function (parent)
 {
   parent.empty();
-  this.data_level   = 0;
   this.current_edit = null;
 }; // _clearBeforeRefresh
 
@@ -3895,7 +3894,9 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
 
-  this.removeFromView(opt);
+  this.removeFromView(opt); // TODO! Neccessary?
+  if (this.resetTabs)
+    this.resetTabs(); // TODO! Calling method in tabs class!
 
   // Update database
   this.options.item_opening = true; // To make top right close icon appear
