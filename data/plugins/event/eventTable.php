@@ -240,7 +240,7 @@ class eventTable extends anyTable
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Update //////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
-
+/*
   protected function dbUpdateItem()
   {
     if (!anyTable::dbUpdateItem())
@@ -270,7 +270,7 @@ class eventTable extends anyTable
     }
     return true;
   } // dbUpdateAssociation
-
+*/
   protected function dbUpdateExtra()
   {
     $upd_what = Parameters::get("upd");
