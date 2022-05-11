@@ -3939,7 +3939,8 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
     return null;
   }
   if (!link_id || !link_type) {
-    console.warn("Link id/type missing ("+type+" id="+id+"): "+link_id+"/"+link_type);
+    // No parent, it must be a new and unsaved entry, so just update view and return
+    this.removeFromView(event.data);
     return null;
   }
   if (this.options.confirmRemove) {
