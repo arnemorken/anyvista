@@ -2269,6 +2269,9 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     showServerErrors: this.options.showServerErrors,
     showButtonNew:    this.options.showButtonNew,
     showButtonAddLink:this.options.showButtonAddLink,
+    sortBy:           this.options.sortBy,
+    sortDirection:    this.options.sortDirection,
+    link_options:     this.options.link_options,
     // Give same permissions to new view as the current one. This may not always
     // be the desired behaviour, in that case override this method and correct.
     isEditable:       this.options.isEditable,
