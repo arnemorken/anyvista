@@ -15,14 +15,14 @@ var gHomeFolder    = "Prosjekter/testserver/wp-content/plugins/anylist/";
 var gThirdpartyPHP = "Prosjekter/testserver/php/";
 var gDataScript    = "data/anyGetData.php"; // Relative to gHomeFolder
 var gUploadScript  = "ajaxfileupload.php";  // Relative to gThirdpartyPHP
-var gUploadFolder  = "upload/";
+var gUploadFolder  = "upload/";             // Relative to gHomeFolder
 var gSkin          = "default";
 
 //////////////////////////////////////////////////////////////////
 // Do not edit below unless you really know what you are doing. //
 //////////////////////////////////////////////////////////////////
 
-var gVersion = "0.0.3.alpha";
+var gVersion = "0.0.5.alpha";
 
 var any_defs = {
   dataScript:   gServer + gHomeFolder + gDataScript,      // URL of the data source script

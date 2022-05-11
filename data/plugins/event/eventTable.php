@@ -278,7 +278,7 @@ class eventTable extends anyTable
       return $this->dbSetAttended(Parameters::get("event_id"),Parameters::get("user_id"));
     //error_log("Unknown value for 'upd':".$upd_what);
     return false;
-  }
+  } // dbUpdateExtra
 
   public function dbAddLink()
   {

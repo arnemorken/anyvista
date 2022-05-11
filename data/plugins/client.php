@@ -8,7 +8,7 @@
  *
  ****************************************************************************************/
 /*
- * Include this file in plugins that are using the anyList user plugin with a server backend
+ * Include this file in anyList plugins that are using a server backend
  */
 ?>
 <!-- jQuery -->
