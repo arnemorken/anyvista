@@ -2066,6 +2066,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,co
     pdata:      pdata,
     pid:        pid,
     plugins:    this.model.plugins,
+    options:    this.options,
   };
   // Bind a method that is called while clicking on the text link, file view or file name (in non-edit mode)
   if (["link", "upload", "fileview"].includes(filter_key.HTML_TYPE)) {
@@ -2864,10 +2865,15 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
                       });
     if (search_view) {
       search_view.id_base = new_id_base;
+      search_view.options.link_options    = context.options; // Remember options for link click
       search_view.options.grouping        = null;
+      search_view.options.isEditable      = null;
       search_view.options.showHeader      = false;
+      search_view.options.showToolbar     = false;
       search_view.options.showTableHeader = true;
       search_view.options.showTableFooter = true;
+      search_view.options.showSearcher    = false;
+      search_view.options.itemLinkClicked = search_view.searchLinkClicked;
       let par_view_id = self.id_base+"_"+self.model.type+"_head_0_data";
       w3_modaldialog({
         parentId:    par_view_id,
@@ -2887,6 +2893,19 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
     } // if search_view
   } // if self.model.data
 }; // searchSuccess
+
+$.any.anyView.prototype.searchLinkClicked = function (event)
+{
+  this.options.grouping        = event.data.options.link_options.grouping;
+  this.options.isEditable      = event.data.options.link_options.isEditable;
+  this.options.showHeader      = event.data.options.link_options.showHeader;
+  this.options.showToolbar     = event.data.options.link_options.showToolbar;
+  this.options.showTableHeader = event.data.options.link_options.showTableHeader;
+  this.options.showTableFooter = event.data.options.link_options.showTableFooter;
+  this.options.showSearcher    = event.data.options.link_options.showSearcher;
+  this.link_options = null;
+  this.itemLinkClicked(event);
+}; // searchLinkClicked
 
 $.any.anyView.prototype.searchSuccessOk = function (opt)
 {
