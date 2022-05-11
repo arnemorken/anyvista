@@ -3943,7 +3943,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
     this.removeFromView(event.data);
     return null;
   }
-  if (this.options.confirmRemove) {
+  if (this.options.confirmRemove && !data[id].is_new) {
     let linkdata = this.model.dataSearch({ type:   type,
                                            id:     id,
                                            parent: true,
@@ -3983,6 +3983,20 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         select:     new Set(),
         unselect:   new Set().add(id),
       });
+  }
+  else {
+    let opt = {
+        type:       type,
+        kind:       kind,
+        id:         id,
+        data:       data,
+        row_id_str: row_id_str,
+        link_type:  link_type,
+        link_id:    link_id,
+        select:     new Set(),
+        unselect:   new Set().add(id),
+    };
+    this.dbUpdateLinkList(opt);
   }
   return this;
 }; // dbRemoveDialog
