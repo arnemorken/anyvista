@@ -2348,11 +2348,10 @@ $.any.anyView.prototype.getLabelStr = function (type,kind,id,val)
 $.any.anyView.prototype.getTextAreaStr = function (type,kind,id,val,edit,filter_id,row_id_str)
 {
   if (edit) {
-    let nameid = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_id;
-    let tinytype = typeof tinyMCE;
-    let ed_man   = tinytype ? tinyMCE.EditorManager.get(nameid) : null;
-    if (tinytype !== "undefined" && ed_man !== null) {
-      tinymce.EditorManager.execCommand('mceRemoveEditor',true, nameid);
+    if (typeof tinyMCE !== "undefined") {
+      let nameid = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_id;
+      if (tinyMCE.EditorManager.get(nameid))
+        tinymce.EditorManager.execCommand('mceRemoveEditor',true, nameid);
     }
     return "<textarea class='itemEdit tinymce'>"+val+"</textarea>";
   }
