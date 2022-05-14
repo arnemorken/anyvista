@@ -1,38 +1,38 @@
-[![CodeQL](https://github.com/arnemorken/anylist/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/arnemorken/anylist/actions/workflows/codeql-analysis.yml)
+[![CodeQL](https://github.com/arnemorken/anyvista/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/arnemorken/anyvista/actions/workflows/codeql-analysis.yml)
 
-# anylist <img src="balanselogo_85x95.png" align="right">
+# anyvista <img src="balanselogo_85x95.png" align="right">
 
 A Javascript library for displaying editable or non-editable items and lists of almost any combination of HTML elements, freely mixing lists and items of different types, interacting with lists and list items and using predefined or user defined plugins. Can be used in apps or web pages, with or without a database back-end.
 
-anyList can read complex data structures and display them in beautiful tables. The data may be read from Ajax, inline code or indeed any data source, as long as it follows a certain flexible data format.
+anyVista can read complex data structures and display them in beautiful tables. The data may be read from Ajax, inline code or indeed any data source, as long as it follows a certain flexible data format.
 
-anyList can also be used as a Wordpress plugin. 
+anyVista can also be used as a Wordpress plugin. 
 
 Early versions of the library are already being used in both commercial and non-commercial projects - see screenshots below:
 
 **Example 1: "Rulletour", a free online bicycle tournament:**
 
-![alt text](https://raw.githubusercontent.com/arnemorken/anylist/main/examples/sample_ss_rt.png)
+![alt text](https://raw.githubusercontent.com/arnemorken/anyvista/main/examples/sample_ss_rt.png)
 
 **Example 2: "Acupedia", a commercial Android app for professional acupuncturists:**
 
-![alt text](https://raw.githubusercontent.com/arnemorken/anylist/main/examples/sample_ss_acupedia.png)
+![alt text](https://raw.githubusercontent.com/arnemorken/anyvista/main/examples/sample_ss_acupedia.png)
 
 jsFiddle examples coming soon.
 
 # Download
 
-The library is currently in the last stages of development. Find it at Github: https://github.com/arnemorken/anylist/.
+The library is currently in the last stages of development. Find it at Github: https://github.com/arnemorken/anyvista/.
 
 **First beta release planned for May 2022.**
 
 # Usage
 
-1. Include the anyList script and CSS files:
+1. Include the anyVista script and CSS files:
 
 ```html
-<script src="/path/to/anyList.js"></script>
-<link  href="/path/to/anyList.css" rel="stylesheet"/>
+<script src="/path/to/anyVista.js"></script>
+<link  href="/path/to/anyVista.css" rel="stylesheet"/>
 ```
 
 2. Create a place for the view to live:
@@ -95,7 +95,7 @@ $("#myview").anyView("refresh");
 
 The above will produce an output like this:
 
-![alt text](https://raw.githubusercontent.com/arnemorken/anylist/main/examples/hello_world/hello_list_uneditable.png)
+![alt text](https://raw.githubusercontent.com/arnemorken/anyvista/main/examples/hello_world/hello_list_uneditable.png)
 
 To make the view editable, give the following extra option to the anyView constructor:
 ```js
@@ -106,7 +106,7 @@ To make the view editable, give the following extra option to the anyView constr
 
 We will then get a view like this:
 
-![alt text](https://raw.githubusercontent.com/arnemorken/anylist/main/examples/hello_world/hello_list_editable.png)
+![alt text](https://raw.githubusercontent.com/arnemorken/anyvista/main/examples/hello_world/hello_list_editable.png)
 
 # API
 
@@ -114,14 +114,14 @@ Coming soon.
 
 # Improvements
 
-Got an idea for improving anyList? A cool new feature you'd like to see? Think you've found a bug? Contact us at software@balanse.info!
+Got an idea for improving anyVista? A cool new feature you'd like to see? Think you've found a bug? Contact us at software@balanse.info!
 We love pull requests! 
 
 # License
 
-AGPLv3.0 for open source use or anyList Commercial License for commercial use.
+AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
 
-Get licences here: https://anylist.balanse.info/license/ (coming soon).
+Get licences here: https://anyvista.balanse.info/license/ (coming soon).
 
 # Donations
 
