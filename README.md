@@ -1,6 +1,6 @@
 [![CodeQL](https://github.com/arnemorken/anyvista/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/arnemorken/anyvista/actions/workflows/codeql-analysis.yml)
 
-# anyvista <img src="balanselogo_85x95.png" align="right">
+# anyVista <img src="balanselogo_85x95.png" align="right">
 
 A Javascript library for displaying editable or non-editable items and lists of almost any combination of HTML elements, freely mixing lists and items of different types, interacting with lists and list items and using predefined or user defined plugins. Can be used in apps or web pages, with or without a database back-end.
 
