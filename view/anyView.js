@@ -4,18 +4,18 @@
 "use strict";
 /****************************************************************************************
  *
- * anyList is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
+ * anyVista is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
  *
- * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
- * Get licences here: http://balanse.info/anylist/license/ (coming soon).
+ * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
+ * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
  *
  ***************************************************************************************/
 /**
- * __anyView: View for the anyList data model.__
+ * __anyView: View for the anyVista data model.__
  *
  * See <a href="../classes/anyModel.html">`anyModel`</a> for a description of the data model class.
  *
- * Note: All jQuery id's in anyList are on the format [id_base]\_[type]\_[kind]\_[id]\_[html_name].
+ * Note: All jQuery id's in anyVista are on the format [id_base]\_[type]\_[kind]\_[id]\_[html_name].
  *
  * @class anyView
  * @constructor Sets the view's variables according to `options`, or to default values.
@@ -1187,7 +1187,7 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
     let pager = extra_foot.data("pager");
     if (!pager) {
       if (!extra_foot.anyPaginator) {
-        console.warn("anyList: anyPaginator missing, cannot paginate data. ");
+        console.warn("anyPaginator missing, cannot paginate data. ");
       }
       else {
         pager = extra_foot.anyPaginator({

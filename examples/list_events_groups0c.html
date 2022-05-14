@@ -14,8 +14,8 @@
 <meta charset="utf-8" />
 <script src="../../testserver/javascript/jquery/jquery-3.6.0.min.js"></script>
 <script src="../../testserver/javascript/jquery/jquery-widget-1.12.1.min.js"></script>
-<link  href="../../testserver/javascript/w3css/w3.css"           rel="stylesheet"/>
-<link  href="../../testserver/javascript/fontawesome/fa.min.css" rel="stylesheet"/>
+<link  href="../../testserver/javascript/w3css/w3.css"                    rel="stylesheet"/>
+<link  href="../../testserver/javascript/fontawesome/fa.min.css"          rel="stylesheet"/>
 <link  href="../view/skin/default/anyvista.css" rel="stylesheet"/>
 <style>
 body {
@@ -44,7 +44,7 @@ body {
 <script src="../view/anyModel.js"></script>
 <script src="../view/anyView.js"></script>
 <div id="any_ex"><i>anyVista examples&nbsp;</i></div>
-<div id="any_content" title="Grouped lists"></div>
+<div id="any_content" title="Minimal grouped lists / items"></div>
 
 <script>
 let my_data = {
@@ -53,12 +53,13 @@ let my_data = {
     group_name: "Seminars",
     data: {
       10: {
-        list: "event",
+        item: "event",
         event_name: "Keynote lecture",
         event_lecturer: "Isaac Newton",
         event_arranger: "John",
       },
       11: {
+        list: "event",
         event_name: "Lecture number two",
         event_lecturer: "Albert Einstein",
         event_arranger: "John",
@@ -99,6 +100,12 @@ let my_data = {
        event_lecturer:  { HEADER:"Lecturer",   DISPLAY:1, HTML_TYPE:"text" },
        event_arranger:  { HEADER:"Arranger",   DISPLAY:1, HTML_TYPE:"text" },
      },
+     item: {
+       event_id:        { HEADER:"Id",         DISPLAY:0, HTML_TYPE:"label" },
+       event_name:      { HEADER:"Event name", DISPLAY:1, HTML_TYPE:"text" },
+       event_lecturer:  { HEADER:"Lecturer",   DISPLAY:1, HTML_TYPE:"text" },
+       event_arranger:  { HEADER:"Arranger",   DISPLAY:1, HTML_TYPE:"text" },
+     },
    },
    org_event: {
      list: {
@@ -115,12 +122,12 @@ let my_data = {
    },
  };
  var data_model = new anyModel({ data:my_data });
- var data_view  = new anyView({ model:   data_model,
-                                filters: all_filters,
-                                id:      "any_content",
-                             });
- data_view.refresh();
+ $("#any_content").anyView({ model:   data_model,
+                             filters: all_filters,
+                          });
+ $("#any_content").anyView("refresh"); // Indirect access to API. Note uppercase 'V'.
+ $("#any_content").anyview.refresh();  // Direct access to API. Note lowercase 'v'.
 
- </script>
- </body>
- </html>
+</script>
+</body>
+</html>

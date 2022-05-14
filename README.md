@@ -31,8 +31,8 @@ The library is currently in the last stages of development. Find it at Github: h
 1. Include the anyVista script and CSS files:
 
 ```html
-<script src="/path/to/anyVista.js"></script>
-<link  href="/path/to/anyVista.css" rel="stylesheet"/>
+<script src="/path/to/anyvista.js"></script>
+<link  href="/path/to/anyvista.css" rel="stylesheet"/>
 ```
 
 2. Create a place for the view to live:

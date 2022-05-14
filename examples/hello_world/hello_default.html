@@ -26,25 +26,20 @@
 <body>
 
 <!-- The view is displayed in this div -->
-<div id="minimal_foo_item"/>
+<div id="minimal_foo_list"/>
 
 <script>
 // Data to display
 let my_data = {
   0: {
-    item: "foo",
-    foo_name: "Hello world",
+    list: "foo",
+    foo_name: "Hello world 1",
     foo_desc: "A simple hello to the world",
   },
-};
-// Filters for the data
-let my_filters = {
-  foo: {
-    item: {
-      foo_id  : { HEADER:"Id",           DISPLAY:0, HTML_TYPE:"label" },
-      foo_name: { HEADER:"Message:",     DISPLAY:1, HTML_TYPE:"label" },
-      foo_desc: { HEADER:"Description:", DISPLAY:1, HTML_TYPE:"text" },
-    },
+  1: {
+    list: "foo",
+    foo_name: "Hello world 2",
+    foo_desc: "Another hello to the world",
   },
 };
 
@@ -56,8 +51,7 @@ var my_model = new anyModel({
 // Give the model to a view
 var my_view  = new anyView({
   model:   my_model,
-  filters: my_filters,
-  id:      "minimal_foo_item", // Id of div in which to display result
+  id:      "minimal_foo_list", // Id of div in which to display result
 });
 
 // Display

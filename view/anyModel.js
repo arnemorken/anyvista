@@ -4,10 +4,10 @@
 "use strict";
 /****************************************************************************************
  *
- * anyList is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
+ * anyVista is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
  *
- * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
- * Get licences here: http://balanse.info/anylist/license/ (coming soon).
+ * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
+ * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
  *
  ***************************************************************************************/
 /**
@@ -27,7 +27,7 @@
  * If used in connection with a database `mode` should be set to "remote" (see below). `type` will then
  * correspond to a database table and `id_key` to an id column in that table.
  *
- * See <a href="../modules/anyList.html">anyList`</a> for a full description of the format of the data structure
+ * See <a href="../modules/anyVista.html">anyVista`</a> for a full description of the format of the data structure
  * that the model works with.
  *
  * The class contains:
@@ -687,7 +687,7 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
  *
  *        {Object}  indata: The values to insert into the data structure.
  *                          Must be on a format that can be recognized by the model.
- *                          See <a href="../modules/anyList.html">`anyList`</a>.
+ *                          See <a href="../modules/anyVista.html">`anyVista`</a>.
  *                          Mandatory.
  *        {Object}  data:   The data structure to insert into.
  *                          Optional. Default: The model's data (`this.data`).

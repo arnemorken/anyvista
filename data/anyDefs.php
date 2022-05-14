@@ -1,17 +1,17 @@
 <?php
 /****************************************************************************************
  *
- * anyList is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
+ * anyVista is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
  *
- * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
- * Get licences here: http://balanse.info/anylist/license/ (coming soon).
+ * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
+ * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
  *
  ****************************************************************************************/
 //
-// User-editable "constants" that define some basic properties of the anyList API.
+// User-editable "constants" that define some basic properties of the anyVista API.
 //
 define("gServer",       "//localhost/");
-define("gHomeFolder",   "Prosjekter/testserver/wp-content/plugins/anylist/");
+define("gHomeFolder",   "Prosjekter/testserver/wp-content/plugins/anyvista/");
 define("gThirdpartyJS", "Prosjekter/testserver/javascript/");
 define("gSkin",         "default");
 
@@ -27,7 +27,7 @@ define("gDataScript",       "data/anyGetData.php"); // Relative to gHomeFolder
 
 // Paths
 define("gHomePath",   $_SERVER['DOCUMENT_ROOT']."/".gHomeFolder);
-define("gAnyListURL", gServer . gHomeFolder);
+define("gAnyVistaURL", gServer . gHomeFolder);
 
 define("gDataSource", $_SERVER['DOCUMENT_ROOT'] . "/" . gHomeFolder . "/" . gDataScript);
 

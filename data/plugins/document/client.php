@@ -1,18 +1,18 @@
 <?php
 /****************************************************************************************
  *
- * anyList is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
+ * anyVista is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
  *
- * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
- * Get licences here: http://balanse.info/anylist/license/ (coming soon).
+ * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
+ * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
  *
  ****************************************************************************************/
 /*
- * Include this file in plugins that are using the anyList document plugin with a server backend
+ * Include this file in plugins that are using the anyVista document plugin with a server backend
  */
 ?>
-<link  href="<?php print gAnyListURL;?>view/plugins/document/skin/<?php print gSkin;?>/document.css" rel="stylesheet"/>
-<script src="<?php print gAnyListURL;?>view/plugins/document/documentModel.js"></script>
-<script src="<?php print gAnyListURL;?>view/plugins/document/documentFilter.js"></script>
-<script src="<?php print gAnyListURL;?>view/plugins/document/documentViewTabs.js"></script>
-<script src="<?php print gAnyListURL;?>view/plugins/document/documentValidator.js"></script>
+<link  href="<?php print gAnyVistaURL;?>view/plugins/document/skin/<?php print gSkin;?>/document.css" rel="stylesheet"/>
+<script src="<?php print gAnyVistaURL;?>view/plugins/document/documentModel.js"></script>
+<script src="<?php print gAnyVistaURL;?>view/plugins/document/documentFilter.js"></script>
+<script src="<?php print gAnyVistaURL;?>view/plugins/document/documentViewTabs.js"></script>
+<script src="<?php print gAnyVistaURL;?>view/plugins/document/documentValidator.js"></script>

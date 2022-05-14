@@ -1,46 +1,46 @@
 /**
- * <h1>anyList user's guide</h1>
+ * <h1>anyVista user's guide</h1>
  <p>
- The anyList jQuery API manages data in a flexible hierarchical tree structure, organized as lists and/or
+ The anyVista jQuery API manages data in a flexible hierarchical tree structure, organized as lists and/or
  individual items, to be viewed and edited in a web page, used in an Android app or any other place where
  Javascript may be executed. The data may come from any source, i.e. an SQL database, another process, an
- inline script, etc., as long as it is on the proper JSON format as described below. anyList may be used as a PHP
- framework for interacting with database tables through a web-based user interface, this means that anyList can work
+ inline script, etc., as long as it is on the proper JSON format as described below. anyVista may be used as a PHP
+ framework for interacting with database tables through a web-based user interface, this means that anyVista can work
  as a Wordpress plugin. The data can be viewed and manipulated as any combination of lists and items, where a
  list may correspond to a database table and an item to a record in the table and there are only a few preconditions
  on the format of the data tables, which may contain any number of columns of many different types. However, it is
- not necessary to use a database backend, anyList may be used directly in Javascript code to display and edit data.
- More uses for anyList can probably be conceived of.
+ not necessary to use a database backend, anyVista may be used directly in Javascript code to display and edit data.
+ More uses for anyVista can probably be conceived of.
  </p>
  <p>
- The anyList API is plugin-based and some plugins are included, specifically `user`, `group`, `event` and
+ The anyVista API is plugin-based and some plugins are included, specifically `user`, `group`, `event` and
  `document`, all described below. More plugins are under development. Plugins may be linked, e.g. users
- may attend events, groups may have a number of documents, events may publish notes, and so on. When anyList
+ may attend events, groups may have a number of documents, events may publish notes, and so on. When anyVista
  is used with Wordpress, these plugins can offer useful functionality otherwise provided by several separate
  Wordpress plugins.
  </p>
  <p>
- Below we describe the anyList client API, the server API for using anyList with a database in a PHP environment,
- how to write anyList plugins and how to use anyList with Wordpress.
+ Below we describe the anyVista client API, the server API for using anyVista with a database in a PHP environment,
+ how to write anyVista plugins and how to use anyVista with Wordpress.
  </p>
  *
  * __TABLE OF CONTENTS__
  *
  * &nbsp;<a href="#client_api">Client API</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#client_api_anyList_classes">- Basic classes</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#client_api_anyVista_classes">- Basic classes</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#client_api_data_format">- Data format</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#client_api_data_filter">- Data filter</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#client_api_css_formatting">- CSS formatting</a><br/>
  * <br/>
  * &nbsp;<a href="#server_api">Server API</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#server_api_anyList_classes">- Basic classes</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#server_api_anyVista_classes">- Basic classes</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#server_api_data_format">- Data format</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#server_api_data_filter">- Data filter</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#server_api_anyDefs">- Configuration files</a><br/>
  * <br/>
- * &nbsp;<a href="#api_plugin_classes">anyList plugins</a><br/>
+ * &nbsp;<a href="#api_plugin_classes">anyVista plugins</a><br/>
  * <br/>
- * &nbsp;<a href="#wordpress_anyList">anyList and Wordpress</a><br/>
+ * &nbsp;<a href="#wordpress_anyVista">anyVista and Wordpress</a><br/>
  * <br/>
  * &nbsp;<a href="#full_examples">Examples</a><br/>
  *
@@ -51,23 +51,23 @@
  *
  * The client API is written in Javascript and uses the jQuery library. It is easily integrated into web
  * pages for displaying and modifying information (for example from database tables) by including the
- * following in your index.html (replace `anylist.1.0.0` with your actual version of anyList):
+ * following in your index.html (replace `anyvista.1.0.0` with your actual version of anyVista):
  *
  *      <script src="anyDefs.js"></script>
- *      <script src="anylist.1.0.0.min.js"></script>
- *      <link  href="anylist.1.0.0.min.css" rel="stylesheet"/>
+ *      <script src="anyvista.1.0.0.min.js"></script>
+ *      <link  href="anyvista.1.0.0.min.css" rel="stylesheet"/>
  *
  * Note: The first line (including the <b>anyDefs.js</b> configuration file) is only neccessary when using
- * anyList with a server backend.
+ * anyVista with a server backend.
  * See <a href="#server_api_anyDefs">configuration files</a> and the <a href="#server_api">server API</a>
  * documentation below for more info on this.
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="client_api_anyList_classes"></a>
+ * <a name="client_api_anyVista_classes"></a>
  * <h3>Basic classes</h3>
  *
- * anyList currently contains three basic classes: `anyModel`, `anyView` and `anyViewTabs`.
+ * anyVista currently contains three basic classes: `anyModel`, `anyView` and `anyViewTabs`.
  *
  * Plugins, such as `event` or `user`, inherits from `anyModel` and either `anyView` or `anyViewTabs`.
  *
@@ -404,7 +404,7 @@
  *
  * The server API implements a simplified abstraction of a general database table as well as some specific table
  * classes corresponding to types (plugins) in the client API. Currently the following plugins are implemented:
- * `user`, `event`, `document` and `group`. The anyList server API is developed for and tested in the Apache/MySQL
+ * `user`, `event`, `document` and `group`. The anyVista server API is developed for and tested in the Apache/MySQL
  * (and Wordpress) environment but should also work in other settings.
  *
  * The file <b>`data/anyDefs.php`</b> should be edited to match the `anyDefs.js` file of the client.
@@ -412,7 +412,7 @@
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="server_api_anyList_classes"></a>
+ * <a name="server_api_anyVista_classes"></a>
  * <h3>Basic classes</h3>
  *
  * The general database abstraction is implemented through:
@@ -438,7 +438,7 @@
  * assumed to contain data for a list. Note that an item may contain lists as subdata.
  * `anyTable` uses an id key and a name key which must correspond to the `id_key` and `name_key` in the `anyModel`
  * class on the client side. These values must be set by the plugin classes deriving from `anyTable` (see
- * <a href="#api_plugin_classes">anyList plugins</a> below).
+ * <a href="#api_plugin_classes">anyVista plugins</a> below).
  *
  * Data returned from the server is formatted by the `anyTable` class into a hierarchical tree structure
  * that can be displayed by the `anyView` class on the client. This structure is exactly the same
@@ -492,7 +492,7 @@
  * simplifications: The server will always put the data into <i>groups</i>, even if it's just a single
  * item. This is done in order to be able to directly display grouped data with the view classes on the
  * client side. It is not something most users will need to think about, unless they are writing new
- * plugins or extending anyList itself.
+ * plugins or extending anyVista itself.
  *
  * <div style="border:1px solid #888; padding:5px;padding-bottom:0px;">
  * <b>A NOTE ON DATA INSULATION:</b>
@@ -549,7 +549,7 @@
  * <a name="server_api_anyDefs"></a>
  * <h3>Configuration files</h3>
  *
- * When anyList is used in a server environment, the client and server must know how to communicate with each other.
+ * When anyVista is used in a server environment, the client and server must know how to communicate with each other.
  * This is done by setting certain values in the <b>`anyDefs.js`</b> and <b>`anyDefs.php`</b> configuration files.
  * Some of these values could and should be set by the user. Do this by editing the files, not programmatically.
  *
@@ -559,8 +559,8 @@
  * The host on which the server is run.
  *
  * `gHomeFolder`:
- * The anyList root directory. If anyList is run as a Wordpress plugin, `gHomeFolder` should be something like
- * `my_wp_installation/wp-content/plugins/anyList/`.
+ * The anyVista root directory. If anyVista is run as a Wordpress plugin, `gHomeFolder` should be something like
+ * `my_wp_installation/wp-content/plugins/anyvista/`.
  *
  * `gThirdpartyJS`:
  * The location of the third party Javascript code.
@@ -569,7 +569,7 @@
  * The location of a script, relative to `gHomeFolder`, that delivers data on the correct JSON format. Default
  * value is `data/anyGetData.php`, which is the default script that gets data from the PHP backend. It is used by
  * the db* methods of `anyModel` and only when the `this.mode` variable is set to `remote`, otherwise the
- * setting is ignored. If a script is not specified in `gDataScript`, the data must be delivered to anyList by some
+ * setting is ignored. If a script is not specified in `gDataScript`, the data must be delivered to anyVista by some
  * other method. Refer to the included examples.
  *
  * `gUploadFolder`:
@@ -580,14 +580,14 @@
  *
  * <h4>anyDefs.js</h4>
  *
- * anyDefs.js is located in the anyList `view` directory and must be included by Javascript code that wants
+ * anyDefs.js is located in the anyVista `view` directory and must be included by Javascript code that wants
  * to interact with the database server backend.
  *
  * Sample listing of the `anyDefs.js` file:
  *
  *      let gServer       = "//localhost/";
- *      let gHomeFolder   = "projects/anyList/testserver/wp-content/plugins/anyList/";
- *      let gThirdpartyJS = "projects/anyList/thirdparty/javascript/";
+ *      let gHomeFolder   = "projects/anyvista/testserver/wp-content/plugins/anyvista/";
+ *      let gThirdpartyJS = "projects/anyvista/thirdparty/javascript/";
  *      let gDataScript   = "data/anyGetData.php"; // Relative to gHomeFolder
  *      let gUploadFolder = "upload/";             // Relative to gHomeFolder
  *      let gSkin         = "default";
@@ -604,15 +604,15 @@
  *
  * <h4>anyDefs.php</h4>
  *
- * anyDefs.php is located in the anyList `data` directory and must be included by PHP code that wants
- * to interact with anyList clients.
+ * anyDefs.php is located in the anyVista `data` directory and must be included by PHP code that wants
+ * to interact with anyVista clients.
  *
  * Sample listing of the `anyDefs.php` file:
  *
  *      <?php
  *      define("gServer",       "//localhost/");
- *      define("gHomeFolder",   "projects/anyList/testserver/wp-content/plugins/anyList/");
- *      define("gThirdpartyJS", "projects/anyList/thirdparty/");
+ *      define("gHomeFolder",   "projects/anyvista/testserver/wp-content/plugins/anyvista/");
+ *      define("gThirdpartyJS", "projects/anyvista/thirdparty/");
  *      define("gDataScript",   "data/anyGetData.php"); // Relative to gHomeFolder
  *      define("gUploadFolder", "wordpress/upload/");   // Relative to gHomeFolder
  *      define("gSkin",         "default");
@@ -622,7 +622,7 @@
  *      define("gVersion", "1.0.0");
  *
  *      define("gHomePath",   $_SERVER['DOCUMENT_ROOT']."/".gHomeFolder);
- *      define("gAnyListURL", gServer.gHomeFolder);
+ *      define("gAnyvistaURL", gServer.gHomeFolder);
  *
  *      define("gDataSource", $_SERVER['DOCUMENT_ROOT']."/".gHomeFolder.gDataScript);
  *      define("gUploadPath", $_SERVER['DOCUMENT_ROOT']."/".gHomeFolder.gUploadFolder);
@@ -981,11 +981,11 @@
  *
  * 5) Create the file for letting other plugins interact with the task plugin (`client.php`):
  *
-        <link  href="<?php print gAnyListURL;?>view/plugins/task/skin/<?php print gSkin;?>/task.css" rel="stylesheet"/>
-        <script src="<?php print gAnyListURL;?>view/plugins/task/taskModel.js"></script>
-        <script src="<?php print gAnyListURL;?>view/plugins/task/taskFilter.js"></script>
-        <script src="<?php print gAnyListURL;?>view/plugins/task/taskView.js"></script>
-        <script src="<?php print gAnyListURL;?>view/plugins/task/taskValidator.js"></script>
+        <link  href="<?php print gAnyvistaURL;?>view/plugins/task/skin/<?php print gSkin;?>/task.css" rel="stylesheet"/>
+        <script src="<?php print gAnyvistaURL;?>view/plugins/task/taskModel.js"></script>
+        <script src="<?php print gAnyvistaURL;?>view/plugins/task/taskFilter.js"></script>
+        <script src="<?php print gAnyvistaURL;?>view/plugins/task/taskView.js"></script>
+        <script src="<?php print gAnyvistaURL;?>view/plugins/task/taskValidator.js"></script>
  *
  * 6) Create the database table (MariaDB) with this SQL code:
  *
@@ -1007,7 +1007,7 @@
  *
         <td class="tooltd"
             onclick="javascript:loadPage('<?php print $gAdmViewArea;?>',
-                                         '<?php print gAnyListURL;?>data/plugins/task/task.php?head=true&grouping=tabs',
+                                         '<?php print gAnyvistaURL;?>data/plugins/task/task.php?head=true&grouping=tabs',
                                          '<?php print $gAdmURL;?>');"
             title="Tasks">
           <i class="fas fa-file-alt fa-2x"></i><br/>Tasks
@@ -1027,8 +1027,8 @@
  *
  * <h4>Included pre-defined plugins</h4>
  *
- * A number of useful plugins are included with anyList. They may be modified to suit the user's need.
- * Currently, anyList includes the following plugins:
+ * A number of useful plugins are included with anyVista. They may be modified to suit the user's need.
+ * Currently, anyVista includes the following plugins:
  *
  * - <b>Group</b>: Grouping of other types/plugins.
  *
@@ -1042,8 +1042,8 @@
  *
  * <hr/>
  *
- * <a name="wordpress_anyList"></a>
- * <h3>anyList and Wordpress</h3>
+ * <a name="wordpress_anyVista"></a>
+ * <h3>anyVista and Wordpress</h3>
  *
  * More info coming soon.
  *
@@ -1054,14 +1054,14 @@
  *
  * Learning by example is an excellent way to master new programming libraries and concepts.
  * Below you will find a  number of examples ranging from the simple "hello world" to writing
- * complex anyList plugins in a client-server environment.
+ * complex anyVista plugins in a client-server environment.
  *
- * 1) <a href="http://localhost/prosjekter/anyList/testserver/wp-content/plugins/anyList/examples/1_hello_world/">Hello world</a>
+ * 1) <a href="http://localhost/prosjekter/anyvista/testserver/wp-content/plugins/anyvista/examples/1_hello_world/">Hello world</a>
  *
  * 2)
  *
  * A collection of complete examples can be found <a>here</a> (coming soon).
  *
- * @module anyList
- * @main anyList
+ * @module anyVista
+ * @main anyVista
  */

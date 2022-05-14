@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<script src="../../../../javascript/jquery/jquery-3.6.0.min.js"></script>
+<script src="../../../../javascript/jquery/jquery-widget-1.12.1.min.js"></script>
+<link  href="../../../../javascript/w3css/w3.css"           rel="stylesheet"/>
+<link  href="../../../../javascript/fontawesome/fa.min.css" rel="stylesheet"/>
+<link  href="../view/skin/default/anyvista.css"              rel="stylesheet"/>
+<script src="../view/functions.js"></script>
+<script src="../view/anyDefs.js"></script>
+<script src="../view/anyStrings_en-GB.js"></script>
+<script src="../view/anyModel.js"></script>
+<script src="../view/anyView.js"></script>
+<script src="../view/anyViewTabs.js"></script>
+<script src="../view/plugins/group/groupModel.js"></script>
+<script src="../view/plugins/group/groupViewTabs.js"></script>
+<script src="../view/plugins/group/groupValidator.js"></script>
+<script src="../view/plugins/event/eventModel.js"></script>
+<script src="../view/plugins/event/eventViewTabs.js"></script>
+<script src="../view/plugins/event/eventValidator.js"></script>
+<script src="../view/plugins/user/userModel.js"></script>
+<script src="../view/plugins/user/userViewTabs.js"></script>
+<script src="../view/plugins/user/userValidator.js"></script>
+
+<style>
+.simplediv {
+  width:        100%;
+  display:      inline-block;
+  float:        left;
+  padding-left: 10px;
+}
+.group_name {
+  font-weight: bold;
+  background: #444;
+  color: white;
+}
+.event_name {
+  background: #dd6600;
+  color: black;
+  font-size: 10pt;
+}
+.any-item-val-user_email {
+  color: blue;
+}
+.any-header-1 {
+  background: #369;
+}
+.any-header-3 {
+  background: #59d;
+}
+</style>
+<title>anyVista test - complex</title>
+</head>
+
+<body>
+
+<div id="any_content" class="simplediv main_view" title="Complex test"></div>
+
+<script>
+var my_data = {
+  9: {
+    head: "event",
+    event_name: "Meetings",
+    event_desc: "All the meetings are listed here",
+    data: {
+      15: {
+        list: "event",
+        event_name: "Organizing stuff",
+        event_desc: "Much to do",
+      },
+      16: {
+        event_name: "Partying",
+        event_desc: "Fix beer and pizza",
+        data: {
+          330: {
+            event_name: "Beer",
+            event_desc: "Brew it",
+            event_who: "Joe",
+          },
+          331: {
+            event_name: "Pizza",
+            event_desc: "Bake it",
+            event_who: "Jim",
+          },
+        },
+      },
+    },
+  },
+  10: {
+    head: "group",
+    group_name: "International races",
+    group_desc: "Some bike races around the globe",
+    data: {
+      /*
+      3: {
+        item: "event",
+        event_name: "Tour de France",
+        event_desc: "A little bike race in France",
+        data: {
+          34: {
+            head: "user",
+            data: {
+              51: { // TODO! Order
+                list: "user",
+                data: {
+                  66: {
+                    user_name: "Christian Prudhomme",
+                    user_email: "christian.prudhomme@mymail.com",
+                  },
+                  67: {
+                    user_name: "Phristian Crudhomme",
+                    user_email: "phristian.crudhomme@mymail.com",
+                  },
+                },
+              },
+              49: { // TODO! Order
+                item: "user",
+                user_name: "The organizer",
+                user_email: "boss@mail.me",
+              },
+            },
+          },
+          38: {
+            head: "event",
+            data: {
+              120: {
+                list: "event",
+                event_name: "Stage 1 prologue",
+                event_desc: "The first stage",
+              },
+              121: {
+                event_name: "Stage 2",
+                event_desc: "The second stage",
+              },
+            },
+          },
+        },
+      },
+      */
+      22: {
+        head: "event",
+        event_name: "Italy",
+        data: {
+          91: {
+            item: "event",
+            event_name: "Giro d'Italia",
+            event_desc: "East of the Alps",
+            data: {
+              42: {
+                list: "event",
+                event_name: "Stage 1",
+              },
+              43: {
+                event_name: "Stage 2",
+              },
+              44: {
+                head: "organization",
+                data: {
+                  66: {
+                    item: "organization",
+                    organization_name: "RCS Sport",
+                    organization_email: "rcssport@mymail.com",
+                  },
+                },
+              },
+              45: {
+                list: "event",
+                event_name: "Stage 3",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  15: {
+    head: "user",
+    user_name: "All riders",
+    data: {
+      5: {
+        head: "user",
+        user_name: "Category A riders",
+        data: {
+          20: {
+            list: "user",
+            user_name: "Thor Hushovd",
+            user_desc: "World champion",
+          },
+          21: {
+            user_name: "Alexander Kristoff",
+            user_desc: "National champion",
+            data: {
+              75: {
+                head: "event",
+                event_name: "Alexander's races",
+                data: {
+                  440: {
+                    list: "event",
+                    event_name: "Tour de France for Alex",
+                    event_desc: "Pri 1",
+                  },
+                  441: {
+                    event_name: "Giro d'Italia for Alex",
+                    event_desc: "Pri 2",
+                  },
+                }
+              }
+            }
+          },
+          22: {
+            user_name: "Alexandro Valverde",
+            user_desc: "Cyclist",
+          },
+        },
+      },
+      6: {
+        head: "user",
+        user_name: "Category B riders",
+        data: {
+          30: {
+            list: "user",
+            user_name: "Lance Armstrong",
+            user_desc: "Dopehead",
+          },
+          31: {
+            user_name: "Bjarne Riis",
+            user_desc: "Dopehead",
+          },
+        }
+      },
+    },
+  },
+  16: {
+    head: "jersey",
+    jersey_name: "Jerseys",
+    data: {
+      21: {
+        list: "jersey",
+        jersey_name:   "Yellow",
+        jersey_wearer: "Nairo Quintana",
+      },
+      22: {
+        jersey_name:   "Green",
+        jersey_wearer: "Thor Hushovd",
+      },
+      23: {
+        jersey_name:   "Polkadot",
+        jersey_wearer: "",
+      },
+    }
+  },
+};
+
+var all_filters = {
+  user: {
+    item: {
+      user_id  :  { HEADER:"User id",     DISPLAY:0, HTML_TYPE:"label"},
+      user_name:  { HEADER:"Name:",       DISPLAY:1, HTML_TYPE:"text"},
+      user_email: { HEADER:"Email:",      DISPLAY:1, HTML_TYPE:"email"},
+      user_desc:  { HEADER:"Description", DISPLAY:0, HTML_TYPE:"textarea"},
+    },
+    list: {
+      user_id   : { HEADER:"User id",     DISPLAY:0, HTML_TYPE:"label" },
+      user_name : { HEADER:"User name",   DISPLAY:1, HTML_TYPE:"link" },
+      user_email: { HEADER:"Email",       DISPLAY:1, HTML_TYPE:"email"},
+      user_desc : { HEADER:"Description", DISPLAY:1, HTML_TYPE:"text"},
+    },
+    head: {
+      user_name : { HEADER:"User name",   DISPLAY:1, HTML_TYPE:"link" },
+    },
+  },
+  event: {
+    item: {
+      event_id  : { HEADER:"Event id",     DISPLAY:0, HTML_TYPE:"label" },
+      event_name: { HEADER:"Event name:",  DISPLAY:1, HTML_TYPE:"link" },
+      event_desc: { HEADER:"Description:", DISPLAY:1, HTML_TYPE:"textarea"},
+      event_date_start: { HEADER:"Start date", DISPLAY:1, HTML_TYPE:"label"},
+    },
+    list: {
+      event_id  : { HEADER:"Event id",    DISPLAY:0, HTML_TYPE:"label" },
+      event_name: { HEADER:"Event name",  DISPLAY:1, HTML_TYPE:"link" },
+      event_desc: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"label"},
+      event_who : { HEADER:"Responsible", DISPLAY:1, HTML_TYPE:"label"},
+      event_date_start: { HEADER:"Start date", DISPLAY:1, HTML_TYPE:"label"},
+    },
+    head: {
+      event_name: { HEADER:"Event name",  DISPLAY:1, HTML_TYPE:"link" },
+    },
+  },
+  group: {
+    item: {
+      group_id  : { HEADER:"Group id",     DISPLAY:0, HTML_TYPE:"label" },
+      group_name: { HEADER:"Group name:",  DISPLAY:1, HTML_TYPE:"link" },
+      group_desc: { HEADER:"Description:", DISPLAY:1, HTML_TYPE:"textarea"},
+    },
+    list: {
+      group_id  : { HEADER:"Group id",    DISPLAY:0, HTML_TYPE:"label" },
+      group_name: { HEADER:"Group name",  DISPLAY:1, HTML_TYPE:"link" },
+      group_desc: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"label"},
+      group_who : { HEADER:"Responsible", DISPLAY:1, HTML_TYPE:"label"},
+    },
+  },
+  organization: {
+    item: {
+      organization_id  :  { HEADER:"Org id",      DISPLAY:0, HTML_TYPE:"label"},
+      organization_name:  { HEADER:"Organization",DISPLAY:1, HTML_TYPE:"text"},
+      organization_email: { HEADER:"Email",       DISPLAY:1, HTML_TYPE:"email"},
+      organization_desc:  { HEADER:"Description", DISPLAY:1, HTML_TYPE:"textarea"},
+    },
+    list: {
+      organization_id   : { HEADER:"Org id",      DISPLAY:0, HTML_TYPE:"label" },
+      organization_name : { HEADER:"Organization",DISPLAY:1, HTML_TYPE:"link" },
+      organization_email: { HEADER:"Email",       DISPLAY:1, HTML_TYPE:"email"},
+      organization_desc : { HEADER:"Description", DISPLAY:1, HTML_TYPE:"email"},
+    },
+    head: {
+      organization_name : { HEADER:"Organization",DISPLAY:1, HTML_TYPE:"link" },
+    },
+  },
+  jersey: {
+    item: {
+      jersey_id    : { HEADER:"Jersey id", DISPLAY:0, HTML_TYPE:"label"},
+      jersey_name  : { HEADER:"Jersey",    DISPLAY:1, HTML_TYPE:"text"},
+      jersey_wearer: { HEADER:"Winner",    DISPLAY:1, HTML_TYPE:"textarea"},
+    },
+    list: {
+      jersey_id    : { HEADER:"Jersey id", DISPLAY:0, HTML_TYPE:"label" },
+      jersey_name  : { HEADER:"Jersey",    DISPLAY:1, HTML_TYPE:"link" },
+      jersey_wearer: { HEADER:"Winner",    DISPLAY:1, HTML_TYPE:"email"},
+    },
+  }
+};
+
+myItemLinkClicked = function (event)
+{
+  //if (this.options && this.options.view)
+  //  this.options.view.setRootDivId("any_content"); // TODO Hack to clear page when clicking on deep links
+  return this.showItem(event);
+};
+
+var data_model = new anyModel({ data: my_data,
+                                type: "event",
+                             });
+var data_view  = new anyView({ id:               "any_content",
+                               filters:          all_filters,
+                               model:            data_model,
+                               isEditable:      true,
+                               indent_subtables: true,
+                               itemLinkClicked:  myItemLinkClicked,
+                            });
+
+data_view.refresh();
+</script>
+
+</body>
+</html>

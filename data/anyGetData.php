@@ -1,14 +1,14 @@
 <?php
 /****************************************************************************************
  *
- * anyList is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
+ * anyVista is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
  *
- * License: AGPLv3.0 for open source use or anyList Commercial License for commercial use.
- * Get licences here: http://balanse.info/anylist/license/ (coming soon).
+ * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
+ * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
  *
  ****************************************************************************************/
 //
-// Gets data from an anyList database server and returns it in a JSON object.
+// Gets data from an anyVista database server and returns it in a JSON object.
 //
 require_once dirname(__FILE__)."/parameters.php";
 require_once dirname(__FILE__)."/anyTableFactory.php";
