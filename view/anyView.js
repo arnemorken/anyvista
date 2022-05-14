@@ -2349,8 +2349,9 @@ $.any.anyView.prototype.getTextAreaStr = function (type,kind,id,val,edit,filter_
 {
   if (edit) {
     let nameid = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_id;
-    if (typeof tinyMCE !== "undefined" && tinyMCE.EditorManager.get(nameid) !== null &&
-        id != "0" && id !== 0) { // TODO! id !== 0 is not the correct test, temporary solution
+    let tinytype = typeof tinyMCE;
+    let ed_man   = tinytype ? tinyMCE.EditorManager.get(nameid) : null;
+    if (tinytype !== "undefined" && ed_man !== null) {
       tinymce.EditorManager.execCommand('mceRemoveEditor',true, nameid);
     }
     return "<textarea class='itemEdit tinymce'>"+val+"</textarea>";
@@ -3495,6 +3496,8 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
       txt.off("keyup").on("keyup",     this.current_edit, $.proxy(this._processKeyup,this));
       txt.off("keydown").on("keydown", this.current_edit, $.proxy(this._processKeyup,this)); // For catching the ESC key on Vivaldi
     }
+    // Initialize thirdparty components (tinymce, etc.)
+    this.initComponents();
   }
   else {
     $("#"+edit_icon).show();

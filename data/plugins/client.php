@@ -19,6 +19,9 @@
 <link href="<?php print gW3CSS_css;?>"       rel="stylesheet"/>
 <link href="<?php print gFontAwesome_css;?>" rel="stylesheet"/>
 
+<!-- TinyMCE -->
+<script src="<?php print gTinyMCE_js;?>"></script>
+
 <!-- anyPaginator -->
 <link  href="<?php print gAnyPaginator_css;?>" rel="stylesheet"/>
 <script src="<?php print gAnyPaginator_js;?>"></script>

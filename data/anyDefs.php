@@ -58,6 +58,10 @@ define("gW3CSS_css",        gW3CSSURL          . "w3.css");
 define("gFontAwesomeURL",   gServer            . gThirdpartyJS . "fontawesome/");
 define("gFontAwesome_css",  gFontAwesomeURL    . "fa.min.css");
 
+// TinyMCE
+define("gTinyMCEURL",       gServer            . gThirdpartyJS . "tinymce/js/tinymce/");
+define("gTinyMCE_js",       gTinyMCEURL        . "tinymce.min.js");
+
 // Wordpress stuff
 //define("WP_PLUGIN",""); // Comment out if using the server API, but not as a Wordpress plugin
 define("gWordpressURL",     gServer            . "Prosjekter/testserver/");
