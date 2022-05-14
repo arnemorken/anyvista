@@ -2933,8 +2933,8 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     type:      pager.options.div_info.type,
     group_id:  pager.options.div_info.group_id,
     grouping:  this.options.grouping,
-    order:     this.options.order,
-    direction: this.options.direction,
+    order:     this.options.sortBy,
+    direction: this.options.sortDirection,
     head:      this.options.grouping == "tabs",
     simple:    this.options.grouping === null,
   };
