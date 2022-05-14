@@ -11,8 +11,8 @@
  * Include this file in plugins that are using the anyVista document plugin with a server backend
  */
 ?>
-<link  href="<?php print gAnyVistaURL;?>view/plugins/document/skin/<?php print gSkin;?>/document.css" rel="stylesheet"/>
-<script src="<?php print gAnyVistaURL;?>view/plugins/document/documentModel.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/plugins/document/documentFilter.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/plugins/document/documentViewTabs.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/plugins/document/documentValidator.js"></script>
+<link  href="<?php print gAnyvistaURL;?>view/plugins/document/skin/<?php print gSkin;?>/document.css" rel="stylesheet"/>
+<script src="<?php print gAnyvistaURL;?>view/plugins/document/documentModel.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/plugins/document/documentFilter.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/plugins/document/documentViewTabs.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/plugins/document/documentValidator.js"></script>

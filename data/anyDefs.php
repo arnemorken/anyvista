@@ -27,7 +27,7 @@ define("gDataScript",       "data/anyGetData.php"); // Relative to gHomeFolder
 
 // Paths
 define("gHomePath",   $_SERVER['DOCUMENT_ROOT']."/".gHomeFolder);
-define("gAnyVistaURL", gServer . gHomeFolder);
+define("gAnyvistaURL", gServer . gHomeFolder);
 
 define("gDataSource", $_SERVER['DOCUMENT_ROOT'] . "/" . gHomeFolder . "/" . gDataScript);
 

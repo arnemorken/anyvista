@@ -11,8 +11,8 @@
  * Include this file in plugins that are using the anyVista group plugin with a server backend
  */
 ?>
-<link  href="<?php print gAnyVistaURL;?>view/plugins/group/skin/<?php print gSkin;?>/group.css" rel="stylesheet"/>
-<script src="<?php print gAnyVistaURL;?>view/plugins/group/groupModel.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/plugins/group/groupFilter.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/plugins/group/groupViewTabs.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/plugins/group/groupValidator.js"></script>
+<link  href="<?php print gAnyvistaURL;?>view/plugins/group/skin/<?php print gSkin;?>/group.css" rel="stylesheet"/>
+<script src="<?php print gAnyvistaURL;?>view/plugins/group/groupModel.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/plugins/group/groupFilter.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/plugins/group/groupViewTabs.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/plugins/group/groupValidator.js"></script>

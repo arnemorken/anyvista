@@ -26,16 +26,16 @@
 <!--
   -- anyVista
   -->
-<link  href="<?php print gAnyVistaURL;?>view/skin/<?php print gSkin;?>/anyvista.css" rel="stylesheet"/>
+<link  href="<?php print gAnyvistaURL;?>view/skin/<?php print gSkin;?>/anyvista.css" rel="stylesheet"/>
 
-<script src="<?php print gAnyVistaURL;?>view/functions.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/anyDefs.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/anyStrings_en-GB.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/functions.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/anyDefs.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/anyStrings_en-GB.js"></script>
 
-<script src="<?php print gAnyVistaURL;?>view/anyModel.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/anyView.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/anyViewTabs.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/anyFilter.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/anyModel.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/anyView.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/anyViewTabs.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/anyFilter.js"></script>
 
 <style>
 body {

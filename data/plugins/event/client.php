@@ -11,8 +11,8 @@
  * Include this file in plugins that are using the anyVista event plugin with a server backend
  */
 ?>
-<link  href="<?php print gAnyVistaURL;?>view/plugins/event/skin/<?php print gSkin;?>/event.css" rel="stylesheet"/>
-<script src="<?php print gAnyVistaURL;?>view/plugins/event/eventModel.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/plugins/event/eventFilter.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/plugins/event/eventViewTabs.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/plugins/event/eventValidator.js"></script>
+<link  href="<?php print gAnyvistaURL;?>view/plugins/event/skin/<?php print gSkin;?>/event.css" rel="stylesheet"/>
+<script src="<?php print gAnyvistaURL;?>view/plugins/event/eventModel.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/plugins/event/eventFilter.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/plugins/event/eventViewTabs.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/plugins/event/eventValidator.js"></script>

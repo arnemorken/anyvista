@@ -11,8 +11,8 @@
  * Include this file in plugins that are using the anyVista user plugin with a server backend
  */
 ?>
-<link  href="<?php print gAnyVistaURL;?>view/plugins/user/skin/<?php print gSkin;?>/user.css" rel="stylesheet"/>
-<script src="<?php print gAnyVistaURL;?>view/plugins/user/userModel.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/plugins/user/userFilter.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/plugins/user/userViewTabs.js"></script>
-<script src="<?php print gAnyVistaURL;?>view/plugins/user/userValidator.js"></script>
+<link  href="<?php print gAnyvistaURL;?>view/plugins/user/skin/<?php print gSkin;?>/user.css" rel="stylesheet"/>
+<script src="<?php print gAnyvistaURL;?>view/plugins/user/userModel.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/plugins/user/userFilter.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/plugins/user/userViewTabs.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/plugins/user/userValidator.js"></script>
