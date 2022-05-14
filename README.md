@@ -2,11 +2,9 @@
 
 # anyVista <img src="balanselogo_85x95.png" align="right">
 
-A Javascript library for displaying editable or non-editable items and lists of almost any combination of HTML elements, freely mixing lists and items of different types, interacting with lists and list items and using predefined or user defined plugins. Can be used in apps or web pages, with or without a database back-end.
+A Javascript library for displaying editable or non-editable items and lists of almost any combination of HTML elements, freely mixing lists and items of different types, interacting with lists and list items and using predefined or user defined plugins. Can be used in apps or web pages, with or without a database back-end and can also be used as a Wordpress plugin.
 
 anyVista can read complex data structures and display them in beautiful tables. The data may be read from Ajax, inline code or indeed any data source, as long as it follows a certain flexible data format.
-
-anyVista can also be used as a Wordpress plugin. 
 
 Early versions of the library are already being used in both commercial and non-commercial projects - see screenshots below:
 
