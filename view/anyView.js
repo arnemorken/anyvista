@@ -506,6 +506,7 @@ $.any.anyView.prototype.refresh = function (params)
                 if (!the_parent.length)
                   the_parent = parent;
               }
+              new_con_id_str = new_row_id_str;
             }
             view = view.createView({
                       parent:     the_parent,
