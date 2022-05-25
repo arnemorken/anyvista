@@ -648,7 +648,7 @@ $.any.anyView.prototype.refreshOne = function (params)
        edit:       edit,
        is_head:    kind == "head",
     });
-    if ((kind == "list" || kind == "select"))
+    if ((curr_kind == "list" || curr_kind == "select"))
       --this.options.indent_level;
   }
   // Clean up
