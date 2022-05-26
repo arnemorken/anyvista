@@ -491,7 +491,7 @@ $.any.anyView.prototype.refresh = function (params)
             if (prev_kind == "list" || prev_kind == "select") {
               let f = view.getFilter(prev_type,prev_kind);
               let max_num_cols = f ? Object.size(f) : 5;
-              let row_id = view.id_base+"_"+curr_type+"_"+curr_kind+"_"+new_row_id_str+"_tr";
+              let row_id = view.id_base+"_"+curr_type+"_"+curr_kind+"_"+row_id_str+"_tr";
               let new_tr  = $("<tr id='"+row_id+"'><td style='padding-left:"+view.options.indent_amount+"px;' colspan='"+max_num_cols+"' class='any-td any-list-td'></td></tr>"); // TODO! CSS
               let tbody = $("#"+view.id_base+"_"+prev_type+"_"+prev_kind+"_"+row_id_str+"_tbody");
               if (tbody.length)
@@ -506,7 +506,7 @@ $.any.anyView.prototype.refresh = function (params)
                 if (!the_parent.length)
                   the_parent = parent;
               }
-              new_con_id_str = new_row_id_str;
+              new_con_id_str = row_id_str;
             }
             view = view.createView({
                       parent:     the_parent,
