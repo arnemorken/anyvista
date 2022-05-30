@@ -78,7 +78,7 @@ let my_filters = {
 let my_view  = new anyView({
   model:   my_model,
   filters: my_filters,
-  id:      "myview",
+  id:      "myview", // Id of div in which to display result
 });
 my_view.refresh();
 ```
