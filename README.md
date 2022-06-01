@@ -2,9 +2,11 @@
 
 # anyVista <img src="balanselogo_85x95.png" align="right">
 
-A Javascript library for displaying editable or non-editable items and lists of almost any combination of HTML elements, freely mixing lists and items of different types, interacting with lists and list items and using predefined or user defined plugins. Can be used in apps or web pages, with or without a database back-end and can also be used as a Wordpress plugin.
+A Javascript library for grouping and displaying hierarchical (editable or non-editable) data as items or lists of almost any combination of HTML elements, freely mixing lists and items of different types, interacting with lists and list items, using predefined or user defined plugin types and more.
 
-anyVista can read complex data structures and display them in beautiful tables. The data may be read from Ajax, inline code or indeed any data source, as long as it follows a certain flexible data format.
+anyVista can read complex hierarchical and clustered data structures and display them in beautiful tables. The data may be read from Ajax, inline code or indeed any data source, as long as it follows a certain flexible data format.
+
+The library is very versatile and can be used for displaying/editing data in web pages as well as in mobile apps, with or without a database back-end. Can also be used as a Wordpress plugin.
 
 Early versions of the library are already being used in both commercial and non-commercial projects - see screenshots below:
 
@@ -22,7 +24,7 @@ jsFiddle examples coming soon.
 
 The library is currently in the last stages of development. Find it at Github: https://github.com/arnemorken/anyvista/.
 
-**First beta release planned for May 2022.**
+**First beta release planned for June 2022.**
 
 # Usage
 
@@ -76,7 +78,7 @@ let my_filters = {
 let my_view  = new anyView({
   model:   my_model,
   filters: my_filters,
-  id:      "myview",
+  id:      "myview", // Id of div in which to display result
 });
 my_view.refresh();
 ```
