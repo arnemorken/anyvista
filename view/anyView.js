@@ -2266,6 +2266,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     showHeader:       this.options.showHeader,
     showTableHeader:  this.options.showTableHeader,
     showTableFooter:  this.options.showTableFooter,
+    showToolbar:      this.options.showToolbar,
     showSearcher:     this.options.showSearcher,
     showPaginator:    this.options.showPaginator,
     showServerErrors: this.options.showServerErrors,
@@ -2274,6 +2275,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     sortBy:           this.options.sortBy,
     sortDirection:    this.options.sortDirection,
     link_options:     this.options.link_options,
+    indent_level:     this.options.indent_level,
     // Give same permissions to new view as the current one. This may not always
     // be the desired behaviour, in that case override this method and correct.
     isEditable:       this.options.isEditable,
@@ -2825,6 +2827,7 @@ $.any.anyView.prototype.sortTable = function (event)
   if (this.model.mode == "remote") {
     // Remote search, let the database do the sorting.
     // Will (normally) call refresh via onModelChange
+    this.options.indent_level = -1;
     this.options.ref_rec = 0;
     this.model.dbSearch(mod_opt);
   } // if remote
