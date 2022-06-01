@@ -547,7 +547,7 @@ $.any.anyView.prototype.refresh = function (params)
 
     // Clean up
     if (!parent.children().length)
-      parent.remove();
+      parent.children().remove();
 
     if (kind == "head")
       --this.data_level;
