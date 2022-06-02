@@ -1507,7 +1507,7 @@ class anyTable extends dbTable
               else
                 $data_tree[$ngidx]["group_type"] = $gidx;
               if (isset($grouping) && $grouping && $grouping != "undefined")
-                $data_tree['grouping'] = $grouping;
+                $data_tree["grouping"] = $grouping;
               $data_tree[$ngidx]["group_name"] = $gname;
               $data_tree[$ngidx]["group_id"] = $ngidx;
             }
@@ -1531,8 +1531,8 @@ class anyTable extends dbTable
           }
           if ($dt === null)
             unset($dt);
-        }
-      }
+        } // if !empty
+      } // foreach
     }
     //vlog("buildGroupTreeAndAttach,data_tree1:",$data_tree);
     //if ($err)
