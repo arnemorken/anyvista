@@ -1425,13 +1425,13 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
           if (is_hidden && edit) {
             let tr = $("<tr "+display_class+"></tr>");
             let td = $("<td/><td colspan='2' class='td_item'>"+
-                       "<span id='"+this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_key.HTML_TYPE+"' class='pointer hiddenText'>"+
+                       "<span id='"+this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_key.TYPE+"' class='pointer hiddenText'>"+
                        filter_key.HEADER+
                        "</span>"+
                        "</td>");
             tr.append(td);
             tbody.append(tr);
-            let params   = { panel_id:   this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_key.HTML_TYPE,
+            let params   = { panel_id:   this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_key.TYPE,
                              start_text: filter_key.HEADER,
                              end_text:   filter_key.HEADER2,
                            };
@@ -2070,7 +2070,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,co
     options:    this.options,
   };
   // Bind a method that is called while clicking on the text link, file view or file name (in non-edit mode)
-  if (["link", "upload", "fileview"].includes(filter_key.HTML_TYPE)) {
+  if (["link", "upload", "fileview"].includes(filter_key.TYPE)) {
     let link_elem = $("#"+td_id);
     if (link_elem.length) {
       if (this.options.isSelectable) {
@@ -2080,7 +2080,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,co
         link_elem.off("click").on("click",init_opt, $.proxy(fun,this));
       }
       else {
-        if (filter_key.HTML_TYPE == "upload") {
+        if (filter_key.TYPE == "upload") {
           // File select link in edit mode opens file select dialog
           let inp_id = td_id+"_upload";
           let inp_elem = $("#"+inp_id);
@@ -2098,7 +2098,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,co
           }
         }
         else
-        if (filter_key.HTML_TYPE == "fileview") {
+        if (filter_key.TYPE == "fileview") {
           // File view link opens the file in a new window
           let inp_id = td_id+"_fileview";
           let inp_elem = $("#"+inp_id);
@@ -2130,12 +2130,12 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,co
       return;
   }
   // Set numerical filter for number fields
-  if (filter_key.HTML_TYPE == "number") {
+  if (filter_key.TYPE == "number") {
     inp_elem.inputFilter(function(value) { return /^\d*\.?\d*$/.test(value); }); // Allow digits and '.' only
   }
   // Bind a function to be called when clicking/pressings the element
-  if (filter_key.OBJ_FUNCTION && filter_key.HTML_TYPE != "select") {
-    let func_name = filter_key.OBJ_FUNCTION;
+  if (filter_key.FUNCTION && filter_key.TYPE != "select") {
+    let func_name = filter_key.FUNCTION;
     let func = isFunction(this[func_name])
                ? this[func_name] // Method in view class
                : isFunction(this.model[func_name])
@@ -2153,10 +2153,10 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,co
     if (func && con)
       inp_elem.on("click", init_opt, $.proxy(func,con));
     else
-      console.warn("Couldnt bind "+func_name+" on "+filter_key.HTML_TYPE+" element. ");
+      console.warn("Couldnt bind "+func_name+" on "+filter_key.TYPE+" element. ");
   }
   // Bind some keyboard events in edit mode
-  if (edit && ["link","text","number","password","date"].indexOf(filter_key.HTML_TYPE) > -1) {
+  if (edit && ["link","text","number","password","date"].indexOf(filter_key.TYPE) > -1) {
     // Bind enter key
     inp_elem.off("keyup").on("keyup",     init_opt, $.proxy(this._processKeyup,this));
     inp_elem.off("keydown").on("keydown", init_opt, $.proxy(this._processKeyup,this)); // For catching the ESC key on Vivaldi
@@ -2301,7 +2301,7 @@ $.any.anyView.prototype.getCellEntryStr = function (id,type,kind,row_id_str,filt
     val = $("<textarea />").html(val).text(); // Convert html entities to real html
   if (filter_key.EDITABLE===0 || filter_key.EDITABLE===false)
     edit = false;
-  switch (filter_key.HTML_TYPE) {
+  switch (filter_key.TYPE) {
     case "label":    return this.getLabelStr   (type,kind,id,val); // Always noneditable
     case "html":     return this.getHtmlStr    (type,kind,id,val,edit);
     case "textarea": return this.getTextAreaStr(type,kind,id,val,edit,filter_id,row_id_str);
@@ -2435,7 +2435,7 @@ $.any.anyView.prototype.getDateStr = function (type,kind,id,val,edit)
 // Execute a function which should return an html string
 $.any.anyView.prototype.getFunctionStr = function (type,kind,id,val,edit,filter_key,pid,pname)
 {
-  let func_name = filter_key.OBJ_FUNCTION;
+  let func_name = filter_key.FUNCTION;
   if (isFunction(this[func_name])) // Method in view class
     return this[func_name](type,kind,id,val,edit,pid);
   if (isFunction(window[func_name])) // Normal function
@@ -2445,8 +2445,8 @@ $.any.anyView.prototype.getFunctionStr = function (type,kind,id,val,edit,filter_
 
 $.any.anyView.prototype.getImageStr = function (type,kind,id,val,edit,filter_key)
 {
-  let image_src = filter_key.OBJ_IMAGE;
-  if (!image_src && filter_key.OBJ_FUNCTION && typeof window[filter_key.OBJ_FUNCTION] == "function")
+  let image_src = filter_key.IMAGE;
+  if (!image_src && filter_key.FUNCTION && typeof window[filter_key.FUNCTION] == "function")
     return this.getFunctionStr(type,kind,id,val,edit,filter_key);
   return "<div class='itemUnedit'>"+
          "<img class='imageRef pointer' src='"+image_src+"' title='"+val+"'style='box-shadow:none;'>"+
@@ -2457,7 +2457,7 @@ $.any.anyView.prototype.getSelectStr = function (type,kind,id,val,edit,filter_ke
 {
   let str  = "";
   let sval = val;
-  let fval = filter_key.OBJ_SELECT ? filter_key.OBJ_SELECT : filter_key.OBJ_FUNCTION;
+  let fval = filter_key.SELECT ? filter_key.SELECT : filter_key.FUNCTION;
   if (fval) {
     if (typeof this[fval] === 'function')
       sval = this[fval](type,kind,id,val,edit,pid);
@@ -2496,7 +2496,7 @@ $.any.anyView.prototype.getRadioStr = function (type,kind,id,val,edit,filter_key
 {
   let str  = "";
   let sval = val;
-  let fval = filter_key.OBJ_RADIO;
+  let fval = filter_key.RADIO;
   if (fval) {
     if (typeof this[fval] == "function")
       sval = this[fval](type,kind,id,val,edit);
@@ -2559,7 +2559,7 @@ $.any.anyView.prototype.getListView = function (type,kind,id,val,edit,filter_key
   // TODO! Should we return null here if val is empty?
 
   // Create the list model
-  let list_type = filter_key.OBJ_LIST;
+  let list_type = filter_key.LIST;
   let model_opt = this.getListModelOptions(type,list_type,val);
   let m_str     = list_type.capitalize()+"Model";
   if (!window[m_str]) {
@@ -2636,8 +2636,8 @@ $.any.anyView.prototype.getUploadStr = function (type,kind,id,val,edit,data_item
   let title   = "title='Select a new file for upload'"; // TODO i18n
   let filter  = this.getFilter(type,kind);
   let img_str = "<i class='fa fa-upload'></i>";
-  if (filter && filter[filter_id] && filter[filter_id]["OBJ_IMAGE"])
-    img_str = "<img src='"+filter[filter_id]["OBJ_IMAGE"]+"' style='border:0;box-shadow:none;'/>";
+  if (filter && filter[filter_id] && filter[filter_id]["IMAGE"])
+    img_str = "<img src='"+filter[filter_id]["IMAGE"]+"' style='border:0;box-shadow:none;'/>";
   let str     = "<label id='"+elem_id+"_label' for='"+elem_id+"_upload' class='itemLabel' "+style+" "+title+">"+
                 img_str+
                 "</label>"+

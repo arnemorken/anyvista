@@ -18,33 +18,33 @@ var groupFilter = function (options)
   this.filters = {
     group: {
       item: {
-        group_id:          { HEADER:"Group id",    DISPLAY:0, HTML_TYPE:"label" },
-        group_name:        { HEADER:"Group name",  DISPLAY:1, HTML_TYPE:"link" },
-        group_type:        { HEADER:"Group type",  DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT: {"group":"Group","user":"User","event":"Event","document":"Document"} },
-        group_description: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"textarea" },
-        parent_id:         { HEADER:"Parent group",DISPLAY:0, HTML_TYPE:"select", OBJ_SELECT: "dbSearchParents" },
-        group_sort_order:  { HEADER:"Sort order",  DISPLAY:1, HTML_TYPE:"text" },
-      //group_status:      { HEADER:"Status",      DISPLAY:1, HTML_TYPE:"select", /*OBJ_SELECT: status*/ },
-        group_privacy:     { HEADER:"Privacy",     DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT: {"0":"Public","1":"Private"} },
-        membership:        { HEADER:"Membership",  DISPLAY:1, HTML_TYPE:"label" }, // TEST
+        group_id:          { HEADER:"Group id",    DISPLAY:0, TYPE:"label" },
+        group_name:        { HEADER:"Group name",  DISPLAY:1, TYPE:"link" },
+        group_type:        { HEADER:"Group type",  DISPLAY:1, TYPE:"select", SELECT: {"group":"Group","user":"User","event":"Event","document":"Document"} },
+        group_description: { HEADER:"Description", DISPLAY:1, TYPE:"textarea" },
+        parent_id:         { HEADER:"Parent group",DISPLAY:0, TYPE:"select", SELECT: "dbSearchParents" },
+        group_sort_order:  { HEADER:"Sort order",  DISPLAY:1, TYPE:"text" },
+      //group_status:      { HEADER:"Status",      DISPLAY:1, TYPE:"select", /*SELECT: status*/ },
+        group_privacy:     { HEADER:"Privacy",     DISPLAY:1, TYPE:"select", SELECT: {"0":"Public","1":"Private"} },
+        membership:        { HEADER:"Membership",  DISPLAY:1, TYPE:"label" }, // TEST
       },
       list: {
-        group_id:          { HEADER:"Group id",    DISPLAY:0, HTML_TYPE:"label" },
-        group_name:        { HEADER:"Group name",  DISPLAY:1, HTML_TYPE:"link" },
-        group_type:        { HEADER:"Group type",  DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT: {"group":"Group","user":"User","event":"Event","document":"Document"} },
-        group_description: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"text" },
-        parent_id:         { HEADER:"Parent group",DISPLAY:0, HTML_TYPE:"select", OBJ_SELECT: "dbSearchParents" },
-        group_sort_order:  { HEADER:"Sort order",  DISPLAY:1, HTML_TYPE:"text" },
-      //group_status:      { HEADER:"Status",      DISPLAY:1, HTML_TYPE:"select", /*OBJ_SELECT: status*/ },
-        group_privacy:     { HEADER:"Privacy",     DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT: {"0":"Public","1":"Private"} },
-        membership:        { HEADER:"Membership",  DISPLAY:1, HTML_TYPE:"label" }, // TEST
+        group_id:          { HEADER:"Group id",    DISPLAY:0, TYPE:"label" },
+        group_name:        { HEADER:"Group name",  DISPLAY:1, TYPE:"link" },
+        group_type:        { HEADER:"Group type",  DISPLAY:1, TYPE:"select", SELECT: {"group":"Group","user":"User","event":"Event","document":"Document"} },
+        group_description: { HEADER:"Description", DISPLAY:1, TYPE:"text" },
+        parent_id:         { HEADER:"Parent group",DISPLAY:0, TYPE:"select", SELECT: "dbSearchParents" },
+        group_sort_order:  { HEADER:"Sort order",  DISPLAY:1, TYPE:"text" },
+      //group_status:      { HEADER:"Status",      DISPLAY:1, TYPE:"select", /*SELECT: status*/ },
+        group_privacy:     { HEADER:"Privacy",     DISPLAY:1, TYPE:"select", SELECT: {"0":"Public","1":"Private"} },
+        membership:        { HEADER:"Membership",  DISPLAY:1, TYPE:"label" }, // TEST
       },
       head: {
-        group_name:        { HEADER:"Group name",  DISPLAY:1, HTML_TYPE:"link" },
-        group_description: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"text" },
+        group_name:        { HEADER:"Group name",  DISPLAY:1, TYPE:"link" },
+        group_description: { HEADER:"Description", DISPLAY:1, TYPE:"text" },
       },
       select: {
-        group_name:        { HEADER:"Group name",  DISPLAY:1, HTML_TYPE:"link" },
+        group_name:        { HEADER:"Group name",  DISPLAY:1, TYPE:"link" },
       },
     },
   };

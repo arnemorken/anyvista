@@ -20,13 +20,13 @@ var anyFilter = function (options)
   this.filters = {
     [options.type]: {
       item: {
-        [name_key]: { HEADER:options.type+" name", DISPLAY:1, HTML_TYPE:"link" },
+        [name_key]: { HEADER:options.type+" name", DISPLAY:1, TYPE:"link" },
       },
       list: {
-        [name_key]: { HEADER:options.type+" name", DISPLAY:1, HTML_TYPE:"link" },
+        [name_key]: { HEADER:options.type+" name", DISPLAY:1, TYPE:"link" },
       },
       head: {
-        [name_key]: { HEADER:options.type,         DISPLAY:1, HTML_TYPE:"label" },
+        [name_key]: { HEADER:options.type,         DISPLAY:1, TYPE:"label" },
       },
     },
   };

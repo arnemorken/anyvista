@@ -314,16 +314,16 @@
  *
  * The filter object contains key / value pairs. The key is the name of a field to display (e.g. `event_name`) and
  * if used with a database, must be the same as the corresponding entry in the server filter. The value is an object
- * describing the field and must as a minimum have `HEADER`, `DISPLAY` and `HTML_TYPE` keys:
+ * describing the field and must as a minimum have `HEADER`, `DISPLAY` and `TYPE` keys:
  *
- *      { [column name]:{HEADER:"[name]", DISPLAY:[0|false|1|true], HTML_TYPE:"[type]", [OBJ_something]: [something]}, ... }
+ *      { [column name]:{HEADER:"[name]", DISPLAY:[0|false|1|true], TYPE:"[type]", ... }
  *
  * Here [column name] is the name of the table column (which may correspond to column in a database table),
- * e.g. `event_name`. Entries from "OBJ_something" onwards are optional.
+ * e.g. `event_name`. Entries after "TYPE" are optional.
  *
  * `HEADER`: The label of the field (e.g. `HEADER:"Event id"`).<br/>
  * `DISPLAY`: Whether the field should be displayed or not (0 or false = hide, 1 or true = display).<br/>
- * `HTML_TYPE`: The html type of the field (e.g. `"textarea"`). Possible values are listed below (for some types,
+ * `TYPE`: The html type of the field (e.g. `"textarea"`). Possible values are listed below (for some types,
  * additional keys are needed):
  *
  * <ul>
@@ -339,16 +339,16 @@
  * <li>"date":      A (potentially editable) date selector.</li>
  * <li>"function":  The name of a method in the View class receiving the parameters `type`, `kind`, `id` and `data`
  *                  and returning html code.</li>
- * <li>"image":     An image. Must have an `OBJ_IMAGE` entry in the filter describing the relative path to the
- *                  image <i>or</i> an `OBJ_FUNCTION` entry describing a method in the View class returning a
+ * <li>"image":     An image. Must have an `IMAGE` entry in the filter describing the relative path to the
+ *                  image <i>or</i> an `FUNCTION` entry describing a method in the View class returning a
  *                  html img tag (see "function" above).<br/>
- *                  Example: `OBJ_IMAGE:"img/shadow1.jpg"`<br/>
- *                  Example: `OBJ_IMAGE:"getImage"`.</li>
- * <li>"select":    A select element. Must have an `OBJ_SELECT` entry in the filter describing entries for a html
- *                  dropdown select box <i>or</i> an `OBJ_FUNCTION` entry describing a method in the View class
+ *                  Example: `IMAGE:"img/shadow1.jpg"`<br/>
+ *                  Example: `IMAGE:"getImage"`.</li>
+ * <li>"select":    A select element. Must have an `SELECT` entry in the filter describing entries for a html
+ *                  dropdown select box <i>or</i> an `FUNCTION` entry describing a method in the View class
  *                  returning an appropriate select object (see "function" above).<br/>
- *                  Example: `OBJ_SELECT:{0:"Not started",1:"In progress",2:"Overdue",3:"Completed",4:"Cancelled"}`<br/>
- *                  Example: `OBJ_SELECT:"getStatus"`.</li>
+ *                  Example: `SELECT:{0:"Not started",1:"In progress",2:"Overdue",3:"Completed",4:"Cancelled"}`<br/>
+ *                  Example: `SELECT:"getStatus"`.</li>
  * <li>"radio":     A radio element. TODO: Not tested.</li>
  * <li>"check":     A check element. TODO: Not tested.</li>
  * <li>"file":      A file selector. TODO: Not tested.</li>
@@ -360,8 +360,8 @@
  *      let my_filters = {
  *        foo: {
  *          list: {
- *            foo_id:   {HEADER:"Foo id",   DISPLAY:0, HTML_TYPE:"label"},
- *            foo_name: {HEADER:"Foo name", DISPLAY:1, HTML_TYPE:"text"},
+ *            foo_id:   {HEADER:"Foo id",   DISPLAY:0, TYPE:"label"},
+ *            foo_name: {HEADER:"Foo name", DISPLAY:1, TYPE:"text"},
  *          }
  *        }
  *      };
@@ -371,19 +371,19 @@
  *      let my_filter1 = {
  *        foo: {
  *          item: {
- *            foo_id:     { HEADER:"Foo id",     DISPLAY:0, HTML_TYPE:"label" },
- *            foo_name:   { HEADER:"Foo name",   DISPLAY:1, HTML_TYPE:"text" },
- *            foo_image1: { HEADER:"Foo image1", DISPLAY:1, HTML_TYPE:"function",OBJ_FUNCTION:"getImage" },
- *            foo_image2: { HEADER:"Foo image2", DISPLAY:1, HTML_TYPE:"image",   OBJ_FUNCTION:"getImage" },
- *            foo_image3: { HEADER:"Foo image3", DISPLAY:1, HTML_TYPE:"image",   OBJ_IMAGE:   "img/shadow1.jpg" },
- *            foo_desc:   { HEADER:"Description",DISPLAY:1, HTML_TYPE:"textarea" },
- *            foo_perm:   { HEADER:"Permission", DISPLAY:1, HTML_TYPE:"select",  OBJ_SELECT:   {0:"Public",1:"Private",2:"Group"} },
- *            foo_place:  { HEADER:"Place",      DISPLAY:1, HTML_TYPE:"select",  OBJ_SELECT:   "getPlaces" },
- *            foo_status: { HEADER:"Status",     DISPLAY:1, HTML_TYPE:"select",  OBJ_FUNCTION: "getStatus" },
+ *            foo_id:     { HEADER:"Foo id",     DISPLAY:0, TYPE:"label" },
+ *            foo_name:   { HEADER:"Foo name",   DISPLAY:1, TYPE:"text" },
+ *            foo_image1: { HEADER:"Foo image1", DISPLAY:1, TYPE:"function",FUNCTION:"getImage" },
+ *            foo_image2: { HEADER:"Foo image2", DISPLAY:1, TYPE:"image",   FUNCTION:"getImage" },
+ *            foo_image3: { HEADER:"Foo image3", DISPLAY:1, TYPE:"image",   IMAGE:   "img/shadow1.jpg" },
+ *            foo_desc:   { HEADER:"Description",DISPLAY:1, TYPE:"textarea" },
+ *            foo_perm:   { HEADER:"Permission", DISPLAY:1, TYPE:"select",  SELECT:   {0:"Public",1:"Private",2:"Group"} },
+ *            foo_place:  { HEADER:"Place",      DISPLAY:1, TYPE:"select",  SELECT:   "getPlaces" },
+ *            foo_status: { HEADER:"Status",     DISPLAY:1, TYPE:"select",  FUNCTION: "getStatus" },
  *          },
  *          list: {
- *            foo_id:     { HEADER:"Foo id",     DISPLAY:0, HTML_TYPE:"label" },
- *            foo_name:   { HEADER:"Foo name",   DISPLAY:1, HTML_TYPE:"text" },
+ *            foo_id:     { HEADER:"Foo id",     DISPLAY:0, TYPE:"label" },
+ *            foo_name:   { HEADER:"Foo name",   DISPLAY:1, TYPE:"text" },
  *          }
  *        },
  *      };
@@ -757,28 +757,28 @@
             this.filters = {
               task: {
                 item: {
-                  task_id:          { HEADER:"Task id",      DISPLAY:0, HTML_TYPE:"label"},
-                  task_owner:       { HEADER:"Owner:",       DISPLAY:1, HTML_TYPE:"link"},
-                  task_name:        { HEADER:"Task name:",   DISPLAY:1, HTML_TYPE:"link"},
-                  task_description: { HEADER:"Description:", DISPLAY:1, HTML_TYPE:"textarea"},
-                  task_date_start:  { HEADER:"Start date:",  DISPLAY:1, HTML_TYPE:"date"},
-                  task_date_end:    { HEADER:"End date:",    DISPLAY:1, HTML_TYPE:"date"},
-                  task_status:      { HEADER:"Status:",      DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT:{0:"Not started",1:"In progress",2:"Completed"}},
+                  task_id:          { HEADER:"Task id",      DISPLAY:0, TYPE:"label"},
+                  task_owner:       { HEADER:"Owner:",       DISPLAY:1, TYPE:"link"},
+                  task_name:        { HEADER:"Task name:",   DISPLAY:1, TYPE:"link"},
+                  task_description: { HEADER:"Description:", DISPLAY:1, TYPE:"textarea"},
+                  task_date_start:  { HEADER:"Start date:",  DISPLAY:1, TYPE:"date"},
+                  task_date_end:    { HEADER:"End date:",    DISPLAY:1, TYPE:"date"},
+                  task_status:      { HEADER:"Status:",      DISPLAY:1, TYPE:"select", SELECT:{0:"Not started",1:"In progress",2:"Completed"}},
                 },
                 list: {
-                  task_id:          { HEADER:"Task id",      DISPLAY:0, HTML_TYPE:"label"},
-                  task_owner:       { HEADER:"Owner",        DISPLAY:1, HTML_TYPE:"link"},
-                  task_name:        { HEADER:"Task name",    DISPLAY:1, HTML_TYPE:"link"},
-                  task_date_start:  { HEADER:"Start date",   DISPLAY:1, HTML_TYPE:"date"},
-                  task_status:      { HEADER:"Status",       DISPLAY:1, HTML_TYPE:"select", OBJ_SELECT:{0:"Not started",1:"In progress",2:"Completed"}},
+                  task_id:          { HEADER:"Task id",      DISPLAY:0, TYPE:"label"},
+                  task_owner:       { HEADER:"Owner",        DISPLAY:1, TYPE:"link"},
+                  task_name:        { HEADER:"Task name",    DISPLAY:1, TYPE:"link"},
+                  task_date_start:  { HEADER:"Start date",   DISPLAY:1, TYPE:"date"},
+                  task_status:      { HEADER:"Status",       DISPLAY:1, TYPE:"select", SELECT:{0:"Not started",1:"In progress",2:"Completed"}},
                 },
                 head: {
-                  task_id:          { HEADER:"Task id",      DISPLAY:0, HTML_TYPE:"label"},
-                  task_name:        { HEADER:"Task name",    DISPLAY:1, HTML_TYPE:"link"},
+                  task_id:          { HEADER:"Task id",      DISPLAY:0, TYPE:"label"},
+                  task_name:        { HEADER:"Task name",    DISPLAY:1, TYPE:"link"},
                 },
                 select: {
-                  task_id:          { HEADER:"Task id",      DISPLAY:0, HTML_TYPE:"label"},
-                  task_name:        { HEADER:"Task name",    DISPLAY:1, HTML_TYPE:"label"},
+                  task_id:          { HEADER:"Task id",      DISPLAY:0, TYPE:"label"},
+                  task_name:        { HEADER:"Task name",    DISPLAY:1, TYPE:"label"},
                 },
               },
             };
