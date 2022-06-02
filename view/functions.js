@@ -67,10 +67,6 @@ var doUploadFile = function (url,file,uid,local_fname)
 }; // doUploadFile
 
 //
-// Simple modal dialog
-//
-
-//
 // Autocomplete
 //
 function w3_autocomplete(parentId,type,arr,onSelect,context)
@@ -162,6 +158,9 @@ document.addEventListener("click",
   });
 }
 
+//
+// Simple modal dialog
+//
 function w3_modaldialog(options)
 {
   if (!options) {
@@ -198,7 +197,7 @@ function w3_modaldialog(options)
             "<div class='w3-modal-content' style='width:"+width+";border:1px solid #555;overflow-x:auto;'>"+
             // Header
             "<header class='w3-container'>"+
-            "<div class='w3-modaldialog-header' style='font-weight:bold;background:#eeeeee;padding-top:.5em;'>"+heading+"&nbsp;"+
+            "<div class='w3-modaldialog-header' style='font-weight:bold;background:#eeeeee;padding-left:0.4em;padding-top:.5em;'>"+heading+"&nbsp;"+
             "<span onclick='$(\"#"+dia_id+"\").remove()' class='w3-button w3-display-topright'>&times;</span>"+
             "</div>"+
             "</header>"+
@@ -234,4 +233,16 @@ function w3_modaldialog_close(options)
   let dia_id = "moddia_"+parentId+"_"+elementId;
   $("#"+dia_id).remove();
 } // w3_modaldialog_close
+
+function w3_modaldialog_resize(options)
+{
+  let parentId  = options.parentId,
+      elementId = options.elementId;
+  let dia_id = "moddia_"+parentId+"_"+elementId;
+  if (options.width)
+    $("#"+dia_id).css("width", options.width);
+  if (options.height)
+    $("#"+dia_id).css("height",options.height);
+} // w3_modaldialog_resize
+
 //@ sourceURL=functions.js
