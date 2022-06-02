@@ -113,7 +113,7 @@ $.widget("any.anyView", {
     showButtonLabels:      false,
     onEnterCallDatabase:   true,
     onEnterInsertNew:      true, // Note: Only used for lists, ignored for items
-    onEnterMoveFocus:      true, // Will me overridden by onEnterCallDatabase==true TODO! Make it work for lists
+    onEnterMoveFocus:      true, // Will be overridden by onEnterCallDatabase==true TODO! Make it work for lists
     onEscRemoveEmpty:      true,
     onFocusoutRemoveEmpty: true,
   //onUpdateEndEdit:       true, // TODO! NOT IMPLEMENTED
@@ -2246,6 +2246,7 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
     plugins:    this.model.plugins,
     select:     this.model.select,
     unselect:   this.model.unselect,
+    last_term:  this.model.last_term,
   };
 }; // getCreateModelOptions
 
@@ -2720,6 +2721,36 @@ $.any.anyView.prototype._fileViewClicked = function (event)
   }
 }; // _fileViewClicked
 
+/************ The following get methods are not used yet ************/
+/*
+$.any.anyView.prototype.getHttpStr = function (nameid,val,type,group_id,id)
+{
+  if (edit) {
+    return this.getTextStr(type,kind,id,val,edit);
+  }
+  else {
+    let id_str  = "" + (Number.isInteger(parseInt(id))       ? parseInt(id)       : id);
+    let gid_str = "" + (Number.isInteger(parseInt(group_id)) ? parseInt(group_id) : group_id);
+    val = val.replace("https://","");
+    val = val.replace("http://","");
+    let it_id = this.id_base+"_link_"+filterKey+"_"+gid_str+"_"+id_str;
+    let protocol = filterVal.TYPE;
+    val = "<div id='"+it_id+"' class='pointer underline'><a class='td_list_link' href='"+protocol+"://"+val+"' target='_blank'>"+val+"</a></div>";
+  }
+};
+
+$.any.anyView.prototype.getTokenList = function (nameid,val,type,group_id,id)
+{
+  return "<input id='"+nameid+"' name='"+nameid+"' class='tokenList' type='text' value='"+val+"'/>";
+};
+
+$.any.anyView.prototype.getTextspanStr = function (nameid,val,type,group_id,id)
+{
+  return "<span class='itemInput' value='"+val+"'>"+val+"</span>"+
+         "<input id='"+nameid+"' name='"+nameid+"' type='hidden' value='"+val+"'/>";
+};
+*/
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -2842,8 +2873,11 @@ $.any.anyView.prototype._processSearch = function (event)
   if (event.keyCode == 13) {
     let search_opt = event.data;
     search_opt.term = $("#"+search_opt.inp_id).val();
-    search_opt.success = this.searchSuccess;
-    search_opt.context = this;
+    search_opt.success   = this.searchSuccess;
+    search_opt.context   = this;
+    search_opt.grouping  = this.options.grouping;
+    search_opt.order     = this.options.sortBy;
+    search_opt.direction = this.options.sortDirection;
     this.model.dbSearch(search_opt);
   }
 }; // _processSearch
@@ -2868,6 +2902,8 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
                          row_id_str: options.row_id_str, // TODO!
                       });
     if (search_view) {
+      if (search_view.model && self.model)
+        search_view.model.last_term = self.model.last_term; // If paginating and we need to call server, repeat the last seach term
       search_view.id_base = new_id_base;
       search_view.options.link_options    = context.options; // Remember options for link click
       search_view.options.grouping        = null;
@@ -2877,6 +2913,7 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
       search_view.options.showTableHeader = true;
       search_view.options.showTableFooter = true;
       search_view.options.showSearcher    = false;
+      search_view.options.indent_level    = 0;
       search_view.options.itemLinkClicked = search_view.searchLinkClicked;
       let par_view_id = self.id_base+"_"+self.model.type+"_head_0_data";
       w3_modaldialog({
@@ -2884,7 +2921,7 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
         elementId:   "",
         heading:     list_type+" search results", // TODO! i18n
         contents:    search_view.element,
-        width:       "30em", // TODO! css
+        //width:       "30em", // TODO! css
         ok:          true,
         cancel:      false,
         okFunction:  self.searchSuccessOk,
@@ -2945,6 +2982,8 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
   if (this.model.mode == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
     this.options.ref_rec = 0;
     mod_opt.from -= 1; // from is 0-based on server
+    if (this.model.last_term && this.model.last_term != "")
+      mod_opt.term = this.model.last_term;
     this.model.dbSearch(mod_opt);
   }
   else {
