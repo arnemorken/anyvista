@@ -44,13 +44,14 @@
 }
 
 .w3-modal-content {
-  padding:  .4em;
 }
 
 .w3-modaldialog-header {
-  font-size:        1.3em;
-  text-decoration:  underline;
-  height:           2em;
+  font-size:  1.3em;
+  height:     1.4em;
+}
+.w3-modaldialog-header::first-letter {
+  text-transform: capitalize;
 }
 
 .w3-button {
