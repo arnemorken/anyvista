@@ -188,6 +188,13 @@ var anyModel = function (options)
   this.search_term = "";
 
   /**
+  * @property {String} last_term
+  * @default ""
+  * @description The last string that was search for. Optional.
+  */
+  this.last_term = "";
+
+  /**
   * @property {Boolean} fields
   * @default true
   * @description An array of strings to be sent to the server, indicating which columns of
@@ -298,6 +305,7 @@ anyModel.prototype._dataInitDefault = function ()
   this.mode             = "local";
   this.search           = false;
   this.search_term      = "";
+  this.last_term        = "";
   this.auto_search_init = true;
   this.auto_callback    = false;
   this.message          = "";
@@ -335,6 +343,7 @@ anyModel.prototype._dataInitSelect = function ()
  *        {String}   mode:         "local" or "remote". Optional.
  *        {boolean}  search:       Whether to call the search method. Optional.
  *        {String}   search_term:  The string to search for. Optional.
+ *        {String}   last_term:    The string to search for. Optional.
  *        {Object}   permission:   Permissions. Optional.
  *        {String}   message:      Messages. Optional.
  *        {String}   error:        Errors. Optional.
@@ -375,6 +384,7 @@ anyModel.prototype.dataInit = function (options)
     if (options.mode)                                  { this.mode             = options.mode; }
     if (options.search)                                { this.search           = options.search; }
     if (options.search_term)                           { this.search_term      = options.search_term; }
+    if (options.last_term)                             { this.last_term        = options.last_term; }
     if (options.fields)                                { this.fields           = options.fields; }
     if (options.auto_search_init)                      { this.auto_search_init = options.auto_search_init; }
     if (options.auto_callback)                         { this.auto_callback    = options.auto_callback; }
@@ -1313,6 +1323,8 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += options.order                        ? "&order="+options.order : "";
   param_str += options.direction                    ? "&dir="  +options.direction : "";
   param_str += options.term                         ? "&term=" +options.term : "";
+  if (options.term)
+    this.last_term = options.term;
   return this._getDataSourceName() + param_str;
 }; // dbSearchGetURL
 
