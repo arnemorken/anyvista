@@ -65,9 +65,9 @@ let my_model = new anyModel({ data: my_data });
 let my_filters = {
   foo: {
     list: {
-      foo_id  : { HEADER:"Id",          DISPLAY:0, HTML_TYPE:"label" },
-      foo_name: { HEADER:"Message",     DISPLAY:1, HTML_TYPE:"label" },
-      foo_desc: { HEADER:"Description", DISPLAY:1, HTML_TYPE:"text" },
+      foo_id  : { HEADER:"Id",          DISPLAY:0, TYPE:"label" },
+      foo_name: { HEADER:"Message",     DISPLAY:1, TYPE:"label" },
+      foo_desc: { HEADER:"Description", DISPLAY:1, TYPE:"text" },
     },
   },
 };
