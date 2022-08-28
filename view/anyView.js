@@ -2242,6 +2242,7 @@ $.any.anyView.prototype.createView = function (params)
   }
   catch (err) {
     console.error("Couldn't create view "+v_str+": "+err);
+    return null;
   }
   return view;
 }; // createView
