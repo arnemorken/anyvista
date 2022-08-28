@@ -1177,7 +1177,7 @@ $.any.anyView.prototype.refreshTfoot = function (params)
 //
 $.any.anyView.prototype.refreshExtraFoot = function (params)
 {
-  if (!params || !params.parent)
+  if (!params || !params.parent || (!this.options.showPaginator && !this.options.showSearcher))
     return null;
 
   let extra_foot = params.parent;
@@ -1203,10 +1203,7 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
     // Initialize paging
     let pager = extra_foot.data("pager");
     if (!pager) {
-      if (!extra_foot.anyPaginator) {
-        console.warn("anyPaginator missing, cannot paginate data. ");
-      }
-      else {
+      if (extra_foot.anyPaginator) {
         pager = extra_foot.anyPaginator({
                    itemsPerPage: this.options.itemsPerPage,
                    onClick:      this.pageNumClicked,
