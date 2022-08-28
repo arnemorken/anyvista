@@ -208,6 +208,10 @@ $.widget("any.anyView", {
     return this.refresh();
   },
 
+  empty: function() {
+    return this.empty();
+  },
+
   // Destructor
   _destroy: function() {
     this.element.removeClass("any-data-view");
@@ -379,6 +383,15 @@ $.any.anyView.prototype.onModelChange = function (model)
 ///////////////////////////////////////////////////////////////////////////////
 // Refreshments
 ///////////////////////////////////////////////////////////////////////////////
+
+// Calls the empty method of the (jQuery) element
+$.any.anyView.prototype.empty = function (params)
+{
+  if (this.element)
+    this.element.empty();
+  else
+    $("#"+this.options.id).empty();
+}; // empty
 
 /**
  * @method refresh
