@@ -24,7 +24,7 @@ jsFiddle examples coming soon.
 
 The library is currently in the last stages of development. Find it at Github: https://github.com/arnemorken/anyvista/.
 
-**First beta release planned for September 2022.**
+**First beta release planned for June 2022.**
 
 # Usage
 
