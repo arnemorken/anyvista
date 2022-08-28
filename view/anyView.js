@@ -1104,13 +1104,16 @@ $.any.anyView.prototype.refreshThead = function (params)
         tr.append(th);
         if (this.options.isSortable) {
           th.css("cursor","pointer");
+        let fun = this.option("sortFunction")
+                  ? this.option("sortFunction")
+                  : this.sortTable;
           let th_opt = { table_id: this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_table",
                          filter_id:  filter_id,
                          filter_key: filter_key,
                          type:       type,
                          group_id:   this.group_id,
                        };
-          th.off("click").on("click",th_opt,$.proxy(this.sortTable,this));
+          th.off("click").on("click",th_opt,$.proxy(fun,this));
         }
         else
           th.css("cursor","default");
