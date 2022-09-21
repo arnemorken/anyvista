@@ -168,8 +168,11 @@ $.widget("any.anyView", {
     if (typeof i18n === "undefined")
       throw ANY_LOCALE_NOT_FOUND;
 
-    if (this.options.id && $("#"+this.options.id).length)
-      this.element = $("#"+this.options.id);
+    if (this.options.id)
+      if ($("#"+this.options.id).length)
+        this.element = $("#"+this.options.id);
+      else
+        this.element.attr("id",this.options.id);
 
     if (!this.element || !this.element.length)
       throw i18n.error.VIEW_AREA_MISSING;
