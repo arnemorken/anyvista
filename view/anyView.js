@@ -946,7 +946,7 @@ $.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,co
   let data_div = $("#"+div_id);
   if (!data_div.length && haveData) {
     // Create new data container if we have data
-    let class_id = "any-data any-"+kind+"-data any-data-"+this.data_level;
+    let class_id = "any-data any-"+kind+"-data any-data-"+this.data_level+" any-data-view";
     let pl       = this.options.indent_tables ? this.options.indent_level * this.options.indent_amount : 0;
     let pl_str   = pl > 0 ? "style='margin-left:"+pl+"px;'" : "";
     data_div     = $("<div id='"+div_id+"' class='"+class_id+"' "+pl_str+"></div>");
