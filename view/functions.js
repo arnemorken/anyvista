@@ -79,7 +79,7 @@ function w3_autocomplete(parentId,type,arr,onSelect,context)
   // the autocomplete function takes two arguments,
   // the text field element and an array of possible
   // autocompleted values
-  var currentFocus = -1;
+  let currentFocus = -1;
   // execute a function when someone writes in the text field
   inp.addEventListener("input", function(e) {
       closeAllLists(); // close any already open lists of autocompleted values
@@ -99,8 +99,9 @@ function w3_autocomplete(parentId,type,arr,onSelect,context)
           b.innerHTML += "<input type='hidden' id='"+arr[i].value+"' value='" + arr[i].label + "'>"; // input field that will hold the current array items value
           // execute a function when someone clicks on the item value (div element)
           b.addEventListener("click", function(e) {
-              var name = this.getElementsByTagName("input")[0].value; // insert the value for the autocomplete text field
-              var id   = this.getElementsByTagName("input")[0].id;
+              let inp_tags = this.getElementsByTagName("input");
+              var name = inp_tags[0].value; // insert the value for the autocomplete text field
+              var id   = inp_tags[0].id;
               inp.value = name;
               closeAllLists(); // close the list of autocompleted values, (or any other open lists of autocompleted values
               onSelect.call(context,type,id,name,parentId);
@@ -117,15 +118,19 @@ function w3_autocomplete(parentId,type,arr,onSelect,context)
         currentFocus++; // increase the currentFocus variable
         addActive(x);   // make the current item more visible
       }
-      else if (e.keyCode == 38) { // Arrow up
+      else
+      if (e.keyCode == 38) { // Arrow up
         currentFocus--; // decrease the currentFocus variable
         addActive(x);   // make the current item more visible
       }
-      else if (e.keyCode == 13) { // Enter
+      else
+      if (e.keyCode == 13) { // Enter
         e.preventDefault(); // prevent the form from being submitted
         if (currentFocus > -1) {
-          if (x) x[currentFocus].click(); // simulate a click on the "active" item
+          if (x)
+            x[currentFocus].click(); // simulate a click on the "active" item
         }
+        currentFocus = -1; // reset focus
       }
   });
   // a function to classify an item as "active"
