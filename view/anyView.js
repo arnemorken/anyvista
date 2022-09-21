@@ -24,6 +24,7 @@
  *        {Object}  model:                 The model with data to be displayed. Default: null.
  *        {Object}  filters:               The filters define how the data will be displayed. Default: null.
  *        {string}  id:                    The jQuery id of a container element in which to display the view. Default: null.
+ *        {boolean} isCreatable:
  *        {boolean} isEditable:            Icons for edit, update and cancel will be displayed. Ignored if isSelectable is set. Default: false.
  *        {boolean} isRemovable:           An icon for removing will be displayed. Ignored if isSelectable is set. Default: false.
  *        {boolean} isDeletable:           An icon for deleting will be displayed. Ignored if isSelectable is set. Default: false.
@@ -43,15 +44,22 @@
  *        {boolean} showServerErrors:      If true, errors from a server will be shown directly. Default: false.
  *        {boolean} showServerMessages:    If true, messages from a server will be shown directly. Default: true.
  *        {boolean} showEmptyRows:         Shows empty rows in non-edit mode. Default: false.
- *        {boolean} showSelectAll:         If isSelectable is true, a button for selecting all rows will be shown. Default: false.
+ *        {boolean} showButtonNew:         If isCreatable is true, a button for creating a new item may be shown. Default: false.
+ *        {boolean} showButtonSelectAll:   If isSelectable is true, a button for selecting all rows may be shown in list table headers. Default: false.
  *        {integer} showButtonAdd:         If isEditable is true, a button for adding new rows may be shown in list table headers. Possible values:
- *                                         0: Do not show an add button. 1: Show button in first column. 2: Show button in last column. Default: 0.
- *        {boolean} showButtonEdit:        If isEditable is true, will show an edit button in front of each list table row. Default: true.
- *        {boolean} showButtonUpdate:      If isEditable is true, will show an update button in front of each list table row in edit-mode. Default: true.
- *        {boolean} showButtonRemove:      If isEditable is true, will show a remove button after each list table row. Default: false.
- *        {boolean} showButtonDelete:      If isEditable is true, will show a delete button after each list table row in edit-mode. Default: false.
- *        {boolean} showButtonCancel:      If isEditable is true, will show a cancel button after each list table row in edit-mode. Default: true.
- *        {boolean} showButtonNew:         If isEditable is true, will show a button for adding a new item. Default: false.
+ *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 0.
+ *        {boolean} showButtonRemove:      If isEditable is true, a remove button may be shown. Possible values:
+ *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
+ *        {boolean} showButtonEdit:        If isEditable is true, an edit button may be shown. Possible values:
+ *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
+ *        {boolean} showButtonUpdate:      If isEditable is true, an update button may be shown in edit-mode. Possible values:
+ *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
+ *        {boolean} showButtonDelete:      If isEditable is true, a delete button may be shown in edit-mode. Possible values:
+ *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
+ *        {boolean} showButtonCancel:      If isEditable is true, a cancel button may be shown in edit-mode. Possible values:
+ *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
+ *        {boolean} showButtonSelect:      If isSelectable is true, a button for selecting a row may be shown. Possible values:
+ *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
  *        {boolean} showButtonAddLink:     Will show a button for adding links to an item. Default: true.
  *        {boolean} showButtonLabels:      Will show labels for buttons on the button panel. Default: false.
  *        {boolean} onEnterCallDatabase:   Pressing enter will update the database with the value of the row being edited. Default: true.
@@ -84,6 +92,7 @@ $.widget("any.anyView", {
     model:                 null,
     filters:               null,
     id:                    null,
+  //isCreatable:           true, // TODO! NOT IMPLEMENTED
     isEditable:            true,
     isRemovable:           true,
     isDeletable:           true,
@@ -101,14 +110,15 @@ $.widget("any.anyView", {
     showServerErrors:      false,
   //showServerMessages:    true,  // TODO! NOT IMPLEMENTED
     showEmptyRows:         false,
-  //showSelectAll:         false, // TODO! NOT IMPLEMENTED
-    showButtonAdd:         1,
-    showButtonEdit:        true,
-    showButtonUpdate:      true,
-    showButtonRemove:      true,
-    showButtonDelete:      true,
-    showButtonCancel:      true,
     showButtonNew:         true,
+  //showButtonSelectAll:   false, // TODO! NOT IMPLEMENTED
+    showButtonAdd:         1,
+    showButtonRemove:      2,
+    showButtonEdit:        1,
+    showButtonUpdate:      1,
+    showButtonDelete:      2,
+    showButtonCancel:      2,
+    showButtonSelect:      1,
     showButtonAddLink:     true,
     showButtonLabels:      false,
     onEnterCallDatabase:   true,
@@ -1332,18 +1342,18 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     edit:       edit,
     con_id_str: con_id_str,
     row_id_str: row_id_str,
-    isEditable: true,
     pdata:      pdata,
     pid:        pid,
   };
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
-      (this.options.isEditable && (this.options.showButtonEdit || this.options.showButtonUpdate))) {
+      this.options.isEditable || this.options.isRemovable || this.options.isDeletable) {
     this.refreshTableDataFirstCell(cell_opt);
   }
   this.refreshListTableDataCells(cell_opt);
 
   if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
-      (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonDelete || this.options.showButtonCancel))) {
+      this.options.isEditable ||
+      this.options.isRemovable) {
     this.refreshTableDataLastCell(cell_opt);
   }
   // Clean up
@@ -1504,7 +1514,6 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
           edit:       edit,
           con_id_str: con_id_str,
           row_id_str: row_id_str,
-          isEditable: true,
           pdata:      pdata,
           pid:        pid,
           // The options below are only used by refreshItemTableDataCells
@@ -1514,7 +1523,7 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
           n:          n,
         };
         if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
-            (this.options.isEditable && (this.options.showButtonEdit || this.options.showButtonUpdate))) {
+            this.options.isEditable) {
           if (n == 1)
             this.refreshTableDataFirstCell(cell_opt);
           else
@@ -1522,7 +1531,8 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
         }
         this.refreshItemTableDataCells(cell_opt);
         if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
-            (this.options.isEditable && (this.options.showButtonRemove || this.options.showButtonDelete || this.options.showButtonCancel))) {
+            this.options.isEditable ||
+            this.options.isRemovable) {
           if (n == 1)
             this.refreshTableDataLastCell(cell_opt);
           else
@@ -1578,69 +1588,60 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
   let edit       = params.edit;
   let con_id_str = params.con_id_str;
   let row_id_str = params.row_id_str;
-  let isEditable = params.isEditable;
   let pdata      = params.pdata;
   let pid        = params.pid;
+
+  if (this.options.isEditable && !(this.options.showButtonRemove==1 || this.options.showButtonDelete==1 || this.options.showButtonCancel==1 || this.options.showButtonEdit==1 || this.options.showButtonUpdate==1))
+    return;
+  if (this.options.isSelectable && !(this.options.showButtonSelect==1 || kind == "list" || kind == "select"))
+    return;
 
   let td_id  = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_edit"; // First tool cell
   if ($("#"+td_id).length)
     $("#"+td_id).remove();
   let td = $("<td id='"+td_id+"' class='any-td any-td-first'></td>");
   tr.append(td);
-  if (this.options.isSelectable && (kind == "list" || kind == "select")) {
+
+  let first_opt = {
+    parent:     td,
+    data:       data,
+    id:         id,
+    type:       type,
+    kind:       kind,
+    con_id_str: con_id_str,
+    row_id_str: row_id_str,
+    filter:     filter,
+    pdata:      pdata,
+    pid:        pid,
+  };
+  if (this.options.showButtonSelect==1 && this.options.isSelectable && (kind == "list" || kind == "select")) {
     let checked = this.model.select.has(parseInt(id));
-    let sel_opt = {
-      parent:     td,
-      data:       data,
-      id:         id,
-      type:       type,
-      kind:       kind,
-      con_id_str: con_id_str,
-      row_id_str: row_id_str,
-      filter:     filter,
-      isEditable: isEditable,
-      checked:    checked,
-      pdata:      pdata,
-      pid:        pid,
-    };
-    this.refreshSelectButton(sel_opt);
+    first_opt.checked = checked;
+    this.refreshSelectButton(first_opt);
   }
-  else
-  if (this.options.isEditable || edit || isEditable) {
-    if (this.options.showButtonEdit) {
-      let edt_opt = {
-        parent:     td,
-        data:       data,
-        id:         id,
-        type:       type,
-        kind:       kind,
-        con_id_str: con_id_str,
-        row_id_str: row_id_str,
-        filter:     filter,
-        isEditable: isEditable,
-        edit:       edit,
-        pdata:      pdata,
-        pid:        pid,
-      };
-      this.refreshEditButton(edt_opt);
+  else {
+    first_opt.edit = edit;
+    if (this.options.showButtonEdit==1 && (this.options.isEditable && !edit)) {
+      if (this.options.showButtonEdit)
+        this.refreshEditButton(first_opt);
     }
-    if (this.options.showButtonUpdate) {
-      let upd_opt = {
-        parent:     td,
-        indata:     data,
-        id:         id,
-        type:       type,
-        kind:       kind,
-        filter:     filter,
-        con_id_str: con_id_str,
-        row_id_str: row_id_str,
-        is_new:     data && data[id] ? data[id].is_new : false,
-        isEditable: isEditable,
-        edit:       edit,
-        pdata:      pdata,
-        pid:        pid,
-      };
-      this.refreshUpdateButton(upd_opt);
+    if (this.options.showButtonUpdate==1 && (this.options.isEditable && edit)) {
+      if (this.options.showButtonUpdate) {
+        first_opt.is_new = data && data[id] ? data[id].is_new : false;
+        first_opt.indata = data;
+        first_opt.data    = null;
+        this.refreshUpdateButton(first_opt);
+      }
+    }
+    if (this.options.isEditable || edit ||
+        (this.options.isRemovable && this.options.showButtonRemove==1) ||
+        (this.options.isDeletable && this.options.showButtonDelete==1)) {
+      if (this.options.showButtonRemove==1 && this.options.isRemovable && id && kind == "list")
+        this.refreshRemoveButton(first_opt);
+      if (this.options.showButtonDelete==1 && this.options.isDeletable && id)
+        this.refreshDeleteButton(first_opt);
+      if (this.options.showButtonCancel==1 && edit)
+        this.refreshCancelButton(first_opt);
     }
   }
 }; // refreshTableDataFirstCell
@@ -1656,9 +1657,13 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
   let edit       = params.edit;
   let con_id_str = params.con_id_str;
   let row_id_str = params.row_id_str;
-  let isEditable = params.isEditable;
   let pdata      = params.pdata;
   let pid        = params.pid;
+
+  if (this.options.isEditable && !(this.options.showButtonRemove==2 || this.options.showButtonDelete==2 || this.options.showButtonCancel==2 || this.options.showButtonEdit==2 || this.options.showButtonUpdate==2))
+    return;
+  if (this.options.isSelectable && !(this.options.showButtonSelect==2 || kind == "list" || kind == "select"))
+    return;
 
   let td_id  = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_unedit"; // Last tool cell
   if ($("#"+td_id).length)
@@ -1667,29 +1672,29 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
   tr.append(td);
   if (this.options.isSelectable && (kind == "list" || kind == "select")) {
   }
-  else
-  if (this.options.isEditable || edit || isEditable) {
-    let last_opt = {
-      parent:     td,
-      data:       data,
-      id:         id,
-      type:       type,
-      kind:       kind,
-      con_id_str: con_id_str,
-      row_id_str: row_id_str,
-      filter:     filter,
-      isEditable: true,
-      edit:       edit,
-      pdata:      pdata,
-      pid:        pid,
-    };
-    last_opt.isEditable = isEditable;
-    if (this.options.showButtonRemove && this.options.isRemovable && id && kind == "list")
-      this.refreshRemoveButton(last_opt);
-    if (this.options.showButtonDelete && this.options.isDeletable && id)
-      this.refreshDeleteButton(last_opt);
-    if (this.options.showButtonCancel && isEditable && edit)
-      this.refreshCancelButton(last_opt);
+  else {
+    if (this.options.isEditable || edit) {
+      let last_opt = {
+        parent:     td,
+        data:       data,
+        id:         id,
+        type:       type,
+        kind:       kind,
+        con_id_str: con_id_str,
+        row_id_str: row_id_str,
+        filter:     filter,
+        isEditable: true,
+        edit:       edit,
+        pdata:      pdata,
+        pid:        pid,
+      };
+      if (this.options.showButtonRemove==2 && this.options.isRemovable && id && kind == "list")
+        this.refreshRemoveButton(last_opt);
+      if (this.options.showButtonDelete==2 && this.options.isDeletable && id)
+        this.refreshDeleteButton(last_opt);
+      if (this.options.showButtonCancel==2 && edit)
+        this.refreshCancelButton(last_opt);
+    }
   }
 }; // refreshTableDataLastCell
 
@@ -1745,7 +1750,12 @@ $.any.anyView.prototype.refreshCloseItemButton = function (params)
   let fun = this.option("localCloseItem")
             ? this.option("localCloseItem")
             : this.closeItem;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
+  let con = this.option("closeContext")
+            ? this.option("closeContext")
+            : this.option("context")
+              ? this.option("context")
+              : this;
+  btn.off("click").on("click",opt,$.proxy(fun,con));
   if (parent && parent.length)
     parent.prev().prepend(btn);
   this.options.item_opening = false;
@@ -1770,7 +1780,12 @@ $.any.anyView.prototype.refreshAddButton = function (opt)
   let fun = this.option("localAdd")
             ? this.option("localAdd")
             : this.addListEntry;
-  btn.off("click").on("click", opt, $.proxy(fun,this));
+  let con = this.option("addContext")
+            ? this.option("addContext")
+            : this.option("context")
+              ? this.option("context")
+              : this;
+  btn.off("click").on("click", opt, $.proxy(fun,con));
   if (parent && parent.length)
     parent.append(btn);
   return btn;
@@ -1799,7 +1814,12 @@ $.any.anyView.prototype.refreshSelectButton = function (opt)
   let fun = this.option("localSelect")
             ? this.option("localSelect")
             : this._toggleChecked;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
+  let con = this.option("selectContext")
+            ? this.option("selectContext")
+            : this.option("context")
+              ? this.option("context")
+              : this;
+  btn.off("click").on("click",opt,$.proxy(fun,con));
   return btn;
 }; // refreshSelectButton
 
@@ -1826,7 +1846,12 @@ $.any.anyView.prototype.refreshEditButton = function (opt)
   let fun = this.option("localEdit")
             ? this.option("localEdit")
             : this.toggleEdit;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
+  let con = this.option("editContext")
+            ? this.option("editContext")
+            : this.option("context")
+              ? this.option("context")
+              : this;
+  btn.off("click").on("click",opt,$.proxy(fun,con));
   return btn;
 }; // refreshEditButton
 
@@ -1853,7 +1878,12 @@ $.any.anyView.prototype.refreshUpdateButton = function (opt)
   let fun = this.option("localUpdate")
             ? this.option("localUpdate")
             : this.dbUpdate;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
+  let con = this.option("updateContext")
+            ? this.option("updateContext")
+            : this.option("context")
+              ? this.option("context")
+              : this;
+  btn.off("click").on("click",opt,$.proxy(fun,con));
   return btn;
 }; // refreshUpdateButton
 
@@ -1875,7 +1905,12 @@ $.any.anyView.prototype.refreshRemoveButton = function (opt)
   let fun = this.option("localRemove")
             ? this.option("localRemove")
             : this.dbRemoveDialog;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
+  let con = this.option("removeContext")
+            ? this.option("removeContext")
+            : this.option("context")
+              ? this.option("context")
+              : this;
+  btn.off("click").on("click",opt,$.proxy(fun,con));
   if (parent && parent.length)
     parent.append(btn);
   if (opt.edit)
@@ -1901,7 +1936,12 @@ $.any.anyView.prototype.refreshDeleteButton = function (opt)
   let fun = this.option("localDelete")
             ? this.option("localDelete")
             : this.dbDeleteDialog;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
+  let con = this.option("deleteContext")
+            ? this.option("deleteContext")
+            : this.option("context")
+              ? this.option("context")
+              : this;
+  btn.off("click").on("click",opt,$.proxy(fun,con));
   if (parent && parent.length)
     parent.append(btn);
   if (!opt.edit)
@@ -1927,7 +1967,12 @@ $.any.anyView.prototype.refreshCancelButton = function (opt)
   let fun = this.option("localCancel")
             ? this.option("localCancel")
             : this.toggleEdit;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
+  let con = this.option("cancelContext")
+            ? this.option("cancelContext")
+            : this.option("context")
+              ? this.option("context")
+              : this;
+  btn.off("click").on("click",opt,$.proxy(fun,con));
   if (parent && parent.length)
     parent.append(btn);
   if (!opt.edit)
@@ -1954,7 +1999,12 @@ $.any.anyView.prototype.refreshNewItemButton = function (opt)
   let fun = this.option("localNew")
             ? this.option("localNew")
             : this.showItem;
-  btn.off("click").on("click",opt,$.proxy(fun,this));
+  let con = this.option("newContext")
+            ? this.option("newContext")
+            : this.option("context")
+              ? this.option("context")
+              : this;
+  btn.off("click").on("click",opt,$.proxy(fun,con));
   if (parent && parent.length)
     parent.append(btn);
   return btn;
@@ -1982,7 +2032,12 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
   let fun = this.option("localShowLinkMenu")
             ? this.option("localShowLinkMenu")
             : this.showLinkMenu;
-  btn.off("click").on("click", opt, $.proxy(fun,this));
+  let con = this.option("menuContext")
+            ? this.option("menuContext")
+            : this.option("context")
+              ? this.option("context")
+              : this;
+  btn.off("click").on("click", opt, $.proxy(fun,con));
   if (parent && parent.length)
     parent.append(btn);
   if (!opt.edit)
@@ -2042,8 +2097,12 @@ $.any.anyView.prototype.refreshLinkButton = function (options,onClickMethod)
   let fun = onClickMethod
             ? onClickMethod
             : this.dbSearchLinks;
-  btn.unbind("click");
-  btn.bind("click", options, $.proxy(fun,this));
+  let con = this.option("menulinkContext")
+            ? this.option("menulinkContext")
+            : this.option("context")
+              ? this.option("context")
+              : this;
+  btn.off("click").on("click", options, $.proxy(fun,con));
   return btn;
 }; // refreshLinkButton
 
@@ -2120,7 +2179,9 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,co
           let inp_elem = $("#"+inp_id);
           if (inp_elem.length) {
             let self = this;
-            let fun = this._uploadClicked;
+            let fun = this.options.localUpload
+                      ? this.options.localUpload
+                      : this._uploadClicked;
             init_opt.elem_id = td_id;
             inp_elem.off("click").on("click", init_opt,
               // Only open file dialog if cell is editable
@@ -2137,7 +2198,9 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,co
           let inp_id = td_id+"_fileview";
           let inp_elem = $("#"+inp_id);
           if (inp_elem.length) {
-            let fun = this._fileViewClicked;
+            let fun = this.options.localFileview
+                      ? this.options.localFileview
+                      : this._fileViewClicked;
             init_opt.elem_id = td_id;
             inp_elem.off("click").on("click", init_opt, $.proxy(fun,this));
           }
@@ -2148,7 +2211,12 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,data,id,type,kind,co
           let fun = this.options.itemLinkClicked
                     ? this.options.itemLinkClicked
                     : this.itemLinkClicked;
-          link_elem.off("click").on("click", init_opt, $.proxy(fun,this));
+          let con = this.option("clickContext")
+                    ? this.option("clickContext")
+                    : this.option("context")
+                      ? this.option("context")
+                      : this;
+          link_elem.off("click").on("click", init_opt, $.proxy(fun,con));
           $("#"+td_id).prop("title", "Open item view"); // TODO i18n
         }
       } // else
@@ -2319,6 +2387,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     isDeletable:      this.options.isDeletable,
     isSelectable:     this.options.isSelectable,
     itemLinkClicked:  this.options.itemLinkClicked,
+    clickContext:     this.options.clickContext,
     preselected:      this.options.isSelectable ? this.options.preselected : null,
   };
 }; // getCreateViewOptions
@@ -2909,7 +2978,7 @@ $.any.anyView.prototype._processSearch = function (event)
   if (event.keyCode == 13) {
     let search_opt = event.data;
     search_opt.term = $("#"+search_opt.inp_id).val();
-    search_opt.success   = this.searchSuccess;
+    search_opt.success   = this.searchSuccess; // TODO! Parameters to searchSuccess
     search_opt.context   = this;
     search_opt.grouping  = this.options.grouping;
     search_opt.order     = this.options.sortBy;
@@ -2921,10 +2990,11 @@ $.any.anyView.prototype._processSearch = function (event)
 $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
-  options.auto_refresh = false;
+  if (options) // TODO!
+    options.auto_refresh = false;
   self.model.dbSearchSuccess(self.model,serverdata,options); // Initialize model without calling refresh
   if (self.model.data) {
-    let list_type   = options.type;
+    let list_type   = options ? options.type : null;
     let new_id_base = self._createIdBase();
     let ll_id       = new_id_base+"_"+list_type+"_search_list";
     let ll_contents = $("<div id='"+ll_id+"'></div>");
@@ -2935,7 +3005,7 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
                          id:         null,
                          type:       list_type,
                          kind:       "list",
-                         row_id_str: options.row_id_str, // TODO!
+                         row_id_str: options ? options.row_id_str : "", // TODO!
                       });
     if (search_view) {
       if (search_view.model && self.model)
@@ -2981,7 +3051,7 @@ $.any.anyView.prototype.searchLinkClicked = function (event)
   this.options.showTableFooter = event.data.options.link_options.showTableFooter;
   this.options.showSearcher    = event.data.options.link_options.showSearcher;
   this.link_options = null;
-  this.itemLinkClicked(event);
+  this.itemLinkClicked(event); // TODO! use method specified in this.options.itemLinkClicked?
 }; // searchLinkClicked
 
 $.any.anyView.prototype.searchSuccessOk = function (opt)
