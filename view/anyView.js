@@ -425,6 +425,9 @@ $.any.anyView.prototype.empty = function (params)
  */
 $.any.anyView.prototype.refresh = function (params)
 {
+  if (!params || !params.dont_reset_rec)
+    this.options.ref_rec = 0; // Reset on every call to refresh, unless specifically told not to do so
+
   let parent     = params && params.parent     ? params.parent        : this.element;
   let data       = params && params.data       ? params.data          : this.model && this.model.data ? this.model.data : null;
   let id         = params && params.id         ? params.id            : "";
@@ -438,16 +441,11 @@ $.any.anyView.prototype.refresh = function (params)
   let from       = params && params.from       ? params.from          : 1;
   let num        = params && params.num        ? params.num           : this.options.itemsPerPage;
 
-  ++this.options.ref_rec;
-  if (this.options.ref_rec > ANY_MAX_REF_REC) {
-    this.options.ref_rec = 0;
-    throw i18n.error.TOO_MUCH_RECURSION;
-  }
   if (!parent)
-    throw i18n.error.VIEW_AREA_MISSING; // Should never happen
+    throw i18n.error.VIEW_AREA_MISSING;
 
   if (!params) {
-    // Top level display of the model, so clear everything
+    // Top level display of the model, so clear everything first
     this._clearBeforeRefresh(parent);
   }
   if (this.must_empty) {
@@ -487,7 +485,9 @@ $.any.anyView.prototype.refresh = function (params)
             continue;
           }
           // Find identifier strings for containers and rows
-          let idx = Number.isInteger(parseInt(idc)) ? parseInt(idc) : idc;
+          let idx = Number.isInteger(parseInt(idc))
+                    ? parseInt(idc)
+                    : idc;
           let new_row_id_str = row_id_str
                                ? row_id_str+"_"+idx
                                : ""+idx;
@@ -521,6 +521,7 @@ $.any.anyView.prototype.refresh = function (params)
               }
               new_con_id_str = row_id_str;
             }
+            // TODO! options.localRemove etc. must be sent as params when creating new view
             view = view.createView({
                       parent:     the_parent,
                       data:       data,
@@ -532,9 +533,9 @@ $.any.anyView.prototype.refresh = function (params)
                    });
           }
           if (view) {
+            // Refresh a header, a single list row or a single item
             ++row_no;
             if (from == -1 || from <= row_no && row_no < from + num) {
-              // Refresh a single list row or a single item
               view.con_id_str = new_con_id_str; // Remember con_id_str for this view, in case missing from params
               view.refreshOne({
                  parent:     the_parent,
@@ -634,7 +635,7 @@ $.any.anyView.prototype.refreshOne = function (params)
   };
 
   // Refresh header
-  let have_data = Object.size(data) > 0;
+  let have_data = Object.size(data[id]) > 0;
   new_params.header_div = this.getOrCreateHeaderContainer(parent,curr_type,curr_kind,con_id_str,have_data,false);
   if (curr_kind == "head" || (data && data.grouping))
     this.refreshHeader(new_params);
@@ -645,8 +646,13 @@ $.any.anyView.prototype.refreshOne = function (params)
   if (curr_kind == "list" || curr_kind == "select" || curr_kind == "item")
     this.refreshData(new_params);
 
-  // If we have subdata, make a recursive call
+  // If the data contains subdata, make a recursive call
   if (data && data[id] && data[id].data) {
+    ++this.options.ref_rec;
+    if (this.options.ref_rec > ANY_MAX_REF_REC) {
+      this.options.ref_rec = 0;
+      throw i18n.error.TOO_MUCH_RECURSION;
+    }
     if ((curr_kind == "list" || curr_kind == "select"))
       ++this.options.indent_level;
     this.refresh({
@@ -660,17 +666,17 @@ $.any.anyView.prototype.refreshOne = function (params)
        pdata:      data,
        pid:        id,
        edit:       edit,
-       is_head:    kind == "head",
+       dont_reset_rec: true,
     });
     if ((curr_kind == "list" || curr_kind == "select"))
       --this.options.indent_level;
   }
   // Clean up
-  if (!new_params.header_div.children().length)
+  if (new_params.header_div && !new_params.header_div.children().length)
     new_params.header_div.remove();
-  if (!new_params.data_div.children().length)
+  if (new_params.data_div && !new_params.data_div.children().length)
     new_params.data_div.remove();
-  if (!new_params.table.children().length)
+  if (new_params.table && !new_params.table.children().length)
     new_params.table.remove();
   return this;
 }; // refreshOne
@@ -764,13 +770,16 @@ $.any.anyView.prototype.refreshMessageArea = function (opt)
 //
 $.any.anyView.prototype.refreshHeader = function (params)
 {
+  if (!params)
+    return null;
+
   let data       = params.data;
   let id         = params.id;
   let type       = params.type;
   let kind       = params.kind;
   let header_div = params.header_div;
 
-  if (!data || !this.options.showHeader || !header_div)
+  if (!data || !this.options.showHeader || !header_div.length)
     return null;
 
   // Get the correct filter
@@ -1091,7 +1100,9 @@ $.any.anyView.prototype.refreshThead = function (params)
     if (filter.hasOwnProperty(filter_id)) {
       let filter_key = filter[filter_id];
       if (filter_key && filter_key.DISPLAY) {
-        let disp_str = filter_key.DISPLAY == 2 || filter_key.DISPLAY == "2" ? "display:none;" : "";
+        let disp_str = filter_key.DISPLAY == 2 || filter_key.DISPLAY == "2"
+                       ? "display:none;"
+                       : "";
         let name_key = this.model.name_key
                        ? this.model.name_key
                        : type+"_name";
@@ -1281,7 +1292,9 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     console.error(this.model.error);
     return null;
   }
-  let filter = this.options.filters[type] && this.options.filters[type][kind] ? this.options.filters[type][kind]: null;
+  let filter = this.options.filters[type] && this.options.filters[type][kind]
+               ? this.options.filters[type][kind]
+               : null;
   if (!filter) {
     if (kind == "select")
       filter = this.options.filters[type]["list"];
@@ -1363,10 +1376,16 @@ $.any.anyView.prototype.refreshListTableDataCells = function (params)
     if (filter.hasOwnProperty(filter_id)) {
       let filter_key = filter[filter_id];
       if (filter_key && filter_key.DISPLAY) {
-        let disp_str = filter_key.DISPLAY == 2 || filter_key.DISPLAY == "2" ? "display:none;" : "";
+        let disp_str = filter_key.DISPLAY == 2 || filter_key.DISPLAY == "2"
+                       ? "display:none;"
+                       : "";
         ++n;
         let td_id    = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_id;
-        let odd_even = this.options.useOddEven ? n%2 ? "any-even" : "any-odd" : "";
+        let odd_even = this.options.useOddEven
+                       ? n%2
+                         ? "any-even"
+                         : "any-odd"
+                       : "";
         let class_id = "any-list-"+filter_id;
         let pln_str  = this.model.name_key
                        ? filter_id == this.model.name_key  ? pl_str : ""
@@ -1403,7 +1422,9 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
     console.error(this.model.error);
     return null;
   }
-  let filter = this.options.filters[type] && this.options.filters[type][kind] ? this.options.filters[type][kind]: null;
+  let filter = this.options.filters[type] && this.options.filters[type][kind]
+               ? this.options.filters[type][kind]
+               : null;
   if (!filter) {
     this.model.message = i18n.error.FILTER_NOT_FOUND.replace("%%", type+" "+kind+"");
     console.warn(this.model.message);
@@ -2355,8 +2376,8 @@ $.any.anyView.prototype.getHtmlStr = function (type,kind,id,val,edit)
 $.any.anyView.prototype.getLabelStr = function (type,kind,id,val)
 {
   //val = (val.replace(/<(?:.|\n)*?>/gm,''));
-  let val_cleaned = typeof val == "string" ? val.substring(0,this.options.cutoff) : ""+val;
-  val_cleaned += (val.length > this.options.cutoff) ? " [...]" : "";
+  let val_cleaned = typeof val == "string" && this.options.cutoff > 0 ? val.substring(0,this.options.cutoff) : ""+val;
+  val_cleaned += (val.length > this.options.cutoff && this.options.cutoff > 0) ? " [...]" : "";
   val = val_cleaned;
   //if (!val || val == "")
   //  val = "&nbsp;";
@@ -2416,8 +2437,8 @@ $.any.anyView.prototype.getNumberStr = function (type,kind,id,val,edit)
   if (edit)
     return "<input class='itemEdit itemNumber' type='text' value='"+val+"'/>";
   else {
-    let val_cleaned = typeof val == "string" ? val.substring(0,this.options.cutoff) : ""+val;
-    val_cleaned += (val.length > this.options.cutoff) ? " [...]" : "";
+    let val_cleaned = typeof val == "string" && this.options.cutoff > 0 ? val.substring(0,this.options.cutoff) : ""+val;
+    val_cleaned += (val.length > this.options.cutoff && this.options.cutoff > 0) ? " [...]" : "";
     val = val_cleaned;
     return "<div class='itemUnedit itemNumber'>"+val+"</div>";
   }
@@ -2639,6 +2660,7 @@ $.any.anyView.prototype.getListViewOptions = function (model,view_id,view)
     showSearch:      true,
     showTableHeader: false,
     showTableFooter: false,
+    showToolbar:     false,
   };
 }; // getListViewOptions
 
@@ -3241,9 +3263,9 @@ $.any.anyView.prototype._addListEntry = function (opt)
      curr_kind:  kind,
      con_id_str: con_id_str,
      row_id_str: row_id_str,
-     edit:       true,
      pdata:      pdata,
      pid:        pid,
+     edit:       true,
   });
 }; // _addListEntry
 
@@ -3821,7 +3843,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
   }
   else {
     this.options.isDeletable = this.options.isEditable;
-    this.refreshData(); // TODO! refresh() ?
+    this.refreshData(); // TODO! refresh()
   }
 
   if (kind == "item")
