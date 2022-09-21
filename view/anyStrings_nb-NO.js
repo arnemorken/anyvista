@@ -40,6 +40,7 @@ var i18n = {
     OPTIONS_MISSING:     "Mangler options. ",
     DATA_MISSING:        "Mangler data. ",
     TYPE_MISSING:        "Mangler type. ",
+    TYPEKIND_MISSING:    "Mangler type eller kind for data med id ",
     ID_KEY_MISSING:      "Mangler id key. ",
     ID_MISSING:          "Mangler id. ",
     ID_ILLEGAL:          "Id må være et positivt heltall eller en streng. ",

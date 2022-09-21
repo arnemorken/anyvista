@@ -40,6 +40,7 @@ var i18n = {
     OPTIONS_MISSING:     "Options missing. ",
     DATA_MISSING:        "Data missing. ",
     TYPE_MISSING:        "Type missing. ",
+    TYPEKIND_MISSING:    "Missing type or kind for data with id ",
     ID_KEY_MISSING:      "Id key missing. ",
     ID_MISSING:          "Id missing. ",
     ID_ILLEGAL:          "Id must be a positive integer or a string. ",

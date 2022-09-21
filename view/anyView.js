@@ -483,7 +483,7 @@ $.any.anyView.prototype.refresh = function (params)
           let curr_kind = view._findKind(data,idc,prev_kind);
           // Skip the current data item if we could not determine its type or kind
           if (!curr_type || !curr_kind) {
-            console.warn("Could not determine the type or kind of data with id "+idc+ "("+type+","+kind+")"); // TODO! i18n
+            console.warn(i18n.error.TYPEKIND_MISSING+idc+" ("+curr_type+","+curr_kind+")");
             continue;
           }
           // Find identifier strings for containers and rows
