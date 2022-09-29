@@ -150,6 +150,7 @@ $.widget("any.anyView", {
     localEdit:      null,
     localCancel:    null,
     localCloseItem: null,
+    itemLinkClicked: null, // TODO! rename?
 
     // "Private" and undocumented options:
     subscribe_default: true, // The default onModelChange method will be subscribed to.
