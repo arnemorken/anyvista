@@ -1486,7 +1486,9 @@ class anyTable extends dbTable
                  : (isset($data_tree[$ngidx]["list"]) && $data_tree[$ngidx]["list"] != "group"
                     ? "list"
                     : "head");
-            $data_tree[$ngidx][$k] = isset($this->mId) && $this->mId != "" ? $this->mType : "group";
+            $data_tree[$ngidx][$k] = isset($this->mId) && $this->mId != ""
+                    ? $this->mType
+                    : "group";
             if (!isset($this->mId) || $this->mId == "") {
               $gname = isset($group_data) && isset($group_data["group"][$gidx])
                        ? $group_data["group"][$gidx]["group_name"]
