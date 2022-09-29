@@ -37,6 +37,7 @@
  *        {boolean} showHeader:            If false, all headers will be suppressed. Default: true.
  *        {boolean} showTableHeader:       Whether to show headers for list tables. Default: true.
  *        {boolean} showTableFooter:       Whether to show footers for list tables. Default: true.
+ *        {boolean} showTableIngress:      Whether to show a description for list tables. Default: true.
  *        {boolean} showSearcher:          Whether to show a search field for list tables. Default: false.
  *        {boolean} showPaginator:         Whether to show paginator buttons for list tables. Default: true.
  *        {boolean} showToolbar:           Will show a toolbar at the bottom. Default: true.
@@ -103,6 +104,7 @@ $.widget("any.anyView", {
     showHeader:            true,
     showTableHeader:       true,
     showTableFooter:       true,
+    showTableIngress:      true,
     showSearcher:          true,
     showPaginator:         true,
     showToolbar:           true,
@@ -297,7 +299,7 @@ $.any.anyView.prototype._getOrCreateFilters = function (model)
   let f_str = type+"Filter";
   if (!window[f_str]) {
     let def_str = "anyFilter";
-    console.warn("Filter class "+f_str+" not found, using "+def_str+". ");
+    //console.warn("Filter class "+f_str+" not found, using "+def_str+". ");
     f_str = def_str;
     if (!window[f_str]) {
       console.warn("Filter class "+f_str+" not found. No filter for "+type+". ");
@@ -453,6 +455,7 @@ $.any.anyView.prototype.refresh = function (params)
   let edit       = params && params.edit       ? params.edit          : false;
   let from       = params && params.from       ? params.from          : 1;
   let num        = params && params.num        ? params.num           : this.options.itemsPerPage;
+  let view_class = params && params.view_class ? params.view_class    : null;
 
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
@@ -468,7 +471,7 @@ $.any.anyView.prototype.refresh = function (params)
   }
 
   if (this.preRefresh)
-    this.preRefresh(parent,data,id,type,kind,edit);
+    this.preRefresh(params);
 
   if (data) {
     if (kind == "head")
@@ -501,17 +504,17 @@ $.any.anyView.prototype.refresh = function (params)
           let idx = Number.isInteger(parseInt(idc))
                     ? parseInt(idc)
                     : idc;
-          let new_row_id_str = row_id_str
-                               ? row_id_str+"_"+idx
-                               : ""+idx;
-          let new_con_id_str = curr_kind == "list" || curr_kind == "select"
-                               ? view.con_id_str
-                                 ? view.con_id_str
-                                 : con_id_str
-                               : new_row_id_str;
+          let curr_row_id_str = row_id_str
+                                ? row_id_str+"_"+idx
+                                : ""+idx;
+          let curr_con_id_str = curr_kind == "list" || curr_kind == "select"
+                                ? view.con_id_str
+                                  ? view.con_id_str
+                                  : con_id_str
+                                : curr_row_id_str;
           // Create new view whenever we encounter a new type or a new kind
           let the_parent = parent;
-          if (prev_type != curr_type || prev_kind != curr_kind) {
+          if (prev_type != curr_type || (prev_kind != curr_kind && prev_kind != "")) {
             // Check to see if the new type/kind is contained within a list.
             // In that case, create a new row to contain the new container.
             if (prev_kind == "list" || prev_kind == "select") {
@@ -532,7 +535,7 @@ $.any.anyView.prototype.refresh = function (params)
                 if (!the_parent.length)
                   the_parent = parent;
               }
-              new_con_id_str = row_id_str;
+              curr_con_id_str = row_id_str; // TODO! curr_con_id_str = curr_row_id_str?
             }
             // TODO! options.localRemove etc. must be sent as params when creating new view
             view = view.createView({
@@ -541,25 +544,24 @@ $.any.anyView.prototype.refresh = function (params)
                       id:         idc,
                       type:       curr_type,
                       kind:       curr_kind,
-                      con_id_str: new_con_id_str,
-                      data_level: this.data_level,
+                      con_id_str: curr_con_id_str,
+                      data_level: view.data_level,
+                      view_class: view_class,
                    });
           }
           if (view) {
             // Refresh a header, a single list row or a single item
             ++row_no;
-            if (from == -1 || from <= row_no && row_no < from + num) {
-              view.con_id_str = new_con_id_str; // Remember con_id_str for this view, in case missing from params
+            if (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num)) {
+              view.con_id_str = curr_con_id_str; // Remember con_id_str for this view, in case missing from params
               view.refreshOne({
                  parent:     the_parent,
                  data:       data,
                  id:         idc,
-                 type:       type,
-                 kind:       kind,
                  curr_type:  curr_type,
                  curr_kind:  curr_kind,
-                 con_id_str: new_con_id_str,
-                 row_id_str: new_row_id_str,
+                 con_id_str: curr_con_id_str,
+                 row_id_str: curr_row_id_str,
                  pdata:      pdata,
                  pid:        pid,
                  edit:       edit,
@@ -597,7 +599,7 @@ $.any.anyView.prototype.refresh = function (params)
   }
 
   if (this.postRefresh)
-    this.postRefresh(parent,data,id,type,kind,edit);
+    this.postRefresh(params);
 
   // Bind key-back on tablets. TODO! Untested
   //document.addEventListener("backbutton", $.proxy(this._processKeyup,this), false);
@@ -619,45 +621,44 @@ $.any.anyView.prototype.refreshOne = function (params)
   let parent     = params.parent;
   let data       = params.data;
   let id         = params.id;
-  let type       = params.type;
-  let kind       = params.kind;
-  let curr_type  = params.curr_type;
-  let curr_kind  = params.curr_kind;
+  let type       = params.curr_type;
+  let kind       = params.curr_kind;
   let con_id_str = params.con_id_str;
   let row_id_str = params.row_id_str;
   let pdata      = params.pdata;
   let pid        = params.pid;
   let edit       = params.edit;
 
-  if (curr_type == "group")
+  if (type == "group")
     this.group_id = id;
 
   let new_params = {
     parent:     parent,
     data:       data,
     id:         id,
-    type:       curr_type,
-    kind:       curr_kind,
-    ptype:      type,
-    pkind:      kind,
-    edit:       edit,
+    type:       type,
+    kind:       kind,
     con_id_str: con_id_str,
     pdata:      pdata,
     pid:        pid,
+    edit:       edit,
     doNotEmpty: false,
   };
 
   // Refresh header
   let have_data = Object.size(data[id]) > 0;
-  new_params.header_div = this.getOrCreateHeaderContainer(parent,curr_type,curr_kind,con_id_str,have_data,false);
-  if (curr_kind == "head" || (data && data.grouping))
-    this.refreshHeader(new_params);
+  new_params.header_div = this.getOrCreateHeaderContainer(parent,type,kind,con_id_str,have_data,false);
+  this.refreshHeader(new_params);
 
-  // Refresh data
-  new_params.data_div = this.getOrCreateDataContainer(parent,curr_type,curr_kind,con_id_str,have_data);
-  new_params.table    = this.getOrCreateTable(new_params.data_div,curr_type,curr_kind,con_id_str);
-  if (curr_kind == "list" || curr_kind == "select" || curr_kind == "item")
-    this.refreshData(new_params);
+  // Refresh data, including ingress
+  new_params.data_div = this.getOrCreateDataContainer(parent,type,kind,con_id_str,have_data);
+  let ingress_str = data && data[id] ? data[id].group_description : "";
+  if (ingress_str && ingress_str != "") {
+    new_params.ingress  = this.getOrCreateIngress(new_params.data_div,type,kind,con_id_str);
+    this.refreshIngress(new_params);
+  }
+  new_params.table    = this.getOrCreateTable(new_params.data_div,type,kind,con_id_str);
+  this.refreshData(new_params);
 
   // If the data contains subdata, make a recursive call
   if (data && data[id] && data[id].data) {
@@ -666,14 +667,14 @@ $.any.anyView.prototype.refreshOne = function (params)
       this.options.ref_rec = 0;
       throw i18n.error.TOO_MUCH_RECURSION;
     }
-    if ((curr_kind == "list" || curr_kind == "select"))
+    if ((kind == "list" || kind == "select"))
       ++this.options.indent_level;
     this.refresh({
        parent:     new_params.data_div,
        data:       data[id].data,
        id:         null,
-       type:       curr_type,
-       kind:       curr_kind,
+       type:       type,
+       kind:       kind,
        con_id_str: con_id_str,
        row_id_str: row_id_str,
        pdata:      data,
@@ -681,7 +682,7 @@ $.any.anyView.prototype.refreshOne = function (params)
        edit:       edit,
        dont_reset_rec: true,
     });
-    if ((curr_kind == "list" || curr_kind == "select"))
+    if ((kind == "list" || kind == "select"))
       --this.options.indent_level;
   }
   // Clean up
@@ -792,7 +793,7 @@ $.any.anyView.prototype.refreshHeader = function (params)
   let kind       = params.kind;
   let header_div = params.header_div;
 
-  if (!data || !this.options.showHeader || !header_div.length)
+  if (!data || (kind != "head" && (!data || !data.grouping)) || !this.options.showHeader || !header_div.length)
     return null;
 
   // Get the correct filter
@@ -830,7 +831,7 @@ $.any.anyView.prototype.refreshHeader = function (params)
 //
 $.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,con_id_str,haveData,doNotEmpty)
 {
-  if (!parent)
+  if (!parent || !this.options.showHeader)
     return null;
   let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_header";
   let header_div = $("#"+div_id);
@@ -885,7 +886,7 @@ $.any.anyView.prototype.refreshData = function (params)
   let data_div   = params.data_div;
   let table      = params.table;
 
-  if (!data_div || !table)
+  if (!data_div || !table || (kind != "list" && kind != "select" && kind != "item"))
     return null;
 
   let extra_foot = this.getOrCreateExtraFoot(table,type,kind,con_id_str);
@@ -967,6 +968,66 @@ $.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,co
   }
   return data_div;
 }; // getOrCreateDataContainer
+
+
+//
+// Create an ingress, or find an ingress created previously
+//
+$.any.anyView.prototype.getOrCreateIngress = function (parent,type,kind,con_id_str)
+{
+  if (!parent)
+    return null;
+  if (!type || !kind)
+    return null;
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_ingress";
+  let ingress  = $("#"+div_id); // Can we reuse ingress div?
+  if (!ingress.length) {
+    let class_id = "any-ingress any-"+kind+"-ingress any-ingress-"+this.data_level;
+    let ingress_row = jQuery("<tr/>");
+    ingress_row.append("<div id='"+div_id+"' class='"+class_id+"'></div>");
+    parent.append(ingress_row);
+  }
+  return ingress;
+}; // getOrCreateIngress
+
+//
+// Refresh the table description (ingress)
+//
+$.any.anyView.prototype.refreshIngress = function (params)
+{
+  if (!params)
+    return null;
+
+  let data       = params.data;
+  let id         = params.id;
+  let type       = params.type;
+  let kind       = params.kind;
+  let edit       = params.edit;
+  let con_id_str = params.con_id_str;
+  let pdata      = params.pdata;
+  let pid        = params.pid;
+  let data_div   = params.data_div;
+  let parent     = params.parent;
+
+  if (!data_div || !parent || !con_id_str || !data || !data[id] || !data[id].group_description)
+    return null;
+
+  let ingress_str = data[id].group_description;
+  if (!ingress_str || ingress_str == "")
+    return null;
+
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_ingress";
+  let div   = $("#"+div_id);
+  if (!div.length) {
+    div = $("<div id='"+div_id+"'></div>");
+    parent.append(div);
+  }
+  div.append(ingress_str);
+  // Clean up
+  if (!div.length)
+    div.remove();
+  return parent;
+}; // refreshIngress
 
 //
 // Create a table, or find a table created previously
@@ -2318,7 +2379,11 @@ $.any.anyView.prototype.createView = function (params)
 
   // Create the view
   let view_opt = this.getCreateViewOptions(model,parent,kind,data_level);
-  let v_str    = view_opt.grouping ? type+"View"+view_opt.grouping.capitalize() : type+"View";
+  let v_str    = params && params.view_class
+               ? params.view_class
+               : view_opt.grouping
+                 ? type+"View"+view_opt.grouping.capitalize()
+                 : type+"View";
   if (!window[v_str]) {
     let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
     console.warn("View class "+v_str+" not found, using "+def_str+". "); // TODO! i18n
@@ -3330,8 +3395,6 @@ $.any.anyView.prototype._addListEntry = function (opt)
      parent:     this.element,
      data:       opt.data,
      id:         new_id,
-     type:       type,
-     kind:       kind,
      curr_type:  type,
      curr_kind:  kind,
      con_id_str: con_id_str,
@@ -3434,7 +3497,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
     the_id = "+"+id;
   if (!the_id && is_new)
     the_id = id;
-  if (!the_id) {
+  if (!the_id && the_id !== 0) {
     console.error("System error: Could not find id. "); // Should never happen TODO! i18n
     return false;
   }
