@@ -638,10 +638,15 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
 {
   if (!type)
     type = this.type;
+  if (!type)
+    return -1;
   if (!data)
     data = this.data;
-  if (!type || !data)
-    return -1;
+  // If empty dataset, start with 0
+  if (!data) {
+    this.max = 0;
+    return 0;
+  }
   // If a non-numerical index is found, return immediately
   let datakeys = Object.keys(data);
   for (const key in datakeys) {
