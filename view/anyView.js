@@ -538,6 +538,7 @@ $.any.anyView.prototype.refresh = function (params)
               curr_con_id_str = row_id_str; // TODO! curr_con_id_str = curr_row_id_str?
             }
             // TODO! options.localRemove etc. must be sent as params when creating new view
+            let mdl = params && params.model ? params.model : null;
             view = view.createView({
                       parent:     the_parent,
                       data:       data,
@@ -547,6 +548,7 @@ $.any.anyView.prototype.refresh = function (params)
                       con_id_str: curr_con_id_str,
                       data_level: view.data_level,
                       view_class: view_class,
+                      model:      mdl, // Let the calling method specify the model explicitely
                    });
           }
           if (view) {
@@ -1450,6 +1452,9 @@ $.any.anyView.prototype.refreshListTableDataCells = function (params)
     if (filter.hasOwnProperty(filter_id)) {
       let filter_key = filter[filter_id];
       if (filter_key && filter_key.DISPLAY) {
+        let model_str = params.filter
+                        ? params.filter[filter_id].MODEL
+                        : null;
         let disp_str = filter_key.DISPLAY == 2 || filter_key.DISPLAY == "2"
                        ? "display:none;"
                        : "";
@@ -1467,8 +1472,9 @@ $.any.anyView.prototype.refreshListTableDataCells = function (params)
         let style_str = disp_str || pln_str ? "style='"+disp_str+pln_str+"'" : "";
         let td  = $("<td id='"+td_id+"' class='any-td any-list-td "+odd_even+" "+class_id+"' "+style_str+"></td>");
         tr.append(td);
-        let str = this.getCellEntryStr(id,type,kind,row_id_str,filter_id,filter_key,data[id],edit);
-        td.append(str);
+        let str = this.getCellEntryStr(id,type,kind,row_id_str,filter_id,filter_key,data[id],data.lists,edit,model_str,td);
+        if (typeof str == "string")
+          td.append(str);
         this.initTableDataCell(td_id,data,id,type,kind,con_id_str,row_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
       }
     }
@@ -1628,6 +1634,8 @@ $.any.anyView.prototype.refreshItemTableDataCells = function (params)
   let pid        = params.pid;
   let pl_str     = params.pl_str;
   let n          = params.n;
+  let model_str  = params.filter ? params.filter[filter_id].MODEL : null;
+  let view_str   = params.filter ? params.filter[filter_id].VIEW  : null;
 
   let class_id_name = "any-item-name-"+filter_id;
   let class_id_val  = "any-item-val-"+filter_id;
@@ -1636,8 +1644,9 @@ $.any.anyView.prototype.refreshItemTableDataCells = function (params)
   let td3           = $("<td id= '"+td_id+"' class='any-td any-item-val  "+class_id_val +"'></td>");
   tr.append(td2);
   tr.append(td3);
-  let str = this.getCellEntryStr(id,type,kind,row_id_str,filter_id,filter_key,data[id],edit);
-  td3.append(str);
+  let str = this.getCellEntryStr(id,type,kind,row_id_str,filter_id,filter_key,data[id],data.lists,edit,model_str,view_str,td3);
+  if (typeof str == "string")
+    td3.append(str);
   this.initTableDataCell(td_id,data,id,type,kind,con_id_str,row_id_str,filter,filter_id,filter_key,edit,n,isEditable,pdata,pid);
 }; // refreshItemTableDataCells
 
@@ -2349,6 +2358,7 @@ $.any.anyView.prototype.createView = function (params)
   let type       = params && params.type       ? params.type       : null;
   let kind       = params && params.kind       ? params.kind       : null;
   let data_level = params && params.data_level ? params.data_level : 0;
+  let model      = params && params.model      ? params.model      : type == this.model.type ? this.model : null;
 
   if (!parent)
     parent = this.element;
@@ -2361,24 +2371,37 @@ $.any.anyView.prototype.createView = function (params)
   if (!type || !kind)
     return null;
 
-  // Create a new model
+  // Create a new model if we dont already have one or if the caller asks for it
   let model_opt = this.getCreateModelOptions(data,id,type,kind);
-  let m_str     = type+"Model";
-  if (!window[m_str]) {
-    let def_str = "anyModel";
-    console.warn("Model class "+m_str+" not found, using "+def_str+". "); // TODO! i18n
-    m_str = def_str;
+  if (!model || typeof model === "string") {
+    let m_str = model
+              ? model         // Use supplied model name
+              : type+"Model"; // Use default model name derived from type
+    if (!window[m_str]) {
+      let def_str = "anyModel"; // Use fallback model name
+      console.warn("Model class "+m_str+" not found, using "+def_str+". "); // TODO! i18n
+      m_str = def_str;
+    }
+    try {
+      model = new window[m_str](model_opt);
+    }
+    catch (err) {
+      console.error("Couldn't create model "+m_str+": "+err);
+      return null;
+    }
   }
-  let model = null;
-  try {
-    model = new window[m_str](model_opt);
+  else
+  if (typeof model != "object") {
+    console.error("Model is "+(typeof model)+", not object. ");
+    return null;
   }
-  catch (err) {
-    console.error("Couldn't create model "+m_str+": "+err);
-  }
-
+  model.data = data;
+  if (id)
+    model.id = id;
   // Create the view
   let view_opt = this.getCreateViewOptions(model,parent,kind,data_level);
+  if (params.showHeader === false)
+    view_opt.showHeader = false
   let v_str    = params && params.view_class
                ? params.view_class
                : view_opt.grouping
@@ -2464,7 +2487,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
 // Methods that create cell items
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.anyView.prototype.getCellEntryStr = function (id,type,kind,row_id_str,filter_id,filter_key,data_item,edit)
+$.any.anyView.prototype.getCellEntryStr = function (id,type,kind,row_id_str,filter_id,filter_key,data_item,data_lists,edit,model_str,view_str,parent)
 {
   if (!filter_id || !filter_key)
     return "";
@@ -2490,7 +2513,7 @@ $.any.anyView.prototype.getCellEntryStr = function (id,type,kind,row_id_str,filt
     case "check":    return this.getCheckStr   (type,kind,id,val,edit,filter_key,filter_id);
     case "select":   return this.getSelectStr  (type,kind,id,val,edit,filter_key,pid,data_item["parent_name"]);
     case "function": return this.getFunctionStr(type,kind,id,val,edit,filter_key,pid,data_item["parent_name"]);
-    case "list":     return this.getListView   (type,kind,id,val,edit,filter_key,row_id_str);
+    case "list":     return this.getListView   (type,kind,id,val,edit,filter_key,row_id_str,data_lists,model_str,view_str,parent);
     case "upload":   return this.getUploadStr  (type,kind,id,val,edit,data_item,filter_id,row_id_str);
     case "fileview": return this.getFileViewStr(type,kind,id,val,edit,data_item,filter_id,row_id_str);
     /* Not used yet
@@ -2724,7 +2747,7 @@ $.any.anyView.prototype.getCheckStr = function (type,kind,id,val,edit,filter_key
 }; // getCheckStr
 
 // Return a view containing a list
-$.any.anyView.prototype.getListView = function (type,kind,id,val,edit,filter_key,row_id_str)
+$.any.anyView.prototype.getListView = function (type,kind,id,val,edit,filter_key,row_id_str,data_lists,model_str,view_str,parent)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -2734,24 +2757,34 @@ $.any.anyView.prototype.getListView = function (type,kind,id,val,edit,filter_key
   // Create the list model
   let list_type = filter_key.LIST;
   let model_opt = this.getListModelOptions(type,list_type,val);
-  let m_str     = list_type.capitalize()+"Model";
+  let m_str     = model_str && typeof model_str === "string"
+                  ? model_str
+                  : list_type.capitalize()+"Model";
   if (!window[m_str]) {
     let def_str = "anyModel";
     console.warn(m_str+" is not a valid list model, using "+def_str+". ");
     m_str = def_str;
   }
   let list_model = new window[m_str](model_opt);
+  list_model.data = data_lists ? data_lists[filter_key.LIST] : null;
 
   // Create the list view
   let list_view_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+list_type+"_list";
   let view_opt     = this.getListViewOptions(list_model,list_view_id,this);
-  let v_str = view_opt.grouping ? list_type.capitalize()+"View"+view_opt.grouping.capitalize() : list_type.capitalize()+"View";
+  let v_str = view_str && typeof view_str === "string"
+              ? view_str
+              : view_opt.grouping
+                ? list_type.capitalize()+"View"+view_opt.grouping.capitalize()
+                : list_type.capitalize()+"View";
   if (!window[v_str]) {
-    let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
+    let def_str = view_opt.grouping
+                  ? "anyView"+view_opt.grouping.capitalize()
+                  : "anyView";
     console.warn(v_str+" is not a valid list view, using "+def_str+". ");
     v_str = def_str;
   }
   view_opt.filter_key = filter_key;
+  view_opt.top_view = this.options.top_view;
   let view = null;
   try {
     view = new window[v_str](view_opt);
@@ -2759,8 +2792,14 @@ $.any.anyView.prototype.getListView = function (type,kind,id,val,edit,filter_key
       console.error("Couldn't create list view "+v_str+" with id "+list_view_id);
       view = null;
     }
-    if (view && view.refresh)
-      view.refresh();
+    if (view) {
+      if (parent)
+        parent.append(view.element);
+      view.is_item_list = true; // Mark this list as a "client" list of an item
+      if (view.refresh)
+        view.refresh();
+      return null;
+    }
   }
   catch (err) {
     console.error("Couldn't create list view "+v_str+": "+err);
@@ -3547,6 +3586,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
     kind:       kind,
     row_id_str: opt.row_id_str,
     data_level: 0, // Reset data_level for the new view
+    showHeader: opt.showHeader === false ? false : true,
   });
   if (!view || !view.options || !view.options.top_view) {
     console.error("System error: View missing. "); // Should never happen TODO! i18n
@@ -3628,8 +3668,11 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
         let is_empty = true;
         for (let filter_id in opt.filter) {
           if (opt.filter.hasOwnProperty(filter_id)) {
-            let input_id = prefix+"_"+filter_id+" .itemEdit";
-            if ($("#"+input_id).val()) {
+            let input_id = prefix+"_"+filter_id;
+            let val = $("#"+input_id).find(".itemText").val();
+            if (!val || val == "")
+              val = $("#"+input_id).find(".itemText").text();
+            if (val) {
               is_empty = false;
               break;
             }
@@ -3989,8 +4032,10 @@ $.any.anyView.prototype.dbUpdate = function (event)
   if (this.model.mode == "remote")
     return this.model.dbUpdate(event.data);
 
-  delete item[id].is_new;
-  delete item[id].dirty;
+  if (item && item[id]) {
+    delete item[id].is_new;
+    delete item[id].dirty;
+  }
   return true;
 }; // dbUpdate
 
