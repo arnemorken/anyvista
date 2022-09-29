@@ -1595,19 +1595,13 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
         };
         if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
             this.options.isEditable) {
-          if (n == 1)
-            this.refreshTableDataFirstCell(cell_opt);
-          else
-            tr.append("<td/>");
+          this.refreshTableDataFirstCell(cell_opt);
         }
         this.refreshItemTableDataCells(cell_opt);
         if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
             this.options.isEditable ||
             this.options.isRemovable) {
-          if (n == 1)
-            this.refreshTableDataLastCell(cell_opt);
-          else
-            tr.append("<td/>");
+          this.refreshTableDataLastCell(cell_opt);
         }
         if (!tr.children().length)
           tr.remove();
