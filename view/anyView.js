@@ -461,10 +461,9 @@ $.any.anyView.prototype.refresh = function (params)
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
 
-  if (!params) {
-    // Top level display of the model, so clear everything first
-    this._clearBeforeRefresh(parent);
-  }
+  if (!params)
+    this._clearBeforeRefresh(parent); // Top level display of the model, so clear everything first
+
   if (this.must_empty) {
     // Someone thinks we should remove data from the must_empty element.
     this.must_empty.empty();
@@ -559,8 +558,8 @@ $.any.anyView.prototype.refresh = function (params)
               view.con_id_str = curr_con_id_str; // Remember con_id_str for this view, in case missing from params
               view.refreshOne({
                  parent:     the_parent,
-                 curr_type:  curr_type,
-                 curr_kind:  curr_kind,
+                 type:       curr_type,
+                 kind:       curr_kind,
                  data:       data,
                  id:         idc,
                  con_id_str: curr_con_id_str,
@@ -621,8 +620,8 @@ $.any.anyView.prototype._clearBeforeRefresh = function (parent)
 $.any.anyView.prototype.refreshOne = function (params)
 {
   let parent     = params.parent;
-  let type       = params.curr_type;
-  let kind       = params.curr_kind;
+  let type       = params.type;
+  let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
   let con_id_str = params.con_id_str;
@@ -3398,8 +3397,8 @@ $.any.anyView.prototype._addListEntry = function (opt)
 
   this.refreshOne({
      parent:     this.element,
-     curr_type:  type,
-     curr_kind:  kind,
+     type:       type,
+     kind:       kind,
      data:       opt.data,
      id:         new_id,
      con_id_str: con_id_str,
