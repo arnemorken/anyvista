@@ -663,7 +663,7 @@ $.any.anyView.prototype.refreshOne = function (params)
   this.refreshData(new_params);
 
   // If the data contains subdata, make a recursive call
-  if (data && data[id] && data[id].data) {
+  if (data && ((data[id] && data[id].data) || (data["+"+id] && data["+"+id].data))) {
     ++this.options.ref_rec;
     if (this.options.ref_rec > ANY_MAX_REF_REC) {
       this.options.ref_rec = 0;
