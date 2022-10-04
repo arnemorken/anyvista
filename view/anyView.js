@@ -49,7 +49,7 @@
  *        {boolean} showButtonSelectAll:   If isSelectable is true, a button for selecting all rows may be shown in list table headers. Default: false.
  *        {integer} showButtonAdd:         If isEditable is true, a button for adding new rows may be shown in list table headers. Possible values:
  *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 0.
- *        {boolean} showButtonRemove:      If isEditable is true, a remove button may be shown. Possible values:
+ *        {boolean} showButtonRemove:      If isRemovable is true, a remove button may be shown. Possible values:
  *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
  *        {boolean} showButtonEdit:        If isEditable is true, an edit button may be shown. Possible values:
  *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
@@ -432,7 +432,7 @@ $.any.anyView.prototype.empty = function (params)
  *                            Default: null.
  *         {string}  pid      The id in `pdata` where `data` may be found (`pdata[pid] == data`).
  *                            Default: null.
- *         {boolean} editable If true, the item should be displayed as editable.
+ *         {boolean} edit     If true, the item should be displayed as editable.
  *                            Default: false.
  *
  * @return parent
@@ -453,7 +453,7 @@ $.any.anyView.prototype.refresh = function (params)
   let row_id_str = params && params.row_id_str ? ""+params.row_id_str : ""; // Id string accumulated through recursion
   let pdata      = params && params.pdata      ? params.pdata         : null;
   let pid        = params && params.pid        ? params.pid           : "";
-  let editable   = params && params.editable   ? params.editable      : false;
+  let edit       = params && params.edit       ? params.edit          : false;
   let from       = params && params.from       ? params.from          : 1;
   let num        = params && params.num        ? params.num           : this.options.itemsPerPage;
 
@@ -566,7 +566,7 @@ $.any.anyView.prototype.refresh = function (params)
                  row_id_str: curr_row_id_str,
                  pdata:      pdata,
                  pid:        pid,
-                 editable:   editable,
+                 edit:       edit,
               });
             }
           } // if view
@@ -628,7 +628,7 @@ $.any.anyView.prototype.refreshOne = function (params)
   let row_id_str = params.row_id_str;
   let pdata      = params.pdata;
   let pid        = params.pid;
-  let editable   = params.editable;
+  let edit       = params.edit;
 
   if (type == "group")
     this.group_id = id;
@@ -642,7 +642,7 @@ $.any.anyView.prototype.refreshOne = function (params)
     con_id_str: con_id_str,
     pdata:      pdata,
     pid:        pid,
-    editable:   editable,
+    edit:       edit,
     doNotEmpty: false,
   };
 
@@ -680,7 +680,7 @@ $.any.anyView.prototype.refreshOne = function (params)
        row_id_str: row_id_str,
        pdata:      data,
        pid:        id,
-       editable:   editable,
+       edit:       edit,
        dont_reset_rec: true,
     });
     if ((kind == "list" || kind == "select"))
@@ -754,7 +754,7 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
       data:       data,
       id:         id,
       con_id_str: the_id,
-      editable:    true,
+      edit:       true,
     };
     this.refreshAddLinkButton(opt);
   }
@@ -941,7 +941,7 @@ $.any.anyView.prototype.refreshData = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
-  let editable   = params.editable;
+  let edit       = params.edit;
   let con_id_str = params.con_id_str;
   let pdata      = params.pdata;
   let pid        = params.pid;
@@ -988,7 +988,7 @@ $.any.anyView.prototype.refreshData = function (params)
        con_id_str: con_id_str,
        pdata:      pdata,
        pid:        pid,
-       editable:   editable,
+       edit:       edit,
     });
   }
   let tfoot = this.getOrCreateTfoot(table,type,kind,con_id_str);
@@ -1152,7 +1152,7 @@ $.any.anyView.prototype.refreshThead = function (params)
       id:         "new", // Find a new id
       con_id_str: con_id_str,
       filter:     filter,
-      editable:   true,
+      edit:       true,
       is_new:     true,
     };
   let tr = $("<tr></tr>");
@@ -1353,7 +1353,7 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
-  let editable   = params.editable;
+  let edit       = params.edit;
   let con_id_str = params.con_id_str;
   let pdata      = params.pdata;
   let pid        = params.pid;
@@ -1404,7 +1404,7 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     data:       data,
     id:         id,
     filter:     filter,
-    editable:   editable,
+    edit:       edit,
     con_id_str: con_id_str,
     row_id_str: row_id_str,
     pdata:      pdata,
@@ -1427,7 +1427,7 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
   let data       = params.data;
   let id         = params.id;
   let filter     = params.filter;
-  let edit       = params.editable;
+  let edit       = params.edit;
   let con_id_str = params.con_id_str;
   let row_id_str = params.row_id_str;
   let pdata      = params.pdata;
@@ -1465,7 +1465,7 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
         let str = this.getCellEntryStr(id,type,kind,row_id_str,filter_id,filter_key,data[id],data.lists,edit,model_str,td);
         if (typeof str == "string")
           td.append(str);
-        this.initTableDataCell(td_id,type,kind,data,id,con_id_str,row_id_str,filter,filter_id,filter_key,edit,n,edit,pdata,pid);
+        this.initTableDataCell(td_id,type,kind,data,id,con_id_str,row_id_str,filter,filter_id,filter_key,edit,n,pdata,pid);
       }
     }
   }
@@ -1479,7 +1479,7 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
-  let editable   = params.editable;
+  let edit       = params.edit;
   let con_id_str = params.con_id_str;
   let pdata      = params.pdata;
   let pid        = params.pid;
@@ -1527,7 +1527,7 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
         else
         if (filter_id == "_HIDEBEGIN_") {
           is_hidden = (id !== null && id != undefined);
-          if (is_hidden && editable) {
+          if (is_hidden && edit) {
             let tr = $("<tr "+display_class+"></tr>");
             let td = $("<td/><td colspan='2' class='td_item'>"+
                        "<span id='"+this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_key.TYPE+"' class='pointer hiddenText'>"+
@@ -1572,7 +1572,7 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
           data:       data,
           id:         id,
           filter:     filter,
-          editable:   editable,
+          edit:       edit,
           con_id_str: con_id_str,
           row_id_str: row_id_str,
           pdata:      pdata,
@@ -1604,7 +1604,7 @@ $.any.anyView.prototype.refreshTableDataItemCells = function (params)
   let filter     = params.filter;
   let filter_id  = params.filter_id;
   let filter_key = params.filter_key;
-  let edit       = params.editable;
+  let edit       = params.edit;
   let con_id_str = params.con_id_str;
   let row_id_str = params.row_id_str;
   let pdata      = params.pdata;
@@ -1640,7 +1640,7 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
   let data       = params.data;
   let id         = params.id;
   let filter     = params.filter;
-  let edit       = params.editable;
+  let edit       = params.edit;
   let con_id_str = params.con_id_str;
   let row_id_str = params.row_id_str;
   let pdata      = params.pdata;
@@ -1706,7 +1706,7 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
   let data       = params.data;
   let id         = params.id;
   let filter     = params.filter;
-  let edit       = params.editable;
+  let edit       = params.edit;
   let con_id_str = params.con_id_str;
   let row_id_str = params.row_id_str;
   let pdata      = params.pdata;
@@ -1765,7 +1765,7 @@ $.any.anyView.prototype._rowHasData = function (data,filter)
 // Buttons
 //
 
-// Button in top toolbar for closing item view
+// Create a button for closing item view
 // By default calls closeItem
 $.any.anyView.prototype.refreshCloseItemButton = function (params)
 {
@@ -1808,7 +1808,7 @@ $.any.anyView.prototype.refreshCloseItemButton = function (params)
   return btn;
 }; // refreshCloseItemButton
 
-// Add-button in list table header
+// Create an add button
 // By default calls addListEntry
 $.any.anyView.prototype.refreshAddButton = function (opt)
 {
@@ -1837,7 +1837,7 @@ $.any.anyView.prototype.refreshAddButton = function (opt)
   return btn;
 }; // refreshAddButton
 
-// Select-button in first list table cell
+// Create a select button
 // By default calls _toggleChecked
 $.any.anyView.prototype.refreshSelectButton = function (opt)
 {
@@ -1870,6 +1870,7 @@ $.any.anyView.prototype.refreshSelectButton = function (opt)
 }; // refreshSelectButton
 
 // Edit-button in first list or item table cell
+// Only displayed if not editing
 // By default calls toggleEdit
 $.any.anyView.prototype.refreshEditButton = function (opt)
 {
@@ -1888,7 +1889,6 @@ $.any.anyView.prototype.refreshEditButton = function (opt)
     parent.append(btn);
   if (opt.edit)
     btn.hide();
-  opt.edit = !opt.edit;
   let fun = this.option("localEdit")
             ? this.option("localEdit")
             : this.toggleEdit;
@@ -1902,6 +1902,7 @@ $.any.anyView.prototype.refreshEditButton = function (opt)
 }; // refreshEditButton
 
 // Update-button in first list or item table cell
+// Only displayed if editing
 // By default calls dbUpdate
 $.any.anyView.prototype.refreshUpdateButton = function (opt)
 {
@@ -1920,7 +1921,6 @@ $.any.anyView.prototype.refreshUpdateButton = function (opt)
     parent.append(btn);
   if (!opt.edit)
     btn.hide();
-  opt.edit = !opt.edit;
   let fun = this.option("localUpdate")
             ? this.option("localUpdate")
             : this.dbUpdate;
@@ -1933,38 +1933,8 @@ $.any.anyView.prototype.refreshUpdateButton = function (opt)
   return btn;
 }; // refreshUpdateButton
 
-// Remove-button in last list or item table cell
-// By default calls dbRemoveDialog
-$.any.anyView.prototype.refreshRemoveButton = function (opt)
-{
-  let parent  = opt.parent;
-
-  let tit_str = i18n.button.buttonRemove;
-  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.row_id_str+"_remove_icon";
-  if ($("#"+btn_id).length)
-    $("#"+btn_id).remove();
-  let btn = $("<div id='"+btn_id+"' class='any-remove-icon any-tool-button pointer' title='"+tit_str+"'>"+
-              "<i class='fas fa-times'></i>"+
-              btn_str+
-              "</div>");
-  let fun = this.option("localRemove")
-            ? this.option("localRemove")
-            : this.dbRemoveDialog;
-  let con = this.option("removeContext")
-            ? this.option("removeContext")
-            : this.option("context")
-              ? this.option("context")
-              : this;
-  btn.off("click").on("click",opt,$.proxy(fun,con));
-  if (parent && parent.length)
-    parent.append(btn);
-  if (opt.edit)
-    btn.hide();
-  return btn;
-}; // refreshRemoveButton
-
 // Delete-button in last list or item table cell
+// Only displayed if editing
 // By default calls dbDeleteDialog
 $.any.anyView.prototype.refreshDeleteButton = function (opt)
 {
@@ -1979,6 +1949,10 @@ $.any.anyView.prototype.refreshDeleteButton = function (opt)
               "<i class='fas fa-trash-alt'></i>"+
               btn_str+
               "</div>");
+  if (parent && parent.length)
+    parent.append(btn);
+  if (!opt.edit)
+    btn.hide();
   let fun = this.option("localDelete")
             ? this.option("localDelete")
             : this.dbDeleteDialog;
@@ -1988,14 +1962,11 @@ $.any.anyView.prototype.refreshDeleteButton = function (opt)
               ? this.option("context")
               : this;
   btn.off("click").on("click",opt,$.proxy(fun,con));
-  if (parent && parent.length)
-    parent.append(btn);
-  if (!opt.edit)
-    btn.hide();
   return btn;
 }; // refreshDeleteButton
 
 // Cancel-button in last list or item table cell
+// Only displayed if editing
 // By default calls toggleEdit
 $.any.anyView.prototype.refreshCancelButton = function (opt)
 {
@@ -2010,6 +1981,10 @@ $.any.anyView.prototype.refreshCancelButton = function (opt)
               "<i class='fas fa-ban'></i>"+
               btn_str+
               "</div>");
+  if (parent && parent.length)
+    parent.append(btn);
+  if (!opt.edit)
+    btn.hide();
   let fun = this.option("localCancel")
             ? this.option("localCancel")
             : this.toggleEdit;
@@ -2019,13 +1994,40 @@ $.any.anyView.prototype.refreshCancelButton = function (opt)
               ? this.option("context")
               : this;
   btn.off("click").on("click",opt,$.proxy(fun,con));
-  if (parent && parent.length)
-    parent.append(btn);
-  if (!opt.edit)
-    btn.hide();
-  opt.edit = false;
   return btn;
 }; // refreshCancelButton
+
+// Remove-button in last list or item table cell
+// May be displayed while editing or not editing depending on the ... option
+// By default calls dbRemoveDialog
+$.any.anyView.prototype.refreshRemoveButton = function (opt)
+{
+  let parent  = opt.parent;
+
+  let tit_str = i18n.button.buttonRemove;
+  let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.row_id_str+"_remove_icon";
+  if ($("#"+btn_id).length)
+    $("#"+btn_id).remove();
+  let btn = $("<div id='"+btn_id+"' class='any-remove-icon any-tool-button pointer' title='"+tit_str+"'>"+
+              "<i class='fas fa-times'></i>"+
+              btn_str+
+              "</div>");
+  if (parent && parent.length)
+    parent.append(btn);
+  if (opt.edit)
+    btn.hide();
+  let fun = this.option("localRemove")
+            ? this.option("localRemove")
+            : this.dbRemoveDialog;
+  let con = this.option("removeContext")
+            ? this.option("removeContext")
+            : this.option("context")
+              ? this.option("context")
+              : this;
+  btn.off("click").on("click",opt,$.proxy(fun,con));
+  return btn;
+}; // refreshRemoveButton
 
 // Button in bottom toolbar for opening a new empty item view
 // By default calls showItem
@@ -2042,6 +2044,8 @@ $.any.anyView.prototype.refreshNewItemButton = function (opt)
               "<i class='fas fa-plus-circle fa-lg'></i>"+
               btn_str+
               "</div>");
+  if (parent && parent.length)
+    parent.append(btn);
   let fun = this.option("localNew")
             ? this.option("localNew")
             : this.showItem;
@@ -2051,8 +2055,6 @@ $.any.anyView.prototype.refreshNewItemButton = function (opt)
               ? this.option("context")
               : this;
   btn.off("click").on("click",opt,$.proxy(fun,con));
-  if (parent && parent.length)
-    parent.append(btn);
   return btn;
 }; // refreshNewItemButton
 
@@ -2075,6 +2077,10 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
                   "<i class='fa fa-plus'></i>&nbsp;"+i18n.message.addRemove+
                   btn_str+
                   "</div>");
+  if (parent && parent.length)
+    parent.append(btn);
+  if (!opt.edit)
+    btn.hide();
   let fun = this.option("localShowLinkMenu")
             ? this.option("localShowLinkMenu")
             : this.showLinkMenu;
@@ -2084,10 +2090,6 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
               ? this.option("context")
               : this;
   btn.off("click").on("click", opt, $.proxy(fun,con));
-  if (parent && parent.length)
-    parent.append(btn);
-  if (!opt.editable)
-    btn.hide();
 
   let menu_id = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.con_id_str+"_link_dropdown";
   opt.element_id = menu_id;
@@ -2187,7 +2189,7 @@ $.any.anyView.prototype.showLinkMenu = function (event)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,con_id_str,row_id_str,filter,filter_id,filter_key,edit,n,editable,pdata,pid)
+$.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,con_id_str,row_id_str,filter,filter_id,filter_key,edit,n,pdata,pid)
 {
   if (!filter_key || !td_id)
     return;
@@ -2229,7 +2231,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,co
                       : this._uploadClicked;
             init_opt.elem_id = td_id;
             inp_elem.off("click").on("click", init_opt,
-              // Only open file dialog if cell is editable
+              // Only open file dialog if cell is being edited
               function(e) {
                 if (!self.options.uploadDirect && !e.data.edit) e.preventDefault();
               }
@@ -2631,7 +2633,7 @@ $.any.anyView.prototype.getSelectStr = function (type,kind,id,val,edit,filter_ke
       sval = this[fval](type,kind,id,val,edit,pid);
     else
     if (typeof fval == "object")
-      sval = edit? fval : fval[val];
+      sval = edit ? fval : fval[val];
     else
       sval = fval;
   }
@@ -2670,7 +2672,7 @@ $.any.anyView.prototype.getRadioStr = function (type,kind,id,val,edit,filter_key
       sval = this[fval](type,kind,id,val,edit);
     else
     if (typeof fval == "object")
-      sval = edit? fval : fval[val];
+      sval = edit ? fval : fval[val];
     else
       sval = fval;
   }
@@ -2703,7 +2705,7 @@ $.any.anyView.prototype.getCheckStr = function (type,kind,id,val,edit,filter_key
     let checked = val == "1" ? "checked" : "";
     str = "<input class='itemEdit' type='checkbox' onclick='$(this).val(this.checked?1:0)' value='"+val+"' "+checked+"/>";
   }
-  else { // noneditable
+  else {
     let the_id      = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
     let row_id_str  = ""+the_id;
     let it_id       = this.id_base+"_"+filter_key+"_"+row_id_str;
@@ -3189,7 +3191,6 @@ $.any.anyView.prototype._processKeyup = function (event)
     event.preventDefault();
 
   if (event.which == 27) { // esc
-    event.data.edit = !event.data.edit;
     this.doToggleEdit(event.data);
   }
   else
@@ -3412,7 +3413,7 @@ $.any.anyView.prototype._addListEntry = function (opt)
      row_id_str: row_id_str,
      pdata:      pdata,
      pid:        pid,
-     editable:   true,
+     edit:       true,
   });
 }; // _addListEntry
 
@@ -3600,7 +3601,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
       kind:     "item",
       data:     the_item,
       id:       the_id,
-      editable: is_new,
+      edit:     is_new,
     });
   } // else
   return true;
@@ -3628,6 +3629,8 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
     opt = this.current_edit;
     opt.edit = false;
   }
+  */
+  opt.edit = !opt.edit;
   let prefix  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.row_id_str;
   let elem_id = opt.kind == "item"
                 ? prefix+"_tbody"
@@ -3669,7 +3672,7 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
         con_id_str: opt.con_id_str,
         pdata:      opt.pdata,
         pid:        opt.pid,
-        editable:   opt.edit,
+        edit:       opt.edit,
       };
       let have_data = Object.size(opt.data) > 0;
       new_params.data_div = this.getOrCreateDataContainer(this.element,opt.type,opt.kind,opt.con_id_str,have_data);
@@ -3686,7 +3689,7 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
         con_id_str: opt.con_id_str,
         pdata:      opt.pdata,
         pid:        opt.pid,
-        editable:   opt.edit,
+        edit:       opt.edit,
       });
     }
   }
@@ -3986,7 +3989,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
       kind:       kind,
       data:       indata,
       id:         id,
-      editable:   false,
+      edit:       false,
       con_id_str: con_id_str,
       row_id_str: row_id_str,
       pdata:      pdata,
@@ -4113,8 +4116,8 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             context:     parent_view,
             // Sent to okFunction:
             type:        self.type,
-            id:          self.id,
             data:        self.data,
+            id:          self.id,
             link_type:   select_list_view.model.type,
             link_id:     null,
             select:      select_list_view.model.select,
@@ -4136,8 +4139,8 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
          kind:       view.model.kind,
          data:       view.model.data,
          id:         view.model.id,
-         edit:       false,
          con_id_str: "",
+         edit:       false,
       });
     }
   }
