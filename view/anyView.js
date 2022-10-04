@@ -2744,7 +2744,7 @@ $.any.anyView.prototype.getListView = function (type,kind,id,val,edit,filter_key
 
   // Create the list view
   let list_view_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+list_type+"_list";
-  let view_opt     = this.getListViewOptions(list_model,list_view_id,this);
+  let view_opt     = this.getListViewOptions(list_model,list_view_id,edit,this);
   let v_str = view_str && typeof view_str === "string"
               ? view_str
               : view_opt.grouping
@@ -2796,7 +2796,7 @@ $.any.anyView.prototype.getListModelOptions = function (type,list_type,data)
 }; // getListModelOptions
 
 // May be overidden by derived classes
-$.any.anyView.prototype.getListViewOptions = function (model,view_id,view)
+$.any.anyView.prototype.getListViewOptions = function (model,view_id,edit,view)
 {
   return {
     model:           model,
