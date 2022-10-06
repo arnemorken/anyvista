@@ -25,11 +25,12 @@
  *        {Object}  filters:               The filters define how the data will be displayed. Default: null.
  *        {string}  id:                    The jQuery id of a container element in which to display the view. Default: null.
  *        {boolean} isCreatable:
- *        {boolean} isEditable:            Icons for edit, update and cancel will be displayed. Ignored if isSelectable is set. Default: false.
- *        {boolean} isRemovable:           An icon for removing will be displayed. Ignored if isSelectable is set. Default: false.
- *        {boolean} isDeletable:           An icon for deleting will be displayed. Ignored if isSelectable is set. Default: false.
  *        {boolean} isSelectable:          An icon for selecting a list row will be displayed. Ignored for items. If isSelectable is set,
- *                                         isEditable, isRemovable and isDeletable will be ignored. Default: false.
+ *                                         isAddable, isRemovable, isEditable and isDeletable will be ignored. Default: false.
+ *        {boolean} isAddable:             An icon for adding new rows may be displayed. Ignored if isSelectable is set. Default: false.
+ *        {boolean} isRemovable:           An icon for removing will be displayed. Ignored if isSelectable is set. Default: false.
+ *        {boolean} isEditable:            Icons for edit, update and cancel will be displayed. Ignored if isSelectable is set. Default: false.
+ *        {boolean} isDeletable:           An icon for deleting will be displayed. Ignored if isSelectable is set. Default: false.
  *        {boolean} isSortable:            List tables will be sortable by clicking on column headers. An icon indicating
  *                                         the direction of the sort wil be displayed. Default: true.
  *        {boolean} confirmRemove:         A remove confirmation dialog will be displayed. Default: true.
@@ -47,7 +48,7 @@
  *        {boolean} showEmptyRows:         Shows empty rows in non-edit mode. Default: false.
  *        {boolean} showButtonNew:         If isCreatable is true, a button for creating a new item may be shown. Default: false.
  *        {boolean} showButtonSelectAll:   If isSelectable is true, a button for selecting all rows may be shown in list table headers. Default: false.
- *        {integer} showButtonAdd:         If isEditable is true, a button for adding new rows may be shown in list table headers. Possible values:
+ *        {integer} showButtonAdd:         If isAddable is true, a button for adding new rows may be shown in list table headers. Possible values:
  *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 0.
  *        {boolean} showButtonRemove:      If isRemovable is true, a remove button may be shown. Possible values:
  *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
@@ -94,10 +95,11 @@ $.widget("any.anyView", {
     filters:               null,
     id:                    null,
   //isCreatable:           true, // TODO! NOT IMPLEMENTED
-    isEditable:            true,
-    isRemovable:           true,
-    isDeletable:           true,
     isSelectable:          false,
+    isAddable:             true,
+    isRemovable:           true,
+    isEditable:            true,
+    isDeletable:           true,
     isSortable:            true,
     confirmRemove:         true,
     confirmDelete:         true,
@@ -1158,8 +1160,10 @@ $.any.anyView.prototype.refreshThead = function (params)
   let tr = $("<tr></tr>");
   thead.append(tr);
   // First tool cell for editable list
-  if ((this.options.isSelectable && (kind == "list" || kind == "select")) ||
-      (this.options.isEditable && (this.options.showButtonAdd || this.options.showButtonEdit || this.options.showButtonUpdate))) {
+  if ((this.options.isSelectable && this.options.showButtonSelect == 1 && (kind == "list" || kind == "select")) ||
+      (this.options.isAddable    && this.options.showButtonAdd == 1) ||
+      (this.options.isRemovable  && this.options.showButtonRemove == 1) ||
+      (this.options.isEditable   && (this.options.showButtonEdit == 1 || this.options.showButtonUpdate == 1 ||  this.options.showButtonDelete == 1 || this.options.showButtonCancel == 1))) {
     let th = $("<th class='any-th any-list-th any-tools-first-th'></th>");
     if (add_opt && this.options.showButtonAdd == 1) {
       add_opt.parent = th;
@@ -1204,7 +1208,10 @@ $.any.anyView.prototype.refreshThead = function (params)
     }
   }
   // Last tool cell for editable list
-  if ((this.options.isSelectable && (kind == "list" || kind == "select")) || this.options.isEditable) {
+  if ((this.options.isSelectable && this.options.showButtonSelect == 2 && (kind == "list" || kind == "select")) ||
+      (this.options.isAddable    && this.options.showButtonAdd == 2) ||
+      (this.options.isRemovable  && this.options.showButtonRemove == 2) ||
+      (this.options.isEditable   && (this.options.showButtonEdit == 2 || this.options.showButtonUpdate == 2 ||  this.options.showButtonDelete == 2 || this.options.showButtonCancel == 2))) {
     let th  = $("<th class='any-th any-list-th any-tools-last-th'></th>");
     if (add_opt && this.options.showButtonAdd == 2) {
       add_opt.parent = th;
@@ -1629,10 +1636,10 @@ $.any.anyView.prototype.refreshTableDataItemCells = function (params)
 
 $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
 {
-  if (!this.options.isEditable && !this.options.isSelectable ||
-     (this.options.isEditable   && this.options.showButtonRemove != 1 && this.options.showButtonDelete != 1 && this.options.showButtonCancel != 1 && this.options.showButtonEdit != 1 && this.options.showButtonUpdate != 1) ||
-     (this.options.isSelectable && this.options.showButtonSelect != 1) ||
-     (this.options.isSelectable &&  kind != "select" && kind != "list"))
+  if (!((this.options.isSelectable && this.options.showButtonSelect == 1 && (kind == "list" || kind == "select")) ||
+        (this.options.isAddable    && this.options.showButtonAdd == 1) ||
+        (this.options.isRemovable  && this.options.showButtonRemove == 1) ||
+        (this.options.isEditable   && (this.options.showButtonEdit == 1 || this.options.showButtonUpdate == 1 ||  this.options.showButtonDelete == 1 || this.options.showButtonCancel == 1))))
    return;
   let tr         = params.parent;
   let type       = params.type;
@@ -1646,11 +1653,17 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
   let pdata      = params.pdata;
   let pid        = params.pid;
 
+  let first = true;
   let td_id  = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_edit"; // First tool cell
   if ($("#"+td_id).length)
-    $("#"+td_id).remove();
+    if (kind != "item")
+      $("#"+td_id).remove();
+    else
+      first = false;
   let td = $("<td id='"+td_id+"' class='any-td any-td-first'></td>");
   tr.append(td);
+  if (!first)
+    return;
 
   let first_opt = {
     parent:     td,
@@ -1695,10 +1708,10 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
 
 $.any.anyView.prototype.refreshTableDataLastCell = function (params)
 {
-  if (!this.options.isEditable && !this.options.isSelectable ||
-     (this.options.isEditable   && this.options.showButtonRemove != 2 && this.options.showButtonDelete != 2 && this.options.showButtonCancel != 2 && this.options.showButtonEdit != 2 && this.options.showButtonUpdate != 2) ||
-     (this.options.isSelectable && this.options.showButtonSelect != 2) ||
-     (this.options.isSelectable &&  kind != "select" && kind != "list"))
+  if (!((this.options.isSelectable && this.options.showButtonSelect == 2 && (kind == "list" || kind == "select")) ||
+        (this.options.isAddable    && this.options.showButtonAdd == 2) ||
+        (this.options.isRemovable  && this.options.showButtonRemove == 2) ||
+        (this.options.isEditable   && (this.options.showButtonEdit == 2 || this.options.showButtonUpdate == 2 ||  this.options.showButtonDelete == 2 || this.options.showButtonCancel == 2))))
    return;
   let tr         = params.parent;
   let type       = params.type;
@@ -1712,15 +1725,21 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
   let pdata      = params.pdata;
   let pid        = params.pid;
 
+  let first = true;
   let td_id  = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_unedit"; // Last tool cell
   if ($("#"+td_id).length)
-    $("#"+td_id).remove();
+    if (kind != "item")
+      $("#"+td_id).remove();
+    else
+      first = false;
   let td = $("<td id='"+td_id+"' class='any-td any-td-last'></td>");
   tr.append(td);
+  if (!first)
+    return;
   if (this.options.isSelectable && (kind == "list" || kind == "select")) {
   }
   else {
-    if (this.options.isEditable || edit) {
+    if (this.options.isEditable || this.options.isRemovable || edit) {
       let last_opt = {
         parent:     td,
         type:       type,
@@ -1734,7 +1753,7 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
         pdata:      pdata,
         pid:        pid,
       };
-      if (this.options.showButtonRemove==2 && this.options.isRemovable && id && kind == "list")
+      if (this.options.showButtonRemove==2 && this.options.isRemovable && id && kind == "list" && !edit)
         this.refreshRemoveButton(last_opt);
       if (this.options.showButtonDelete==2 && this.options.isDeletable && id)
         this.refreshDeleteButton(last_opt);
@@ -2311,7 +2330,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,co
     inp_elem.off("keydown").on("keydown", init_opt, $.proxy(this._processKeyup,this)); // For catching the ESC key on Vivaldi
   }
   // Set focus to first editable text field and make sure cursor is at the end of the field
-  if (this.options.isEditable && edit && n==1) {
+  if ((this.options.isEditable || this.options.isAddable) && edit && n==1) {
     inp_elem.trigger("focus");
     let tmp = inp_elem.val();
     inp_elem.val("");
