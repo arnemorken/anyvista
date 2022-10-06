@@ -1385,7 +1385,7 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     return null; // Nothing to display
 
   let the_id     = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
-  let row_id_str = con_id_str+(con_id_str?"_":"")+the_id;
+  let row_id_str = con_id_str ? con_id_str+"_"+the_id : ""+the_id;
 
   let tr_id  = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_tr";
   let tr = $("#"+tr_id);
