@@ -69,13 +69,15 @@ var doUploadFile = function (url,file,uid,local_fname)
 //
 // Autocomplete
 //
-function w3_autocomplete(parentId,type,arr,onSelect,context)
+function w3_autocomplete(fieldOrFieldId,type,id,arr,onSelect,context)
 {
-  var inp = document.getElementById(parentId)
+  var inp = typeof fieldOrFieldId == "string" ? document.getElementById(fieldOrFieldId) : fieldOrFieldId;
   if (!inp) {
     console.error("autocomplete: input field missing")
     return;
   }
+  if (!inp.id)
+    inp.id = inp.parentElement.id+"_autoinput";
   // the autocomplete function takes two arguments,
   // the text field element and an array of possible
   // autocompleted values
@@ -101,10 +103,11 @@ function w3_autocomplete(parentId,type,arr,onSelect,context)
           b.addEventListener("click", function(e) {
               let inp_tags = this.getElementsByTagName("input");
               var name = inp_tags[0].value; // insert the value for the autocomplete text field
-              var id   = inp_tags[0].id;
+              var sel_id = inp_tags[0].id;
               inp.value = name;
               closeAllLists(); // close the list of autocompleted values, (or any other open lists of autocompleted values
-              onSelect.call(context,type,id,name,parentId);
+              var pid = typeof fieldOrFieldId == "string" ? fieldOrFieldId : fieldOrFieldId.id;
+              onSelect.call(context,type,sel_id,name,pid);
           });
           a.appendChild(b);
         }
