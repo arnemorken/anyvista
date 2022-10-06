@@ -579,8 +579,10 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
           if (!data[idx].head)
             if (!options.parent)
               itemlist.push(data[idx]);
-            else
+            else {
               itemlist.push(data);
+              break;
+            }
         }
       }
       if (!item && data[idx].data) { // subdata
@@ -596,8 +598,11 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
         return item; // Found id
     }
   } // for
-  if (itemlist.length > 0)
-    return itemlist; // Found type list
+  if (itemlist.length > 0) // Found type list
+    if (options.parent)
+      return itemlist[0];
+    else
+      return itemlist;
   return null; // Not found
 }; // dataSearch
 
