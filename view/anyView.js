@@ -462,7 +462,7 @@ $.any.anyView.prototype.refresh = function (params)
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
 
-  if (!params)
+  if (!params || !params.data)
     this._clearBeforeRefresh(parent); // Top level display of the model, so clear everything first
 
   if (this.must_empty) {
@@ -578,6 +578,9 @@ $.any.anyView.prototype.refresh = function (params)
       }
     } // for
 
+    if (edit) // Initialize thirdparty components (tinymce, etc.)
+      this.initComponents();
+
     // Clean up
     if (!parent.children().length)
       parent.children().remove();
@@ -649,7 +652,7 @@ $.any.anyView.prototype.refreshOne = function (params)
   };
 
   // Refresh header
-  let have_data = Object.size(data[id]) > 0;
+  let have_data = data && Object.size(data[id]) > 0;
   new_params.header_div = this.getOrCreateHeaderContainer(parent,type,kind,con_id_str,have_data,false);
   this.refreshHeader(new_params);
 
@@ -1631,12 +1634,12 @@ $.any.anyView.prototype.refreshTableDataItemCells = function (params)
   let str = this.getCellEntryStr(id,type,kind,row_id_str,filter_id,filter_key,data[id],data.lists,edit,model_str,view_str,td3);
   if (typeof str == "string")
     td3.append(str);
-  this.initTableDataCell(td_id,type,kind,data,id,con_id_str,row_id_str,filter,filter_id,filter_key,edit,n,edit,pdata,pid);
+  this.initTableDataCell(td_id,type,kind,data,id,con_id_str,row_id_str,filter,filter_id,filter_key,edit,n,pdata,pid);
 }; // refreshTableDataItemCells
 
 $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
 {
-  if (!((this.options.isSelectable && this.options.showButtonSelect == 1 && (kind == "list" || kind == "select")) ||
+  if (!((this.options.isSelectable && this.options.showButtonSelect == 1 && (params.kind == "list" || params.kind == "select")) ||
         (this.options.isAddable    && this.options.showButtonAdd == 1) ||
         (this.options.isRemovable  && this.options.showButtonRemove == 1) ||
         (this.options.isEditable   && (this.options.showButtonEdit == 1 || this.options.showButtonUpdate == 1 ||  this.options.showButtonDelete == 1 || this.options.showButtonCancel == 1))))
@@ -1708,7 +1711,7 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
 
 $.any.anyView.prototype.refreshTableDataLastCell = function (params)
 {
-  if (!((this.options.isSelectable && this.options.showButtonSelect == 2 && (kind == "list" || kind == "select")) ||
+  if (!((this.options.isSelectable && this.options.showButtonSelect == 2 && (params.kind == "list" || params.kind == "select")) ||
         (this.options.isAddable    && this.options.showButtonAdd == 2) ||
         (this.options.isRemovable  && this.options.showButtonRemove == 2) ||
         (this.options.isEditable   && (this.options.showButtonEdit == 2 || this.options.showButtonUpdate == 2 ||  this.options.showButtonDelete == 2 || this.options.showButtonCancel == 2))))
@@ -3644,6 +3647,7 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
 {
   if (!opt)
     return null;
+  /*
   if (this.current_edit && this.current_edit.edit) {
     opt = this.current_edit;
     opt.edit = false;
@@ -3865,7 +3869,7 @@ $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,
             let pname = data[id][type_name];
             $("#"+item_id).append($("<option "+sel+">").attr("value",parseInt(id)).text(pname));
             if (sel != "") {
-              $("#"+item_id+"-button .ui-selectmenu-text").text(item[type_name]);
+              $("#"+item_id+"-button .ui-selectmenu-text").text(item[type_name]); // TODO! .ui-selectmenu-text no longer used
               did_select = "";
             }
           }
