@@ -476,16 +476,17 @@ $.any.anyView.prototype.refresh = function (params)
   if (this.preRefresh)
     this.preRefresh(params);
 
+  // Find the filters to use
+  this.options.filters = this._getOrCreateFilters(this.model);
+
+  // Refresh top close button for item
+  if (!this.options.isSelectable && this.options.item_opening && con_id_str != "")
+    this.refreshCloseItemButton(params);
+
   if (data) {
+    // Display data
     if (kind == "head")
       ++this.data_level;
-
-    // Find the filters to use
-    this.options.filters = this._getOrCreateFilters(this.model);
-
-    // Refresh top close button for item
-    if (!this.options.isSelectable && this.options.item_opening && con_id_str != "")
-      this.refreshCloseItemButton(params);
 
     // Loop over all entries and refresh
     let view = this;
@@ -580,16 +581,33 @@ $.any.anyView.prototype.refresh = function (params)
       }
     } // for
 
-    if (edit) // Initialize thirdparty components (tinymce, etc.)
-      this.initComponents();
-
-    // Clean up
-    if (!parent.children().length)
-      parent.children().remove();
-
     if (kind == "head")
       --this.data_level;
   } // if data
+  else {
+    // No data, but must still have the opportunity to add new data.
+    // New data may be added by entering a new entry in a list or by
+    // entering a new item, so make sure this is possible.
+    this.refreshOne({
+       parent:     parent,
+       type:       type,
+       kind:       kind,
+       data:       null,
+       id:         null,
+       con_id_str: "",
+       row_id_str: "",
+       pdata:      pdata,
+       pid:        pid,
+       edit:       edit,
+    });
+  }
+
+  if (edit) // Initialize thirdparty components (tinymce, etc.)
+    this.initComponents();
+
+  // Clean up
+  if (!parent.children().length)
+    parent.children().remove();
 
   // Refresh bottom toolbar
   if (this.options.showToolbar && this.options.data_level == 0) {
@@ -659,7 +677,7 @@ $.any.anyView.prototype.refreshOne = function (params)
   this.refreshHeader(new_params);
 
   // Refresh data, including ingress
-  new_params.data_div = this.getOrCreateDataContainer(parent,type,kind,con_id_str,have_data);
+  new_params.data_div = this.getOrCreateDataContainer(parent,type,kind,con_id_str);
   let ingress_str = data && data[id] ? data[id].group_description : "";
   if (ingress_str && ingress_str != "") {
     new_params.ingress = this.getOrCreateIngress(new_params.data_div,type,kind,con_id_str);
@@ -955,8 +973,6 @@ $.any.anyView.prototype.refreshData = function (params)
 
   if (!table)
     return null;
-  if (kind != "list" && kind != "select" && kind != "item")
-    return null;
 
   let extra_foot = this.getOrCreateExtraFoot(table,type,kind,con_id_str);
   if (extra_foot) {
@@ -984,19 +1000,21 @@ $.any.anyView.prototype.refreshData = function (params)
          con_id_str: con_id_str,
       });
   }
-  let tbody = this.getOrCreateTbody(table,type,kind,con_id_str);
-  if (tbody) {
-    this.refreshTbodyRow({
-       parent:     tbody,
-       type:       type,
-       kind:       kind,
-       data:       data,
-       id:         id,
-       con_id_str: con_id_str,
-       pdata:      pdata,
-       pid:        pid,
-       edit:       edit,
-    });
+  if (kind == "list" || kind == "select" || kind == "item") {
+    let tbody = this.getOrCreateTbody(table,type,kind,con_id_str);
+    if (tbody) {
+      this.refreshTbodyRow({
+         parent:     tbody,
+         type:       type,
+         kind:       kind,
+         data:       data,
+         id:         id,
+         con_id_str: con_id_str,
+         pdata:      pdata,
+         pid:        pid,
+         edit:       edit,
+      });
+    }
   }
   let tfoot = this.getOrCreateTfoot(table,type,kind,con_id_str);
   if (tfoot) {
@@ -1018,13 +1036,13 @@ $.any.anyView.prototype.refreshData = function (params)
 //
 // Get the current data div, or create a new one if it does not exist
 //
-$.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,con_id_str,haveData)
+$.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,con_id_str)
 {
   if (!parent)
     return null;
   let div_id   = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_data";
   let data_div = $("#"+div_id);
-  if (!data_div.length && haveData) {
+  if (!data_div.length) {
     // Create new data container if we have data
     let class_id = "any-data any-"+kind+"-data any-data-"+this.data_level+" any-data-view";
     let pl       = this.options.indent_tables ? this.options.indent_level * this.options.indent_amount : 0;
@@ -1151,7 +1169,7 @@ $.any.anyView.prototype.refreshThead = function (params)
     return null;
   }
   let add_opt = null;
-  if (this.options.showButtonAdd && !this.options.isSelectable && (this.model.data && !this.model.data.grouping_for_id))
+  if (this.options.showButtonAdd && !this.options.isSelectable && (!this.model.data || this.model.data && !this.model.data.grouping_for_id))
     add_opt = {
       type:       type,
       kind:       kind,
@@ -3703,7 +3721,7 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
         edit:       opt.edit,
       };
       let have_data = Object.size(opt.data) > 0;
-      new_params.data_div = this.getOrCreateDataContainer(this.element,opt.type,opt.kind,opt.con_id_str,have_data);
+      new_params.data_div = this.getOrCreateDataContainer(this.element,opt.type,opt.kind,opt.con_id_str);
       new_params.table    = this.getOrCreateTable(new_params.data_div,opt.type,opt.kind,opt.con_id_str);
       this.refreshData(new_params);
     }
