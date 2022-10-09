@@ -68,6 +68,7 @@
  *        {boolean} onEnterInsertNew:      A new row will be inserted when pressing enter while editing a list. Default: false.
  *        {boolean} onEnterMoveFocus:      Pressing enter will move the focus to the next input element if editing an item. Default: True.
  *        {boolean} onEscRemoveEmpty:      The current row being edited in a list will be removed when pressing the Esc key if the row is empty. Default: true.
+ *        {boolean} onEscEndEdit:          Pressing the Esc key will end the current editing. Default: true.
  *        {boolean} onFocusoutRemoveEmpty: The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
  *        {boolean} onUpdateEndEdit:       Pressing the update button will close the element currently being edited for editing. Default: true.
  *        {boolean} useOddEven:            If true, tags for odd and even columns will be generated for list entries. Default: false.
@@ -129,6 +130,7 @@ $.widget("any.anyView", {
     onEnterInsertNew:      true, // Note: Only used for lists, ignored for items
     onEnterMoveFocus:      true, // Will be overridden by onEnterCallDatabase==true TODO! Make it work for lists
     onEscRemoveEmpty:      true,
+    onEscEndEdit:          true,
     onFocusoutRemoveEmpty: true,
   //onUpdateEndEdit:       true, // TODO! NOT IMPLEMENTED
     useOddEven:            true,
@@ -2476,6 +2478,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     itemLinkClicked:  this.options.itemLinkClicked,
     clickContext:     this.options.clickContext,
     preselected:      this.options.isSelectable ? this.options.preselected : null,
+    onEscEndEdit:     params && params.onEscEndEdit     !== undefined ? params.onEscEndEdit     : this.options.onEscEndEdit,
   };
 }; // getCreateViewOptions
 
@@ -2833,6 +2836,7 @@ $.any.anyView.prototype.getListViewOptions = function (model,view_id,edit,view)
     showTableHeader: false,
     showTableFooter: false,
     showToolbar:     false,
+    onEscEndEdit:    view ? view.options.onEscEndEdit : this.options.onEscEndEdit,
   };
 }; // getListViewOptions
 
@@ -3212,7 +3216,7 @@ $.any.anyView.prototype._processKeyup = function (event)
   if (event.preventDefault)
     event.preventDefault();
 
-  if (event.which == 27) { // esc
+  if (event.which == 27 && this.options.onEscEndEdit) { // esc
     this.doToggleEdit(event.data);
   }
   else
@@ -3582,6 +3586,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
     row_id_str: opt.row_id_str,
     data_level: 0, // Reset data_level for the new view
     showHeader: opt.showHeader === false ? false : true,
+    onEscEndEdit:     opt.onEscEndEdit     !== undefined ? opt.onEscEndEdit     : this.options.onEscEndEdit,
   });
   if (!view || !view.options || !view.options.top_view) {
     console.error("System error: View missing. "); // Should never happen TODO! i18n
