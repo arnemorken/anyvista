@@ -2350,9 +2350,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,co
   }
   // Bind some keyboard events in edit mode
   if (edit && ["link","text","number","password","date"].indexOf(filter_key.TYPE) > -1) {
-    // Bind enter key
-    inp_elem.off("keyup").on("keyup",     init_opt, $.proxy(this._processKeyup,this));
-    inp_elem.off("keydown").on("keydown", init_opt, $.proxy(this._processKeyup,this)); // For catching the ESC key on Vivaldi
+    this.bindTableDataCellEdit(inp_elem,init_opt);
   }
   // Set focus to first editable text field and make sure cursor is at the end of the field
   if ((this.options.isEditable || this.options.isAddable) && edit && n==1) {
@@ -2362,6 +2360,13 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,co
     inp_elem.val(tmp);
   }
 }; // initTableDataCell
+
+$.any.anyView.prototype.bindTableDataCellEdit = function (elem,params)
+{
+  // Bind enter key
+  elem.off("keyup").on("keyup",     params, $.proxy(this._processKeyup,this));
+  elem.off("keydown").on("keydown", params, $.proxy(this._processKeyup,this)); // For catching the ESC key on Vivaldi
+}; // bindTableDataCellEdit
 
 ///////////////////////////////////////////////////////////////////////////////
 
