@@ -4057,7 +4057,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
   }
   else {
     this.options.isDeletable = this.options.isEditable;
-    this.refreshData(); // TODO! refresh()
+    this.refresh();
   }
 
   if (kind == "item")
