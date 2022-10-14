@@ -624,6 +624,8 @@ $.any.anyView.prototype.refresh = function (params)
     }
   }
 
+  this.con_id_str = "";
+
   if (this.postRefresh)
     this.postRefresh(params);
 
