@@ -901,7 +901,7 @@ $.any.anyView.prototype.refreshHeaderEntry = function (header_div,data,id,filter
 //
 $.any.anyView.prototype.getOrCreateIngress = function (parent,type,kind,con_id_str)
 {
-  if (!parent)
+  if (!parent || !this.options.showTableIngress)
     return null;
   if (!type || !kind)
     return null;
@@ -921,7 +921,7 @@ $.any.anyView.prototype.getOrCreateIngress = function (parent,type,kind,con_id_s
 //
 $.any.anyView.prototype.refreshIngress = function (params)
 {
-  if (!params)
+  if (!params || !this.options.showTableIngress)
     return null;
 
   let parent     = params.parent;
