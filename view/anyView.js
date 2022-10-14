@@ -2560,6 +2560,8 @@ $.any.anyView.prototype.getHtmlStr = function (type,kind,id,val,edit)
 
 $.any.anyView.prototype.getLabelStr = function (type,kind,id,val)
 {
+  if (val == null || val == undefined)
+    val = "";
   //val = (val.replace(/<(?:.|\n)*?>/gm,''));
   let val_cleaned = typeof val == "string" && this.options.cutoff > 0 ? val.substring(0,this.options.cutoff) : ""+val;
   val_cleaned += (val.length > this.options.cutoff && this.options.cutoff > 0) ? " [...]" : "";
@@ -2622,6 +2624,8 @@ $.any.anyView.prototype.getNumberStr = function (type,kind,id,val,edit)
   if (edit)
     return "<input class='itemEdit itemNumber' type='text' value='"+val+"'/>";
   else {
+    if (val == null || val == undefined)
+      val = "";
     let val_cleaned = typeof val == "string" && this.options.cutoff > 0 ? val.substring(0,this.options.cutoff) : ""+val;
     val_cleaned += (val.length > this.options.cutoff && this.options.cutoff > 0) ? " [...]" : "";
     val = val_cleaned;
