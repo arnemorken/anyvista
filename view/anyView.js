@@ -3662,7 +3662,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
   }
   else {
     // Local refresh: Display the empty data structure just created
-    if (is_new)
+    if (is_new && opt.showHeader)
       the_id = "+0";
     view.refresh({
       type:     type,
