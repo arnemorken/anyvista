@@ -3018,6 +3018,10 @@ $.any.anyView.prototype.initComponents = function ()
       plugins: [
         "link image media autoresize"
       ],
+      autoresize_on_init: true,
+      autoresize_min_height: 0,
+      autoresize_max_height: 200,
+      autoresize_bottom_margin: 0,
       toolbar_items_size: "small",
       toolbar1: "undo redo | cut copy paste | link unlink anchor image media code | bullist numlist | outdent indent blockquote | alignleft aligncenter alignright alignjustify | hr",
       toolbar2: "bold italic underline strikethrough subscript superscript | styleselect formatselect fontselect fontsizeselect | searchreplace",
