@@ -1649,9 +1649,17 @@ $.any.anyView.prototype.refreshTableDataItemCells = function (params)
   let class_id_name = "any-item-name-"+filter_id;
   let class_id_val  = "any-item-val-"+filter_id;
   let td_id         = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_id;
-  let td2           = $("<td "+             "class='any-td any-item-name "+class_id_name+"' "+pl_str+">"+filter_key.HEADER+"</td>");
-  let td3           = $("<td id= '"+td_id+"' class='any-td any-item-val  "+class_id_val +"'></td>");
-  tr.append(td2);
+  let td2           = null;
+  let td3           = null;
+  if (filter_key.DISPLAY == 1) {
+    td2 = $("<td "+             "class='any-td any-item-name "+class_id_name+"' "+pl_str+">"+filter_key.HEADER+"</td>");
+    td3 = $("<td id= '"+td_id+"' class='any-td any-item-val  "+class_id_val +"'></td>");
+    tr.append(td2);
+  }
+  else {
+    let brk = filter[filter_id].HEADER ? "<br/>" : "";
+    td3 = $("<td id= '"+td_id+"' class='any-td any-item-val  "+class_id_val +"' colspan='2'>"+"<div class='"+class_id_name+"'>"+filter_key.HEADER+brk+"</div>"+"</td>");
+  }
   tr.append(td3);
   let str = this.getCellEntryStr(id,type,kind,row_id_str,filter_id,filter_key,data[id],data.lists,edit,model_str,view_str,td3);
   if (typeof str == "string")
