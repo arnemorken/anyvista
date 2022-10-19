@@ -3496,9 +3496,10 @@ $.any.anyView.prototype.showItem = function (event)
   let id     = event.data.id;
   let is_new = event.data.is_new;
   if (is_new || id == "new" || id == -1 || (!id && id !== 0)) {
-    // Find id for a new item
+    // Find id for a new item if one is not specified
     if (this.model.mode == "local") {
-      id = this.model.dataSearchNextId(type,this.model.data);
+      if ((!id && id !== 0) || id < 0)
+        id = this.model.dataSearchNextId(type,this.model.data);
       if ((!id && id !== 0) || id < 0) {
         this.model.error = i18n.error.NEW_ID_NOT_FOUND.replace("%%", type);
         console.error(this.model.error,null);
@@ -3509,12 +3510,15 @@ $.any.anyView.prototype.showItem = function (event)
       return this._doShowItem(event.data);
     }
     else { // remote
-      this.model.dbSearchNextId({
-         type:    type,
-         is_new:  true,
-         success: this._foundNextIdFromDB,
-         context: this,
-      }); // TODO! Asynchronous database call
+      if ((!id && id !== 0) || id < 0)
+        this.model.dbSearchNextId({
+           type:    type,
+           is_new:  true,
+           success: this._foundNextIdFromDB,
+           context: this,
+        }); // TODO! Asynchronous database call
+      else
+        this._doShowItem(event.data); // TODO! Not tested!
     }
   }
   else
