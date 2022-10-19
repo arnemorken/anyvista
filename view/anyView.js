@@ -1921,7 +1921,7 @@ $.any.anyView.prototype.refreshSelectButton = function (opt)
   return btn;
 }; // refreshSelectButton
 
-// Edit-button in first list or item table cell
+// Create an edit button
 // Only displayed if not editing
 // By default calls toggleEdit
 $.any.anyView.prototype.refreshEditButton = function (opt)
@@ -1953,7 +1953,7 @@ $.any.anyView.prototype.refreshEditButton = function (opt)
   return btn;
 }; // refreshEditButton
 
-// Update-button in first list or item table cell
+// Create an update button
 // Only displayed if editing
 // By default calls dbUpdate
 $.any.anyView.prototype.refreshUpdateButton = function (opt)
@@ -1985,7 +1985,7 @@ $.any.anyView.prototype.refreshUpdateButton = function (opt)
   return btn;
 }; // refreshUpdateButton
 
-// Delete-button in last list or item table cell
+// Create a delete button
 // Only displayed if editing
 // By default calls dbDeleteDialog
 $.any.anyView.prototype.refreshDeleteButton = function (opt)
@@ -2017,7 +2017,7 @@ $.any.anyView.prototype.refreshDeleteButton = function (opt)
   return btn;
 }; // refreshDeleteButton
 
-// Cancel-button in last list or item table cell
+// Create a cancel button
 // Only displayed if editing
 // By default calls toggleEdit
 $.any.anyView.prototype.refreshCancelButton = function (opt)
@@ -2049,8 +2049,7 @@ $.any.anyView.prototype.refreshCancelButton = function (opt)
   return btn;
 }; // refreshCancelButton
 
-// Remove-button in last list or item table cell
-// May be displayed while editing or not editing depending on the ... option
+// Create a remove button
 // By default calls dbRemoveDialog
 $.any.anyView.prototype.refreshRemoveButton = function (opt)
 {
@@ -2081,7 +2080,7 @@ $.any.anyView.prototype.refreshRemoveButton = function (opt)
   return btn;
 }; // refreshRemoveButton
 
-// Button in bottom toolbar for opening a new empty item view
+// Create a button for opening a new empty item view
 // By default calls showItem
 $.any.anyView.prototype.refreshNewItemButton = function (opt)
 {
@@ -2110,7 +2109,7 @@ $.any.anyView.prototype.refreshNewItemButton = function (opt)
   return btn;
 }; // refreshNewItemButton
 
-// Button in bottom toolbar for displaying a menu for adding links
+// Create a button for displaying a menu for adding links
 // By default calls showLinkMenu
 $.any.anyView.prototype.refreshAddLinkButton = function (opt)
 {
@@ -2180,7 +2179,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
   return btn;
 }; // refreshAddLinkButton
 
-// Button in menu for adding a link
+// Create a button for adding a link
 // By default calls dbSearchLinks
 $.any.anyView.prototype.refreshLinkButton = function (options,onClickMethod)
 {
