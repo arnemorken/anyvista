@@ -3593,26 +3593,29 @@ $.any.anyView.prototype._doShowItem = function (opt)
       data: {},
     },
   };
+  let the_item_data = the_item["+0"].data;
+  if (!opt.showHeader)
+    the_item = the_item_data;
   if (is_new) {
     // Fill the item with empty data for all displayable entries
-    the_item["+0"].data[the_id] = {};
+    the_item_data[the_id] = {};
     let filter = this.getFilter(type,"item");
     for (let filter_id in filter)
       if (filter[filter_id].DISPLAY)
-        the_item["+0"].data[the_id][filter_id] = "";
+        the_item_data[the_id][filter_id] = "";
   }
   else {
     // Fill the item with data copied from original data structure
-    the_item["+0"].data[the_id] = (the_data && the_data[the_id])
+    the_item_data[the_id] = (the_data && the_data[the_id])
                                   ? $.extend(true, {}, the_data[the_id])
                                   : null;
-    if (the_item["+0"].data[the_id].head)
-      delete the_item["+0"].data[the_id].head; // TODO! Why?
-    if (the_item["+0"].data[the_id].list)
-      delete the_item["+0"].data[the_id].list; // TODO! Why?
+    if (the_item_data[the_id].head)
+      delete the_item_data[the_id].head; // TODO! Why?
+    if (the_item_data[the_id].list)
+      delete the_item_data[the_id].list; // TODO! Why?
   }
-  the_item["+0"].data[the_id].item   = type;
-  the_item["+0"].data[the_id].is_new = is_new;
+  the_item_data[the_id].item   = type;
+  the_item_data[the_id].is_new = is_new;
 
   // Create and prepare a new display area
   let view = this.createView({
