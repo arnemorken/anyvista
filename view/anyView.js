@@ -680,10 +680,12 @@ $.any.anyView.prototype.refreshOne = function (params)
 
   // Refresh data, including ingress
   new_params.data_div = this.getOrCreateDataContainer(parent,type,kind,con_id_str);
-  let ingress_str = data && data[id] ? data[id].group_description : "";
-  if (ingress_str && ingress_str != "") {
-    new_params.ingress = this.getOrCreateIngress(new_params.data_div,type,kind,con_id_str);
-    this.refreshIngress(new_params);
+  if (kind == "head") {
+    let ingress_str = data && data[id] ? data[id].group_description : "";
+    if (ingress_str && ingress_str != "") {
+      new_params.ingress = this.getOrCreateIngress(new_params.data_div,type,kind,con_id_str);
+      this.refreshIngress(new_params);
+    }
   }
   new_params.table = this.getOrCreateTable(new_params.data_div,type,kind,con_id_str);
   this.refreshData(new_params);
