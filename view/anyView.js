@@ -3492,8 +3492,6 @@ $.any.anyView.prototype._addListEntry = function (opt)
 $.any.anyView.prototype.itemLinkClicked = function (event)
 {
   this.data_level = 0;
-  if (this.resetTabs)
-    this.resetTabs(); // TODO! Calling method in tabs class!
   return this.showItem(event);
 }; // itemLinkClicked
 
@@ -3644,8 +3642,6 @@ $.any.anyView.prototype._doShowItem = function (opt)
   }
   let top_view = this.options.top_view;
   if (top_view) {
-    if (top_view.resetTabs)
-      top_view.resetTabs(); // TODO! Calling method in tabs class!
     if (top_view.element && top_view.element.length) {
       top_view.element.empty();
       view.element = top_view.element;
@@ -4234,8 +4230,6 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
     throw i18n.error.MODEL_MISSING;
 
   this.removeFromView(opt); // TODO! Neccessary?
-  if (this.resetTabs)
-    this.resetTabs(); // TODO! Calling method in tabs class!
 
   // Update database
   this.options.item_opening = true; // To make top right close icon appear
