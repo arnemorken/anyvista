@@ -100,7 +100,9 @@ $.any.anyViewTabs.prototype.refreshHeader = function (params)
     if (kind == "list" || kind == "select")
       con_id_str = tabs_id_str;
     // Get or create a container for the tab buttons
-    let tab_button_div = this.getOrCreateTabsContainer(parent,type,kind,tabs_id_str);
+    let ptype          = this._findType(params.pdata,pid,type);
+    let pkind          = this._findKind(params.pdata,pid,type);
+    let tab_button_div = this.getOrCreateTabsContainer(parent,ptype,pkind,tabs_id_str);
     // Get the correct filter
     if (!this.options.filters) {
       this.model.error = type.capitalize()+" "+kind+" "+i18n.error.FILTERS_MISSING;
