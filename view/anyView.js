@@ -666,6 +666,7 @@ $.any.anyView.prototype.refreshOne = function (params)
     kind:       kind,
     data:       data,
     id:         id,
+    row_id_str: row_id_str, // For ingress
     con_id_str: con_id_str,
     pdata:      pdata,
     pid:        pid,
@@ -675,7 +676,7 @@ $.any.anyView.prototype.refreshOne = function (params)
 
   // Refresh header
   let have_data = data && Object.size(data[id]) > 0;
-  new_params.header_div = this.getOrCreateHeaderContainer(parent,type,kind,con_id_str,have_data,false);
+  new_params.header_div = this.getOrCreateHeaderContainer(parent,type,kind,row_id_str,have_data,false);
   this.refreshHeader(new_params);
 
   // Refresh data, including ingress
@@ -683,7 +684,7 @@ $.any.anyView.prototype.refreshOne = function (params)
   if (kind == "head") {
     let ingress_str = data && data[id] ? data[id].group_description : "";
     if (ingress_str && ingress_str != "") {
-      new_params.ingress = this.getOrCreateIngress(new_params.data_div,type,kind,con_id_str);
+      new_params.ingress = this.getOrCreateIngress(new_params.data_div,type,kind,row_id_str);
       this.refreshIngress(new_params);
     }
   }
@@ -811,11 +812,11 @@ $.any.anyView.prototype.refreshMessageArea = function (opt)
 //
 // Get the current header div, or create a new one if it does not exist
 //
-$.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,con_id_str,haveData,doNotEmpty)
+$.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,row_id_str,haveData,doNotEmpty)
 {
   if (!parent || !this.options.showHeader)
     return null;
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_header";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_header";
   let header_div = $("#"+div_id);
   if (header_div.length) {
     if (!doNotEmpty && header_div && header_div.length)
@@ -931,20 +932,20 @@ $.any.anyView.prototype.refreshIngress = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
-  let con_id_str = params.con_id_str;
+  let row_id_str = params.row_id_str;
   let pdata      = params.pdata;
   let pid        = params.pid;
 
   if (!parent)
     return null;
-  if (!data || !data[id] || !data[id].group_description || !con_id_str)
+  if (!data || !data[id] || !data[id].group_description || !row_id_str)
     return null;
 
   let ingress_str = data[id].group_description;
   if (!ingress_str || ingress_str == "")
     return null;
 
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_ingress";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_ingress";
   let div    = $("#"+div_id);
   if (!div.length) {
     div = $("<div id='"+div_id+"'></div>");
