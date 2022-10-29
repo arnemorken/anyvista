@@ -630,20 +630,21 @@ class anyTable extends dbTable
       $this->setError("Missing key ($key) or value ($val)");
       return false;
     }
-    // Build and execute the full statement
+
+    // Build and execute the query
     $stmt = $this->dbPrepareSearchItemStmt($key,$val);
     //elog("dbSearchItem:".$stmt);
     if (!$stmt || !$this->query($stmt))
       return false; // An error occured
 
     // Get the data
-    $success = $this->getRowData($data,"item",false,false);
+    $success = $this->getRowData($data,"item");
 
     if ($success) {
       // Search and get the meta data
       $this->dbSearchMeta($data,"item",false);
 
-      // Get associated lists, unless they should be skipped
+      // Get lists associated with the item (unless they should be skipped)
       if (!$skipLists)
         $this->dbSearchItemLists($data);
 
@@ -652,7 +653,6 @@ class anyTable extends dbTable
       $group_data = $group_table
                     ? $group_table->dbSearchGroupInfo($this->mType)
                     : null;
-      //vlog("dbSearchItem,group_data:",$group_data);
       if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
         $this->setError($group_table->mError);
 
@@ -684,7 +684,8 @@ class anyTable extends dbTable
 
     // Select from left joined user table (if this is not a user table)
     if ($this->mType != "user" &&
-        isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin["user"]) && $this->tableExists($this->mTableNameUserLink)) {
+        isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin["user"]) &&
+        $this->tableExists($this->mTableNameUserLink)) {
       foreach ($this->mTableFieldsLeftJoin["user"] as $field)
         $si .= ", ".$this->mTableNameUserLink.".".$field;
     }
@@ -700,7 +701,8 @@ class anyTable extends dbTable
     // Left join user table (if this is not a user table)
     $lj = "";
     if ($this->mType != "user" &&
-        isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin["user"]) && $this->tableExists($this->mTableNameUserLink)) {
+        isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin["user"]) &&
+        $this->tableExists($this->mTableNameUserLink)) {
       $lj .= "LEFT JOIN ".$this->mTableNameUserLink." ON ".$this->mTableNameUserLink.".".$this->mIdKeyTable."='".$this->mId."' ";
       if ($cur_uid)
         $lj .= "AND ".$this->mTableNameUserLink.".user_id='".$cur_uid."' ";
@@ -724,7 +726,14 @@ class anyTable extends dbTable
     if (!isset($this->mPlugins))
       return true; // No plugins found, return with no error
 
-    $err = $this->dbValidateItemListSearch();
+    // Must have a type and an id, and the type must exist as a plugin
+    $err = "";
+    if (!$this->mType)
+      $err .= "Type missing. ";
+    if (!isset($this->mId) || $this->mId == "")
+      $err .= "Id missing. ";
+    if (!in_array($this->mType,$this->mPlugins))
+      $err .= "Unregistered plugin: $this->mType. ";
     if ($err != "") {
       $this->setError($err);
       return false;
@@ -746,8 +755,8 @@ class anyTable extends dbTable
           if (!$skipOwnId || $this->hasParentId()) {
             if (!$table->dbSearchList($table_data,$skipOwnId,true,false)) // TODO! Searching for "simple" list does not work here
               $this->mError .= $table->getError();
-            // If we found some data, insert it in the data structure
             if ($table_data) {
+              // We found some data, insert it in the data structure
               if (!isset($data[$idx]))
                 $data[$idx] = array();
               if (!isset($data[$idx]["data"]))
@@ -775,18 +784,6 @@ class anyTable extends dbTable
     return true;
   } // dbSearchItemLists
 
-  protected function dbValidateItemListSearch()
-  {
-    $err = "";
-    if (!$this->mType)
-      $err .= "Type missing. ";
-    if (!isset($this->mId) || $this->mId == "")
-      $err .= "Id missing. ";
-    if (!isset($this->mPlugins) || !in_array($this->mType,$this->mPlugins))
-      $err .= "Unregistered plugin: $this->mType. ";
-    return $err;
-  } // dbValidateItemListSearch
-
   //////////////////////////////// List search ////////////////////////////////
 
   //
@@ -798,19 +795,18 @@ class anyTable extends dbTable
     if ($this->mType == "user" && $this->mListForType == "user")
       return true; // We do not have subusers (user table does not have parent_id field) TODO! Neccessary?
 
-    // Set mOrder * properties
+    // Set order properties
     if (Parameters::get("order")) {
       $this->mOrderBy = ltrim(Parameters::get("order"));
       if (Parameters::get("dir"))
         $this->mOrderDir = ltrim(Parameters::get("dir"));
     }
-
     if (!$simple && Parameters::get("lt") == "simple")
       $simple = true;
 
-    // Since a 'LIMIT' operation might apply, we need to search for results for
-    // each group seperately rather then using a LEFT JOIN on the group table.
-    // However, if a group_id is specified, we search only in that group.
+    // Since a 'LIMIT' operator might apply, we need to search for results for
+    // each group separately rather then using a LEFT JOIN on the group table.
+    // However, if "group_id" is specified, we need only search in that group.
 
     // Get group data
     $group_id    = Parameters::get("group_id");
@@ -820,7 +816,8 @@ class anyTable extends dbTable
                   : null;
     //vlog("dbSearchList,group_data:",$group_data);
     $success = false;
-    $limit   = !$simple ? $this->findLimit() : ""; // Same limit for all groups
+    // Use same limit for all groups
+    $limit = !$simple ? $this->findLimit() : "";
 
     if ($group_id) {
       // Build and execute the full statement for data from the given group
@@ -863,18 +860,19 @@ class anyTable extends dbTable
     return !$this->isError();
   } // dbSearchList
 
-  protected function dbExecListStmt(&$data,$gid=null,$limit=null,$skipOwnId=false,$flat=false,$simple=false)
+  protected function dbExecListStmt(&$data,$gid=null,$limit="",$skipOwnId=false,$flat=false,$simple=false)
   {
-    // Build and execute the full statement for a group
+    // Build and execute the query for a group
     $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$gid);
     $stmt = $partial_stmt.$limit;
     //elog("dbExecListStmt1:".$stmt);
-    if (!$stmt || !$this->query($stmt))
-      return false; // An error occured, abort
+    if (!$stmt || !$this->query($stmt) || $this->isError())
+      return false; // Something went wrong
+
     // Get the data
     $s = $this->getRowData($data,"list",$flat,$simple);
     if ($limit != "") {
-      // We should count how many rows would have been returned without LIMIT
+      // Count how many rows would have been returned without LIMIT
       $part_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$gid);
       $count_stmt = "SELECT count(*) AS num_results FROM (".
                     $part_stmt.
@@ -931,13 +929,9 @@ class anyTable extends dbTable
           $where .= " WHERE $this->mTableNameGroupLink.group_id is null ";
       }
     }
-    $order_by  = $this->findListOrderBy();
+    $order_by     = $this->findListOrderBy();
 
-    if ($this->isError()) {
-      error_log($this->mError);
-      return null;
-    }
-    // Build the full statement
+    // Build the query
     $stmt = $select.
             "FROM ".$this->getTableName()." ".
             $left_join.
@@ -953,10 +947,10 @@ class anyTable extends dbTable
 
     // Always select from group table
     if ($gid && isset($this->mTableFieldsGroup)) {
-      if ("group" != $this->mType) {
+      if ("group" != $this->mType &&
+          $this->tableExists($this->mTableNameGroup)) {
         $linktable = $this->findLinkTableName("group");
-        if ($this->tableExists($this->mTableNameGroup) &&
-            $this->tableExists($linktable)) {
+        if ($this->tableExists($linktable)) {
           foreach ($this->mTableFieldsGroup as $field)
             $sl .= ", ".$this->mTableNameGroup.".".$field;
         }
@@ -965,7 +959,7 @@ class anyTable extends dbTable
     // Select from other tables (link tables)
     if (isset($this->mPlugins)) {
       foreach($this->mPlugins as $i => $plugin) {
-        if ($plugin != "group" && $plugin != $this->mType) {
+        if ("group" != $plugin && $plugin != $this->mType) {
           if ((isset($this->mListForType) || $plugin == "user")) {
             if (isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin[$plugin])) {
               $linktable = $this->findLinkTableName($plugin);
@@ -1044,7 +1038,8 @@ class anyTable extends dbTable
   {
     $where = null;
     $link_table = $this->findLinkTableName($this->mListForType);
-    if (!$skipOwnId && isset($this->mListForType) && isset($this->mListForId) && $this->mListForId != "nogroup" && $link_table !== null && $this->tableExists($link_table)) {
+    if (!$skipOwnId && isset($this->mListForType) && isset($this->mListForId) && $this->mListForId != "nogroup" &&
+        $this->tableExists($link_table)) {
       $where_id = $link_table.".".$this->mListForType."_id='".$this->mListForId."' ";
       $where = "WHERE ".$where_id;
     }
@@ -1081,9 +1076,9 @@ class anyTable extends dbTable
       else
         $where .= " AND (".$skip_str.") ";
     }
-    $term = Parameters::get("term");
-    if ($term) {
-      $term_str = $this->getTableName().".".$this->mNameKey." LIKE '%".$term."%'";
+    $search_term = Parameters::get("term");
+    if ($search_term) {
+      $term_str = $this->getTableName().".".$this->mNameKey." LIKE '%".$search_term."%'";
       if ($where === null)
         $where  = "WHERE (".$term_str.") ";
       else
@@ -1145,7 +1140,7 @@ class anyTable extends dbTable
       $group_data = $group_table
                     ? $group_table->dbSearchGroupInfo($this->mType,$group_id)
                     : null;
-      //vlog("dbSearchListFromIds,group_data:",$group_data);
+      //vlog("dbSearchListFromIds,group_data($this->mType,$group_id):",$group_data);
       if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
         $this->setError($group_table->mError);
 
@@ -1185,7 +1180,8 @@ class anyTable extends dbTable
       }
     }
     */
-    $has_grp_lnk     = isset($this->mTableNameGroupLink) && $this->tableExists($this->mTableNameGroupLink);
+    $has_grp_lnk     = isset($this->mTableNameGroupLink) &&
+                             $this->tableExists($this->mTableNameGroupLink);
     $group_id_sel    = $has_grp_lnk && $is_list || isset($this->mListForType) ? ",".$this->mTableNameGroupLink.".group_id " : " ";
     $group_type_sel  = /*$has_grp_lnk && $this->mType == "group" ? ",any_group.group_type" :*/ " ";
     $group_left_join = $has_grp_lnk ? "LEFT JOIN ".$this->mTableNameGroupLink." ".
@@ -1219,7 +1215,6 @@ class anyTable extends dbTable
               ? $this->mFilters["list"]
               : $this->mFilters["item"];
     //elog("getRowData,filter:".var_export($filter,true));
-    $cur_user_id = $this->mPermission["current_user_id"];
     $this->mLastNumRows = 0;
     if (!$data)
       $data = array();
@@ -1258,7 +1253,8 @@ class anyTable extends dbTable
           } // for
         }
         // Meta table
-        if ($this->tableExists($this->mTableNameMeta) && isset($this->mTableFieldsMeta)) {
+        if (isset($this->mTableFieldsMeta) &&
+            $this->tableExists($this->mTableNameMeta)) {
           for ($t=0; $t<count($this->mTableFieldsMeta); $t++) {
             $item_id_table = $this->mTableFieldsMeta[$t];
             if (!$simple || $item_id_table == $this->mIdKey || $item_id_table == $this->mNameKey)
@@ -1529,7 +1525,7 @@ class anyTable extends dbTable
     //if ($err)
     //  $this->setMessage("Warning: ".$err);
     //
-    // Build group tree and stick data tree to it
+    // If grouping is specified, build group tree and stick data tree to it
     //
     if ($this->mType != "group") {
       if (isset($grouping) && $grouping && $grouping != "undefined" && (!isset($this->mId) || $this->mId == "") && !isset($this->mListForId) && $group_table) {
@@ -1862,7 +1858,8 @@ class anyTable extends dbTable
 
     // Insert in group table, if group id is given and we have a group table
     // TODO! Untested
-    if (isset($this->mTableNameGroupLink) && $this->tableExists($this->mTableNameGroupLink)) {
+    if (isset($this->mTableNameGroupLink) &&
+        $this->tableExists($this->mTableNameGroupLink)) {
       $gid = Parameters::get("group_id");
       if ($gid && $gid != ""  && $gid != "nogroup" && $this->mType != "group") {
         $stmt = "INSERT INTO ".$this->mTableNameGroupLink." (group_id,".$this->mType."_id) ".
@@ -2069,7 +2066,8 @@ class anyTable extends dbTable
 
   protected function dbMetaInsertOrUpdate($id)
   {
-    if (!$this->tableExists($this->mTableNameMeta) || !isset($this->mTableFieldsMeta))
+    if (!isset($this->mTableFieldsMeta) ||
+        !$this->tableExists($this->mTableNameMeta))
       return true;
     $is_err = false;
     // Insert any_ Parameters
@@ -2357,7 +2355,8 @@ class anyTable extends dbTable
         $this->setMessage($this->mDeleteNothingToDo);
 
       // Delete from meta table
-      if ($this->tableExists($this->mTableNameMeta) && $this->mIdKeyMetaTable) {
+      if ($this->mIdKeyMetaTable &&
+          $this->tableExists($this->mTableNameMeta)) {
         $stmt = "DELETE FROM ".$this->mTableNameMeta." WHERE ".$this->mIdKeyMetaTable."='".$this->mId."'";
         //elog("dbDelete:".$stmt);
         if (!$this->query($stmt))
