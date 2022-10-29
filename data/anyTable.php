@@ -200,7 +200,6 @@ class anyTable extends dbTable
     // Filters should be defined in the options parameter, but may also
     // be specified / manipulated in the initFilters method.
     $this->initFilters($this->mFilters);
-
   } // constructor
 
   //
@@ -211,7 +210,6 @@ class anyTable extends dbTable
   private function initProperties($defsOrType)
   {
     $this->mError = "";
-    $this->mErrorListLeftJoin = "";
     if (!$defsOrType || (gettype($defsOrType) != "array" && gettype($defsOrType) != "string")) {
       $this->mError = "Unknown or missing parameter to initProperties. ";
       return false;
@@ -254,6 +252,7 @@ class anyTable extends dbTable
       $this->mType               = $defsOrType;
       $this->mTableName          = "any_".$this->mType;
       $this->mTableNameMeta      = null; // No meta table for auto-generated type/table
+      // Group table link
       $ltn = ["group",$this->mType];
       sort($ltn);
       $ltn = "any_".implode("_",$ltn);
@@ -555,7 +554,6 @@ class anyTable extends dbTable
       return null;
     }
     $this->mError = "";
-    $this->mErrorListLeftJoin = "";
     $this->mData = null;
 
     $this->initFieldsFromParam();
@@ -669,15 +667,9 @@ class anyTable extends dbTable
   {
     // Get query fragments
     $this->mError = "";
-    $this->mErrorListLeftJoin = "";
-    $select    = $this->findItemSelect();
-    $left_join = $this->findItemLeftJoin();
-    $where     = $this->findItemWhere($key,$val);
-
-    if ($this->isError()) {
-      error_log($this->mError);
-      return false;
-    }
+    $select       = $this->findItemSelect();
+    $left_join    = $this->findItemLeftJoin();
+    $where        = $this->findItemWhere($key,$val);
     $stmt = $select.
             "FROM ".$this->getTableName()." ".
             $left_join.
@@ -914,7 +906,6 @@ class anyTable extends dbTable
   {
     // Get query fragments
     $this->mError = "";
-    $this->mErrorListLeftJoin = "";
     $select    = $this->findListSelect($gid);
     $left_join = $this->findListLeftJoin($gid);
     $where     = $this->findListWhere($skipOwnId);
@@ -1012,8 +1003,6 @@ class anyTable extends dbTable
           }
         }
       }
-      if ($this->mErrorListLeftJoin)
-        error_log($this->mErrorListLeftJoin);
     }
     if ($this->hasParentId())
       $lj .= "LEFT JOIN ".$this->mTableName." temp ON ".$this->mTableName.".parent_id=temp.".$this->mIdKey." ";
@@ -1832,8 +1821,7 @@ class anyTable extends dbTable
       return null;
     }
     $this->mError = "";
-    $this->mErrorListLeftJoin = "";
-    $this->mData = null;
+    $this->mData  = null;
     $this->mNumRowsChanged = 0;
 
     $this->initFieldsFromParam();
@@ -1953,8 +1941,7 @@ class anyTable extends dbTable
       return null;
     }
     $this->mError = "";
-    $this->mErrorListLeftJoin = "";
-    $this->mData = null;
+    $this->mData  = null;
     $this->mNumRowsChanged = 0;
 
     $this->initFieldsFromParam();
@@ -2341,7 +2328,6 @@ class anyTable extends dbTable
   public function dbDelete()
   {
     $this->mError = "";
-    $this->mErrorListLeftJoin = "";
     $this->mData  = null;
 
     // Delete item(s) from table or file from disk
