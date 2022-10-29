@@ -166,12 +166,14 @@ $.any.anyViewTabs.prototype.openTab = function (event)
     if ($("#"+this.active_button).siblings().is($("#"+event.data.tab_button_id))) {
       $("#"+this.active_button ).removeAttr("active_tab");
       $("#"+this.active_tab_area).removeAttr("active_tab");
-      this.active_button_panel.removeAttr("active_tab");
+      if (this.active_button_panel)
+        this.active_button_panel.removeAttr("active_tab");
     }
     // Inactivate and hide old active tab and hide old active button panel (in case we clicked on a tab in another panel)
     $("#"+this.active_button).removeClass("w3-blue");
     $("#"+this.active_tab_area).hide();
-    this.active_button_panel.hide();
+    if (this.active_button_panel)
+      this.active_button_panel.hide();
     // Remember new active tab/panel selected by user if no children are active
     let active_child = $("#"+event.data.tab_area_id).find("[active_tab]");
     if (!active_child.length) {
