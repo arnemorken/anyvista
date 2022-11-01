@@ -808,33 +808,32 @@ class anyTable extends dbTable
     $group_data  = $group_table
                    ? $group_table->dbSearchGroupInfo($this->mType,$group_id)
                    : null;
+    //vlog("dbSearchList,group_data($this->mType,$group_id):",$group_data);
+    if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
+      $this->setError($group_table->mError);
+
     // Use same limit for all groups
     $limit = !$simple ? $this->findLimit() : "";
 
-    if ($group_id) {
-      // Build and execute the full statement for data from the given group
-      if ($group_id == "nogroup")
-        $group_id = null;
-      $s = $this->dbExecListStmt($data,$group_id,$limit,$skipOwnId,$flat,$simple);
-      $success = $success || $s;
-    } // if
+    if ($group_id && $this->mType != "group") {
+      // Build and execute the query for data from the given non-group group
+      $success = $this->dbExecListStmt($data,$group_id,$limit,$skipOwnId,$flat,$simple);
+    }
     else {
+      // Build and execute the query for grouped data
+      $success = true;
+      $has_nogroup = false;
       if ($group_data && $group_data["group"]) {
         foreach ($group_data["group"] as $gid => $group) {
-          // Build and execute the full statement for a group
+          $success = $success && $this->dbExecListStmt($data,$gid,$limit,$skipOwnId,$flat,$simple);
           if ($gid == "nogroup")
-            $gid = null;
-          $gidx = $this->mType == "group"
-                  ? $group["group_type"]
-                  : $gid;
-          $s = $this->dbExecListStmt($data,$gidx,$limit,$skipOwnId,$flat,$simple);
-          $success = $success || $s;
+            $has_nogroup = true;
         }
       }
-      // Build and execute the full statement for ungrouped data
-      $s = $this->dbExecListStmt($data,null,$limit,$skipOwnId,$flat,$simple);
-      $success = $success || $s;
-    } // else
+      // Build and execute the query for ungrouped data
+      if (!$group_id && !$has_nogroup)
+        $success = $success && $this->dbExecListStmt($data,"nogroup",$limit,$skipOwnId,$flat,$simple);
+    }
 
     if ($success) {
       // Search and get the meta data
@@ -864,7 +863,8 @@ class anyTable extends dbTable
       return false; // Something went wrong
 
     // Get the data
-    $s = $this->getRowData($data,"list",$flat,$simple);
+    $success = $this->getRowData($data,"list",$flat,$simple);
+
     if ($limit != "") {
       // Count how many rows would have been returned without LIMIT
       $part_stmt = $this->dbPrepareSearchListStmt($gid,$skipOwnId);
@@ -879,9 +879,6 @@ class anyTable extends dbTable
         if (!$gid)
           $gr_idx = "nogroup";
         else
-        if ($this->mType == "group")
-          $gr_idx = $gid;
-        else
         if (is_int(intval($gid)))
           $gr_idx = intval($gid);
         else
@@ -891,7 +888,7 @@ class anyTable extends dbTable
       else
         unset($this->mNumResults);
     } // if
-    return $s;
+    return $success;
   } // dbExecListStmt
 
   protected function dbPrepareSearchListStmt($gid=null,$skipOwnId=false)
