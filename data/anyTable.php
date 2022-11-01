@@ -745,12 +745,12 @@ class anyTable extends dbTable
       if ($table) {
         $link_table = $this->findLinkTableName($plugin);
         if ($this->tableExists($link_table)) {
-          $table->mListForType = $this->mType;
-          $table->mListForId   = $this->mId;
-          $table->mListForName = isset($data[$idx]) && isset($data[$idx][$this->mNameKey]) ? $data[$idx][$this->mNameKey] : "";
-          $table_data = null;
           $skipOwnId = $plugin == $this->mType;
           if (!$skipOwnId || $this->hasParentId()) {
+            $table_data          = null;
+            $table->mListForType = $this->mType;
+            $table->mListForId   = $this->mId;
+            $table->mListForName = isset($data[$idx]) && isset($data[$idx][$this->mNameKey]) ? $data[$idx][$this->mNameKey] : "";
             if (!$table->dbSearchList($table_data,$skipOwnId,true,false)) // TODO! Searching for "simple" list does not work here
               $this->mError .= $table->getError();
             if ($table_data) {
@@ -759,21 +759,20 @@ class anyTable extends dbTable
                 $data[$idx] = array();
               if (!isset($data[$idx]["data"]))
                 $data[$idx]["data"] = array();
-              if (isset($grouping) && $grouping && $grouping != "undefined")
-                $data[$idx]["data"]['grouping']      = $grouping;
+              if ($grouping)
+                $data[$idx]["data"]['grouping'] = $grouping;
               $data[$idx]["data"]["grouping_for_type"] = $table->mListForType;
               $data[$idx]["data"]["grouping_for_id"]   = $table->mListForId;
               $data[$idx]["data"]["grouping_for_name"] = $table->mListForName;
-              $data[$idx]["data"]["plugin-".$plugin] = array();
-              $data[$idx]["data"]["plugin-".$plugin]["head"] = $plugin;
-              $data[$idx]["data"]["plugin-".$plugin][$table->getNameKey()] = $this->findDefaultItemListHeader($plugin,$data[$idx]["data"]["plugin-".$plugin],true);
+              $pl_idx = "plugin-".$plugin;
+              $data[$idx]["data"][$pl_idx] = array();
+              $data[$idx]["data"][$pl_idx]["head"] = $plugin;
+              $data[$idx]["data"][$pl_idx][$table->getNameKey()] = $this->findDefaultItemListHeader($plugin,$data[$idx]["data"][$pl_idx],true);
               if (isset($table_data[$plugin]))
-                $data[$idx]["data"]["plugin-".$plugin]["data"] = isset($table_data[$plugin]["data"]) ? $table_data[$plugin]["data"] : null;
+                $data[$idx]["data"][$pl_idx]["data"] = isset($table_data[$plugin]["data"]) ? $table_data[$plugin]["data"] : null;
               else
               if ($plugin == $this->mType)
-                $data[$idx]["data"]["plugin-".$plugin]["data"] = $table_data;
-              else
-                $data[$idx]["data"]["plugin-".$plugin]["data"] = "empty"; // So that the view can create an empty container
+                $data[$idx]["data"][$pl_idx]["data"] = $table_data;
             }
           }
         }
@@ -809,11 +808,9 @@ class anyTable extends dbTable
     // Get group data
     $group_id    = Parameters::get("group_id");
     $group_table = anyTableFactory::create("group",$this);
-    $group_data = $group_table
-                  ? $group_table->dbSearchGroupInfo($this->mType,$group_id)
-                  : null;
-    //vlog("dbSearchList,group_data:",$group_data);
-    $success = false;
+    $group_data  = $group_table
+                   ? $group_table->dbSearchGroupInfo($this->mType,$group_id)
+                   : null;
     // Use same limit for all groups
     $limit = !$simple ? $this->findLimit() : "";
 
@@ -848,10 +845,10 @@ class anyTable extends dbTable
         $this->dbSearchMeta($data,"list",$flat);
 
       // Sort the list
-      if ($this->mSortFunction !== null)
+      if ($this->mSortFunction)
         call_user_func($this->mSortFunction);
 
-      // Build the data tree unless its a 'simple' list
+      // Build the data tree (unless its a 'simple' list)
       if (!$simple)
         $this->buildGroupTreeAndAttach($data,"list",$group_table,$group_data);
     }
@@ -1232,8 +1229,8 @@ class anyTable extends dbTable
              ? $nextrow[$this->mIdKeyTable]
              : null;
       if ($idx) {
-        // Force idx to be a string in order to keep ordering when sending JSON data to a json client
-        $idx  = "+".$idx;
+        // Force idx to be a string in order to maintain ordering when sending JSON data to a json client
+        $idx = "+".$idx;
         if ($kind == "list") {
           if (!$simple)
             $data[$gidx][$idx][$kind] = $this->mType; // Index by group id
