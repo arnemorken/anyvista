@@ -4000,6 +4000,15 @@ $.any.anyView.prototype.dbUpdate = function (event)
   });
   if (data_values["parent_name"])
     delete data_values["parent_name"]; // TODO! Why?
+  if (this.options.top_view && this.options.top_view.model) {
+    // If a top_view exists, update the data there too in order to keep it in sync
+    // TODO! What if id == "new"?
+    this.options.top_view.model.dataUpdate({
+      type:   type,
+      id:     id,
+      indata: data_values,
+    });
+  }
   if (id || id === 0) { // TODO!
     if (kind == "item") {
       // Update header for item view
