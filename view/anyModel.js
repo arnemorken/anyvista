@@ -1626,16 +1626,18 @@ anyModel.prototype.dbUpdate = function (options)
  * @description Builds a POST string for dbUpdate to be sent to server.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer}  id:     Item's id. If specified, the server will update the item,
- *                           if not specified, the server will insert the item.
- *                           Optional. Default: null.
- *        {integer}  type:   Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
- *                           be used as the id_key instead of the value in `this.id_key` when calling the server.
- *                           Optional. Default: `this.type`.
- *        {boolean}  is_new: true if the item is new (does not exist in database) and should be inserted
- *                           and not updated. Note: If set, an insert operation will be performed even if
- *                           `options.id` has a value.
- *                           Optional. Default: false.
+ *        {integer}  id:      Item's id. If specified, the server will update the item,
+ *                            if not specified, the server will insert the item.
+ *                            Optional. Default: null.
+ *        {integer}  type:    Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
+ *                            be used as the id_key instead of the value in `this.id_key` when calling the server.
+ *                            Optional. Default: `this.type`.
+ *        {boolean}  is_new:  true if the item is new (does not exist in database) and should be inserted
+ *                            and not updated. Note: If set, an insert operation will be performed even if
+ *                            `options.id` has a value.
+ *                            Optional. Default: false.
+ *        {boolean} auto_id:  Tells the server whether to update the id field by AUTOINCREMENT. If false, the server
+ *                            will use the value provide, if tru use AUTOINCREMENT. Default: true.
  *
  * @return The complete URL for dbUpdate or null on error.
  */
@@ -1677,6 +1679,11 @@ anyModel.prototype.dbUpdateGetURL = function (options)
                      : null;
   if (the_group_id)
     param_str += "&group_id="+the_group_id;
+
+  // Auto id
+  param_str += options.auto_id
+               ? "&auto_id=1"
+               : "&auto_id=0";
 
   // Command
   param_str += options.is_new || !the_id
