@@ -789,9 +789,6 @@ class anyTable extends dbTable
   //
   protected function dbSearchList(&$data,$skipOwnId=false,$flat=false,$simple=false)
   {
-    if ($this->mType == "user" && $this->mListForType == "user")
-      return true; // We do not have subusers (user table does not have parent_id field) TODO! Neccessary?
-
     // Set order properties
     if (Parameters::get("order")) {
       $this->mOrderBy = ltrim(Parameters::get("order"));
