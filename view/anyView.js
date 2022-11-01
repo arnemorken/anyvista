@@ -4012,23 +4012,14 @@ $.any.anyView.prototype.dbUpdate = function (event)
   if (id || id === 0) { // TODO!
     if (kind == "item") {
       // Update header for item view
-      let head_item = this.model.dataSearch({ type: type,
-                                              id:   "+0",
-                                           });
+      let head_item = this.options.view.model.dataSearch({ type: type,
+                                                           id:   "+0",
+                                                        });
       if (head_item && head_item["+0"]) {
         if (data_values[this.model.name_key]) {
-          head_item["+0"][this.model.name_key] = data_values[this.model.name_key];
-          let con_div = this.element; // TODO! UNTESTED!
-          let new_params = {
-            parent:     con_div,
-            type:       type,
-            kind:       "head",
-            data:       this.model.data,
-            id:         "0",
-            con_id_str: "0",
-            doNotEmpty: true,
-          };
-          this.refreshHeader(new_params); // TODO! Does not work?
+          head_item["+0"][this.options.view.model.name_key] = data_values[this.model.name_key];
+          this.options.view.options.item_opening = true;
+          this.options.view.refresh(); // TODO! Refreshes entire view, but only need to refresh header
         }
       }
     }
