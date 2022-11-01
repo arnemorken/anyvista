@@ -912,9 +912,7 @@ $.any.anyView.prototype.getOrCreateIngress = function (parent,type,kind,con_id_s
   let ingress  = $("#"+div_id); // Can we reuse ingress div?
   if (!ingress.length) {
     let class_id = "any-ingress any-"+kind+"-ingress any-ingress-"+this.data_level;
-    let ingress_row = jQuery("<tr/>");
-    ingress_row.append("<div id='"+div_id+"' class='"+class_id+"'></div>");
-    parent.append(ingress_row);
+    parent.append("<div id='"+div_id+"' class='"+class_id+"'></div>");
   }
   return ingress;
 }; // getOrCreateIngress
