@@ -513,7 +513,7 @@ class anyTable extends dbTable
       }
       $unique = Parameters::get("unique");
       if (isset($unique))
-        $sql .= "UNIQUE KEY(".$unique.")";
+        $sql .= ",UNIQUE KEY(".$unique.")";
       $sql .= ")";
       //elog("dbCreate,sql:$sql");
       $this->getConnection()->mDBHandle->exec($sql); // TODO! Delegate this to dbTable class
