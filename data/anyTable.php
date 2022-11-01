@@ -218,6 +218,13 @@ class anyTable extends dbTable
       // Table defs given, check if it is valid
       if (!$this->validateTableDefs($defsOrType))
         return false;
+
+      // Set table fields, meta table fields and user link table fields
+      $this->mTableFields         = $defsOrType["fields"];
+      $this->mTableFieldsMeta     = $defsOrType["fieldsMeta"];
+      $this->mTableFieldsGroup    = $defsOrType["fieldsGroup"];
+      $this->mTableFieldsLeftJoin = $defsOrType["fieldsLeftJoin"];
+
       // Set variables from table defs
       $this->mType               = $defsOrType["type"];
       $this->mTableName          = $defsOrType["tableName"];
@@ -232,12 +239,6 @@ class anyTable extends dbTable
       $this->mOrderDir           = isset($defsOrType["orderDir"]) ? $defsOrType["orderDir"] : "ASC";
       $this->mMetaId             = $defsOrType["metaId"];
 
-      // Set table fields, meta table fields and user link table fields
-      $this->mTableFields         = $defsOrType["fields"];
-      $this->mTableFieldsMeta     = $defsOrType["fieldsMeta"];
-      $this->mTableFieldsGroup    = $defsOrType["fieldsGroup"];
-      $this->mTableFieldsLeftJoin = $defsOrType["fieldsLeftJoin"];
-
       // Set table filters
       if (isset($defsOrType["filters"]))
         $this->mFilters = $defsOrType["filters"];
@@ -248,6 +249,14 @@ class anyTable extends dbTable
     }
     else
     if (gettype($defsOrType) == "string") {
+      // Set default table fields
+      $this->mTableFields = [
+        $this->mIdKey,
+        $this->mNameKey,
+      ];
+      // Set default table meta fields
+      $this->mTableFieldsMeta = null;
+
       // Set minimal working values ("defsOrType" should be type)
       $this->mType               = $defsOrType;
       $this->mTableName          = "any_".$this->mType;
@@ -267,13 +276,6 @@ class anyTable extends dbTable
       $this->mNameKey            = $this->mType."_name";
       $this->mOrderBy            = $this->mIdKeyTable;
       $this->mMetaId             = null; // No meta table for auto-generated type/table
-      // Set default table fields
-      $this->mTableFields = [
-        $this->mIdKey,
-        $this->mNameKey,
-      ];
-      // Set default table meta fields
-      $this->mTableFieldsMeta = null;
       // Set default table filters
       $this->mFilters = [
         "list" => [
@@ -286,6 +288,7 @@ class anyTable extends dbTable
         ],
       ];
     }
+
     // Set some common properties if not already set
     if (!isset($this->mOrderBy))
       $this->mOrderBy = $this->mIdKeyTable;
@@ -303,7 +306,11 @@ class anyTable extends dbTable
     if (!isset($this->mType))
       return "Table type missing. "; // We must have a type
     if (!isset($this->mId) || $this->mId == "")
-      $this->mId        = ltrim(Parameters::get($this->mIdKey));
+      $this->mId   = ltrim(Parameters::get($this->mIdKey));
+
+    // Make sure the order-by field exists
+    if (!in_array($this->mOrderBy,$this->mTableFields))
+      $this->mOrderBy = $this->mTableFields[0];
 
     $str = Parameters::get("plugins");
     if ($str)
