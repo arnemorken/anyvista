@@ -1883,9 +1883,10 @@ class anyTable extends dbTable
     // TODO Check for all fields empty
     $unique_table_fields = array_unique($this->mTableFields);
     $stmt = "INSERT IGNORE INTO ".$this->getTableName()." (";
+    $auto_id = Parameters::get("auto_id");
     $n = 0;
     foreach ($unique_table_fields as $key) {
-      if ($key != $this->mIdKeyTable) { // Do not update the id key field
+      if ($key != $this->mIdKeyTable || !$auto_id || $auto_id =="0" || $auto_id=="false") { // Do not update the id key field, unless told to do so
         $val = Parameters::get($key);
         //elog("dbPrepareInsertStmt,".$key.":".$val);
         if ($val && $val != "") { // Only allow values that are set (or blank)
@@ -1897,7 +1898,7 @@ class anyTable extends dbTable
     $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
     $stmt.= ") VALUES (";
     foreach ($unique_table_fields as $key) {
-      if ($key != $this->mIdKeyTable) { // Do not update the id key ield
+      if ($key != $this->mIdKeyTable || !$auto_id || $auto_id =="0" || $auto_id=="false") { // Do not update the id key field, unless told to do so
         $val = Parameters::get($key);
         if ($val && $val != "") { // Only allow values that are set (or blank)
           $val = htmlentities((string)$val,ENT_QUOTES,'utf-8',FALSE);
@@ -2011,10 +2012,11 @@ class anyTable extends dbTable
     }
     $unique_table_fields = array_unique($this->mTableFields);
     $stmt = "UPDATE ".$this->getTableName()." SET ";
+    $auto_id = Parameters::get("auto_id");
     $n = 0;
     $to_set = "";
     foreach ($unique_table_fields as $key) {
-      if ($key != $this->mIdKeyTable) { // Do not update the id key field
+      if ($key != $this->mIdKeyTable || !$auto_id || $auto_id =="0" || $auto_id=="false") { // Do not update the id key field, unless told to do so
         $val = Parameters::get($key);
         //elog("dbPrepareUpdateStmt,".$key.":".$val);
         if ($val || $val === "") { // Only allow values that are set (or blank)
