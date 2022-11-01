@@ -171,8 +171,8 @@ class groupTable extends anyTable
                       $this->getTableName().".group_type,".
                       $this->getTableName().".group_name,".
                       $this->getTableName().".group_description,".
-                      $this->getTableName().".parent_id, ".
-                      $this->getTableName().".group_sort_order ".
+                      $this->getTableName().".group_sort_order,".
+                      $this->getTableName().".parent_id ".
             "FROM ".$this->getTableName()." ";
     $where = "";
     if ($type && $type != "group")
@@ -185,8 +185,9 @@ class groupTable extends anyTable
     }
     $stmt .= $where."ORDER BY group_sort_order,group_id,group_type";
     //error_log("dbSearchGroupInfo:".$stmt);
-    if (!$this->tableExists($this->getTableName()) || !$this->query($stmt))
-      error_log("Warning: No group tree. "); // No group tree
+    if (!$this->tableExists($this->getTableName()) ||
+        !$this->query($stmt))
+      error_log("Warning: No group tree. ");
     $data = array();
     while (($nextrow = $this->getNext(true)) != null) {
       $idx = "+".$nextrow[$this->mIdKeyTable];
@@ -196,7 +197,8 @@ class groupTable extends anyTable
           $this->getCellData($item_id_table,$nextrow,$data,$idx,"group",null,"list",false); // TODO: Searching for "simple" list does not work here
         }
       }
-      $data["group"][$idx]["head"] = "group";
+      if ($type != "group")
+        $data["group"][$idx]["head"] = "group";
     }
     // Get group tree and append data to it
     $num = 0;
@@ -215,7 +217,6 @@ class groupTable extends anyTable
     }
     //error_log("dbSearchGroupInfo,data_tree2:".var_export($data_tree,true));
     $this->tdata = $data_tree;
-
     return $this->tdata;
   } // dbSearchGroupInfo
 
