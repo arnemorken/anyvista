@@ -2432,7 +2432,7 @@ $.any.anyView.prototype.createView = function (params)
   if (id || id === 0)
     model.id = id;
   // Create the view
-  let view_opt = this.getCreateViewOptions(model,parent,kind,data_level);
+  let view_opt = this.getCreateViewOptions(model,parent,kind,data_level,params);
   if (params.showHeader === false)
     view_opt.showHeader = false
   let v_str    = params && params.view_class
@@ -2477,7 +2477,7 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
   };
 }; // getCreateModelOptions
 
-$.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_level)
+$.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_level,params)
 {
   return {
     model:            model,
@@ -2492,8 +2492,8 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     top_view:         this.options.top_view,
     currentPage:      this.options.currentPage,
     showHeader:       this.options.showHeader,
-    showTableHeader:  this.options.showTableHeader,
-    showTableFooter:  this.options.showTableFooter,
+    showTableHeader:  params && params.showTableHeader !== undefined ? params.showTableHeader : this.options.showTableHeader,
+    showTableFooter:  params && params.showTableFooter !== undefined ? params.showTableFooter : this.options.showTableFooter,
     showToolbar:      this.options.showToolbar,
     showSearcher:     this.options.showSearcher,
     showPaginator:    this.options.showPaginator,
@@ -2514,6 +2514,9 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     itemLinkClicked:  this.options.itemLinkClicked,
     clickContext:     this.options.clickContext,
     preselected:      this.options.isSelectable ? this.options.preselected : null,
+    showButtonEdit:   params && params.showButtonEdit   !== undefined ? params.showButtonEdit   : this.options.showButtonEdit,
+    showButtonUpdate: params && params.showButtonUpdate !== undefined ? params.showButtonUpdate : this.options.showButtonUpdate,
+    showButtonCancel: params && params.showButtonCancel !== undefined ? params.showButtonCancel : this.options.showButtonCancel,
     onEscEndEdit:     params && params.onEscEndEdit     !== undefined ? params.onEscEndEdit     : this.options.onEscEndEdit,
   };
 }; // getCreateViewOptions
@@ -2873,8 +2876,8 @@ $.any.anyView.prototype.getListViewOptions = function (model,view_id,edit,view)
     isEditable:      false,
     isDeletable:     false,
     showSearch:      true,
-    showTableHeader: false,
-    showTableFooter: false,
+    showTableHeader: view ? view.options.showTableHeader : false,
+    showTableFooter: view ? view.options.showTableFooter : false,
     showToolbar:     false,
     onEscEndEdit:    view ? view.options.onEscEndEdit : this.options.onEscEndEdit,
   };
@@ -3636,6 +3639,10 @@ $.any.anyView.prototype._doShowItem = function (opt)
     row_id_str: opt.row_id_str,
     data_level: 0, // Reset data_level for the new view
     showHeader: opt.showHeader === false ? false : true,
+    showButtonEdit:   opt.showButtonEdit   !== undefined ? opt.showButtonEdit   : this.options.showButtonEdit,
+    showButtonUpdate: opt.showButtonUpdate !== undefined ? opt.showButtonUpdate : this.options.showButtonUpdate,
+    showButtonCancel: opt.showButtonCancel !== undefined ? opt.showButtonCance  : this.options.showButtonCancel,
+    showTableHeader:  opt.showTableHeader  !== undefined ? opt.showTableHeader  : this.options.showTableHeader,
     onEscEndEdit:     opt.onEscEndEdit     !== undefined ? opt.onEscEndEdit     : this.options.onEscEndEdit,
   });
   if (!view || !view.options || !view.options.top_view) {
