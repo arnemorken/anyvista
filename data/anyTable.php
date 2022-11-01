@@ -1206,13 +1206,11 @@ class anyTable extends dbTable
     while (($nextrow = $this->getNext(true)) !== null) {
       //elog("getRowData,nextrow:".var_export($nextrow,true));
       ++$this->mLastNumRows;
-      $gidx = $this->mType == "group" || $flat
-              ? $flat
-                ? $this->mType
-                : $nextrow["group_type"]
+      $gidx = $flat
+              ? $this->mType
               : (isset($nextrow["group_id"])
-                 ? $nextrow["group_id"]
-                 : "nogroup");
+                ? $nextrow["group_id"]
+                : "nogroup");
       if ($gidx === null)
         $gidx = "nogroup";
       $idx = isset($nextrow[$this->mIdKeyTable])
@@ -1512,37 +1510,18 @@ class anyTable extends dbTable
     //
     // If grouping is specified, build group tree and stick data tree to it
     //
-    if ($this->mType != "group") {
-      if (isset($grouping) && $grouping && $grouping != "undefined" && (!isset($this->mId) || $this->mId == "") && !isset($this->mListForId) && $group_table) {
-        $this->dbAttachToGroups($group_table->tdata["group"],$data_tree);
-        $group_table->tdata["group"]['grouping'] = $grouping;
-        //vlog("buildGroupTreeAndAttach,tdata:",$group_table->tdata);
-        $data = $group_table->tdata["group"];
-      }
-      else
-        $data = $data_tree;
-      //vlog("buildGroupTreeAndAttach,data1:",$data);
+    if (isset($grouping) && $grouping && $grouping != "undefined" &&
+        (!isset($this->mId) || $this->mId == "") &&
+        !isset($this->mListForId) &&
+        $group_table) {
+      $this->dbAttachToGroups($group_table->tdata["group"],$data_tree);
+      $group_table->tdata["group"]['grouping'] = $grouping;
+      //vlog("buildGroupTreeAndAttach,tdata:",$group_table->tdata);
+      $data = $group_table->tdata["group"];
     }
-    else {
-      $is_list = (!isset($this->mId) || $this->mId == "");
-      if ($is_list && $data_tree) {
-        if ($is_list && !isset($this->mListForType)) {
-          // Add the "other" category
-          if (isset($data_tree["group"]) && $data_tree["group"] !== null) {
-            foreach ($data_tree["group"] as $gidx => &$group) {
-              if (isset($data_tree["group"][$gidx]["group"])) {
-                $grp = array_values($data_tree["group"][$gidx]["group"])[0];
-                $data_tree["group"][$gidx]["group"]["nogroup"] = array();
-                $data_tree["group"][$gidx]["group"]["nogroup"]["group_type"] = $grp["group_type"];
-                $data_tree["group"][$gidx]["group"]["nogroup"]["group_id"]   = "nogroup";
-                $data_tree["group"][$gidx]["group"]["nogroup"]["group_name"] = "Default ".$grp["group_type"]." group";
-              }
-            }
-          }
-        }
-      }
+    else
       $data = $data_tree;
-    }
+    //vlog("buildGroupTreeAndAttach,data1:",$data);
     //vlog("buildGroupTreeAndAttach,data2:",$data);
   } // buildGroupTreeAndAttach
 
@@ -1631,26 +1610,22 @@ class anyTable extends dbTable
     //vlog("dbAttachToGroups,data_tree:", $data_tree);
     if ($group_tree !== null) {
       foreach ($group_tree as $gid => $group) { // Iterate over group ids
-        if (isset($group_tree[$gid]["group_type"]) && $group_tree[$gid]["group_type"] == $this->mType) {
-          if (isset($group_tree[$gid]["data"]) && $group_tree[$gid]["data"] !== null)
-            $this->dbAttachToGroups($group_tree[$gid]["data"],$data_tree);
-          if (isset($data_tree[$gid]) && $data_tree[$gid] != "")
-            $idx = $gid;
-          else
-          if (isset($data_tree["+".$gid]) && $data_tree["+".$gid] != "")
-            $idx = "+".$gid;
-          if (isset($idx) && $data_tree[$idx] !== null) {
-            if (isset($data_tree[$idx]["data"]) && $data_tree[$idx]["data"] != "") {
-              $group_tree[$gid]["head"] = "group";
-              if (array_key_exists("data",$group_tree[$gid]) && !isset($group_tree[$gid]["data"]) && $group_tree[$gid]["data"] != "")
-                $group_tree[$gid]["data"] = array();
-              foreach ($data_tree[$idx]["data"] as $id => $obj)
-                $group_tree[$gid]["data"][$id] = $data_tree[$idx]["data"][$id];
-            }
-          }
-        } // if group_tree
+        if (isset($group_tree[$gid]["data"]) && $group_tree[$gid]["data"] !== null)
+          $this->dbAttachToGroups($group_tree[$gid]["data"],$data_tree); // Recursive call
+        if (isset($data_tree[$gid]) && $data_tree[$gid] != "")
+          $idx = $gid;
         else
-          ;//unset($group_tree[$gid]);
+        if (isset($data_tree["+".$gid]) && $data_tree["+".$gid] != "")
+          $idx = "+".$gid;
+        if (isset($idx) && $data_tree[$idx] !== null) {
+          if (isset($data_tree[$idx]["data"]) && $data_tree[$idx]["data"] != "") {
+            $group_tree[$gid]["head"] = "group";
+            if (array_key_exists("data",$group_tree[$gid]) && !isset($group_tree[$gid]["data"]) && $group_tree[$gid]["data"] != "")
+              $group_tree[$gid]["data"] = array();
+            foreach ($data_tree[$idx]["data"] as $id => $obj)
+              $group_tree[$gid]["data"][$id] = $data_tree[$idx]["data"][$id];
+          }
+        }
       } // foreach
     } // if
   } // dbAttachToGroups
