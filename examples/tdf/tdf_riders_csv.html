@@ -176,33 +176,45 @@ function csv2table()
         type:   "rider",
         table:  table,
         unique: "rider_name,year",
-        success: function() {
-          //
-          // Insert in table
-          //
-          doLog("Inserting data in table...");
-          let n_obj = 0;
-          result.forEach(function (obj) {
-            if (obj.Year == "2021") {
-              ++n_obj;
-              let indata = {};
-              indata[obj.Id] = getIndata(obj);
-              data_model.dbUpdate({ id:     obj.Id,
-                                    indata: indata,
-                                    is_new: true, // insert
-                                    table:  "rider",
-                                    auto_refresh: false,
-                                    sync:         true, // Note!
-                                    fields: ["rider_id","r_id","rank","rider_name","rider_no",
-                                             "times","gap","team","year","distance","num_stages","total_sec",
-                                             "gap_sec","result_type"],
-                                    success: function() {
-                                      doLog("Insertion of "+n_obj+" records complete",true);
-                                    }
-                                  });
-            }
-          }); // forEach
-        } // function
+        success: function(context,serverdata,options) {
+          if (serverdata && serverdata["JSON_CODE"] && serverdata["JSON_CODE"].error) {
+            doLog("Error:"+serverdata["JSON_CODE"].error,true);
+          }
+          else {
+            //
+            // Insert in table
+            //
+            doLog("Inserting data in table...");
+            let n_obj = 0;
+            result.forEach(function (obj) {
+              if (obj.Year == "2021") {
+                ++n_obj;
+                let indata = {};
+                indata[obj.Id] = getIndata(obj);
+                data_model.dbUpdate({ id:      obj.Id,
+                                      indata:  indata,
+                                      is_new:  true, // insert
+                                      table:   "rider",
+                                      auto_id: false, // We manage the table id ourselves (as we do not use AUTOINCREMENT)
+                                      fields: ["rider_id","r_id","rank","rider_name","rider_no",
+                                               "times","gap","team","year","distance","num_stages","total_sec",
+                                               "gap_sec","result_type"],
+                                      sync:         true, // Note!
+                                      auto_refresh: false,
+                                      success: function() {
+                                        doLog("Insertion of "+n_obj+" records complete",true);
+                                      },
+                                      fail: function(con,jqXHR) {
+                                        doLog(jqXHR.responseText,true);
+                                      },
+                                    });
+              }
+            }); // forEach
+          } // else
+        }, // success function
+        fail: function(con,jqXHR) {
+          doLog(jqXHR.responseText,true);
+        },
       }); // dbCreate
     }); // done
   });
