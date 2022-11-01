@@ -2389,8 +2389,11 @@ $.any.anyView.prototype.createView = function (params)
   let data       = params && params.data       ? params.data       : null;
   let id         = params && params.id         ? params.id         : "";
   let data_level = params && params.data_level ? params.data_level : 0;
-  let model      = params && params.model      ? params.model      : type == this.model.type ? this.model : null;
-
+  let model      = params && (params.model || params.model===null)
+                   ? params.model
+                   : type == this.model.type
+                     ? this.model
+                     : null;
   if (!parent)
     parent = this.element;
   if (!parent)
@@ -2406,8 +2409,8 @@ $.any.anyView.prototype.createView = function (params)
   let model_opt = this.getCreateModelOptions(data,id,type,kind);
   if (!model || typeof model === "string") {
     let m_str = model
-              ? model         // Use supplied model name
-              : type+"Model"; // Use default model name derived from type
+                ? model         // Use supplied model name
+                : type+"Model"; // Use default model name derived from type
     if (!window[m_str]) {
       let def_str = "anyModel"; // Use fallback model name
       console.warn("Model class "+m_str+" not found, using "+def_str+". "); // TODO! i18n
@@ -2426,18 +2429,17 @@ $.any.anyView.prototype.createView = function (params)
     console.error("Model is "+(typeof model)+", not object. ");
     return null;
   }
-  model.data = data;
-  if (id)
+  if (id || id === 0)
     model.id = id;
   // Create the view
   let view_opt = this.getCreateViewOptions(model,parent,kind,data_level);
   if (params.showHeader === false)
     view_opt.showHeader = false
   let v_str    = params && params.view_class
-               ? params.view_class
-               : view_opt.grouping
-                 ? type+"View"+view_opt.grouping.capitalize()
-                 : type+"View";
+                 ? params.view_class
+                 : view_opt.grouping
+                   ? type+"View"+view_opt.grouping.capitalize()
+                   : type+"View";
   if (!window[v_str]) {
     let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
     console.warn("View class "+v_str+" not found, using "+def_str+". "); // TODO! i18n
@@ -3616,9 +3618,9 @@ $.any.anyView.prototype._doShowItem = function (opt)
                                   ? $.extend(true, {}, the_data[the_id])
                                   : null;
     if (the_item_data[the_id].head)
-      delete the_item_data[the_id].head; // TODO! Why?
+      delete the_item_data[the_id].head; // ...because this is an item
     if (the_item_data[the_id].list)
-      delete the_item_data[the_id].list; // TODO! Why?
+      delete the_item_data[the_id].list; // ...because this is an item
   }
   the_item_data[the_id].item   = type;
   the_item_data[the_id].is_new = is_new;
@@ -3965,7 +3967,6 @@ $.any.anyView.prototype.dbUpdate = function (event)
     this.showMessages();
     return false;
   }
-
   // Update model with contents of input fields
   let filter = this.getFilter(type,kind);
   let data_values = {};
