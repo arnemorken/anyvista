@@ -492,7 +492,6 @@ class anyTable extends dbTable
 
   public function dbCreate()
   {
-    try {
       // sql to create table
       $type = Parameters::get("type");
       if (!$type)
@@ -516,12 +515,11 @@ class anyTable extends dbTable
         $sql .= ",UNIQUE KEY(".$unique.")";
       $sql .= ")";
       //elog("dbCreate,sql:$sql");
-      $this->getConnection()->mDBHandle->exec($sql); // TODO! Delegate this to dbTable class
-      elog("Table $tableName created successfully"); // TODO! Check for non-catchable errors!
-    }
-    catch(PDOException $e) {
-      elog("dbCreate error:".$sql."\n".$e->getMessage());
-    }
+      if ($this->query($sql))
+        elog("Table $tableName created successfully");
+      else
+        elog("Error creating table $tableName:".$this->getError());
+      return null;
   } // dbCreate
 
   private function initFiltersFromParam()
