@@ -3628,6 +3628,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
   // Create and prepare a new display area
   let view = this.createView({
     parent:     this.element,
+    model:      null, // Create a new model
     type:       type,
     kind:       kind,
     data:       the_item,
