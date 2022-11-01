@@ -858,7 +858,9 @@ class anyTable extends dbTable
   protected function dbExecListStmt(&$data,$gid=null,$limit="",$skipOwnId=false,$flat=false,$simple=false)
   {
     // Build and execute the query for a group
-    $partial_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$gid);
+    if ($gid == "nogroup")
+      $gid = null;
+    $partial_stmt = $this->dbPrepareSearchListStmt($gid,$skipOwnId);
     $stmt = $partial_stmt.$limit;
     //elog("dbExecListStmt1:".$stmt);
     if (!$stmt || !$this->query($stmt) || $this->isError())
@@ -868,7 +870,7 @@ class anyTable extends dbTable
     $s = $this->getRowData($data,"list",$flat,$simple);
     if ($limit != "") {
       // Count how many rows would have been returned without LIMIT
-      $part_stmt = $this->dbPrepareSearchListStmt($skipOwnId,$gid);
+      $part_stmt = $this->dbPrepareSearchListStmt($gid,$skipOwnId);
       $count_stmt = "SELECT count(*) AS num_results FROM (".
                     $part_stmt.
                     ") AS dummy";
@@ -895,35 +897,13 @@ class anyTable extends dbTable
     return $s;
   } // dbExecListStmt
 
-  protected function dbPrepareSearchListStmt($skipOwnId=false,$gid=null)
+  protected function dbPrepareSearchListStmt($gid=null,$skipOwnId=false)
   {
     // Get query fragments
     $this->mError = "";
-    $select    = $this->findListSelect($gid);
-    $left_join = $this->findListLeftJoin($gid);
-    $where     = $this->findListWhere($skipOwnId);
-    if ($gid) {
-      if ($this->mType == "group") {
-        if ($where)
-          $where .= " AND ".$this->mTableNameGroup.".group_type='".$gid."' ";
-        else
-          $where .= " WHERE ".$this->mTableNameGroup.".group_type='".$gid."' ";
-      }
-      else {
-        if ($where)
-          $where .= " AND ".$this->mTableNameGroup.".group_id=CAST(".$gid." AS INT) ";
-        else
-          $where .= " WHERE ".$this->mTableNameGroup.".group_id=CAST(".$gid." AS INT) ";
-      }
-    }
-    else {
-      if ($this->tableExists($this->mTableNameGroupLink)) {
-        if ($where)
-          $where .= " AND $this->mTableNameGroupLink.group_id is null ";
-        else
-          $where .= " WHERE $this->mTableNameGroupLink.group_id is null ";
-      }
-    }
+    $select       = $this->findListSelect($gid);
+    $left_join    = $this->findListLeftJoin($gid);
+    $where        = $this->findListWhere($gid,$skipOwnId);
     $order_by     = $this->findListOrderBy();
 
     // Build the query
@@ -1029,7 +1009,7 @@ class anyTable extends dbTable
     return $lj;
   } // findListLeftJoinOne
 
-  protected function findListWhere($skipOwnId=false)
+  protected function findListWhere($gid,$skipOwnId=false)
   {
     $where = null;
     $link_table = $this->findLinkTableName($this->mListForType);
@@ -1054,16 +1034,6 @@ class anyTable extends dbTable
           $where .= " OR (".$gstr.") ";
       }
     }
-    if ($this->mType == "group") { // TODO! Return this fragment from groupTable class
-      $group_type = Parameters::get("group_type");
-      if ($group_type) {
-        $gstr = "(any_group.group_type='".$group_type."') ";
-        if ($where === null)
-          $where  = "WHERE ".$gstr;
-        else
-          $where .= " AND ".$gstr;
-      }
-    }
     if ($skipOwnId && $this->mId != "nogroup") {
       $skip_str = $this->getTableName().".".$this->mIdKeyTable." != '".$this->mId."'";
       if ($where === null)
@@ -1078,6 +1048,32 @@ class anyTable extends dbTable
         $where  = "WHERE (".$term_str.") ";
       else
         $where .= " AND (".$term_str.") ";
+    }
+    if ($gid) {
+      $group_type = Parameters::get("group_type");
+      if ($group_type) {
+        $gt_str = $this->mTableNameGroup.".group_type='".$group_type."' ";
+        if ($where === null)
+          $where  = " WHERE ".$gt_str;
+        else
+          $where .= " AND ".$gt_str;
+      }
+      if (!isset($this->mListForType)) {
+        $lf_str = $this->mTableNameGroup.".group_id=CAST(".$gid." AS INT) ";
+        if ($where === null)
+          $where  = " WHERE ".$lf_str;
+        else
+          $where .= " AND ".$lf_str;
+      }
+    }
+    else {
+      if ($this->tableExists($this->mTableNameGroupLink)) {
+        $n_str = $this->mTableNameGroupLink.".group_id is null ";
+        if ($where === null)
+          $where  = " WHERE ".$n_str;
+        else
+          $where .= " AND ".$n_str;
+      }
     }
     return $where;
   } // findListWhere

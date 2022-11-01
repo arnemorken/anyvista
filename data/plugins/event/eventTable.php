@@ -210,9 +210,9 @@ class eventTable extends anyTable
   /////////////////////// Database query fragments ////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function findListWhere($skipOwnId=false)
+  protected function findListWhere($gid,$skipOwnId=false)
   {
-    $where = parent::findListWhere($skipOwnId);
+    $where = parent::findListWhere($gid,$skipOwnId);
     $w = "";
     $event_date_start = Parameters::get("event_date_start");
     $event_date_end   = Parameters::get("event_date_end");
