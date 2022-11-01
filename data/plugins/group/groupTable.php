@@ -164,21 +164,6 @@ class groupTable extends anyTable
   /////////////////////////////// Search //////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function dbSearchItem(&$data,$key,$val,$skipLists=false)
-  {
-    if ($val == "nogroup") {
-      $group_type = Parameters::get("group_type");
-      $this->mData = array();
-      $this->mData["group"]["nogroup"]["group_type"] = $group_type;
-      $this->mData["group"]["nogroup"]["group_id"]   = "nogroup";
-      $this->mData["group"]["nogroup"]["group_name"] = "Default ".$group_type." group";
-      $this->mGroupId = $group_type;
-      return $this->dbSearchItemLists($data);
-    }
-    else
-      return parent::dbSearchItem($data,$key,$val);
-  } // dbSearchItem
-
   // Return a tree structure of all groups of a given type
   protected function dbSearchGroupInfo($type=null,$group_id=null)
   {
