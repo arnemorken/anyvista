@@ -34,8 +34,8 @@ class groupTable extends anyTable
     "orderBy"            => "group_type",
     "metaId"             => "meta_id",
     "fields" => [
-      "group_type",
       "group_id",
+      "group_type",
       "group_name",
       "group_description",
       "parent_id",
@@ -63,8 +63,8 @@ class groupTable extends anyTable
     ],
     "filters" => [
       "list" => [
-        "group_type"        => 1,
         "group_id"          => 1,
+        "group_type"        => 1,
         "group_name"        => 1,
         "group_description" => 1,
         "parent_id"         => 1,
@@ -75,8 +75,8 @@ class groupTable extends anyTable
         "membership"        => 1,
       ],
       "item" => [
-        "group_type"        => 1,
         "group_id"          => 1,
+        "group_type"        => 1,
         "group_name"        => 1,
         "group_description" => 1,
         "parent_id"         => 1,
@@ -210,8 +210,8 @@ class groupTable extends anyTable
     // Add the default "nogroup" group
     $group_id = Parameters::get("group_id");
     if ((!$group_id || $group_id == "nogroup") && $type) {
-      $data_tree["group"]["nogroup"]["group_type"] = $type;
       $data_tree["group"]["nogroup"]["group_id"]   = "nogroup";
+      $data_tree["group"]["nogroup"]["group_type"] = $type;
       $data_tree["group"]["nogroup"]["group_name"] = $this->findDefaultHeader($type);
       $data_tree["group"]["nogroup"]["head"]       = "group";
     }

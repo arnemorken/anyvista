@@ -190,10 +190,6 @@ class anyTable extends dbTable
       return;
     }
     // Initialize properties
-    if (!$defsOrType) {
-      $this->setError("Table definitions or type missing. ");
-      return;
-    }
     if (!$this->initProperties($defsOrType))
       return;
 
@@ -210,55 +206,75 @@ class anyTable extends dbTable
   private function initProperties($defsOrType)
   {
     $this->mError = "";
-    if (!$defsOrType || (gettype($defsOrType) != "array" && gettype($defsOrType) != "string")) {
-      $this->mError = "Unknown or missing parameter to initProperties. ";
-      return false;
-    }
+
+    $fields = Parameters::get("fields");
+
     if (gettype($defsOrType) == "array") {
       // Table defs given, check if it is valid
       if (!$this->validateTableDefs($defsOrType))
         return false;
 
+      if ($defsOrType["type"])
+        $type = $defsOrType["type"];
+      else
+        $type = Parameters::get("type");
+      if (!$type)
+        if ($fields && $fields[0])
+          $type = $fields[0];
+        else
+          $type = null;
+      $this->mType = $type;
+
+      // Set variables from table defs
+      $this->mTableName           = $defsOrType["tableName"];
+      $this->mTableNameMeta       = $defsOrType["tableNameMeta"];
+      $this->mTableNameGroupLink  = $defsOrType["tableNameGroupLink"];
+      $this->mTableNameUserLink   = $defsOrType["tableNameUserLink"];
+      $this->mIdKey               = $defsOrType["idKey"]
+                                    ? $defsOrType["idKey"]
+                                    : ( Parameters::get($type."_id")
+                                        ? Parameters::get($type."_id")
+                                        : ( $fields && $fields[0]
+                                            ? $fields[0]
+                                            : $type."_id"
+                                          )
+                                      );
+      $this->mIdKeyTable          = $defsOrType["idKeyTable"]
+                                    ? $defsOrType["idKeyTable"]
+                                    : $this->mIdKey;
+      $this->mIdKeyMetaTable      = $defsOrType["idKeyMetaTable"];
+      $this->mNameKey             = $defsOrType["nameKey"];
+      $this->mOrderBy             = isset($defsOrType["orderBy"])  ? $defsOrType["orderBy"]  : null;
+      $this->mOrderDir            = isset($defsOrType["orderDir"]) ? $defsOrType["orderDir"] : "ASC";
+      $this->mMetaId              = $defsOrType["metaId"];
       // Set table fields, meta table fields and user link table fields
-      $this->mTableFields         = $defsOrType["fields"];
+      $this->mTableFields         = $fields
+                                    ? $fields
+                                    : $defsOrType["fields"];
       $this->mTableFieldsMeta     = $defsOrType["fieldsMeta"];
       $this->mTableFieldsGroup    = $defsOrType["fieldsGroup"];
       $this->mTableFieldsLeftJoin = $defsOrType["fieldsLeftJoin"];
-
-      // Set variables from table defs
-      $this->mType               = $defsOrType["type"];
-      $this->mTableName          = $defsOrType["tableName"];
-      $this->mTableNameMeta      = $defsOrType["tableNameMeta"];
-      $this->mTableNameGroupLink = $defsOrType["tableNameGroupLink"];
-      $this->mTableNameUserLink  = $defsOrType["tableNameUserLink"];
-      $this->mIdKey              = $defsOrType["idKey"];
-      $this->mIdKeyTable         = $defsOrType["idKeyTable"];
-      $this->mIdKeyMetaTable     = $defsOrType["idKeyMetaTable"];
-      $this->mNameKey            = $defsOrType["nameKey"];
-      $this->mOrderBy            = isset($defsOrType["orderBy"])  ? $defsOrType["orderBy"]  : null;
-      $this->mOrderDir           = isset($defsOrType["orderDir"]) ? $defsOrType["orderDir"] : "ASC";
-      $this->mMetaId             = $defsOrType["metaId"];
-
       // Set table filters
       if (isset($defsOrType["filters"]))
         $this->mFilters = $defsOrType["filters"];
-
       // Set plugins
       if (isset($defsOrType["plugins"]))
         $this->mPlugins= $defsOrType["plugins"];
     }
     else
-    if (gettype($defsOrType) == "string") {
-      // Set default table fields
-      $this->mTableFields = [
-        $this->mIdKey,
-        $this->mNameKey,
-      ];
-      // Set default table meta fields
-      $this->mTableFieldsMeta = null;
+    if (!$defsOrType || gettype($defsOrType) == "string") {
+      if ($defsOrType)
+        $type = $defsOrType;
+      else
+        $type = Parameters::get("type");
+      if (!$type)
+        if ($fields && $fields[0])
+          $type = $fields[0];
+        else
+          $type = null;
+      $this->mType = $type;
 
-      // Set minimal working values ("defsOrType" should be type)
-      $this->mType               = $defsOrType;
+      // Set minimal working values
       $this->mTableName          = "any_".$this->mType;
       $this->mTableNameMeta      = null; // No meta table for auto-generated type/table
       // Group table link
@@ -270,12 +286,27 @@ class anyTable extends dbTable
       sort($ltn);
       $ltn = "any_".implode("_",$ltn);
       $this->mTableNameUserLink  = $ltn;
-      $this->mIdKey              = $this->mType."_id";
-      $this->mIdKeyTable         = $this->mType."_id";
+      $this->mIdKey              = Parameters::get($type."_id")
+                                   ? Parameters::get($type."_id")
+                                   : ( $fields && $fields[0]
+                                       ? $fields[0]
+                                       : $type."_id"
+                                     );
+      $this->mIdKeyTable         = $this->mIdKey;
       $this->mIdKeyMetaTable     = null; // No meta table for auto-generated type/table
       $this->mNameKey            = $this->mType."_name";
       $this->mOrderBy            = $this->mIdKeyTable;
       $this->mMetaId             = null; // No meta table for auto-generated type/table
+
+      // Set default table fields
+      $this->mTableFields = $fields
+                            ? $fields
+                            : [ $this->mIdKey,
+                                $this->mNameKey,
+                              ];
+      // Set default table meta fields
+      $this->mTableFieldsMeta = null;
+
       // Set default table filters
       $this->mFilters = [
         "list" => [
@@ -308,9 +339,13 @@ class anyTable extends dbTable
     if (!isset($this->mId) || $this->mId == "")
       $this->mId   = ltrim(Parameters::get($this->mIdKey));
 
-    // Make sure the order-by field exists
+    // Make sure some vital fields exist
     if (!in_array($this->mOrderBy,$this->mTableFields))
       $this->mOrderBy = $this->mTableFields[0];
+    if (!in_array($this->mIdKey,$this->mTableFields))
+      $this->mIdKey = $this->mTableFields[0];
+    if (!in_array($this->mIdKeyTable,$this->mTableFields))
+      $this->mIdKeyTable = $this->mTableFields[0];
 
     $str = Parameters::get("plugins");
     if ($str)
@@ -1091,6 +1126,8 @@ class anyTable extends dbTable
     if (!isset($this->mOrderBy))
       return "";
     $dir = $this->mOrderDir ? $this->mOrderDir : "";
+    if (!in_array($this->mOrderBy,$this->mTableFields))
+      $this->mOrderBy = $this->mTableFields[0];
     $ob = "ORDER BY ".$this->getTableName().".".$this->mOrderBy." ".$dir." ";
     return $ob;
   } // findListOrderBy
@@ -1367,7 +1404,7 @@ class anyTable extends dbTable
   {
     foreach ($data as $gidx => $grp) {
       foreach ($data[$gidx] as $idx => $item) {
-        $type_id = $this->mType."_id";
+        $type_id = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
         if (isset($data[$gidx][$idx][$type_id]) &&
             intval($data[$gidx][$idx][$type_id]) == intval($pid)) {
           if (isset($data[$gidx][$idx]["group_id"])) {
@@ -1572,7 +1609,7 @@ class anyTable extends dbTable
       return null;
     $retval = array();
     $type_list = $this->mType;
-    $id_name   = $this->mType."_id";
+    $id_name   = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
     foreach ($flatdata as $idx => &$subdata) {
       $has_grouping_data = (strpos($idx,"grouping") === 0);
       if (!$has_grouping_data) {
@@ -2120,7 +2157,7 @@ class anyTable extends dbTable
       return false;
     }
     $this->mNumRowsChanged = 0;
-    $id_key       = $this->mType."_id";
+    $id_key       = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
     $id_key_link  = $link_type."_id";
     $id           = Parameters::get($id_key);
     $id_link      = Parameters::get($id_key_link);

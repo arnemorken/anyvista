@@ -407,6 +407,9 @@ anyModel.prototype.dataInit = function (options)
     }
     if (options.page_links)                            { this.page_links       = options.page_links; }
 
+    if (this.fields && this.id_key && !this.fields.includes(this.id_key))
+      this.id_key = this.fields[0];
+
     if (!this.error) {
       if (!this.data)
         this.data = null;

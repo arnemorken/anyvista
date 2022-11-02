@@ -157,8 +157,7 @@ function csv2table()
       //
       doLog("Creating table...");
       let table = {
-        rider_id:   "INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY",
-        r_id:       "INT(6) UNSIGNED",
+        r_id:       "INT(6) UNSIGNED", // First entry is automatically set as PRIMARY KEY id [type]_id is not specified
         rank:       "INT(6) UNSIGNED",
         rider_name: "VARCHAR(30) NOT NULL",
         rider_no:   "VARCHAR(4)",
@@ -177,8 +176,8 @@ function csv2table()
         table:  table,
         unique: "rider_name,year",
         success: function(context,serverdata,options) {
-          if (serverdata && serverdata["JSON_CODE"] && serverdata["JSON_CODE"].error) {
-            doLog("Error:"+serverdata["JSON_CODE"].error,true);
+          if (serverdata && serverdata.JSON_CODE && serverdata.JSON_CODE.error) {
+            doLog("Error:"+serverdata.JSON_CODE.error,true);
           }
           else {
             //
@@ -196,7 +195,7 @@ function csv2table()
                                       is_new:  true, // insert
                                       table:   "rider",
                                       auto_id: false, // We manage the table id ourselves (as we do not use AUTOINCREMENT)
-                                      fields: ["rider_id","r_id","rank","rider_name","rider_no",
+                                      fields: ["r_id","rank","rider_name","rider_no",
                                                "times","gap","team","year","distance","num_stages","total_sec",
                                                "gap_sec","result_type"],
                                       sync:         true, // Note!
@@ -231,7 +230,7 @@ function table2display()
   $( document ).ready(function() {
     let data_model = new anyModel({type:   "rider",
                                    mode:   "remote",
-                                   fields: ["rider_id","r_id","rank","rider_name","rider_no",
+                                   fields: ["r_id","rank","rider_name","rider_no",
                                             "times","gap","team","year","distance","num_stages","total_sec",
                                             "gap_sec","result_type"],
                                  });
@@ -245,6 +244,7 @@ function table2display()
                                    filters:    all_filters,
                                    id:         "any_result",
                                    isEditable: false,
+                                   onEnterInsertNew: false,
                                 });
     //
     // Get data from table
@@ -305,6 +305,7 @@ function csv2display()
                                     filters: all_filters,
                                     id:      "any_result",
                                     isEditable: false,
+                                    onEnterInsertNew: false,
                                  });
       //
       // Insert in data model
