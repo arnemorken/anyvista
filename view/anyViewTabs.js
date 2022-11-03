@@ -66,6 +66,7 @@ $.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kin
 {
   if (!parent)
     return null;
+
   let tabs_id  = this.getIdBase()+"_"+type+"_"+kind+"_"+tabs_id_str+"_tabs";
   let tabs_div = $("#"+tabs_id);
   if (!tabs_div.length) {
@@ -81,6 +82,9 @@ $.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kin
 
 $.any.anyViewTabs.prototype.refreshHeader = function (params)
 {
+  if (!params)
+    return null;
+
   let parent     = params.parent;
   let type       = params.type;
   let kind       = params.kind;
