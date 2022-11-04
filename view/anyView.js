@@ -973,7 +973,7 @@ $.any.anyView.prototype.refreshIngress = function (params)
 //
 $.any.anyView.prototype.refreshData = function (params)
 {
-  if (!params)
+  if (!params || !params.table)
     return null;
 
   let table      = params.table;
@@ -985,9 +985,6 @@ $.any.anyView.prototype.refreshData = function (params)
   let con_id_str = params.con_id_str;
   let pdata      = params.pdata;
   let pid        = params.pid;
-
-  if (!table)
-    return null;
 
   let extra_foot = this.getOrCreateExtraFoot(table,type,kind,con_id_str);
   if (extra_foot) {
