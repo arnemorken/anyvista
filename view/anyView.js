@@ -465,7 +465,7 @@ $.any.anyView.prototype.refresh = function (params)
     throw i18n.error.VIEW_AREA_MISSING;
 
   if (!params || !params.data)
-    this._clearBeforeRefresh(parent); // Top level display of the model, so clear everything first
+    this._clearBeforeRefresh(); // Top level display of the model, so clear everything first
 
   if (this.must_empty) {
     // Someone thinks we should remove data from the must_empty element.
@@ -635,9 +635,10 @@ $.any.anyView.prototype.refresh = function (params)
   return this;
 }; // refresh
 
-$.any.anyView.prototype._clearBeforeRefresh = function (parent)
+$.any.anyView.prototype._clearBeforeRefresh = function ()
 {
-  parent.empty();
+  let e = this.element.find("table").parent();
+  e.empty();
   this.current_edit = null;
 }; // _clearBeforeRefresh
 
