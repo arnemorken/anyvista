@@ -3440,6 +3440,7 @@ $.any.anyView.prototype.addListEntry = function (event)
       // Find a new row_id_str
       let the_id = Number.isInteger(parseInt(new_id)) ? parseInt(new_id) : new_id;
       let row_id_str = con_id_str ? con_id_str+"_"+the_id : ""+the_id;
+      let f = []; f[0] = this.model.id_key;
       this.model.dbSearchNextId({
          type:       type,
          data:       the_data,
@@ -3449,6 +3450,7 @@ $.any.anyView.prototype.addListEntry = function (event)
          pid:        pid,
          success:    this._addListEntryFromDB,
          context:    this,
+         fields:     f,
       });
     }
   }
@@ -3587,13 +3589,16 @@ $.any.anyView.prototype.showItem = function (event)
       return this._doShowItem(event.data);
     }
     else { // remote
-      if ((!id && id !== 0) || id < 0)
+      if ((!id && id !== 0) || id < 0) {
+        let f = []; f[0] = this.model.id_key;
         this.model.dbSearchNextId({
            type:    type,
            is_new:  true,
            success: this._foundNextIdFromDB,
            context: this,
+           fields:  f,
         }); // TODO! Asynchronous database call
+      }
       else
         this._doShowItem(event.data); // TODO! Not tested!
     }
