@@ -1423,7 +1423,15 @@ anyModel.prototype.dbSearchNextId = function (options)
     let url = this.dbSearchNextIdGetURL(options);
     if (!url)
       return false;
-    $.getJSON(url) // Call server
+    let item_to_send = {};
+    if (options.fields)
+      item_to_send.fields = options.fields;
+    else
+    if (this.fields)
+      item_to_send.fields = this.fields;
+    else
+      item_to_send = null;
+    $.getJSON(url,item_to_send) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
       return self.success ? self.success(self.context,serverdata,options) : false;
     })
