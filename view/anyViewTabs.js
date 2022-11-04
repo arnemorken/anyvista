@@ -46,8 +46,10 @@ $.widget("any.anyViewTabs", $.any.anyView, {
 $.any.anyViewTabs.prototype.refreshData = function (params)
 {
   let table = $.any.anyView.prototype.refreshData.call(this,params);
-  if (this.options.grouping == "tabs" && params.data.grouping == "tabs")
-    params.data_div.hide();
+  if (params && params.data && params.data_div) {
+    if (this.options.grouping == "tabs" && params.data.grouping == "tabs")
+      params.data_div.hide();
+  }
   this.openTab();
   return table;
 }; // refreshData
