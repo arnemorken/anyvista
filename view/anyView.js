@@ -539,7 +539,7 @@ $.any.anyView.prototype.refresh = function (params)
                 if (!the_parent.length)
                   the_parent = parent;
               }
-              curr_con_id_str = row_id_str; // TODO! curr_con_id_str = curr_row_id_str?
+              //curr_con_id_str = row_id_str; // TODO! curr_con_id_str = curr_row_id_str?
             }
             // TODO! options.localRemove etc. must be sent as params when creating new view
             let view_class = params && params.view_class ? params.view_class : null;
@@ -2381,6 +2381,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,co
                     : this.option("context")
                       ? this.option("context")
                       : this;
+          init_opt.showHeader = true; // TODO! Perhaps not the right place to do this
           link_elem.off("click").on("click", init_opt, $.proxy(fun,con));
           $("#"+td_id).prop("title", "Open item view"); // TODO i18n
         }
@@ -2457,9 +2458,7 @@ $.any.anyView.prototype.createView = function (params)
   let data_level = params && params.data_level ? params.data_level : 0;
   let model      = params && (params.model || params.model===null)
                    ? params.model
-                   : type == this.model.type
-                     ? this.model
-                     : null;
+                   : null;
   if (!parent)
     parent = this.element;
   if (!parent)
@@ -2472,7 +2471,6 @@ $.any.anyView.prototype.createView = function (params)
     return null;
 
   // Create a new model if we dont already have one or if the caller asks for it
-  let model_opt = this.getCreateModelOptions(data,id,type,kind);
   if (!model || typeof model === "string") {
     let m_str = model
                 ? model         // Use supplied model name
@@ -2483,6 +2481,7 @@ $.any.anyView.prototype.createView = function (params)
       m_str = def_str;
     }
     try {
+      let model_opt = this.getCreateModelOptions(data,id,type,kind);
       model = new window[m_str](model_opt);
     }
     catch (err) {
@@ -2498,21 +2497,21 @@ $.any.anyView.prototype.createView = function (params)
   if (id || id === 0)
     model.id = id;
   // Create the view
-  let view_opt = this.getCreateViewOptions(model,parent,kind,data_level,params);
-  if (params.showHeader === false)
-    view_opt.showHeader = false
-  let v_str    = params && params.view_class
-                 ? params.view_class
-                 : view_opt.grouping
-                   ? type+"View"+view_opt.grouping.capitalize()
-                   : type+"View";
-  if (!window[v_str]) {
-    let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
-    console.warn("View class "+v_str+" not found, using "+def_str+". "); // TODO! i18n
-    v_str = def_str;
-  }
   let view = null;
   try {
+    let view_opt = this.getCreateViewOptions(model,parent,kind,data_level,params);
+    if (params.showHeader === false)
+      view_opt.showHeader = false
+    let v_str    = params && params.view_class
+                   ? params.view_class
+                   : view_opt.grouping
+                     ? type+"View"+view_opt.grouping.capitalize()
+                     : type+"View";
+    if (!window[v_str]) {
+      let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
+      console.warn("View class "+v_str+" not found, using "+def_str+". "); // TODO! i18n
+      v_str = def_str;
+    }
     view = new window[v_str](view_opt);
     if (!Object.keys(view).length) {
       console.error("Couldn't create view "+v_str+" with id "+view_opt.id);
