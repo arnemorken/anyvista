@@ -4155,9 +4155,6 @@ $.any.anyView.prototype.dbUpdate = function (event)
     this.refresh();
   }
 
-  if (kind == "item")
-    this.options.item_opening = true; // To make top right close icon appear
-
   // Update database
   if (this.model.mode == "remote")
     return this.model.dbUpdate(event.data);
