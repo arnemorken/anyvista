@@ -633,7 +633,7 @@ class anyTable extends dbTable
   } // dbValidateSearch
 
   //
-  // Find max id for a table
+  // Find max id for a table. Only for tables with AUTO_INCREMENT rows
   //
   protected function dbSearchMaxId()
   {
@@ -647,7 +647,7 @@ class anyTable extends dbTable
     if (!$this->query($stmt))
       return false;
     $nextrow = $this->getNext(true);
-    $this->mMaxId = $nextrow !== null
+    $this->mMaxId = $nextrow !== null && isset($nextrow["AUTO_INCREMENT"])
                     ? $nextrow["AUTO_INCREMENT"]
                     : -1;
     //elog("dbSearchMaxId,mMaxId:".$this->mMaxId);
