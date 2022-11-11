@@ -3676,7 +3676,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
     },
   };
   let the_item_data = the_item["+0"].data;
-  if (!opt.showHeader)
+  if (!opt.showHeader && !is_new)
     the_item = the_item_data;
   if (is_new) {
     // Fill the item with empty data for all displayable entries
