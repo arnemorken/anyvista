@@ -16,7 +16,7 @@ Early versions of the library are already being used in both commercial and non-
 
 **Example 2: "Acupedia", a commercial Android app for professional acupuncturists:**
 
-![alt text](https://raw.githubusercontent.com/arnemorken/anyvista/main/examples/sample_ss_acupedia.png)
+![alt text](https://user-images.githubusercontent.com/16836060/200034825-2d2fef1b-1b25-413b-a587-4c0e810e0da0.png)
 
 jsFiddle examples coming soon.
 
