@@ -18,6 +18,7 @@ var i18n = {
     buttonRemove:         "Remove",
     buttonRemoveFromList: "Remove %% from list",
     buttonCancel:         "Cancel",
+    buttonClose:          "Close",
     buttonSelect:         "Select",
     buttonAddLink:        "Add",
   },

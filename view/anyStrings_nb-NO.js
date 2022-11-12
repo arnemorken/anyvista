@@ -18,6 +18,7 @@ var i18n = {
     buttonRemove:         "Fjern",
     buttonRemoveFromList: "Fjern %% fra liste",
     buttonCancel:         "Avbryt",
+    buttonClose:          "Lukk",
     buttonSelect:         "Velg",
     buttonAddLink:        "Legg til",
   },

@@ -1876,7 +1876,7 @@ $.any.anyView.prototype.refreshCloseItemButton = function (opt)
     edit:     false,
     top_view: this.options.top_view,
   };
-  let tit_str = i18n.button.buttonCancel;
+  let tit_str = i18n.button.buttonClose;
   //let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
   let btn_id  = this.id_base+"_cancel_new_icon";
   if ($("#"+btn_id).length)
@@ -3712,7 +3712,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
     showHeader: opt.showHeader === false ? false : true,
     showButtonEdit:   opt.showButtonEdit   !== undefined ? opt.showButtonEdit   : this.options.showButtonEdit,
     showButtonUpdate: opt.showButtonUpdate !== undefined ? opt.showButtonUpdate : this.options.showButtonUpdate,
-    showButtonCancel: opt.showButtonCancel !== undefined ? opt.showButtonCance  : this.options.showButtonCancel,
+    showButtonCancel: opt.showButtonCancel !== undefined ? opt.showButtonCancel : this.options.showButtonCancel,
     showTableHeader:  opt.showTableHeader  !== undefined ? opt.showTableHeader  : this.options.showTableHeader,
     onEscEndEdit:     opt.onEscEndEdit     !== undefined ? opt.onEscEndEdit     : this.options.onEscEndEdit,
   });
