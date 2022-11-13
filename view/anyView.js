@@ -2498,16 +2498,17 @@ $.any.anyView.prototype.createView = function (params)
   if (id || id === 0)
     model.id = id;
   // Create the view
+  let v_str = "";
   let view = null;
   try {
     let view_opt = this.getCreateViewOptions(model,parent,kind,data_level,params);
     if (params.showHeader === false)
       view_opt.showHeader = false
-    let v_str    = params && params.view_class
-                   ? params.view_class
-                   : view_opt.grouping
-                     ? type+"View"+view_opt.grouping.capitalize()
-                     : type+"View";
+    v_str = params && params.view_class
+            ? params.view_class
+            : view_opt.grouping
+              ? type+"View"+view_opt.grouping.capitalize()
+              : type+"View";
     if (!window[v_str]) {
       let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
       console.warn("View class "+v_str+" not found, using "+def_str+". "); // TODO! i18n
