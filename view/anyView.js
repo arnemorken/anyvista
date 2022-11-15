@@ -819,12 +819,12 @@ $.any.anyView.prototype.refreshMessageArea = function (params)
 //
 // Get the current header div, or create a new one if it does not exist
 //
-$.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,row_id_str,haveData,doNotEmpty)
+$.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,id_str,haveData,doNotEmpty)
 {
   if (!parent || !this.options.showHeader)
     return null;
 
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_header";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_header";
   let header_div = $("#"+div_id);
   if (header_div.length) {
     if (!doNotEmpty && header_div && header_div.length)
@@ -911,13 +911,13 @@ $.any.anyView.prototype.refreshHeaderEntry = function (header_div,data,id,filter
 //
 // Create an ingress, or find an ingress created previously
 //
-$.any.anyView.prototype.getOrCreateIngress = function (parent,type,kind,con_id_str)
+$.any.anyView.prototype.getOrCreateIngress = function (parent,type,kind,id_str)
 {
   if (!parent || !this.options.showTableIngress)
     return null;
   if (!type || !kind)
     return null;
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_ingress";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_ingress";
   let ingress  = $("#"+div_id); // Can we reuse ingress div?
   if (!ingress.length) {
     let class_id = "any-ingress any-"+kind+"-ingress any-ingress-"+this.data_level;
@@ -1045,12 +1045,12 @@ $.any.anyView.prototype.refreshData = function (params)
 //
 // Get the current data div, or create a new one if it does not exist
 //
-$.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,con_id_str)
+$.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,id_str)
 {
   if (!parent)
     return null;
 
-  let div_id   = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_data";
+  let div_id   = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_data";
   let data_div = $("#"+div_id);
   if (!data_div.length) {
     // Create new data container if we have data
@@ -1066,12 +1066,12 @@ $.any.anyView.prototype.getOrCreateDataContainer = function (parent,type,kind,co
 //
 // Create a table, or find a table created previously
 //
-$.any.anyView.prototype.getOrCreateTable = function (parent,type,kind,con_id_str)
+$.any.anyView.prototype.getOrCreateTable = function (parent,type,kind,id_str)
 {
   if (!parent)
     return null;
 
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_table";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_table";
   let table  = $("#"+div_id); // Can we reuse list table?
   if (!table.length) {
     // Create the table
@@ -1085,12 +1085,12 @@ $.any.anyView.prototype.getOrCreateTable = function (parent,type,kind,con_id_str
 //
 // Create a tbody, or find a tbody created previously
 //
-$.any.anyView.prototype.getOrCreateTbody = function (table,type,kind,con_id_str)
+$.any.anyView.prototype.getOrCreateTbody = function (table,type,kind,id_str)
 {
   if (!table || !type || !kind)
     return null;
 
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_tbody";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tbody";
   let tbody  = $("#"+div_id); // Can we reuse list tbody?
   if (!tbody.length) {
     let class_id = "any-"+kind+"-tbody any-tbody-"+this.data_level;
@@ -1103,14 +1103,14 @@ $.any.anyView.prototype.getOrCreateTbody = function (table,type,kind,con_id_str)
 //
 // Create a thead, or find a thead created previously
 //
-$.any.anyView.prototype.getOrCreateThead = function (table,type,kind,con_id_str)
+$.any.anyView.prototype.getOrCreateThead = function (table,type,kind,id_str)
 {
   if (!table || !type || !kind ||
       !this.options.showTableHeader ||
       (kind != "list" && kind != "select"))
     return null;
 
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_thead";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_thead";
   let thead  = $("#"+div_id);
   if (thead.length)
     thead.remove();
@@ -1122,14 +1122,14 @@ $.any.anyView.prototype.getOrCreateThead = function (table,type,kind,con_id_str)
 //
 // Create a tfoot, or find a tfoot created previously
 //
-$.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,con_id_str)
+$.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
 {
   if (!table || !type || !kind ||
       !this.options.showTableFooter ||
       (kind != "list" && kind != "select"))
     return null;
 
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_tfoot";
+  let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tfoot";
   let tfoot = $("#"+div_id); // Can we reuse list tfoot?
   if (!tfoot.length) {
     tfoot = $("<tfoot id='"+div_id+"'></tfoot>");
@@ -1141,13 +1141,13 @@ $.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,con_id_str)
 //
 // Create a special footer to contain pager, search box, etc.
 //
-$.any.anyView.prototype.getOrCreateExtraFoot = function (table,type,kind,con_id_str)
+$.any.anyView.prototype.getOrCreateExtraFoot = function (table,type,kind,id_str)
 {
   if (!table || !type || !kind ||
       (kind != "list" && kind != "select"))
     return null;
 
-  let foot_div_id = this.id_base+"_"+type+"_"+kind+"_"+con_id_str+"_extrafoot";
+  let foot_div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_extrafoot";
   let foot_div = $("#"+foot_div_id); // Can we reuse extrafoot?
   if (!foot_div.length) {
     foot_div = $("<div id='"+foot_div_id+"' class='table_extrafoot'></div>");
@@ -2588,7 +2588,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
 // Methods that create cell items
 ///////////////////////////////////////////////////////////////////////////////
 
-$.any.anyView.prototype.getCellEntryStr = function (id,type,kind,row_id_str,filter_id,filter_key,data_item,data_lists,edit,model_str,view_str,parent)
+$.any.anyView.prototype.getCellEntryStr = function (id,type,kind,id_str,filter_id,filter_key,data_item,data_lists,edit,model_str,view_str,parent)
 {
   if (!filter_id || !filter_key)
     return "";
@@ -2601,7 +2601,7 @@ $.any.anyView.prototype.getCellEntryStr = function (id,type,kind,row_id_str,filt
   switch (filter_key.TYPE) {
     case "label":    return this.getLabelStr   (type,kind,id,val); // Always noneditable
     case "html":     return this.getHtmlStr    (type,kind,id,val,edit);
-    case "textarea": return this.getTextAreaStr(type,kind,id,val,edit,filter_id,row_id_str);
+    case "textarea": return this.getTextAreaStr(type,kind,id,val,edit,filter_id,id_str);
     case "text":     return this.getTextStr    (type,kind,id,val,edit);
     case "password": return this.getPasswordStr(type,kind,id,val,edit);
     case "link":     return this.getLinkStr    (type,kind,id,val,edit);
@@ -2614,9 +2614,9 @@ $.any.anyView.prototype.getCellEntryStr = function (id,type,kind,row_id_str,filt
     case "check":    return this.getCheckStr   (type,kind,id,val,edit,filter_key,filter_id);
     case "select":   return this.getSelectStr  (type,kind,id,val,edit,filter_key,pid,data_item["parent_name"]);
     case "function": return this.getFunctionStr(type,kind,id,val,edit,filter_key,pid,data_item["parent_name"]);
-    case "list":     return this.getListView   (type,kind,id,val,edit,filter_key,row_id_str,data_lists,model_str,view_str,parent);
-    case "upload":   return this.getUploadStr  (type,kind,id,val,edit,data_item,filter_id,row_id_str);
-    case "fileview": return this.getFileViewStr(type,kind,id,val,edit,data_item,filter_id,row_id_str);
+    case "list":     return this.getListView   (type,kind,id,val,edit,filter_key,id_str,data_lists,model_str,view_str,parent);
+    case "upload":   return this.getUploadStr  (type,kind,id,val,edit,data_item,filter_id,id_str);
+    case "fileview": return this.getFileViewStr(type,kind,id,val,edit,data_item,filter_id,id_str);
     /* Not used yet
     case "http":
     case "https":    return this.getHttpStr    (type,kind,id,val,edit);
@@ -2647,11 +2647,11 @@ $.any.anyView.prototype.getLabelStr = function (type,kind,id,val)
   return "<div class='itemUnedit itemLabel'>"+val+"</div>";
 }; // getLabelStr
 
-$.any.anyView.prototype.getTextAreaStr = function (type,kind,id,val,edit,filter_id,row_id_str)
+$.any.anyView.prototype.getTextAreaStr = function (type,kind,id,val,edit,filter_id,id_str)
 {
   if (edit) {
     if (typeof tinyMCE !== "undefined") {
-      let nameid = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_id;
+      let nameid = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id;
       if (tinyMCE.EditorManager.get(nameid))
         tinymce.EditorManager.execCommand('mceRemoveEditor',true, nameid);
     }
@@ -2838,8 +2838,8 @@ $.any.anyView.prototype.getCheckStr = function (type,kind,id,val,edit,filter_key
   }
   else {
     let the_id      = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
-    let row_id_str  = ""+the_id;
-    let it_id       = this.id_base+"_"+filter_key+"_"+row_id_str;
+    let id_str      = ""+the_id;
+    let it_id       = this.id_base+"_"+filter_key+"_"+id_str;
     let check_class = (val == "1") ? "far fa-check-square" : "far fa-square";
     let title   = "Check if attended"; // TODO! Move to event class
     str = "<div class='itemUnedit inlineDiv pointer' "+
@@ -2852,7 +2852,7 @@ $.any.anyView.prototype.getCheckStr = function (type,kind,id,val,edit,filter_key
 }; // getCheckStr
 
 // Return a view containing a list
-$.any.anyView.prototype.getListView = function (type,kind,id,val,edit,filter_key,row_id_str,data_lists,model_str,view_str,parent)
+$.any.anyView.prototype.getListView = function (type,kind,id,val,edit,filter_key,id_str,data_lists,model_str,view_str,parent)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -2874,7 +2874,7 @@ $.any.anyView.prototype.getListView = function (type,kind,id,val,edit,filter_key
   list_model.data = data_lists ? data_lists[filter_key.LIST] : null;
 
   // Create the list view
-  let list_view_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+list_type+"_list";
+  let list_view_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+list_type+"_list";
   let view_opt     = this.getListViewOptions(list_model,list_view_id,edit,this);
   let v_str = view_str && typeof view_str === "string"
               ? view_str
@@ -2946,10 +2946,10 @@ $.any.anyView.prototype.getListViewOptions = function (model,view_id,edit,view)
   };
 }; // getListViewOptions
 
-$.any.anyView.prototype.getUploadStr = function (type,kind,id,val,edit,data_item,filter_id,row_id_str)
+$.any.anyView.prototype.getUploadStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
 {
   // Shows a clickable label that opens a file select dialog when pressed
-  let elem_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_id; // element id
+  let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id; // element id
   let name    = data_item[type+"_name"];                                 // real file name from user
   let style   = "style='cursor:pointer;'";
   let title   = "title='Select a new file for upload'"; // TODO i18n
@@ -3008,9 +3008,9 @@ $.any.anyView.prototype._uploadClicked = function (event)
   return fname;
 }; // _uploadClicked
 
-$.any.anyView.prototype.getFileViewStr = function (type,kind,id,val,edit,data_item,filter_id,row_id_str)
+$.any.anyView.prototype.getFileViewStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
 {
-  let elem_id  = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+filter_id; // element id
+  let elem_id  = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id; // element id
   let filename = data_item[filter_id] ? data_item[filter_id]          : ""; // local file name on server
   let fileurl  = filename             ? any_defs.uploadURL + filename : ""; // url of server file
   let style    = kind == "list" ? "style='text-align:center;'" : "";
