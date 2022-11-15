@@ -191,17 +191,15 @@ $.widget("any.anyView", {
     if (!this.options.top_view)
       this.options.top_view = this;
 
-    this.id_base  = this.options.id_base
-                    ? this.options.id_base
-                    : this._createIdBase();
+    this.id_base = this.options.id_base
+                   ? this.options.id_base
+                   : this._createIdBase();
 
     this.data_level = this.options.data_level
                       ? this.options.data_level
                       : 0;
 
     this.group_id = this.options.group_id; // TODO! Can we get rid of this?
-
-    this.con_id_str = "";
 
     this.model = this.options.model
                  ? this.options.model
@@ -623,8 +621,6 @@ $.any.anyView.prototype.refresh = function (params)
       });
     }
   }
-
-  this.con_id_str = "";
 
   if (this.postRefresh)
     this.postRefresh(params);
@@ -4256,24 +4252,24 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           select_list_view.model.dataInit(mod_opt);
           let par_view_id = parent_view.id_base+"_"+self.type+"_head_0_data";
           w3_modaldialog({
-            parentId:    par_view_id,
-            elementId:   "",
-            heading:     "Select "+list_type+"s to add / remove", // TODO! i18n
-            contents:    select_list_view.element,
-            width:       "25em", // TODO! css
-            ok:          true,
-            cancel:      true,
-            okFunction:  parent_view.dbUpdateLinkList,
-            context:     parent_view,
+            parentId:   par_view_id,
+            elementId:  "",
+            heading:    "Select "+list_type+"s to add / remove", // TODO! i18n
+            contents:   select_list_view.element,
+            width:      "25em", // TODO! css
+            ok:         true,
+            cancel:     true,
+            okFunction: parent_view.dbUpdateLinkList,
+            context:    parent_view,
             // Sent to okFunction:
-            type:        self.type,
-            data:        self.data,
-            id:          self.id,
-            link_type:   select_list_view.model.type,
-            link_id:     null,
-            select:      select_list_view.model.select,
-            unselect:    select_list_view.model.unselect,
-            name_key:    select_list_view.model.name_key,
+            type:       self.type,
+            data:       self.data,
+            id:         self.id,
+            link_type:  select_list_view.model.type,
+            link_id:    null,
+            select:     select_list_view.model.select,
+            unselect:   select_list_view.model.unselect,
+            name_key:   select_list_view.model.name_key,
           });
           select_list_view.refresh();
         }
@@ -4335,15 +4331,15 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   if (!event || !event.data)
     throw i18n.error.DATA_MISSING;
 
-  let type       = event.data.type;
-  let kind       = event.data.kind;
-  let data       = event.data.data;
-  let id         = event.data.id;
-  let row_id_str = event.data.row_id_str;
-  let pdata      = event.data.pdata;
-  let pid        = event.data.pid;
-  let link_id    = pdata && pdata.grouping_for_id   ? pdata.grouping_for_id   : pid && pdata[pid] ? pid : null;
-  let link_type  = pdata && pdata.grouping_for_type ? pdata.grouping_for_type : pid && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
+  let type      = event.data.type;
+  let kind      = event.data.kind;
+  let data      = event.data.data;
+  let id        = event.data.id;
+  let id_str    = event.data.id_str;
+  let pdata     = event.data.pdata;
+  let pid       = event.data.pid;
+  let link_id   = pdata && pdata.grouping_for_id   ? pdata.grouping_for_id   : pid && pdata[pid] ? pid : null;
+  let link_type = pdata && pdata.grouping_for_type ? pdata.grouping_for_type : pid && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
   if (!data || !data[id]) {
     console.warn("Data not found ("+type+" id="+id+"). ");
     return null;
@@ -4387,7 +4383,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         kind:       kind,
         id:         id,
         data:       data,
-        row_id_str: row_id_str,
+        id_str:     id_str,
         link_type:  link_type,
         link_id:    link_id,
         select:     new Set(),
@@ -4396,15 +4392,15 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   }
   else {
     let opt = {
-        type:       type,
-        kind:       kind,
-        data:       data,
-        id:         id,
-        row_id_str: row_id_str,
-        link_type:  link_type,
-        link_id:    link_id,
-        select:     new Set(),
-        unselect:   new Set().add(id),
+        type:      type,
+        kind:      kind,
+        data:      data,
+        id:        id,
+        id_str:    id_str,
+        link_type: link_type,
+        link_id:   link_id,
+        select:    new Set(),
+        unselect:  new Set().add(id),
     };
     this.dbUpdateLinkList(opt);
   }
@@ -4428,11 +4424,11 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
   if (!event || !event.data)
     throw i18n.error.DATA_MISSING;
 
-  let type       = event.data.type;
-  let kind       = event.data.kind;
-  let data       = event.data.data;
-  let id         = event.data.id;
-  let row_id_str = event.data.row_id_str;
+  let type   = event.data.type;
+  let kind   = event.data.kind;
+  let data   = event.data.data;
+  let id     = event.data.id;
+  let id_str = event.data.id_str;
 
   let item = this.model.dataSearch({
                 type: type,
@@ -4473,7 +4469,7 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
         kind:       kind,
         data:       data,
         id:         id,
-        row_id_str: row_id_str,
+        id_str:     id_str,
       });
   }
   return true;
@@ -4528,14 +4524,14 @@ $.any.anyView.prototype.dbDelete = function (opt)
 // Does not  remove from memory (data structure).
 $.any.anyView.prototype.removeFromView = function (opt)
 {
-  let type       = opt.type;
-  let kind       = opt.kind;
-  let data       = opt.data;
-  let id         = opt.id;
-  let row_id_str = opt.row_id_str;
+  let type   = opt.type;
+  let kind   = opt.kind;
+  let data   = opt.data;
+  let id     = opt.id;
+  let id_str = opt.id_str;
 
   if (kind == "list" || kind == "select") {
-    let elem_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str +"_tr";
+    let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str +"_tr";
     let tr = $("#"+elem_id);
     if (tr.length)
       tr.remove();
@@ -4551,7 +4547,7 @@ $.any.anyView.prototype.removeFromView = function (opt)
       for (let new_id in item[id].data) {
         if (item[id].data.hasOwnProperty(new_id)) {
           let the_id = Number.isInteger(parseInt(new_id)) ? parseInt(new_id) : new_id;
-          let elem_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_"+the_id+"_tr";
+          let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+the_id+"_tr";
           let tr      = $("#"+elem_id);
           if (tr.length)
             tr.remove();
@@ -4561,7 +4557,7 @@ $.any.anyView.prototype.removeFromView = function (opt)
   }
   else
   if (kind == "item") {
-    let elem_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_container";
+    let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_container";
     let con = $("#"+elem_id);
     if (con.length && con.parent().length && con.parent().parent().length)
       con.parent().parent().remove();
