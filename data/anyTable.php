@@ -29,7 +29,7 @@
  *              '[key]':       '[value]',   // Optional. One or more key / value pairs.
  *              ...
  *              'data': {    // Optional
- *                'grouping':          'tabs',    // Optional
+ *                'grouping':          'true',    // Optional
  *                'grouping_for_id':   '[id]',    // Optional, but mandatory if both 'grouping' and 'id' is specified.
  *                'grouping_for_type': '[type]',  // Optional, but mandatory if both 'grouping' and 'id' is specified.
  *                'grouping_for_name': '[value]', // Optional, but mandatory if both 'grouping' and 'id' is specified.
@@ -1523,14 +1523,11 @@ class anyTable extends dbTable
                   else
                     $gname = "Other groups"; // TODO i18n
               }
-              if ($this->mType != "group")
-                $data_tree[$ngidx]["group_type"] = $this->mType;
-              else
-                $data_tree[$ngidx]["group_type"] = $gidx;
               if (isset($grouping) && $grouping && $grouping != "undefined")
-                $data_tree["grouping"] = $grouping;
+                $data_tree["grouping"] = true;
+              $data_tree[$ngidx]["group_type"] = $this->mType != "group" ? $this->mType : $gidx;
+              $data_tree[$ngidx]["group_id"]   = $ngidx;
               $data_tree[$ngidx]["group_name"] = $gname;
-              $data_tree[$ngidx]["group_id"] = $ngidx;
             }
             else {
               $idx = isset($data[$gidx][$this->mId]) ? $this->mId : "+".$this->mId;
@@ -1566,7 +1563,7 @@ class anyTable extends dbTable
         !isset($this->mListForId) &&
         $group_table) {
       $this->dbAttachToGroups($group_table->tdata["group"],$data_tree);
-      $group_table->tdata["group"]['grouping'] = $grouping;
+      $group_table->tdata["group"]["grouping"] = true;
       //vlog("buildGroupTreeAndAttach,tdata:",$group_table->tdata);
       $data = $group_table->tdata["group"];
     }
