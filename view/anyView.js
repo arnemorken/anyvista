@@ -4065,13 +4065,28 @@ $.any.anyView.prototype.dbUpdate = function (event)
   if (data_values["parent_name"])
     delete data_values["parent_name"]; // TODO! Why?
   if (this.options.top_view && this.options.top_view.model) {
-    // If a top_view exists, update the data there too in order to keep it in sync
-    // TODO! What if id == "new"?
-    this.options.top_view.model.dataUpdate({
-      type:   type,
-      id:     id,
-      indata: data_values,
-    });
+    // If a top_view exists, insert/update the data there too
+    if (event.data.is_new) {
+      // Insert new
+      let new_indata = {};
+      $.extend(true, new_indata, indata[id]);
+      delete new_indata.dirty;
+      delete new_indata.item;
+      new_indata.head = indata[id].item; // TODO! Is this a good solution in every case?
+      this.options.top_view.model.dataInsert({
+        type:   type,
+        new_id: id,
+        indata: new_indata,
+      });
+    }
+    else {
+      // Update existing
+      this.options.top_view.model.dataUpdate({
+        type:   type,
+        id:     id,
+        indata: data_values,
+      });
+    }
   }
   if (id || id === 0) { // TODO!
     if (kind == "item") {
