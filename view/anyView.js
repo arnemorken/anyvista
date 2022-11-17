@@ -446,18 +446,18 @@ $.any.anyView.prototype.refresh = function (params)
   if (!params || !params.dont_reset_rec)
     this.options.ref_rec = 0; // Reset on every call to refresh, unless specifically told not to do so
 
-  let parent     = params && params.parent     ? params.parent        : this.element;
-  let type       = params && params.type       ? params.type          : this.model && this.model.type ? this.model.type : "";
-  let kind       = params && params.kind       ? params.kind          : "";
-  let data       = params && params.data       ? params.data          : this.model && this.model.data ? this.model.data : null;
-  let id         = params && params.id         ? params.id            : "";
-  let con_id_str = params && params.con_id_str ? ""+params.con_id_str : ""; // Id string for containers and table
-  let row_id_str = params && params.row_id_str ? ""+params.row_id_str : ""; // Id string accumulated through recursion
-  let pdata      = params && params.pdata      ? params.pdata         : null;
-  let pid        = params && params.pid        ? params.pid           : "";
-  let edit       = params && params.edit       ? params.edit          : false;
-  let from       = params && params.from       ? params.from          : 1;
-  let num        = params && params.num        ? params.num           : this.options.itemsPerPage;
+  let parent     = params && params.parent     ? params.parent     : this.element;
+  let type       = params && params.type       ? params.type       : this.model && this.model.type ? this.model.type : "";
+  let kind       = params && params.kind       ? params.kind       : "";
+  let data       = params && params.data       ? params.data       : this.model && this.model.data ? this.model.data : null;
+  let id         = params && params.id         ? params.id         : "";
+  let con_id_str = params && params.con_id_str ? params.con_id_str : ""; // Id string for containers and table
+  let row_id_str = params && params.row_id_str ? params.row_id_str : ""; // Id string accumulated through recursion
+  let pdata      = params && params.pdata      ? params.pdata      : null;
+  let pid        = params && params.pid        ? params.pid        : "";
+  let edit       = params && params.edit       ? params.edit       : false;
+  let from       = params && params.from       ? params.from       : 1;
+  let num        = params && params.num        ? params.num        : this.options.itemsPerPage;
 
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
@@ -504,7 +504,7 @@ $.any.anyView.prototype.refresh = function (params)
           }
           // Find identifier strings for containers and rows
           let idx = Number.isInteger(parseInt(idc))
-                    ? parseInt(idc)
+                    ? ""+parseInt(idc)
                     : idc;
           let curr_row_id_str = row_id_str
                                 ? row_id_str+"_"+idx
@@ -514,11 +514,10 @@ $.any.anyView.prototype.refresh = function (params)
                                   ? view.con_id_str
                                   : con_id_str
                                 : curr_row_id_str;
-          // Create new view whenever we encounter a new type or a new kind
           let the_parent = parent;
+          // Create new view whenever we encounter a new type or a new kind
           if (prev_type != curr_type || (prev_kind != curr_kind && prev_kind != "")) {
-            // Check to see if the new type/kind is contained within a list.
-            // In that case, create a new row to contain the new container.
+            // If the new type/kind is contained within a list, create a new row to contain a new parent container
             if (prev_kind == "list" || prev_kind == "select") {
               let f = view.getFilter(prev_type,prev_kind);
               let max_num_cols = f ? Object.size(f) : 5;
@@ -539,7 +538,6 @@ $.any.anyView.prototype.refresh = function (params)
               }
               //curr_con_id_str = row_id_str; // TODO! curr_con_id_str = curr_row_id_str?
             }
-            // TODO! options.localRemove etc. must be sent as params when creating new view
             let view_class = params && params.view_class ? params.view_class : null;
             let mdl        = params && params.model      ? params.model      : null;
             view = view.createView({
@@ -583,9 +581,7 @@ $.any.anyView.prototype.refresh = function (params)
       --this.data_level;
   } // if data
   else {
-    // No data, but must still have the opportunity to add new data.
-    // New data may be added by entering a new entry in a list or by
-    // entering a new item, so make sure this is possible.
+    // Arrive here if no data
     this.refreshOne({
        parent:     parent,
        type:       type,
@@ -633,7 +629,7 @@ $.any.anyView.prototype.refresh = function (params)
 
 $.any.anyView.prototype._clearBeforeRefresh = function ()
 {
-  let e = this.element.find("table").parent();
+  let e = this.element;//.find("table").parent();
   e.empty();
   this.current_edit = null;
 }; // _clearBeforeRefresh
@@ -684,7 +680,7 @@ $.any.anyView.prototype.refreshOne = function (params)
   if (kind == "head") {
     let ingress_str = data && data[id] ? data[id].group_description : "";
     if (ingress_str && ingress_str != "") {
-      new_params.ingress = this.getOrCreateIngress(new_params.data_div,type,kind,row_id_str);
+      new_params.ingress = this.getOrCreateIngressContainer(new_params.data_div,type,kind,row_id_str);
       this.refreshIngress(new_params);
     }
   }
@@ -847,7 +843,7 @@ $.any.anyView.prototype.getOrCreateHeaderContainer = function (parent,type,kind,
 //
 $.any.anyView.prototype.refreshHeader = function (params)
 {
-  if (!params)
+  if (!params || !this.options.showHeader)
     return null;
 
   let header_div = params.header_div;
@@ -856,9 +852,7 @@ $.any.anyView.prototype.refreshHeader = function (params)
   let data       = params.data;
   let id         = params.id;
 
-  if (!header_div || !header_div.length)
-    return null;
-  if (!this.options.showHeader || !data || (kind != "head" && !data.grouping))
+  if (!header_div || !header_div.length || !data || (kind != "head" && !data.grouping))
     return null;
 
   // Get the correct filter
@@ -911,20 +905,20 @@ $.any.anyView.prototype.refreshHeaderEntry = function (header_div,data,id,filter
 //
 // Create an ingress, or find an ingress created previously
 //
-$.any.anyView.prototype.getOrCreateIngress = function (parent,type,kind,id_str)
+$.any.anyView.prototype.getOrCreateIngressContainer = function (parent,type,kind,id_str)
 {
   if (!parent || !this.options.showTableIngress)
     return null;
-  if (!type || !kind)
-    return null;
+
   let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_ingress";
-  let ingress  = $("#"+div_id); // Can we reuse ingress div?
-  if (!ingress.length) {
+  let ingress_div  = $("#"+div_id); // Can we reuse ingress div?
+  if (!ingress_div.length) {
     let class_id = "any-ingress any-"+kind+"-ingress any-ingress-"+this.data_level;
-    parent.append("<div id='"+div_id+"' class='"+class_id+"'></div>");
+    ingress_div = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
+    parent.append(ingress_div);
   }
-  return ingress;
-}; // getOrCreateIngress
+  return ingress_div;
+}; // getOrCreateIngressContainer
 
 //
 // Refresh the table description (ingress)
@@ -934,16 +928,16 @@ $.any.anyView.prototype.refreshIngress = function (params)
   if (!params || !this.options.showTableIngress)
     return null;
 
-  let parent     = params.parent;
-  let type       = params.type;
-  let kind       = params.kind;
-  let data       = params.data;
-  let id         = params.id;
-  let row_id_str = params.row_id_str;
-  let pdata      = params.pdata;
-  let pid        = params.pid;
+  let ingress_div = params.parent;
+  let type        = params.type;
+  let kind        = params.kind;
+  let data        = params.data;
+  let id          = params.id;
+  let row_id_str  = params.row_id_str;
+  let pdata       = params.pdata;
+  let pid         = params.pid;
 
-  if (!parent)
+  if (!ingress_div)
     return null;
   if (!data || !data[id] || !data[id].group_description || !row_id_str)
     return null;
@@ -951,18 +945,12 @@ $.any.anyView.prototype.refreshIngress = function (params)
   let ingress_str = data[id].group_description;
   if (!ingress_str || ingress_str == "")
     return null;
+  ingress_div.append(ingress_str);
 
-  let div_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_ingress";
-  let div    = $("#"+div_id);
-  if (!div.length) {
-    div = $("<div id='"+div_id+"'></div>");
-    parent.append(div);
-  }
-  div.append(ingress_str);
   // Clean up
-  if (!div.length)
-    div.remove();
-  return div;
+  if (!ingress_div.length)
+    ingress_div.remove();
+  return ingress_div;
 }; // refreshIngress
 
 //
@@ -973,7 +961,7 @@ $.any.anyView.prototype.refreshData = function (params)
   if (!params || !params.table)
     return null;
 
-  let table      = params.table;
+  let table_div  = params.table;
   let type       = params.type;
   let kind       = params.kind;
   let data       = params.data;
@@ -983,7 +971,7 @@ $.any.anyView.prototype.refreshData = function (params)
   let pdata      = params.pdata;
   let pid        = params.pid;
 
-  let extra_foot = this.getOrCreateExtraFoot(table,type,kind,con_id_str);
+  let extra_foot = this.getOrCreateExtraFoot(table_div,type,kind,con_id_str);
   if (extra_foot) {
     this.refreshExtraFoot({
        parent:     extra_foot,
@@ -996,9 +984,9 @@ $.any.anyView.prototype.refreshData = function (params)
        pid:        pid,
     });
   }
-  let thead = table.find("thead").length ? table.find("thead") : null;
+  let thead = table_div.find("thead").length ? table_div.find("thead") : null;
   if (!thead) {
-    thead = this.getOrCreateThead(table,type,kind,con_id_str);
+    thead = this.getOrCreateThead(table_div,type,kind,con_id_str);
     if (thead)
       this.refreshThead({
          parent:     thead,
@@ -1010,7 +998,7 @@ $.any.anyView.prototype.refreshData = function (params)
       });
   }
   if (kind == "list" || kind == "select" || kind == "item") {
-    let tbody = this.getOrCreateTbody(table,type,kind,con_id_str);
+    let tbody = this.getOrCreateTbody(table_div,type,kind,con_id_str);
     if (tbody) {
       this.refreshTbodyRow({
          parent:     tbody,
@@ -1025,7 +1013,7 @@ $.any.anyView.prototype.refreshData = function (params)
       });
     }
   }
-  let tfoot = this.getOrCreateTfoot(table,type,kind,con_id_str);
+  let tfoot = this.getOrCreateTfoot(table_div,type,kind,con_id_str);
   if (tfoot) {
     this.refreshTfoot({
        parent:     tfoot,
@@ -1039,7 +1027,7 @@ $.any.anyView.prototype.refreshData = function (params)
   // Clean up
   if (extra_foot && !extra_foot.children().length)
     extra_foot.remove();
-  return table;
+  return table_div;
 }; // refreshData
 
 //
@@ -1072,14 +1060,14 @@ $.any.anyView.prototype.getOrCreateTable = function (parent,type,kind,id_str)
     return null;
 
   let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_table";
-  let table  = $("#"+div_id); // Can we reuse list table?
-  if (!table.length) {
+  let table_div = $("#"+div_id); // Can we reuse list table?
+  if (!table_div.length) {
     // Create the table
     let class_id = "any-table any-"+kind+"-table any-table-"+this.data_level;
-    table = $("<table id='"+div_id+"' class='"+class_id+"'></table>");
-    parent.append(table);
+    table_div = $("<table id='"+div_id+"' class='"+class_id+"'></table>");
+    parent.append(table_div);
   }
-  return table;
+  return table_div;
 }; // getOrCreateTable
 
 //
@@ -1091,13 +1079,13 @@ $.any.anyView.prototype.getOrCreateTbody = function (table,type,kind,id_str)
     return null;
 
   let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tbody";
-  let tbody  = $("#"+div_id); // Can we reuse list tbody?
-  if (!tbody.length) {
+  let tbody_div = $("#"+div_id); // Can we reuse list tbody?
+  if (!tbody_div.length) {
     let class_id = "any-"+kind+"-tbody any-tbody-"+this.data_level;
-    tbody = $("<tbody id='"+div_id+"' class='"+class_id+"'></tbody>");
-    table.append(tbody);
+    tbody_div = $("<tbody id='"+div_id+"' class='"+class_id+"'></tbody>");
+    table.append(tbody_div);
   }
-  return tbody;
+  return tbody_div;
 }; // getOrCreateTbody
 
 //
@@ -1111,12 +1099,12 @@ $.any.anyView.prototype.getOrCreateThead = function (table,type,kind,id_str)
     return null;
 
   let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_thead";
-  let thead  = $("#"+div_id);
-  if (thead.length)
-    thead.remove();
-  thead = $("<thead id='"+div_id+"'></thead>");
-  table.prepend(thead);
-  return thead;
+  let thead_div = $("#"+div_id);
+  if (thead_div.length)
+    thead_div.remove();
+  thead_div = $("<thead id='"+div_id+"'></thead>");
+  table.prepend(thead_div);
+  return thead_div;
 }; // getOrCreateThead
 
 //
@@ -1130,12 +1118,12 @@ $.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
     return null;
 
   let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tfoot";
-  let tfoot = $("#"+div_id); // Can we reuse list tfoot?
-  if (!tfoot.length) {
-    tfoot = $("<tfoot id='"+div_id+"'></tfoot>");
-    table.append(tfoot);
+  let tfoot_div = $("#"+div_id); // Can we reuse list tfoot?
+  if (!tfoot_div.length) {
+    tfoot_div = $("<tfoot id='"+div_id+"'></tfoot>");
+    table.append(tfoot_div);
   }
-  return tfoot;
+  return tfoot_div;
 }; // getOrCreateTfoot
 
 //
@@ -1288,8 +1276,8 @@ $.any.anyView.prototype.refreshTfoot = function (params)
   let td    = $("#"+td_id);
   if (!td.length) {
     let f = this.getFilter(type,kind);
-    let max_num_cols = f ? Object.size(f) : 5;
-    td = $("<td colspan='"+max_num_cols+"' id='"+td_id+"' class='any-td any-td-list-foot'></td>");
+    let num_cols = f ? Object.size(f) : 5;
+    td = $("<td colspan='"+num_cols+"' id='"+td_id+"' class='any-td any-td-list-foot'></td>");
     tr.append(td);
   }
   // Clean up
@@ -2540,6 +2528,7 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
   };
 }; // getCreateModelOptions
 
+// TODO! options.localRemove etc. must be sent as params when creating new view
 $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_level,params)
 {
   return {
@@ -3706,7 +3695,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
     id:         the_id,
     row_id_str: opt.row_id_str,
     data_level: 0, // Reset data_level for the new view
-    showHeader: opt.showHeader === false ? false : true,
+    showHeader:       opt.showHeader       === false     ? false                : true,
     showButtonEdit:   opt.showButtonEdit   !== undefined ? opt.showButtonEdit   : this.options.showButtonEdit,
     showButtonUpdate: opt.showButtonUpdate !== undefined ? opt.showButtonUpdate : this.options.showButtonUpdate,
     showButtonCancel: opt.showButtonCancel !== undefined ? opt.showButtonCancel : this.options.showButtonCancel,
