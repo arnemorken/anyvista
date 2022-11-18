@@ -789,6 +789,7 @@ class anyTable extends dbTable
     $idx = "+".$this->mId;
     // Loop through all registered plugins (link tables)
     $grouping = Parameters::get("grouping");
+    $grouping = $grouping != "false" && $grouping != "0";
     foreach ($this->mPlugins as $i => $plugin) {
       $table = anyTableFactory::create($plugin,$this);
       if ($table) {
@@ -934,8 +935,6 @@ class anyTable extends dbTable
           $gr_idx = $gid;
         $data[$gr_idx]["grouping_num_results"] = $row["num_results"];
       }
-      else
-        unset($this->mNumResults);
     } // if
     return $success;
   } // dbExecListStmt
@@ -1102,7 +1101,8 @@ class anyTable extends dbTable
           $where .= " AND ".$gt_str;
       }
       if (!isset($this->mListForType)) {
-        $lf_str = $this->mTableNameGroup.".group_id=CAST(".$gid." AS INT) ";
+        $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : $gid;
+        $lf_str = $this->mTableNameGroup.".group_id=".$db_gid." ";
         if ($where === null)
           $where  = " WHERE ".$lf_str;
         else
@@ -1271,10 +1271,10 @@ class anyTable extends dbTable
         // Force idx to be a string in order to maintain ordering when sending JSON data to a json client
         $idx = "+".$idx;
         if ($kind == "list") {
-          if (!$simple)
-            $data[$gidx][$idx][$kind] = $this->mType; // Index by group id
-          else
-            $data[$idx][$kind] = $this->mType; // Do not index by group id
+          if (!$simple) // Index by group id
+            $data[$gidx][$idx][$kind] = $this->mType;
+          else // Do not index by group id
+            $data[$idx][$kind] = $this->mType;
         }
         else // kind == "item"
           $data[$idx][$kind] = $this->mType;
@@ -1484,6 +1484,7 @@ class anyTable extends dbTable
 
     //vlog("buildGroupTreeAndAttach,data before building tree:",$data);
     $grouping = Parameters::get("grouping");
+    $grouping = $grouping != "false" && $grouping != "0";
     $this->mRecDepth = 0;
     if ($kind == "item") {
       if ($data)
@@ -1499,7 +1500,7 @@ class anyTable extends dbTable
         if (!empty($data[$gidx])) {
           $ngidx = is_int($gidx) ? "+".$gidx : $gidx;
           $data_tree[$ngidx] = array();
-          if ($grouping && $grouping != "undefined") {
+          if ($grouping) {
             $k = isset($this->mId) && $this->mId != ""
                  ? "item"
                  : (isset($data_tree[$ngidx]["list"]) && $data_tree[$ngidx]["list"] != "group"
@@ -1523,7 +1524,7 @@ class anyTable extends dbTable
                   else
                     $gname = "Other groups"; // TODO i18n
               }
-              if (isset($grouping) && $grouping && $grouping != "undefined")
+              if ($grouping)
                 $data_tree["grouping"] = true;
               $data_tree[$ngidx]["group_type"] = $this->mType != "group" ? $this->mType : $gidx;
               $data_tree[$ngidx]["group_id"]   = $ngidx;
@@ -1558,7 +1559,7 @@ class anyTable extends dbTable
     //
     // If grouping is specified, build group tree and stick data tree to it
     //
-    if (isset($grouping) && $grouping && $grouping != "undefined" &&
+    if ($grouping &&
         (!isset($this->mId) || $this->mId == "") &&
         !isset($this->mListForId) &&
         $group_table) {
@@ -1569,8 +1570,7 @@ class anyTable extends dbTable
     }
     else
       $data = $data_tree;
-    //vlog("buildGroupTreeAndAttach,data1:",$data);
-    //vlog("buildGroupTreeAndAttach,data2:",$data);
+    //vlog("buildGroupTreeAndAttach,data after building tree:",$data);
   } // buildGroupTreeAndAttach
 
   // Overridden in group table
