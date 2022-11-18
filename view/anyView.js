@@ -486,10 +486,11 @@ $.any.anyView.prototype.refresh = function (params)
       ++this.data_level;
 
     // Loop over all entries and refresh
-    let view = this;
-    let prev_type = type;
-    let prev_kind = kind;
-    let row_no = 0;
+    let view       = this;
+    let prev_type  = type;
+    let prev_kind  = kind;
+    let the_parent = parent;
+    let row_no     = 0;
     for (let idc in data) {
       if (data.hasOwnProperty(idc)) {
         if (view && !idc.startsWith("grouping")) {
@@ -512,7 +513,6 @@ $.any.anyView.prototype.refresh = function (params)
                                 ? id_str+"_"+idx
                                 : id_str
                               : idx;
-          let the_parent = parent;
           // Create new view whenever we encounter a new type or a new kind
           if (prev_type != curr_type || (prev_kind != curr_kind && prev_kind != "")) {
             // If the new type/kind is contained within a list, create a new row to contain a new parent container
@@ -719,7 +719,7 @@ $.any.anyView.prototype.refreshOne = function (params)
     params.header_div.remove();
   if (params.data_div && !params.data_div.children().length)
     params.data_div.remove();
-  if (params.table_div && !params.table_div.children().length)
+  if (params.table_div && (!params.table_div.children().length || !params.table_div.children("tbody").length || !params.table_div.children("tbody").children().length))
     params.table_div.remove();
   return this;
 }; // refreshOne
