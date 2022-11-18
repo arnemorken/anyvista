@@ -612,7 +612,7 @@ $.any.anyView.prototype.refresh = function (params)
 // Shows a new, empty item for entering data.
 $.any.anyView.prototype.refreshNoData = function (params)
 {
-  this.showItem({ data: params });
+  //this.showItem({ data: params });
 };
 
 $.any.anyView.prototype._clearBeforeRefresh = function ()
@@ -675,16 +675,7 @@ $.any.anyView.prototype.refreshOne = function (params)
   let have_data = data && Object.size(data[id]) > 0;
   params.header_div = this.getOrCreateHeaderContainer(parent,type,kind,the_id_str,have_data,false);
   this.refreshHeader(params);
-/*
-  if (kind == "head") {
-    // Refresh ingress
-    let ingress_str = data && data[id] ? data[id].group_description : "";
-    if (ingress_str && ingress_str != "") {
-      params.ingress_div = this.getOrCreateIngressContainer(params.header_div,type,kind,the_id_str);
-      this.refreshIngress(params);
-    }
-  }
-*/
+
   // Refresh data
   params.data_div  = this.getOrCreateDataContainer(parent,type,kind,the_id_str);
   params.table_div = this.getOrCreateTable(params.data_div,type,kind,the_id_str);
@@ -1333,10 +1324,9 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
                    hideGoto:     true,
                    // Set in paginator options that are sent to onClick handler:
                    div_info: {
-                     type:       type,
-                     kind:       kind,
-                     par_id_str: par_id_str,
-                     group_id:   pid,
+                     type:     type,
+                     kind:     kind,
+                     group_id: pid,
                    },
                 });
         pager.numItems(num_results);
