@@ -2488,7 +2488,7 @@ $.any.anyView.prototype.createView = function (params)
               ? type+"View"+view_opt.grouping.capitalize()
               : type+"View";
     if (!window[v_str]) {
-      let def_str = view_opt.grouping ? "anyView"+view_opt.grouping.capitalize() : "anyView";
+      let def_str = "anyView";// Use fallback view name
       console.warn("View class "+v_str+" not found, using "+def_str+". "); // TODO! i18n
       v_str = def_str;
     }
@@ -2499,7 +2499,9 @@ $.any.anyView.prototype.createView = function (params)
     }
   }
   catch (err) {
-    console.error("Couldn't create view "+v_str+": "+err);
+    let errstr = "Couldn't create view "+v_str+": "+err; // TODO! i18n
+    this.model.error = "System error: See console log for details. ";
+    console.error(errstr);
     return null;
   }
   return view;
@@ -3277,11 +3279,13 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     num:       num,
     context:   this.model,
     type:      pager.options.div_info.type,
-    group_id:  pager.options.div_info.group_id,
+    group_id:  this.options.grouping
+               ? pager.options.div_info.group_id
+               : null, // TODO!
     grouping:  this.options.grouping,
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
-    head:      this.options.grouping == "tabs",
+    head:      true, // TODO!
     simple:    this.options.grouping === null,
   };
   if (this.model.mode == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already

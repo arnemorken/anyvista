@@ -18,6 +18,7 @@
 $.widget("any.eventViewTabs", $.any.anyViewTabs, {
   // Default options
   options: {
+    grouping:    "tabs",
     mustEnroll:  true,
     mustLogin:   false,
     disp_result: true,

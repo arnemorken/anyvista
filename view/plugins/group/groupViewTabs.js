@@ -18,7 +18,8 @@
 $.widget("any.groupViewTabs", $.any.anyViewTabs, {
   // Default options
   options: {
-    filters: null, // Must be set by the calling method or will be set to default values in the constructor
+    grouping:  "tabs",
+    filters:   null, // Must be set by the calling method or will be set to default values in the constructor
     linkIcons: {
       "event":    "fa fa-calendar",
       "user":     "fa fa-user",

@@ -254,7 +254,7 @@ function table2display()
     let num  = data_view.option("itemsPerPage");
     let self = data_model;
     data_model.dbSearch({
-      head: show_header ? "TDF 2021 riders" : null,  // Add a header to the list
+      head: show_header ? "TDF 2021 riders" : false,  // Add a header to the list
       grouping: false,
       from: from,
       num:  num,

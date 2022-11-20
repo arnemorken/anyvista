@@ -1329,8 +1329,10 @@ anyModel.prototype.dbSearchGetURL = function (options)
                : ""; // Search all groups
   param_str += options.simple                       ? "&lt=simple" : "";
   param_str += type == "group" && options.link_type ? "&group_type="+options.link_type : "";
-  param_str += options.head                         ? "&head="+options.head : "";
-  param_str += options.grouping                     ? "&grouping="+options.grouping : "";
+  param_str += options.head === true ||
+               options.head === false               ? "&head="+options.head : "";
+  param_str += options.grouping === true ||
+               options.grouping === false           ? "&grouping="+options.grouping : "";
   param_str += options.from || options.from==0      ? "&from="+options.from : "";
   param_str += options.num                          ? "&num=" +options.num : "";
   param_str += options.order                        ? "&order="+options.order : "";

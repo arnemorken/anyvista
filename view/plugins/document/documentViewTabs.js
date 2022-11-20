@@ -18,7 +18,8 @@
 $.widget("any.documentViewTabs", $.any.anyViewTabs, {
   // Default options
   options: {
-    filters: null, // If not set by the calling method, it will be set to default values
+    grouping:  "tabs",
+    filters:   null, // If not set by the calling method, it will be set to default values
     linkIcons: {
       "event":    "fa fa-calendar",
       "user":     "fa fa-user",
