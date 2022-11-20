@@ -43,6 +43,7 @@ var is_admin     = model.permission && model.permission.is_admin;
 var is_logged_in = model.permission && model.permission.is_logged_in && parseInt(model.permission.current_user_id) > 0;
 var is_new       = (data_id == "new" || parseInt(data_id) == -1) && (!is_logged_in || is_admin);
 var is_me        = model.permission && parseInt(model.permission.current_user_id) == parseInt(data_id);
+var grouping     = "<?php echo Parameters::get("grouping");?>";
 var view = new eventViewTabs({ id:               "<?php print $gViewArea;?>",
                                model:            model,
                                showSearcher:     20,
@@ -52,6 +53,7 @@ var view = new eventViewTabs({ id:               "<?php print $gViewArea;?>",
                                sortBy:           "event_date_start",
                                sortDirection:    "DESC",
                                edit:             is_new,
+                               grouping:         (!grouping || grouping == "false") && grouping != "" ? false : "tabs",
                                event_date_start: "<?php echo Parameters::get('event_date_start'); ?>",
                                event_date_end:   "<?php echo Parameters::get('event_date_end'); ?>",
                             });

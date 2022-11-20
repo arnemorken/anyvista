@@ -617,7 +617,9 @@ class anyTable extends dbTable
     else {
       $this->mListForType = null;
       $this->mListForId   = null;
-      $res = $this->dbSearchList($this->mData);
+      $grouping = Parameters::get("grouping");
+      $grouping = $grouping != "false" && $grouping != "0";
+      $res = $this->dbSearchList($this->mData,false,!$grouping,false);
     }
     if (!$res)
       return null;
@@ -865,9 +867,17 @@ class anyTable extends dbTable
     // Use same limit for all groups
     $limit = !$simple ? $this->findLimit() : "";
 
+    $this->mNumResults = 0; // Total number of results
+    $grouping = Parameters::get("grouping");
+    $grouping = $grouping != "false" && $grouping != "0";
     if ($group_id && $this->mType != "group") {
       // Build and execute the query for data from the given non-group group
       $success = $this->dbExecListStmt($data,$group_id,$limit,$skipOwnId,$flat,$simple);
+    }
+    else
+    if (!$grouping) {
+      // Build and execute the query for all data, non-grouped
+      $success = $this->dbExecListStmt($data,null,$limit,$skipOwnId,$flat,$simple);
     }
     else {
       // Build and execute the query for grouped data
@@ -913,6 +923,9 @@ class anyTable extends dbTable
       return false; // Something went wrong
 
     // Get the data
+    $grouping = Parameters::get("grouping");
+    $grouping = $grouping != "false" && $grouping != "0";
+    $flat = !$grouping;
     $success = $this->getRowData($data,"list",$flat,$simple);
 
     if ($limit != "") {
@@ -934,6 +947,8 @@ class anyTable extends dbTable
         else
           $gr_idx = $gid;
         $data[$gr_idx]["grouping_num_results"] = $row["num_results"];
+        $this->mNumResults += $row["num_results"];
+        //elog("num_res:".$this->mNumResults);
       }
     } // if
     return $success;
@@ -1041,9 +1056,10 @@ class anyTable extends dbTable
         }
         else {
           if ($gid) {
-            $lj .= "LEFT JOIN ".$plugintable." ON CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$gid." AS INT) ";
+            $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
+            $lj .= "LEFT JOIN ".$plugintable." ON CAST(".$linktable.".".$linktable_id." AS INT)=".$db_gid." ";
             if ($this->tableExists($metatable))
-              $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=CAST(".$gid." AS INT) ";
+              $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=".$db_gid." ";
           }
         }
       }
@@ -1101,7 +1117,7 @@ class anyTable extends dbTable
           $where .= " AND ".$gt_str;
       }
       if (!isset($this->mListForType)) {
-        $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : $gid;
+        $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
         $lf_str = $this->mTableNameGroup.".group_id=".$db_gid." ";
         if ($where === null)
           $where  = " WHERE ".$lf_str;
@@ -1110,7 +1126,9 @@ class anyTable extends dbTable
       }
     }
     else {
-      if ($this->tableExists($this->mTableNameGroupLink)) {
+      $grouping = Parameters::get("grouping");
+      $grouping = $grouping != "false" && $grouping != "0";
+      if ($grouping && $this->tableExists($this->mTableNameGroupLink)) {
         $n_str = $this->mTableNameGroupLink.".group_id is null ";
         if ($where === null)
           $where  = " WHERE ".$n_str;
@@ -1251,6 +1269,8 @@ class anyTable extends dbTable
               ? $this->mFilters["list"]
               : $this->mFilters["item"];
     //elog("getRowData,filter:".var_export($filter,true));
+    $grouping = Parameters::get("grouping");
+    $grouping = $grouping != "false" && $grouping != "0";
     $this->mLastNumRows = 0;
     if (!$data)
       $data = array();
@@ -1271,8 +1291,13 @@ class anyTable extends dbTable
         // Force idx to be a string in order to maintain ordering when sending JSON data to a json client
         $idx = "+".$idx;
         if ($kind == "list") {
-          if (!$simple) // Index by group id
+          if (!$simple) { // Index by group id
             $data[$gidx][$idx][$kind] = $this->mType;
+            if (!$grouping)
+              $data[$gidx][$idx]["group_id"] = isset($nextrow["group_id"])
+                                               ? $nextrow["group_id"]
+                                               : "nogroup";
+          }
           else // Do not index by group id
             $data[$idx][$kind] = $this->mType;
         }
@@ -1695,23 +1720,25 @@ class anyTable extends dbTable
     $this->prepareTypeKindId($data);
     if (!$inData)
       return $data;
-    $h = Parameters::get("head");
-    $use_head = $h && $h != "0" && $h != "false"; // Must explicitly specify that a header should be generated
-    if ($use_head)
-      $data["data"]["+0"]["head"] = $this->mType;
     if ($inData) {
-      if ($use_head)
-        $d = &$data["data"]["+0"];
-      else
-        $d = &$data;
+      $d = &$data["data"]["+0"];
+      $d["head"] = $this->mType;
       if (!isset($this->mId) || $this->mId == "") {
         // List
+        $h = Parameters::get("head");
+        $use_head = $h && $h != "0" && $h != "false"; // Must explicitly specify that a top header should be generated
         if ($use_head && $h != "true" && $h != "1")
-          $hdr = $h;
+          $hdr = $h; // Use the header provided in the in-parameter
         else
+        if ($h == "true" || $h == "1")
           $hdr = $this->findDefaultListHeader($this->mType);
-        $d[$this->mNameKey] = $hdr;
-        $d["data"]          = $inData;
+        if (isset($hdr))
+          $d[$this->mNameKey] = $hdr;
+        $d["data"] = $inData;
+        $grouping = Parameters::get("grouping");
+        $grouping = $grouping != "false" && $grouping != "0";
+        if (!$grouping)
+          $d["data"][$this->mType]["data"]["grouping_num_results"] = $this->mNumResults;
       }
       else {
         // Item

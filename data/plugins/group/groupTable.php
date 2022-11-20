@@ -178,10 +178,11 @@ class groupTable extends anyTable
     if ($type && $type != "group")
       $where = "WHERE group_type='".$type."' ";
     if ($group_id && $group_id != "nogroup") {
+      $db_gid = is_numeric($group_id) ? "CAST(".$group_id." AS INT)" : "'".$group_id."'";
       if ($where == null)
-        $where .= "WHERE group_id=CAST(".$group_id." AS INT) ";
+        $where .= "WHERE group_id=".$db_gid." ";
       else
-        $where .= "AND group_id=CAST(".$group_id." AS INT) ";
+        $where .= "AND group_id=".$db_gid." ";
     }
     $stmt .= $where."ORDER BY group_sort_order,group_id,group_type";
     //error_log("dbSearchGroupInfo:".$stmt);

@@ -672,8 +672,9 @@ $.any.anyView.prototype.refreshOne = function (params)
     this.group_id = id;
 
   // Refresh header
-  let have_data = data && Object.size(data[id]) > 0;
-  params.header_div = this.getOrCreateHeaderContainer(parent,type,kind,the_id_str,have_data,false);
+  let have_data  = data && Object.size(data[id]) > 0;
+  let header_div = this.getOrCreateHeaderContainer(parent,type,kind,the_id_str,have_data,false);
+  params.parent  = header_div;
   this.refreshHeader(params);
 
   // Refresh data
@@ -706,8 +707,8 @@ $.any.anyView.prototype.refreshOne = function (params)
       --this.options.indent_level;
   }
   // Clean up
-  if (params.header_div && !params.header_div.children().length)
-    params.header_div.remove();
+  if (header_div && !header_div.children().length)
+    header_div.remove();
   if (params.data_div && !params.data_div.children().length)
     params.data_div.remove();
   if (params.table_div && (!params.table_div.children().length || !params.table_div.children("tbody").length || !params.table_div.children("tbody").children().length))
@@ -839,7 +840,7 @@ $.any.anyView.prototype.refreshHeader = function (params,skipName)
   if (!params || !this.options.showHeader)
     return null;
 
-  let parent = params.header_div;
+  let parent = params.parent;
   let type   = params.type;
   let kind   = params.kind;
   let data   = params.data;

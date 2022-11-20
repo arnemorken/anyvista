@@ -45,17 +45,6 @@ $.widget("any.anyViewTabs", $.any.anyView, {
   }
 }); // ViewTabs widget constructor
 
-$.any.anyViewTabs.prototype.refreshData = function (params)
-{
-  let table_div = $.any.anyView.prototype.refreshData.call(this,params);
-  if (this.options.grouping == "tabs" && params && params.data && params.data.grouping && params.data_div) {
-    if (this.active_tab_data_id != null && params.data_div.attr("id") != +this.active_tab_data_id)
-      params.data_div.hide();
-  }
-  this.openTab();
-  return table_div;
-}; // refreshData
-
 //
 // Get the current tab container (div), or create a new one if it does not exist
 //
@@ -72,31 +61,24 @@ $.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kin
     let pl       = this.options.indent_tables ? lev_tab * this.options.indent_amount : 0;
     let pl_str   = pl > 0 ? "style='margin-left:"+pl+"px;'" : "";
     tabs_div     = $("<div id='"+tabs_id+"' class='"+class_id+"' "+pl_str+"></div>");
-    if (kind == "head")
-      parent.prepend(tabs_div);
+    if (kind != "item")
+      parent.parent().prepend(tabs_div);
     else
-      parent.append(tabs_div);
+      parent.parent().append(tabs_div);
   }
   return tabs_div;
 }; // getOrCreateTabsContainer
 
 $.any.anyViewTabs.prototype.refreshHeader = function (params)
 {
-  if (!params || !this.options.showHeader)
+  if (!params || !params.data || !this.options.showHeader)
     return null;
 
-  let parent     = params.parent; // NOTE! Different parent than in anyView.refreshHeader!
   let type       = params.type;
   let kind       = params.kind;
   let data       = params.data;
-  let id         = params.id;
   let par_id_str = params.par_id_str;
-  let row_id_str = params.row_id_str;
 
-  if (!parent || !data)
-    return null;
-
-  let skip_hdr = false;
   if (this.options.grouping == "tabs" && data.grouping && par_id_str) {
     // Get the correct filter
     if (!this.options.filters) {
@@ -113,54 +95,78 @@ $.any.anyViewTabs.prototype.refreshHeader = function (params)
     }
     let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
     if (filter[name_key] && filter[name_key].DISPLAY) {
-      // We found a name to use as tab button, so skip it as an ordinary header
-      skip_hdr = true;
-      // Get or create a container for the header tab buttons
-      let ptype = this._findType(params.pdata,params.pid,type);
-      let pkind = this._findKind(params.pdata,params.pid,kind);
-      this.active_tab_panel = this.getOrCreateTabsContainer(parent,ptype,pkind,par_id_str);
-      // Add a new header tab button in tab panel if it doesnt already exists
-      let tab_btn_id    = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str+"_data_tab_btn";
-      let tab_data_id   = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str+"_data";
-      let tab_header_id = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str+"_header";
-      if (!$("#"+tab_btn_id).length) {
-        let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null;
-        let tab_str = d && (d[name_key] || d[name_key] == "")
-                      ? d[name_key]
-                      : "Other "+type+"s"; // TODO i18n
-        let tab_btn = $("<button class='anyTabButton w3-bar-item w3-button' id='"+tab_btn_id+"'>"+tab_str+"</button>");
-        this.active_tab_panel.append(tab_btn);
-        // Bind click on tab
-        let opt = {
-          tab_panel:     this.active_tab_panel,
-          tab_btn_id:    tab_btn_id,    // Id of button that was clicked
-          tab_data_id:   tab_data_id,   // Id of data area to be shown
-          tab_header_id: tab_header_id, // Id of header area to be shown
-        };
-        tab_btn.off("click").on("click",opt,$.proxy(this.openTab,this));
-      }
-      // Remember which tab is the first
-      let num_tab = this.active_tab_panel.children().length;
-      if (num_tab == 1) {
-        this.active_tab_btn_id    = tab_btn_id;    // Remember first tab button
-        this.active_tab_data_id   = tab_data_id;   // Remember first tab data area
-        this.active_tab_header_id = tab_header_id; // Remember first tab header area
-        this.openTab();
-      }
-      else {
-        ;//$("#"+tab_data_id).hide();
-        ;//$("#"+tab_header_id).hide();
-      }
-      let hdr = $.any.anyView.prototype.refreshHeader.call(this,params,true);
-      if (num_tab != 1)
-        hdr.hide();
-      return hdr;
+      // The name should be placed in the tab button container
+      this.refreshTabPanel(params);
+
+      // The rest of the header goes in the header section before the data section
+      return $.any.anyView.prototype.refreshHeader.call(this,params,true);
     }
   }
-  if (!skip_hdr) // TODO: Should just skip the *name*, not the rest of the header?
-    return $.any.anyView.prototype.refreshHeader.call(this,params);
-  return null;
+  // Normal header
+  return $.any.anyView.prototype.refreshHeader.call(this,params);
 }; // refreshHeader
+
+$.any.anyViewTabs.prototype.refreshTabPanel = function (params)
+{
+  if (!params || !params.parent || !params.data || !this.options.showHeader)
+    return null;
+
+  let parent     = params.parent; // NOTE! Different parent than in anyView.refreshHeader!
+  let type       = params.type;
+  let kind       = params.kind;
+  let data       = params.data;
+  let id         = params.id;
+  let par_id_str = params.par_id_str;
+  let row_id_str = params.row_id_str;
+
+  // Get or create a container for the header tab buttons
+  let ptype = this._findType(params.pdata,params.pid,type);
+  let pkind = this._findKind(params.pdata,params.pid,kind);
+  this.active_tab_panel = this.getOrCreateTabsContainer(parent,ptype,pkind,par_id_str);
+
+  // Add a new header tab button in tab panel if it doesnt already exists
+  let tab_btn_id    = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str+"_data_tab_btn";
+  let tab_data_id   = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str+"_data";
+  let tab_header_id = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str+"_header";
+  if (!$("#"+tab_btn_id).length) {
+    let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null;
+    let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
+    let tab_str  = d && (d[name_key] || d[name_key] == "")
+                   ? d[name_key]
+                   : "Other "+type+"s"; // TODO i18n
+    let tab_btn = $("<button class='anyTabButton w3-bar-item w3-button' id='"+tab_btn_id+"'>"+tab_str+"</button>");
+    this.active_tab_panel.append(tab_btn);
+    // Bind click on tab
+    let opt = {
+      tab_panel:     this.active_tab_panel,
+      tab_btn_id:    tab_btn_id,    // Id of button that was clicked
+      tab_data_id:   tab_data_id,   // Id of data area to be shown
+      tab_header_id: tab_header_id, // Id of header area to be shown
+    };
+    tab_btn.off("click").on("click",opt,$.proxy(this.openTab,this));
+  }
+
+  // Remember which tab is the first
+  let num_tab = this.active_tab_panel.children().length;
+  if (num_tab == 1) {
+    this.active_tab_btn_id    = tab_btn_id;    // Remember first tab button
+    this.active_tab_data_id   = tab_data_id;   // Remember first tab data area
+    this.active_tab_header_id = tab_header_id; // Remember first tab header area
+    this.openTab();
+  }
+}; // refreshTabPanel
+
+// Call anyView.refreshData(), then hide/show tabs
+$.any.anyViewTabs.prototype.refreshData = function (params)
+{
+  let table_div = $.any.anyView.prototype.refreshData.call(this,params);
+  if (this.options.grouping == "tabs" && params && params.data && params.data.grouping && params.data_div) {
+    if (this.active_tab_data_id != null && params.data_div.attr("id") != +this.active_tab_data_id)
+      params.data_div.hide();
+  }
+  this.openTab();
+  return table_div;
+}; // refreshData
 
 // Display a tab
 // If called by user clicking a tab: Hide/inactivate currently active tab and show/activate new tab.
