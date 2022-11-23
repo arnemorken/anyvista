@@ -2220,7 +2220,7 @@ class anyTable extends dbTable
       if ($this->hasParentId()) {
         if ($dellist !== null) {
           foreach ($dellist as $delval) {
-            if ($delval && $gid != $id) {
+            if ($delval) {
               $stmt = "UPDATE ".$this->getTableName()." SET parent_id=null WHERE ".$id_key."='".intval($delval)."'";
               //elog("dbUpdateLink(4):".$stmt);
               if (!$this->query($stmt))
@@ -2230,7 +2230,7 @@ class anyTable extends dbTable
         }
         if ($updlist !== null) {
           foreach ($updlist as $updval) {
-            if ($updval && $gid != $id && intval($id) != intval($updval)) {
+            if ($updval && intval($id) != intval($updval)) {
               $stmt = "UPDATE ".$this->getTableName()." SET parent_id='".intval($id)."' WHERE ".$id_key."='".intval($updval)."'";
               //elog("dbUpdateLink(5):".$stmt);
               if (!$this->query($stmt))
