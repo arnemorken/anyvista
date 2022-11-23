@@ -977,8 +977,9 @@ class anyTable extends dbTable
     // Select from own table
     $sl = "SELECT DISTINCT ".$this->getTableName().".* ";
 
-    // Always select from group table
-    if ($gid && isset($this->mTableFieldsGroup)) {
+    // Always select from group table, except if has parent_id while being a list-for list
+    if ($gid && isset($this->mTableFieldsGroup) &&
+        !($this->hasParentId() && (isset($this->mListForType) || (isset($this->mId) && $this->mId != "")))) {
       if ("group" != $this->mType &&
           $this->tableExists($this->mTableNameGroup)) {
         $linktable = $this->findLinkTableName("group");
@@ -1016,8 +1017,9 @@ class anyTable extends dbTable
   {
     $cur_uid = $this->mPermission["current_user_id"];
     $lj = "";
-    // Always left join group table
-    if ("group" != $this->mType)
+    // Always left join group table, except if has parent_id while being a list-for list
+    if ("group" != $this->mType &&
+        !($this->hasParentId() && (isset($this->mListForType) || (isset($this->mId) && $this->mId != ""))))
       $lj .= $this->findListLeftJoinOne($cur_uid,"group",$gid);
 
     // Left join other tables (link tables)
@@ -1076,8 +1078,8 @@ class anyTable extends dbTable
       $where_id = $link_table.".".$this->mListForType."_id='".$this->mListForId."' ";
       $where = "WHERE ".$where_id;
     }
-    if ($this->hasParentId() &&
-        (isset($this->mListForType) || (isset($this->mId) && $this->mId != ""))) {
+    // If has parent_id while being a list-for list
+    if ($this->hasParentId() && (isset($this->mListForType) || (isset($this->mId) && $this->mId != ""))) {
       if (isset($this->mId) && $this->mId != "" && is_numeric($this->mId) &&
           (!isset($this->mListForType) || (isset($this->mListForType) && $this->mListForType == $this->mType))) {
         $gstr = $this->getTableName().".".$this->mIdKeyTable." IN ( ".
@@ -1128,7 +1130,8 @@ class anyTable extends dbTable
     else {
       $grouping = Parameters::get("grouping");
       $grouping = $grouping != "false" && $grouping != "0";
-      if ($grouping && $this->tableExists($this->mTableNameGroupLink)) {
+      if ($grouping && $this->tableExists($this->mTableNameGroupLink) &&
+          !($this->hasParentId() && (isset($this->mListForType) || (isset($this->mId) && $this->mId != "")))) {
         $n_str = $this->mTableNameGroupLink.".group_id is null ";
         if ($where === null)
           $where  = " WHERE ".$n_str;
