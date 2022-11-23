@@ -506,17 +506,13 @@ $.any.anyView.prototype.refresh = function (params)
           let idx = Number.isInteger(parseInt(idc))
                     ? ""+parseInt(idc)
                     : idc;
-          let prev_is_parent = data[idc].parent_id = pid &&
-                               curr_type == prev_type && curr_kind == prev_kind && curr_kind == "list"; // Check if subtype in list
-          let par_id_str  = !prev_is_parent
-                            ? curr_kind == "list" || curr_kind == "select"
-                              ? id_str
-                              : id_str
-                                ? curr_kind == "item"
-                                  ? id_str+"_"+idx
-                                  : id_str
-                                : idx
-                             : id_str.substring(0,id_str.lastIndexOf("_"));
+           let par_id_str  = curr_kind == "list" || curr_kind == "select"
+                             ? id_str
+                             : id_str
+                               ? curr_kind == "item"
+                                 ? id_str+"_"+idx
+                                 : id_str
+                               : idx;
           // Create new view whenever we encounter a new type or a new kind
           if (prev_type != curr_type || (prev_kind != curr_kind && prev_kind != "")) {
             // If the new type/kind is contained within a list, create a new row to contain a new parent container
@@ -695,13 +691,14 @@ $.any.anyView.prototype.refreshOne = function (params)
     }
     if ((kind == "list" || kind == "select"))
       ++this.options.indent_level;
+    let p = data && data[id] ? data[id].parent_id : null;
     this.refresh({
        parent:     params.data_div,
        type:       type,
        kind:       kind,
        data:       data[id] ? data[id].data : data["+"+id].data,
        id:         null,
-       id_str:     row_id_str,
+       id_str:     p || p === 0 ? par_id_str : row_id_str,
        pdata:      data,
        pid:        id,
        edit:       edit,
