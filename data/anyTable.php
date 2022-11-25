@@ -883,7 +883,7 @@ class anyTable extends dbTable
       // Build and execute the query for grouped data
       $success = true;
       $has_nogroup = false;
-      if ($group_data && $group_data["group"]) {
+      if ($group_data && isset($group_data["group"])) {
         foreach ($group_data["group"] as $gid => $group) {
           $success = $success && $this->dbExecListStmt($data,$gid,$limit,$skipOwnId,$flat,$simple);
           if ($gid == "nogroup")
@@ -1339,6 +1339,7 @@ class anyTable extends dbTable
     } // while
     //elog("getRowData1 ($this->mType),data:".var_export($data,true));
 
+/* BUGGY as of 20221124
     if ($kind == "list" && $this->mType != "group" && !$flat) {
       // Check and fix conflicts in parent_id / group_id in lists
       // TODO! Check for circular parent-child relationship.
@@ -1353,8 +1354,8 @@ class anyTable extends dbTable
         ++$iter;
       }
     }
-    //elog("getRowData2 ($this->mType),data:".var_export($data,true));
-
+    elog("getRowData2 ($this->mType),data:".var_export($data,true));
+*/
     if ($data === null || empty($data))
       return false;
     return true;
@@ -1510,7 +1511,7 @@ class anyTable extends dbTable
     if (!$data)
       return;
 
-    //vlog("buildGroupTreeAndAttach,data before building tree:",$data);
+    //vlog("buildGroupTreeAndAttach,data before building tree ($kind):",$data);
     $grouping = Parameters::get("grouping");
     $grouping = $grouping != "false" && $grouping != "0";
     $this->mRecDepth = 0;
@@ -1562,8 +1563,8 @@ class anyTable extends dbTable
               $idx = isset($data[$gidx][$this->mId]) ? $this->mId : "+".$this->mId;
               if (isset($data[$gidx][$idx]))
                 $data_tree[$ngidx][$this->mNameKey] = $data[$gidx][$idx][$this->mNameKey];
-              else
-                $data_tree[$ngidx][$this->mNameKey] = null;
+            //else
+            //  $data_tree[$ngidx][$this->mNameKey] = null;
             }
           } // if grouping
           $num = 0; // Used by page links
