@@ -134,16 +134,16 @@ class anyTable extends dbTable
             $mTableFieldsGroup    = null,
             $mTableFieldsLeftJoin = null;
 
-  protected $mType              = null,
+  protected $mData              = null, // List or item data
+            $mType              = null, // Table type
+            $mId                = null, // Null if list, non-null if item
             $mIdKey             = null,
             $mIdKeyTable        = null,
             $mIdKeyMetaTable    = null,
             $mNameKey           = null,
-            $mId                = null, // Non-null if item, null if list
             $mMetaId            = null,
             $mListForType       = null, // Used by items that have associated lists
             $mListForId         = null, // Used by items that have associated lists
-            $mData              = null, // List or item data
             $mFilters           = null,
             $mPermission        = null,
             $mOrderBy           = null,
@@ -411,10 +411,20 @@ class anyTable extends dbTable
   public function getTableNameMeta()  { return $this->mTableNameMeta; }
 
   /**
+   * @method getData
+   * @description Returns the data.
+   */
+  public function getData()       { return $this->mData; }
+  /**
    * @method getType
    * @description Returns the type of the table data.
    */
   public function getType()       { return $this->mType; }
+  /**
+   * @method getId
+   * @description Returns the id of the table data, if an item. If a list, the result is undefined.
+   */
+  public function getId()         { return $this->mId; }
 
   /**
    * @method getIdKey
@@ -428,17 +438,7 @@ class anyTable extends dbTable
    */
   public function getNameKey()    { return $this->mNameKey; }
 
-  /**
-   * @method getId
-   * @description Returns the id of the table data, if an item. If a list, the result is undefined.
-   */
-  public function getId()         { return $this->mId; }
 
-  /**
-   * @method getData
-   * @description Returns the data.
-   */
-  public function getData()       { return $this->mData; }
 
   /**
    * @method getPermission
@@ -681,7 +681,6 @@ class anyTable extends dbTable
       $this->setError("Missing key ($key) or value ($val)");
       return false;
     }
-
     // Build and execute the query
     $stmt = $this->dbPrepareSearchItemStmt($key,$val);
     //elog("dbSearchItem:".$stmt);
