@@ -802,7 +802,7 @@ class anyTable extends dbTable
             $table->mListForType = $this->mType;
             $table->mListForId   = $this->mId;
             $table->mListForName = isset($data[$idx]) && isset($data[$idx][$this->mNameKey]) ? $data[$idx][$this->mNameKey] : "";
-            if (!$table->dbSearchList($table_data,$skipOwnId,true,false)) // TODO! Searching for "simple" list does not work here
+            if (!$table->dbSearchList($table_data,$skipOwnId,true,false,true)) // TODO! Searching for "simple" list does not work here
               $this->mError .= $table->getError();
             if ($table_data) {
               // We found some data, insert it in the data structure
@@ -838,7 +838,7 @@ class anyTable extends dbTable
   // Search database for a list, including meta data
   // Returns true on success, false on error
   //
-  protected function dbSearchList(&$data,$skipOwnId=false,$flat=false,$simple=false)
+  protected function dbSearchList(&$data,$skipOwnId=false,$flat=false,$simple=false,$simpleGroup=false)
   {
     // Set order properties
     if (Parameters::get("order")) {
@@ -857,7 +857,7 @@ class anyTable extends dbTable
     $group_id    = Parameters::get("group_id");
     $group_table = anyTableFactory::create("group",$this);
     $group_data  = $group_table
-                   ? $group_table->dbSearchGroupInfo($this->mType,$group_id)
+                   ? $group_table->dbSearchGroupInfo($this->mType,$group_id,$simpleGroup)
                    : null;
     //vlog("dbSearchList,group_data($this->mType,$group_id):",$group_data);
     if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
@@ -1592,7 +1592,7 @@ class anyTable extends dbTable
   } // buildGroupTreeAndAttach
 
   // Overridden in group table
-  protected function dbSearchGroupInfo($type=null,$group_id=null)
+  protected function dbSearchGroupInfo($type=null,$group_id=null,$simple=false)
   {
     // Get group tree and append data to it
     $num = 0;
