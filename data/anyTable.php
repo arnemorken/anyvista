@@ -350,10 +350,10 @@ class anyTable extends dbTable
     $str = Parameters::get("plugins");
     if ($str)
       $this->mPlugins = explode(',', $str);
+    if (!isset($this->mPlugins))
+      $this->mPlugins = array();
     if (!in_array($this->mType,$this->mPlugins))
       array_unshift($this->mPlugins,$this->mType); // Add the current type as a "plugin" in order to work with sub-items
-    if (!isset($this->mPlugins))
-      $this->mPlugins = null; // Should never happen
 
     return true;
   } // initProperties
