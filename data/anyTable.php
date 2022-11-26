@@ -767,16 +767,12 @@ class anyTable extends dbTable
   //
   protected function dbSearchItemLists(&$data)
   {
+    // If no plugins found, return with no error
     if (!isset($this->mPlugins))
-      return true; // No plugins found, return with no error
-
-    // Must have a type and an id, and the type must exist as a plugin
-    $err = "";
-    if (!$this->mType)
-      $err .= "Type missing. ";
-    if (!isset($this->mId) || $this->mId == "")
-      $err .= "Id missing. ";
-    if ($err != "") {
+      return true;
+    // Must have a type and an id
+    if (!$this->mType || !isset($this->mId) || $this->mId == "") {
+      $err = "Type or id missing (type=$this->mType,id=$this->mId). ";
       $this->setError($err);
       return false;
     }
