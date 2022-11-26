@@ -350,8 +350,10 @@ class anyTable extends dbTable
     $str = Parameters::get("plugins");
     if ($str)
       $this->mPlugins = explode(',', $str);
+    if (!in_array($this->mType,$this->mPlugins))
+      array_unshift($this->mPlugins,$this->mType); // Add the current type as a "plugin" in order to work with sub-items
     if (!isset($this->mPlugins))
-      $this->mPlugins = null;
+      $this->mPlugins = null; // Should never happen
 
     return true;
   } // initProperties
@@ -781,8 +783,6 @@ class anyTable extends dbTable
       $err .= "Type missing. ";
     if (!isset($this->mId) || $this->mId == "")
       $err .= "Id missing. ";
-    if (!in_array($this->mType,$this->mPlugins))
-      $err .= "Unregistered plugin: $this->mType. ";
     if ($err != "") {
       $this->setError($err);
       return false;

@@ -150,7 +150,7 @@ class userTable extends anyTable
         "user_role"        => 1,
       ],
     ],
-    "plugins" => [/*"document",*/"event","group","user"],
+    "plugins" => [/*"document",*/"event","group"],
   ];
 
   protected $mInsertSuccessMsg  = "User created. ",
