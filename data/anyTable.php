@@ -675,9 +675,9 @@ class anyTable extends dbTable
   // Search database for an item, including meta data
   // Returns true on success, false on error
   //
-  protected function dbSearchItem(&$data,$key,$val,$skipLists=false)
+  protected function dbSearchItem(&$data,$key,$val,$skipLinks=false)
   {
-    if ($key === null || $val === null) {
+    if ($key === null || $key == "" || $val === null || $val == "") {
       $this->setError("Missing key ($key) or value ($val)");
       return false;
     }
@@ -688,28 +688,11 @@ class anyTable extends dbTable
       return false; // An error occured
 
     // Get the data
-    $success = $this->getRowData($data,"item");
-
-    if ($success) {
-      // Search and get the meta data
-      $this->dbSearchMeta($data,"item",false);
-
-      // Get lists associated with the item (unless they should be skipped)
-      if (!$skipLists)
-        $this->dbSearchItemLists($data);
-
-      // Get group data
-      $group_table = anyTableFactory::create("group",$this);
-      $group_data = $group_table
-                    ? $group_table->dbSearchGroupInfo($this->mType)
-                    : null;
-      if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
-        $this->setError($group_table->mError);
-
-      // Build the data tree
-      $this->buildGroupTreeAndAttach($data,"item",$group_table,$group_data);
+    if ($this->getRowData($data,"item")) {
+      $this->dbSearchMeta($data,"item",false); // Search and get the meta data
+      if (!$skipLinks)
+        $this->dbSearchItemLists($data); // Get lists associated with the item
     }
-
     return !$this->isError();
   } // dbSearchItem
 
