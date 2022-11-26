@@ -621,6 +621,7 @@ class anyTable extends dbTable
     else {
       $this->mListForType = null;
       $this->mListForId   = null;
+      $this->mListForName = null;
       $res = $this->dbSearchList($this->mData,false,!$this->mGrouping,false);
     }
     if (!$res)
@@ -641,7 +642,7 @@ class anyTable extends dbTable
   //
   protected function dbSearchMaxId()
   {
-    $table = $this->getTableName();
+    $table = $this->mTableName;
   //$id    = $this->mIdKeyTable;
   //$stmt  = "SELECT MAX(".$id.") FROM ".$table;
     $stmt  = "SELECT AUTO_INCREMENT FROM information_schema.tables ".
@@ -704,7 +705,7 @@ class anyTable extends dbTable
     $left_join    = $this->findItemLeftJoin();
     $where        = $this->findItemWhere($key,$val);
     $stmt = $select.
-            "FROM ".$this->getTableName()." ".
+            "FROM ".$this->mTableName." ".
             $left_join.
             $where;
     return $stmt;
@@ -713,15 +714,17 @@ class anyTable extends dbTable
   protected function findItemSelect()
   {
     // Select from own table
-    $si = "SELECT DISTINCT ".$this->getTableName().".* ";
+    $si = "SELECT DISTINCT ".$this->mTableName.".* ";
 
     // Select from left joined user table (if this is not a user table)
     if ($this->mType != "user" &&
-        isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin["user"]) &&
+        isset($this->mTableFieldsLeftJoin) && 
+	isset($this->mTableFieldsLeftJoin["user"]) &&
         $this->tableExists($this->mTableNameUserLink)) {
       foreach ($this->mTableFieldsLeftJoin["user"] as $field)
         $si .= ", ".$this->mTableNameUserLink.".".$field;
     }
+    // Get parent name
     if ($this->hasParentId())
       $si .= ", temp.".$this->mNameKey." AS parent_name";
     $si .= " ";
@@ -734,20 +737,24 @@ class anyTable extends dbTable
     // Left join user table (if this is not a user table)
     $lj = "";
     if ($this->mType != "user" &&
-        isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin["user"]) &&
+        isset($this->mTableFieldsLeftJoin) && 
+	isset($this->mTableFieldsLeftJoin["user"]) &&
         $this->tableExists($this->mTableNameUserLink)) {
-      $lj .= "LEFT JOIN ".$this->mTableNameUserLink." ON ".$this->mTableNameUserLink.".".$this->mIdKeyTable."='".$this->mId."' ";
+        $lj .= "LEFT JOIN ".$this->mTableNameUserLink." ".
+               "ON "       .$this->mTableNameUserLink.".".$this->mIdKeyTable."='".$this->mId."' ";
       if ($cur_uid)
         $lj .= "AND ".$this->mTableNameUserLink.".user_id='".$cur_uid."' ";
     }
+    // Get parent name
     if ($this->hasParentId())
-      $lj .= "LEFT JOIN ".$this->mTableName." temp ON ".$this->mTableName.".parent_id=temp.".$this->mIdKey." ";
+      $lj .= "LEFT JOIN ".$this->mTableName." temp ".
+             "ON "       .$this->mTableName.".parent_id=temp.".$this->mIdKey." ";
     return $lj;
   } // findItemLeftJoin
 
   protected function findItemWhere($key,$val)
   {
-    $where = "WHERE ".$this->getTableName().".".$key."='".utf8_encode($val)."' ";
+    $where = "WHERE ".$this->mTableName.".".$key."='".utf8_encode($val)."' ";
     return $where;
   } // findItemWhere
 
@@ -943,7 +950,7 @@ class anyTable extends dbTable
 
     // Build the query
     $stmt = $select.
-            "FROM ".$this->getTableName()." ".
+            "FROM ".$this->mTableName." ".
             $left_join.
             $where.
             $order_by;
@@ -953,7 +960,7 @@ class anyTable extends dbTable
   protected function findListSelect($gid)
   {
     // Select from own table
-    $sl = "SELECT DISTINCT ".$this->getTableName().".* ";
+    $sl = "SELECT DISTINCT ".$this->mTableName.".* ";
 
     // Always select from group table, except if has parent_id while being a list-for list
     if ($gid && isset($this->mTableFieldsGroup) &&
@@ -1025,7 +1032,7 @@ class anyTable extends dbTable
     $plugintable_id = $this->findPluginTableId($plugin);
     $metatable_id   = $plugin."_id";
     if ($this->tableExists($linktable)) {
-      $lj .= "LEFT JOIN ".$linktable.  " ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->getTableName().".".$this->mIdKeyTable." AS INT) ";
+      $lj .= "LEFT JOIN ".$linktable.  " ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ";
       if (!isset($this->mListForType) && $plugin == "user" && $cur_uid)
         $lj .= "AND CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$cur_uid." AS INT) "; // Only return results for current user
       if ($this->tableExists($plugintable)) {
@@ -1060,11 +1067,11 @@ class anyTable extends dbTable
     if ($this->hasParentId() && (isset($this->mListForType) || (isset($this->mId) && $this->mId != ""))) {
       if (isset($this->mId) && $this->mId != "" && is_numeric($this->mId) &&
           (!isset($this->mListForType) || (isset($this->mListForType) && $this->mListForType == $this->mType))) {
-        $gstr = $this->getTableName().".".$this->mIdKeyTable." IN ( ".
-                "SELECT ".$this->getTableName().".".$this->mIdKeyTable." ".
+        $gstr = $this->mTableName.".".$this->mIdKeyTable." IN ( ".
+                "SELECT ".$this->mTableName.".".$this->mIdKeyTable." ".
                 "FROM (SELECT @pv := '$this->mId') ".
-                "INITIALISATION WHERE find_in_set(".$this->getTableName().".parent_id, @pv) > 0 ".
-                "AND   @pv := concat(@pv, ',', ".$this->getTableName().".".$this->mIdKeyTable.") ".
+                "INITIALISATION WHERE find_in_set(".$this->mTableName.".parent_id, @pv) > 0 ".
+                "AND   @pv := concat(@pv, ',', ".$this->mTableName.".".$this->mIdKeyTable.") ".
                 ") ";
         if ($where === null)
           $where  = "WHERE (".$gstr.") ";
@@ -1073,7 +1080,7 @@ class anyTable extends dbTable
       }
     }
     if ($skipOwnId && $this->mId != "nogroup") {
-      $skip_str = $this->getTableName().".".$this->mIdKeyTable." != '".$this->mId."'";
+      $skip_str = $this->mTableName.".".$this->mIdKeyTable." != '".$this->mId."'";
       if ($where === null)
         $where  = "WHERE (".$skip_str.") ";
       else
@@ -1081,7 +1088,7 @@ class anyTable extends dbTable
     }
     $search_term = Parameters::get("term");
     if ($search_term) {
-      $term_str = $this->getTableName().".".$this->mNameKey." LIKE '%".$search_term."%'";
+      $term_str = $this->mTableName.".".$this->mNameKey." LIKE '%".$search_term."%'";
       if ($where === null)
         $where  = "WHERE (".$term_str.") ";
       else
@@ -1125,7 +1132,7 @@ class anyTable extends dbTable
     $dir = $this->mOrderDir ? $this->mOrderDir : "";
     if (!in_array($this->mOrderBy,$this->mTableFields))
       $this->mOrderBy = $this->mTableFields[0];
-    $ob = "ORDER BY ".$this->getTableName().".".$this->mOrderBy." ".$dir." ";
+    $ob = "ORDER BY ".$this->mTableName.".".$this->mOrderBy." ".$dir." ";
     return $ob;
   } // findListOrderBy
 
@@ -1153,8 +1160,8 @@ class anyTable extends dbTable
   //
   protected function dbSearchListFromIds(&$data,$ids,$skipOwnId=false,$flat=false,$simple=false)
   {
-    $sl = "SELECT DISTINCT ".$this->getTableName().".* ".
-          "FROM ".$this->getTableName()." ".
+    $sl = "SELECT DISTINCT ".$this->mTableName.".* ".
+          "FROM ".$this->mTableName." ".
           "WHERE ".$this->mIdKeyTable." IN (".implode(',',$ids).")";
     //elog("dbSearchListFromIds:".$sl);
     if (!$this->query($sl))
@@ -1859,7 +1866,7 @@ class anyTable extends dbTable
     $this->mNumRowsChanged += $this->getNumRowsChanged();
 
     // Get the id that was auto-created
-    $this->mId = $this->getLastInsertID($this->getTableName());
+    $this->mId = $this->getLastInsertID($this->mTableName);
     Parameters::set($this->mIdKey,$this->mId);
 
     // Insert in meta table
@@ -1896,7 +1903,7 @@ class anyTable extends dbTable
   {
     // TODO Check for all fields empty
     $unique_table_fields = array_unique($this->mTableFields);
-    $stmt = "INSERT IGNORE INTO ".$this->getTableName()." (";
+    $stmt = "INSERT IGNORE INTO ".$this->mTableName." (";
     $auto_id = Parameters::get("auto_id");
     $n = 0;
     foreach ($unique_table_fields as $key) {
@@ -2025,7 +2032,7 @@ class anyTable extends dbTable
       return null;
     }
     $unique_table_fields = array_unique($this->mTableFields);
-    $stmt = "UPDATE ".$this->getTableName()." SET ";
+    $stmt = "UPDATE ".$this->mTableName." SET ";
     $auto_id = Parameters::get("auto_id");
     $n = 0;
     $to_set = "";
@@ -2062,7 +2069,7 @@ class anyTable extends dbTable
   // Check if item exists
   protected function dbItemExists()
   {
-    $stmt = "SELECT * FROM ".$this->getTableName()." WHERE ".$this->mIdKeyTable."=".$this->mId;
+    $stmt = "SELECT * FROM ".$this->mTableName." WHERE ".$this->mIdKeyTable."=".$this->mId;
     //elog("dbItemExists,stmt:".$stmt);
     if (!$this->query($stmt))
       return false;
@@ -2195,7 +2202,7 @@ class anyTable extends dbTable
         if ($dellist !== null) {
           foreach ($dellist as $delval) {
             if ($delval) {
-              $stmt = "UPDATE ".$this->getTableName()." SET parent_id=null WHERE ".$id_key."='".intval($delval)."'";
+              $stmt = "UPDATE ".$this->mTableName." SET parent_id=null WHERE ".$id_key."='".intval($delval)."'";
               //elog("dbUpdateLink(4):".$stmt);
               if (!$this->query($stmt))
                 return false;
@@ -2205,7 +2212,7 @@ class anyTable extends dbTable
         if ($updlist !== null) {
           foreach ($updlist as $updval) {
             if ($updval && intval($id) != intval($updval)) {
-              $stmt = "UPDATE ".$this->getTableName()." SET parent_id='".intval($id)."' WHERE ".$id_key."='".intval($updval)."'";
+              $stmt = "UPDATE ".$this->mTableName." SET parent_id='".intval($id)."' WHERE ".$id_key."='".intval($updval)."'";
               //elog("dbUpdateLink(5):".$stmt);
               if (!$this->query($stmt))
                 return false;
@@ -2356,7 +2363,7 @@ class anyTable extends dbTable
         $this->setError($err);
         return null;
       }
-      $stmt = "DELETE FROM ".$this->getTableName()." WHERE ".$this->mIdKeyTable."='".$this->mId."'";
+      $stmt = "DELETE FROM ".$this->mTableName." WHERE ".$this->mIdKeyTable."='".$this->mId."'";
       //elog("dbDelete:".$stmt);
       if (!$this->query($stmt))
         return null;
@@ -2376,7 +2383,7 @@ class anyTable extends dbTable
 
       // Update parent_id of children
       if ($this->hasParentId()) {
-        $stmt = "UPDATE ".$this->getTableName()." SET parent_id=NULL WHERE parent_id='".$this->mId."'";
+        $stmt = "UPDATE ".$this->mTableName." SET parent_id=NULL WHERE parent_id='".$this->mId."'";
         //elog("dbDelete:".$stmt);
         if (!$this->query($stmt))
           return null;
