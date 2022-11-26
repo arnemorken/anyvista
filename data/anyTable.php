@@ -697,12 +697,12 @@ class anyTable extends dbTable
     return !$this->isError();
   } // dbSearchItem
 
-  protected function dbPrepareSearchItemStmt($key,$val)
+  protected function dbPrepareSearchItemStmt($key,$val,$leftJoinUser=false)
   {
     // Get query fragments
     $this->mError = "";
-    $select       = $this->findItemSelect();
-    $left_join    = $this->findItemLeftJoin();
+    $select       = $this->findItemSelect($leftJoinUser);
+    $left_join    = $this->findItemLeftJoin($leftJoinUser);
     $where        = $this->findItemWhere($key,$val);
     $stmt = $select.
             "FROM ".$this->mTableName." ".
@@ -711,18 +711,20 @@ class anyTable extends dbTable
     return $stmt;
   } // dbPrepareSearchItemStmt
 
-  protected function findItemSelect()
+  protected function findItemSelect($leftJoinUser)
   {
     // Select from own table
     $si = "SELECT DISTINCT ".$this->mTableName.".* ";
 
     // Select from left joined user table (if this is not a user table)
+    if ($leftJoinUser) {
     if ($this->mType != "user" &&
         isset($this->mTableFieldsLeftJoin) && 
 	isset($this->mTableFieldsLeftJoin["user"]) &&
         $this->tableExists($this->mTableNameUserLink)) {
       foreach ($this->mTableFieldsLeftJoin["user"] as $field)
         $si .= ", ".$this->mTableNameUserLink.".".$field;
+      }
     }
     // Get parent name
     if ($this->hasParentId())
@@ -731,19 +733,21 @@ class anyTable extends dbTable
     return $si;
   } // findItemSelect
 
-  protected function findItemLeftJoin()
+  protected function findItemLeftJoin($leftJoinUser)
   {
-    $cur_uid = $this->mPermission["current_user_id"];
-    // Left join user table (if this is not a user table)
     $lj = "";
+    // Left join user table (if this is not a user table)
+    if ($leftJoinUser) {
+      $cur_uid = $this->mPermission["current_user_id"];
     if ($this->mType != "user" &&
         isset($this->mTableFieldsLeftJoin) && 
 	isset($this->mTableFieldsLeftJoin["user"]) &&
         $this->tableExists($this->mTableNameUserLink)) {
         $lj .= "LEFT JOIN ".$this->mTableNameUserLink." ".
                "ON "       .$this->mTableNameUserLink.".".$this->mIdKeyTable."='".$this->mId."' ";
-      if ($cur_uid)
+        if ($cur_uid || $cur_uid === 0)
         $lj .= "AND ".$this->mTableNameUserLink.".user_id='".$cur_uid."' ";
+      }
     }
     // Get parent name
     if ($this->hasParentId())
