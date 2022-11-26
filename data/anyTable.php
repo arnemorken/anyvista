@@ -608,6 +608,8 @@ class anyTable extends dbTable
     $this->initFieldsFromParam();
     $this->initFiltersFromParam();
 
+    $this->mGrouping = Parameters::get("grouping");
+    $this->mGrouping = $this->mGrouping != "false" && $this->mGrouping != "0";
     if ($this->mId == "max")
       $res = $this->dbSearchMaxId();
     else
@@ -619,9 +621,7 @@ class anyTable extends dbTable
     else {
       $this->mListForType = null;
       $this->mListForId   = null;
-      $grouping = Parameters::get("grouping");
-      $grouping = $grouping != "false" && $grouping != "0";
-      $res = $this->dbSearchList($this->mData,false,!$grouping,false);
+      $res = $this->dbSearchList($this->mData,false,!$this->mGrouping,false);
     }
     if (!$res)
       return null;
@@ -789,10 +789,10 @@ class anyTable extends dbTable
     // Prepare the data structure
     $idx = "+".$this->mId;
     // Loop through all registered plugins (link tables)
-    $grouping = Parameters::get("grouping");
-    $grouping = $grouping != "false" && $grouping != "0";
     foreach ($this->mPlugins as $i => $plugin) {
       $table = anyTableFactory::create($plugin,$this);
+      $table->mGrouping = Parameters::get("grouping");
+      $table->mGrouping = $table->mGrouping != "false" && $table->mGrouping != "0";
       if ($table) {
         $link_table = $this->findLinkTableName($plugin);
         if ($this->tableExists($link_table)) {
@@ -810,8 +810,8 @@ class anyTable extends dbTable
                 $data[$idx] = array();
               if (!isset($data[$idx]["data"]))
                 $data[$idx]["data"] = array();
-              if ($grouping)
-                $data[$idx]["data"]['grouping'] = $grouping;
+              if ($this->mGrouping)
+                $data[$idx]["data"]['grouping'] = $this->mGrouping;
               $data[$idx]["data"]["grouping_for_type"] = $table->mListForType;
               $data[$idx]["data"]["grouping_for_id"]   = $table->mListForId;
               $data[$idx]["data"]["grouping_for_name"] = $table->mListForName;
@@ -867,14 +867,12 @@ class anyTable extends dbTable
     $limit = !$simple ? $this->findLimit() : "";
 
     $this->mNumResults = 0; // Total number of results
-    $grouping = Parameters::get("grouping");
-    $grouping = $grouping != "false" && $grouping != "0";
     if ($group_id && $this->mType != "group") {
       // Build and execute the query for data from the given non-group group
       $success = $this->dbExecListStmt($data,$group_id,$limit,$skipOwnId,$flat,$simple);
     }
     else
-    if (!$grouping) {
+    if (!$this->mGrouping) {
       // Build and execute the query for all data, non-grouped
       $success = $this->dbExecListStmt($data,null,$limit,$skipOwnId,$flat,$simple);
     }
@@ -922,9 +920,7 @@ class anyTable extends dbTable
       return false; // Something went wrong
 
     // Get the data
-    $grouping = Parameters::get("grouping");
-    $grouping = $grouping != "false" && $grouping != "0";
-    $flat = !$grouping;
+    $flat = !$this->mGrouping;
     $success = $this->getRowData($data,"list",$flat,$simple);
 
     if ($limit != "") {
@@ -1127,9 +1123,7 @@ class anyTable extends dbTable
       }
     }
     else {
-      $grouping = Parameters::get("grouping");
-      $grouping = $grouping != "false" && $grouping != "0";
-      if ($grouping && $this->tableExists($this->mTableNameGroupLink) &&
+      if ($this->mGrouping && $this->tableExists($this->mTableNameGroupLink) &&
           !($this->hasParentId() && (isset($this->mListForType) || (isset($this->mId) && $this->mId != "")))) {
         $n_str = $this->mTableNameGroupLink.".group_id is null ";
         if ($where === null)
@@ -1271,8 +1265,6 @@ class anyTable extends dbTable
               ? $this->mFilters["list"]
               : $this->mFilters["item"];
     //elog("getRowData,filter:".var_export($filter,true));
-    $grouping = Parameters::get("grouping");
-    $grouping = $grouping != "false" && $grouping != "0";
     $this->mLastNumRows = 0;
     if (!$data)
       $data = array();
@@ -1295,7 +1287,7 @@ class anyTable extends dbTable
         if ($kind == "list") {
           if (!$simple) { // Index by group id
             $data[$gidx][$idx][$kind] = $this->mType;
-            if (!$grouping)
+            if (!$this->mGrouping)
               $data[$gidx][$idx]["group_id"] = isset($nextrow["group_id"])
                                                ? $nextrow["group_id"]
                                                : "nogroup";
@@ -1511,8 +1503,6 @@ class anyTable extends dbTable
       return;
 
     //vlog("buildGroupTreeAndAttach,data before building tree ($kind):",$data);
-    $grouping = Parameters::get("grouping");
-    $grouping = $grouping != "false" && $grouping != "0";
     $this->mRecDepth = 0;
     if ($kind == "item") {
       if ($data)
@@ -1528,7 +1518,7 @@ class anyTable extends dbTable
         if (!empty($data[$gidx])) {
           $ngidx = is_int($gidx) ? "+".$gidx : $gidx;
           $data_tree[$ngidx] = array();
-          if ($grouping) {
+          if ($this->mGrouping) {
             $k = isset($this->mId) && $this->mId != ""
                  ? "item"
                  : (isset($data_tree[$ngidx]["list"]) && $data_tree[$ngidx]["list"] != "group"
@@ -1552,7 +1542,7 @@ class anyTable extends dbTable
                   else
                     $gname = "Other groups"; // TODO i18n
               }
-              if ($grouping)
+              if ($this->mGrouping)
                 $data_tree["grouping"] = true;
               $data_tree[$ngidx]["group_type"] = $this->mType != "group" ? $this->mType : $gidx;
               $data_tree[$ngidx]["group_id"]   = $ngidx;
@@ -1587,7 +1577,7 @@ class anyTable extends dbTable
     //
     // If grouping is specified, build group tree and stick data tree to it
     //
-    if ($grouping &&
+    if ($this->mGrouping &&
         (!isset($this->mId) || $this->mId == "") &&
         !isset($this->mListForId) &&
         $group_table) {
@@ -1738,9 +1728,7 @@ class anyTable extends dbTable
         if (isset($hdr))
           $d[$this->mNameKey] = $hdr;
         $d["data"] = $inData;
-        $grouping = Parameters::get("grouping");
-        $grouping = $grouping != "false" && $grouping != "0";
-        if (!$grouping)
+        if (!$this->mGrouping)
           $d["data"][$this->mType]["data"]["grouping_num_results"] = $this->mNumResults;
       }
       else {
