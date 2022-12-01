@@ -30,9 +30,6 @@
  *              ...
  *              'data': {    // Optional
  *                'grouping':          'true',    // Optional
- *                'grouping_for_id':   '[id]',    // Optional, but mandatory if both 'grouping' and 'id' is specified.
- *                'grouping_for_type': '[type]',  // Optional, but mandatory if both 'grouping' and 'id' is specified.
- *                'grouping_for_name': '[value]', // Optional, but mandatory if both 'grouping' and 'id' is specified.
  *                '+[id]': { // Optional
  *                  'head' | 'item' | 'list': '[type]',         // Mandatory.
  *                  'parent_id':              '[id]',           // Optional. Contains the id of the level above, if of the same type.
@@ -609,7 +606,7 @@ class anyTable extends dbTable
     $this->initFiltersFromParam();
 
     $this->mGrouping = Parameters::get("grouping");
-    $this->mGrouping = $this->mGrouping != "false" && $this->mGrouping != "0";
+    $this->mGrouping = $this->mGrouping !== false && $this->mGrouping !== "false" && $this->mGrouping !== "0";
     if ($this->mId == "max")
       $res = $this->dbSearchMaxId();
     else
@@ -664,6 +661,7 @@ class anyTable extends dbTable
   protected function dbSearchParents()
   {
     $this->mData = null;
+    $this->mGrouping = true;
     if (!$this->dbSearchList($this->mData,true,true,true)) // Search to a flat list
       return null;
     return $this->prepareData($this->mData);
@@ -675,7 +673,7 @@ class anyTable extends dbTable
   // Search database for an item, including meta data and linked lists.
   // Returns true on success, false on error.
   //
-  protected function dbSearchItem(&$data,$key,$val,$skipLinks=false)
+  protected function dbSearchItem(&$data,$key,$val,$skipLinks=false,$leftJoinUser=true)
   {
     if ($key === null || $key == "" || $val === null || $val == "") {
       $this->setError("Missing key ($key) or value ($val)");
@@ -799,8 +797,6 @@ class anyTable extends dbTable
                 $data[$idx]["data"] = array();
               if ($this->mGrouping)
                 $data[$idx]["data"]["grouping"] = $this->mGrouping;
-              $data[$idx]["data"]["grouping_for_type"] = $table->mLinkType;
-              $data[$idx]["data"]["grouping_for_id"]   = $table->mLinkId;
               $pl_idx = "plugin-".$plugin;
               $data[$idx]["data"][$pl_idx] = array();
               $data[$idx]["data"][$pl_idx]["head"] = $plugin;
@@ -1507,7 +1503,7 @@ class anyTable extends dbTable
             //else
             //  $data_tree[$ngidx][$this->mNameKey] = null;
             }
-          } // if grouping
+          } // if mGrouping
           $num = 0; // Used by page links
           $data_tree[$ngidx]["data"] = array();
           $dt = &$data_tree[$ngidx]["data"];
@@ -1564,7 +1560,7 @@ class anyTable extends dbTable
     return $data_tree;
   } // dbSearchGroupInfo
 
-  protected function buildDataTree(&$flatdata,$parentId,$getPageLinks,&$num)
+  protected function buildDataTree(&$flatdata,$parentId=null,$getPageLinks=false,&$num=null)
   {
     if (!$num)
       $num = 0;
