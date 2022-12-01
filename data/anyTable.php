@@ -144,7 +144,6 @@ class anyTable extends dbTable
             $mMetaId            = null,
             $mLinkType          = null, // Used by items that have associated lists
             $mLinkId            = null, // Used by items that have associated lists
-            $mLinkName          = null, // Used by items that have associated lists
             $mFilters           = null,
             $mPermission        = null,
             $mOrderBy           = null,
@@ -622,7 +621,6 @@ class anyTable extends dbTable
     else {
       $this->mLinkType = null;
       $this->mLinkId   = null;
-      $this->mLinkName = null;
       $res = $this->dbSearchList($this->mData,false,!$this->mGrouping,false);
     }
     if (!$res)
@@ -674,8 +672,8 @@ class anyTable extends dbTable
   //////////////////////////////// Item search ////////////////////////////////
 
   //
-  // Search database for an item, including meta data
-  // Returns true on success, false on error
+  // Search database for an item, including meta data and linked lists.
+  // Returns true on success, false on error.
   //
   protected function dbSearchItem(&$data,$key,$val,$skipLinks=false)
   {
@@ -684,21 +682,21 @@ class anyTable extends dbTable
       return false;
     }
     // Build and execute the query
-    $stmt = $this->dbPrepareSearchItemStmt($key,$val);
+    $stmt = $this->dbPrepareSearchItemStmt($key,$val,$leftJoinUser);
     //elog("dbSearchItem:".$stmt);
     if (!$stmt || !$this->query($stmt))
       return false; // An error occured
 
     // Get the data
     if ($this->getRowData($data,"item")) {
-      $this->dbSearchMeta($data,"item",false); // Search and get the meta data
+      $this->dbSearchMeta($data,"item"); // Search and get the meta data
       if (!$skipLinks)
         $this->dbSearchItemLists($data); // Get lists associated with the item
     }
     return !$this->isError();
   } // dbSearchItem
 
-  protected function dbPrepareSearchItemStmt($key,$val,$leftJoinUser=false)
+  protected function dbPrepareSearchItemStmt($key,$val,$leftJoinUser=true)
   {
     // Get query fragments
     $this->mError = "";
@@ -777,7 +775,7 @@ class anyTable extends dbTable
       $this->setError($err);
       return false;
     }
-    // Loop through all registered plugins (link tables)
+    // Search through all registered plugins (link tables)
     $idx = "+".$this->mId;
     foreach ($this->mPlugins as $i => $plugin) {
       $table = anyTableFactory::create($plugin,$this);
@@ -790,9 +788,8 @@ class anyTable extends dbTable
           if (!$skipOwnId || $this->hasParentId()) {
             $table->mLinkType = $this->mType;
             $table->mLinkId   = $this->mId;
-            $table->mLinkName = isset($data[$idx]) && isset($data[$idx][$this->mNameKey]) ? $data[$idx][$this->mNameKey] : "";
             $table_data          = null;
-            if (!$table->dbSearchList($table_data,$skipOwnId,true,false,true)) // TODO! Searching for "simple" list does not work here
+            if (!$table->dbSearchList($table_data,$skipOwnId,true,false,true))
               $this->mError .= $table->getError();
             if ($table_data) {
               // We found some data, insert it in the data structure
@@ -801,10 +798,9 @@ class anyTable extends dbTable
               if (!isset($data[$idx]["data"]))
                 $data[$idx]["data"] = array();
               if ($this->mGrouping)
-                $data[$idx]["data"]['grouping'] = $this->mGrouping;
+                $data[$idx]["data"]["grouping"] = $this->mGrouping;
               $data[$idx]["data"]["grouping_for_type"] = $table->mLinkType;
               $data[$idx]["data"]["grouping_for_id"]   = $table->mLinkId;
-              $data[$idx]["data"]["grouping_for_name"] = $table->mLinkName;
               $pl_idx = "plugin-".$plugin;
               $data[$idx]["data"][$pl_idx] = array();
               $data[$idx]["data"][$pl_idx]["head"] = $plugin;
@@ -826,72 +822,71 @@ class anyTable extends dbTable
 
   //
   // Search database for a list, including meta data
+  // Since a 'LIMIT' operator might apply, we need to search for results for
+  // each group separately rather then using a LEFT JOIN on the group table.
+  // However, if "group_id" is specified, we need only search in that group.
+  //
   // Returns true on success, false on error
   //
-  protected function dbSearchList(&$data,$skipOwnId=false,$flat=false,$simple=false,$simpleGroup=false)
+  protected function dbSearchList(&$data,$skipOwnId=false,$flat=false,$simple=false,$flatGroup=false)
   {
-    // Set order properties
-    if (Parameters::get("order")) {
-      $this->mOrderBy = ltrim(Parameters::get("order"));
-      if (Parameters::get("dir"))
-        $this->mOrderDir = ltrim(Parameters::get("dir"));
-    }
-    if (!$simple && Parameters::get("lt") == "simple")
-      $simple = true;
-
-    // Since a 'LIMIT' operator might apply, we need to search for results for
-    // each group separately rather then using a LEFT JOIN on the group table.
-    // However, if "group_id" is specified, we need only search in that group.
 
     // Get group data
     $group_id    = Parameters::get("group_id");
     $group_table = anyTableFactory::create("group",$this);
     $group_data  = $group_table
-                   ? $group_table->dbSearchGroupInfo($this->mType,$group_id,$simpleGroup)
+                   ? $group_table->dbSearchGroupInfo($this->mType,$group_id,$flatGroup)
                    : null;
     //vlog("dbSearchList,group_data($this->mType,$group_id):",$group_data);
     if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
       $this->setError($group_table->mError);
 
-    // Use same limit for all groups
-    $limit = !$simple ? $this->findLimit() : "";
+    if (Parameters::get("order")) {
+      $this->mOrderBy = ltrim(Parameters::get("order"));
+      if (Parameters::get("dir"))
+        $this->mOrderDir = ltrim(Parameters::get("dir"));
+    }
+    if (Parameters::get("simple") == "simple")
+      $simple = true; // In a "simple" search we only get the id and name
+    $limit = !$simple ? $this->findLimit() : ""; // Use same limit for all groups
 
-    $this->mNumResults = 0; // Total number of results
+    $this->mNumResults = 0; // Init total number of results
+    // Build and execute the query
     if ($group_id && $this->mType != "group") {
-      // Build and execute the query for data from the given non-group group
+      // Query data from the given group (or "nogroup")
       $success = $this->dbExecListStmt($data,$group_id,$limit,$skipOwnId,$flat,$simple);
     }
     else
     if (!$this->mGrouping) {
-      // Build and execute the query for all data, non-grouped
+      // Query all data, non-grouped
       $success = $this->dbExecListStmt($data,null,$limit,$skipOwnId,$flat,$simple);
     }
     else {
-      // Build and execute the query for grouped data
-      $success = true;
+      // Query grouped data
+      $success = false;
       $has_nogroup = false;
       if ($group_data && isset($group_data["group"])) {
         foreach ($group_data["group"] as $gid => $group) {
-          $success = $success && $this->dbExecListStmt($data,$gid,$limit,$skipOwnId,$flat,$simple);
+          $success = $this->dbExecListStmt($data,$gid,$limit,$skipOwnId,$flat,$simple) || $success;
           if ($gid == "nogroup")
             $has_nogroup = true;
         }
       }
       // Build and execute the query for ungrouped data
       if (!$group_id && !$has_nogroup)
-        $success = $success && $this->dbExecListStmt($data,"nogroup",$limit,$skipOwnId,$flat,$simple);
+        $success = $this->dbExecListStmt($data,"nogroup",$limit,$skipOwnId,$flat,$simple) || $success;
     }
 
     if ($success) {
       // Search and get the meta data
       if (!$simple)
-        $this->dbSearchMeta($data,"list",$flat);
+        $this->dbSearchMeta($data,"list");
 
       // Sort the list
       if ($this->mSortFunction)
         call_user_func($this->mSortFunction);
 
-      // Build the data tree (unless its a 'simple' list)
+      // Build the data tree
       if (!$simple)
         $this->buildGroupTreeAndAttach($data,"list",$group_table,$group_data);
     }
@@ -903,7 +898,7 @@ class anyTable extends dbTable
     // Build and execute the query for a group
     if ($gid == "nogroup")
       $gid = null;
-    $partial_stmt = $this->dbPrepareSearchListStmt($gid,$skipOwnId);
+    $partial_stmt = $this->dbPrepareSearchListStmt($gid);
     $stmt = $partial_stmt.$limit;
     //elog("dbExecListStmt1:".$stmt);
     if (!$stmt || !$this->query($stmt) || $this->isError())
@@ -915,7 +910,7 @@ class anyTable extends dbTable
 
     if ($limit != "") {
       // Count how many rows would have been returned without LIMIT
-      $part_stmt = $this->dbPrepareSearchListStmt($gid,$skipOwnId);
+      $part_stmt = $this->dbPrepareSearchListStmt($gid);
       $count_stmt = "SELECT count(*) AS num_results FROM (".
                     $part_stmt.
                     ") AS dummy";
@@ -939,13 +934,13 @@ class anyTable extends dbTable
     return $success;
   } // dbExecListStmt
 
-  protected function dbPrepareSearchListStmt($gid=null,$skipOwnId=false)
+  protected function dbPrepareSearchListStmt($gid=null)
   {
     // Get query fragments
     $this->mError = "";
     $select       = $this->findListSelect($gid);
     $left_join    = $this->findListLeftJoin($gid);
-    $where        = $this->findListWhere($gid,$skipOwnId);
+    $where        = $this->findListWhere($gid);
     $order_by     = $this->findListOrderBy();
 
     // Build the query
@@ -1054,11 +1049,14 @@ class anyTable extends dbTable
     return $lj;
   } // findListLeftJoinOne
 
-  protected function findListWhere($gid,$skipOwnId=false)
+  protected function findListWhere($gid)
   {
+    $skipOwnType = $this->mLinkType == $this->mType;
     $where = null;
     $link_table = $this->findLinkTableName($this->mLinkType);
-    if (!$skipOwnId && isset($this->mLinkType) && isset($this->mLinkId) && $this->mLinkId != "nogroup" &&
+    if (!$skipOwnType &&
+        isset($this->mLinkType) &&
+        isset($this->mLinkId)   && $this->mLinkId != "nogroup" &&
         $this->tableExists($link_table)) {
       $where_id = $link_table.".".$this->mLinkType."_id='".$this->mLinkId."' ";
       $where = "WHERE ".$where_id;
@@ -1079,7 +1077,8 @@ class anyTable extends dbTable
           $where .= " OR (".$gstr.") ";
       }
     }
-    if ($skipOwnId && $this->mId != "nogroup") {
+    if ($skipOwnType &&
+        $this->mId != "nogroup") {
       $skip_str = $this->mTableName.".".$this->mIdKeyTable." != '".$this->mId."'";
       if ($where === null)
         $where  = "WHERE (".$skip_str.") ";
@@ -1153,48 +1152,10 @@ class anyTable extends dbTable
     $this->mSortFunction = $sortFunc;
   } // setSortFunction
 
-  //
-  // Search database for a list of the items with ids as given in the ids array, including meta data.
-  // Returns true on success, false on error.
-  // TODO! Should LEFT JOIN link tables.
-  //
-  protected function dbSearchListFromIds(&$data,$ids,$skipOwnId=false,$flat=false,$simple=false)
-  {
-    $sl = "SELECT DISTINCT ".$this->mTableName.".* ".
-          "FROM ".$this->mTableName." ".
-          "WHERE ".$this->mIdKeyTable." IN (".implode(',',$ids).")";
-    //elog("dbSearchListFromIds:".$sl);
-    if (!$this->query($sl))
-      return false; // An error occured
-
-    $success = $this->getRowData($data,"list");
-
-    if ($success) {
-      // Get the meta data
-      if (!$simple)
-        $this->dbSearchMeta($data,"list",true); // TODO! WHERE wp_usermeta.user_id IN ({ids})
-
-      // Get group data
-      $group_id    = Parameters::get("group_id");
-      $group_table = anyTableFactory::create("group",$this);
-      $group_data = $group_table
-                    ? $group_table->dbSearchGroupInfo($this->mType,$group_id)
-                    : null;
-      //vlog("dbSearchListFromIds,group_data($this->mType,$group_id):",$group_data);
-      if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
-        $this->setError($group_table->mError);
-
-      // Build the data tree
-      $this->buildGroupTreeAndAttach($data,"list",$group_table,$group_data);
-    }
-
-    return !$this->isError();
-  } // dbSearchListFromIds
-
   //////////////////////////////// Metadata search ////////////////////////////////
 
   // Get the meta data
-  protected function dbSearchMeta(&$data,$kind,$flat)
+  protected function dbSearchMeta(&$data,$kind)
   {
     if (!$this->tableExists($this->mTableNameMeta)) {
       $this->mMessage = "No meta table for '$this->mType' type. ";
@@ -1239,6 +1200,7 @@ class anyTable extends dbTable
       return false;
 
     // Get the data
+    $flat = !$this->mGrouping;
     return $this->getRowMetaData($data,$kind,$flat);
   } // dbSearchMeta
 
@@ -1251,13 +1213,14 @@ class anyTable extends dbTable
   //
   protected function getRowData(&$data,$kind,$flat=false,$simple=false)
   {
+    $this->mLastNumRows = 0; // Used to break (theoretical) infinite recursion
     $filter = $kind == "list"
               ? $this->mFilters["list"]
               : $this->mFilters["item"];
     //elog("getRowData,filter:".var_export($filter,true));
-    $this->mLastNumRows = 0;
     if (!$data)
       $data = array();
+    $has_meta_table  = $this->tableExists($this->mTableNameMeta);
     while (($nextrow = $this->getNext(true)) !== null) {
       //elog("getRowData,nextrow:".var_export($nextrow,true));
       ++$this->mLastNumRows;
@@ -1271,9 +1234,10 @@ class anyTable extends dbTable
       $idx = isset($nextrow[$this->mIdKeyTable])
              ? $nextrow[$this->mIdKeyTable]
              : null;
-      if ($idx) {
+      if (!$idx && $idx !== 0)
+        continue;
         // Force idx to be a string in order to maintain ordering when sending JSON data to a json client
-        $idx = "+".$idx;
+        $idx = is_int($idx) ? "+".$idx : $idx;
         if ($kind == "list") {
           if (!$simple) { // Index by group id
             $data[$gidx][$idx][$kind] = $this->mType;
@@ -1290,18 +1254,17 @@ class anyTable extends dbTable
         // Main table
         if (isset($this->mTableFields)) {
           for ($t=0; $t<count($this->mTableFields); $t++) {
-            $item_id_table = $this->mTableFields[$t];
-            if (!$simple || $item_id_table == $this->mIdKeyTable || $item_id_table == $this->mNameKey)
-              $this->getCellData($item_id_table,$nextrow,$data,$idx,$gidx,$filter,$kind,$simple);
+          $field = $this->mTableFields[$t];
+          if (!$simple || $field == $this->mIdKeyTable || $field == $this->mNameKey)
+            $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$kind,$simple);
           } // for
         }
         // Meta table
-        if (isset($this->mTableFieldsMeta) &&
-            $this->tableExists($this->mTableNameMeta)) {
+      if (isset($this->mTableFieldsMeta) && $has_meta_table) {
           for ($t=0; $t<count($this->mTableFieldsMeta); $t++) {
-            $item_id_table = $this->mTableFieldsMeta[$t];
-            if (!$simple || $item_id_table == $this->mIdKey || $item_id_table == $this->mNameKey)
-              $this->getCellData($item_id_table,$nextrow,$data,$idx,$gidx,$filter,$kind,$simple);
+          $field = $this->mTableFieldsMeta[$t];
+          if (!$simple || $field == $this->mIdKey || $field == $this->mNameKey)
+            $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$kind,$simple);
           } // for
         }
         // Link tables for item
@@ -1309,14 +1272,13 @@ class anyTable extends dbTable
           foreach ($this->mPlugins as $i => $plugin) {
             if (isset($this->mTableFieldsLeftJoin[$plugin])) {
               for ($t=0; $t<count($this->mTableFieldsLeftJoin[$plugin]); $t++) {
-                $item_id_table = $this->mTableFieldsLeftJoin[$plugin][$t];
-                if (!$simple || $item_id_table == $this->mIdKey || $item_id_table == $this->mNameKey)
-                  $this->getCellData($item_id_table,$nextrow,$data,$idx,$gidx,$filter,$kind,$simple);
+              $field = $this->mTableFieldsLeftJoin[$plugin][$t];
+              if (!$simple || $field == $this->mIdKey || $field == $this->mNameKey)
+                $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$kind,$simple);
               } // for
             }
           } // foreach
         }
-      } // if
     } // while
     //elog("getRowData1 ($this->mType),data:".var_export($data,true));
 
@@ -1342,29 +1304,28 @@ class anyTable extends dbTable
     return true;
   } // getRowData
 
-  protected function getCellData($item_id_table,$nextrow,&$data,$idx,$gidx,$filter,$kind,$simple)
+  protected function getCellData($field,$nextrow,&$data,$idx,$gidx,$filter,$kind,$simple)
   {
-    if (isset($nextrow[$item_id_table])) {
-      $item_id = $item_id_table;
-      if ($item_id == $this->mIdKeyTable)
-        $item_id = $this->mIdKey; // Map id name (e.g. "user_id" and not "ID")
-      if ($item_id == "user_pass") // TODO! "user_pass" is Wordpress specific
+    if (isset($nextrow[$field])) {
+      if ($field == $this->mIdKeyTable)
+        $field = $this->mIdKey; // Map id name (e.g. "user_id" and not "ID")
+      if ($field == "user_pass") // TODO! "user_pass" is Wordpress specific
         $val = ""; // Never send password to client
       else
-      if ($filter === null || (isset($filter[$item_id]) && $filter[$item_id] == 1))
-        $val = htmlentities((string)$nextrow[$item_id_table],ENT_QUOTES,'utf-8',FALSE);
+      if ($filter === null || (isset($filter[$field]) && $filter[$field] == 1))
+        $val = htmlentities((string)$nextrow[$field],ENT_QUOTES,'utf-8',FALSE);
       else
         $val = null;
       if ($val != null && $val != "") {
         if ($kind == "list") {
           if (!$simple)
-            $data[$gidx][$idx][$item_id] = $val;
+            $data[$gidx][$idx][$field] = $val;
           else
-            $data[$idx][$item_id] = $val;
+            $data[$idx][$field] = $val;
         }
         else
-          $data[$idx][$item_id] = $val;
-        //elog("getCellData:".$gidx.",".$idx.",".$item_id.":".$val);
+          $data[$idx][$field] = $val;
+        //elog("getCellData:".$gidx.",".$idx.",".$field.":".$val);
       }
     }
   } // getCellData
@@ -1485,7 +1446,7 @@ class anyTable extends dbTable
   } // getRowMetaData
 
   //
-  // Build the data group tree for all groups. List data are grouped, item data are not.
+  // Build the data group tree for all groups for a list search.
   //
   protected function buildGroupTreeAndAttach(&$data,$kind,$group_table,$group_data)
   {
@@ -1505,7 +1466,8 @@ class anyTable extends dbTable
       //
       $data_tree = array();
       foreach ($data as $gidx => $grp) {
-        if (!empty($data[$gidx])) {
+        if (empty($data[$gidx]))
+          continue;
           $ngidx = is_int($gidx) ? "+".$gidx : $gidx;
           $data_tree[$ngidx] = array();
           if ($this->mGrouping) {
@@ -1558,7 +1520,6 @@ class anyTable extends dbTable
           }
           if ($dt === null)
             unset($dt);
-        } // if !empty
       } // foreach
     }
     //vlog("buildGroupTreeAndAttach,data_tree1:",$data_tree);
@@ -1605,6 +1566,8 @@ class anyTable extends dbTable
 
   protected function buildDataTree(&$flatdata,$parentId,$getPageLinks,&$num)
   {
+    if (!$num)
+      $num = 0;
     ++$this->mRecDepth;
     if ($this->mRecDepth > $this->mLastNumRows + $this->mRecMax) {
       error_log("buildDataTree: Too much recursion ($this->mRecDepth)");
@@ -1631,9 +1594,8 @@ class anyTable extends dbTable
           if (!isset($subdata["parent_id"]))
             $subdata["parent_id"] = NULL;
           if ($subdata["parent_id"] == $parentId) {
-            if ($getPageLinks && $subdata["parent_id"] === null) {
+            if ($getPageLinks && $subdata["parent_id"] === null)
               $num++; // "Top-level" item, so we count it
-            }
             if (!$getPageLinks || ($num > $flatdata["page_links"]["from"] && $num <= $flatdata["page_links"]["to"])) {
               if (isset($subdata[$id_name]) && $subdata[$id_name] != "")
                 $children = $this->buildDataTree($flatdata,$subdata[$id_name],$getPageLinks,$num);
@@ -1641,9 +1603,8 @@ class anyTable extends dbTable
                 $children = null;
               if ($this->mRecDepth > $this->mLastNumRows + $this->mRecMax)
                 break; // Break recursion
-              if ($children) {
+              if ($children)
                 $subdata["data"] = $children;
-              }
               if ($parent_not_in_group)
                 $subdata["parent_id"] = $pid;
               $retval[$idx] = $subdata;
@@ -1673,6 +1634,8 @@ class anyTable extends dbTable
         else
         if (isset($data_tree["+".$gid]) && $data_tree["+".$gid] != "")
           $idx = "+".$gid;
+        else
+          $idx = null;
         if (isset($idx) && $data_tree[$idx] !== null) {
           if (isset($data_tree[$idx]["data"]) && $data_tree[$idx]["data"] != "") {
             $group_tree[$gid]["head"] = "group";
