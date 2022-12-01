@@ -164,8 +164,8 @@ class groupTable extends anyTable
   /////////////////////////////// Search //////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  // Return a tree structure of all groups of a given type
-  protected function dbSearchGroupInfo($type=null,$group_id=null,$simple=false)
+  // Return info of one or all groups of a given type
+  protected function dbSearchGroupInfo($type=null,$group_id=null,$flatGroup=false)
   {
     $stmt = "SELECT ".$this->getTableName().".group_id,".
                       $this->getTableName().".group_type,".
@@ -195,30 +195,29 @@ class groupTable extends anyTable
       if ($this->mTableFields) {
         for ($t=0; $t<count($this->mTableFields); $t++) {
           $item_id_table = $this->mTableFields[$t];
-          $this->getCellData($item_id_table,$nextrow,$data,$idx,"group",null,"list",$simple); // TODO: Searching for "simple" list does not work here
+          $this->getCellData($item_id_table,$nextrow,$data,$idx,"group",null,"list",$flatGroup);
         }
       }
-      if ($type != "group")
-        $data["group"][$idx]["head"] = "group";
+      $data["group"][$idx]["head"] = "group";
     }
-    // Get group tree and append data to it
-    $num = 0;
-    $data_tree = array();
-    $data_tree["group"] = array();
-    $data_tree["group"] = $this->buildDataTree($data["group"],null,false,$num);
-    //vlog("dbSearchGroupInfo,data_tree1:",$data_tree);
+    //vlog("dbSearchGroupInfo,data:",$data);
+    if ($type != "group" && !$flatGroup) {
+      // Get group tree and append data to it
+      $data["group"] = $this->buildDataTree($data["group"]);
+    }
+
+    //vlog("dbSearchGroupInfo,d1:",$data);
 
     // Add the default "nogroup" group
     $group_id = Parameters::get("group_id");
     if ((!$group_id || $group_id == "nogroup") && $type) {
-      $data_tree["group"]["nogroup"]["group_id"]   = "nogroup";
-      $data_tree["group"]["nogroup"]["group_type"] = $type;
-      $data_tree["group"]["nogroup"]["group_name"] = $this->findDefaultHeader($type);
-      $data_tree["group"]["nogroup"]["head"]       = "group";
+      $data["group"]["nogroup"]["group_id"]   = "nogroup";
+      $data["group"]["nogroup"]["group_type"] = $type;
+      $data["group"]["nogroup"]["group_name"] = $this->findDefaultHeader($type);
+      $data["group"]["nogroup"]["head"]       = "group";
     }
-    //error_log("dbSearchGroupInfo,data_tree2:".var_export($data_tree,true));
-    $this->tdata = $data_tree;
-    return $this->tdata;
+    //error_log("dbSearchGroupInfo,d2:".var_export($data,true));
+    return $data;
   } // dbSearchGroupInfo
 
 } // class groupTable
