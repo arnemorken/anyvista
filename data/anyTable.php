@@ -777,7 +777,7 @@ class anyTable extends dbTable
     $idx = "+".$this->mId;
     foreach ($this->mPlugins as $i => $plugin) {
       $table = anyTableFactory::create($plugin,$this);
-      $table->mGrouping = false;
+      $table->mGrouping = true;
       if ($table) {
         $link_table = $this->findLinkTableName($plugin);
         if ($this->tableExists($link_table)) {
@@ -869,7 +869,7 @@ class anyTable extends dbTable
       if (!$simple) {
         if ($flatGroup)
           $group_data["group"] = $group_table->buildDataTree($group_data["group"]);
-        $this->buildGroupTreeAndAttach($data,$group_table,$group_data);
+        $this->buildGroupTreeAndAttach($data,$group_data);
       }
     }
     return !$this->isError();
@@ -1416,11 +1416,10 @@ class anyTable extends dbTable
   //
   // Build the data group tree for all groups for a list search.
   //
-  protected function buildGroupTreeAndAttach(&$data,$group_table,$group_data)
+  protected function buildGroupTreeAndAttach(&$data,$group_data)
   {
     if (!$data)
       return;
-
     $this->mRecDepth = 0;
     //vlog("buildGroupTreeAndAttach,group_data:",$group_data);
     //vlog("buildGroupTreeAndAttach,data before copying parent/child:",$data);
@@ -1436,7 +1435,7 @@ class anyTable extends dbTable
                                ? $grp2["+".$pid]
                                : null );
             if ($item_parent && $gidx2 != $gidx) {
-              elog("found child $idx in group $gidx with parent $pid...");
+              //elog("found child $idx in group $gidx with parent $pid...");
               if (!isset($grp2[$idx]) && !isset($grp2["+".$idx]))
                 $grp2[$idx] = $item;  // Copy child to other group
               if (!isset($grp[$pid]) && !isset($grp["+".$pid])) {
@@ -1454,24 +1453,12 @@ class anyTable extends dbTable
       $data_tree = array();
     $data_tree["grouping"] = $this->mGrouping;
     foreach ($data as $gidx => $grp) {
-      if (empty($data[$gidx]))
-        continue;
+      if ($this->mGrouping && !empty($data[$gidx])) { // Add a head data layer
       $ngidx = is_int($gidx) ? "+".$gidx : $gidx;
       $data_tree[$ngidx] = array();
-      if ($this->mGrouping) {
-        $is_item_list = isset($this->mId) && $this->mId != "";
-        $kind = $is_item_list
-                 ? "item"
-                 : (isset($data_tree[$ngidx]["list"]) && $data_tree[$ngidx]["list"] != "group"
-                    ? "list"
-                    : "head");
-        $data_tree[$ngidx][$kind] = $is_item_list
-                    ? $this->mType
-                    : "group";
-        if (!$is_item_list) {
-          $data_tree[$ngidx]["group_type"] = $this->mType != "group"
-                ? $this->mType
-                : $gidx;
+        $data_tree[$ngidx]["head"] = $this->mType;
+        if (isset($this->mId) && $this->mId != "") {
+          $data_tree[$ngidx]["group_type"] = $this->mType;
           $data_tree[$ngidx]["group_id"]   = $ngidx;
           $gname = isset($group_data) && isset($group_data["group"][$ngidx])
                 ? $group_data["group"][$ngidx]["group_name"]
@@ -1493,31 +1480,23 @@ class anyTable extends dbTable
           $idx = isset($data[$gidx][$this->mId]) ? $this->mId : "+".$this->mId;
           if (isset($data[$gidx][$idx]))
             $data_tree[$ngidx][$this->mNameKey] = $data[$gidx][$idx][$this->mNameKey];
-        //else
-        //  $data_tree[$ngidx][$this->mNameKey] = null;
         }
-      } // if mGrouping
       $num = 0; // Used by page links
       $data_tree[$ngidx]["data"] = $this->buildDataTree($data[$gidx],null,false,$num);
-      // Preserve "grouping_" values
-      foreach ($data[$gidx] as $idx => $val) {
-        $has_grouping_data = (strpos($idx,"grouping") === 0);
-        if ($has_grouping_data && is_array($data_tree[$ngidx]["data"]))
-          $data_tree[$ngidx]["data"][$idx] = $data[$gidx][$idx];
-      }
+        // Preserve "grouping_num_results" value
+        if (isset($data[$gidx]["grouping_num_results"]))
+          $data_tree[$ngidx]["data"]["grouping_num_results"] = $data[$gidx]["grouping_num_results"];
       if ($data_tree[$ngidx]["data"] === null)
         unset($data_tree[$ngidx]["data"]);
+      } // if mGrouping
       } // foreach
     //vlog("buildGroupTreeAndAttach,data_tree1:",$data_tree);
-    //if ($err)
-    //  $this->setMessage("Warning: ".$err);
     //
     // If grouping is specified, build group tree and stick data tree to it
     //
     if ($this->mGrouping &&
         (!isset($this->mId) || $this->mId == "") &&
-        !isset($this->mLinkId) &&
-        $group_table) {
+        !isset($this->mLinkId)) {
       $this->dbAttachToGroups($group_data["group"],$data_tree);
       $group_data["group"]["grouping"] = true;
       //vlog("buildGroupTreeAndAttach,tdata:",$group_data);

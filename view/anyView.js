@@ -698,7 +698,7 @@ $.any.anyView.prototype.refreshOne = function (params)
        kind:       kind,
        data:       data[id] ? data[id].data : data["+"+id].data,
        id:         null,
-       id_str:     p || p === 0 ? par_id_str : row_id_str,
+       id_str:     /*p || p === 0 ||*/ (kind=="list" && data[id].list == type) ? par_id_str : row_id_str,
        pdata:      data,
        pid:        id,
        edit:       edit,
@@ -1168,7 +1168,7 @@ $.any.anyView.prototype.refreshThead = function (params)
     return null;
   }
   let add_opt = null;
-  if (this.options.showButtonAdd && !this.options.isSelectable && (!this.model.data || this.model.data && !this.model.data.grouping_for_id))
+  if (this.options.showButtonAdd && !this.options.isSelectable && !this.model.data) {
     add_opt = {
       type:       type,
       kind:       kind,
@@ -1179,6 +1179,7 @@ $.any.anyView.prototype.refreshThead = function (params)
       edit:       true,
       is_new:     true,
     };
+  }
   let tr = $("<tr></tr>");
   thead.append(tr);
   // First tool cell for editable list
@@ -4339,8 +4340,8 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   let id_str    = event.data.id_str;
   let pdata     = event.data.pdata;
   let pid       = event.data.pid;
-  let link_id   = pdata && pdata.grouping_for_id   ? pdata.grouping_for_id   : pid && pdata[pid] ? pid : null;
-  let link_type = pdata && pdata.grouping_for_type ? pdata.grouping_for_type : pid && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
+  let link_id   = pid && pdata && pdata[pid] ? pid : null;
+  let link_type = pid && pdata && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
   if (!data || !data[id]) {
     console.warn("Data not found ("+type+" id="+id+"). ");
     return null;

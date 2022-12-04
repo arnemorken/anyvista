@@ -189,6 +189,7 @@ class groupTable extends anyTable
     if (!$this->tableExists($this->getTableName()) ||
         !$this->query($stmt))
       error_log("Warning: No group tree. ");
+
     $data = array();
     while (($nextrow = $this->getNext(true)) != null) {
       $idx = "+".$nextrow[$this->mIdKeyTable];

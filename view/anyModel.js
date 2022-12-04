@@ -1000,8 +1000,6 @@ anyModel.prototype.dataUpdateLinkList = function (options)
             indata[ins_id].head = type;
             indata[ins_id][options.name_key] = type+"s";
             indata.grouping          = this.grouping;
-            indata.grouping_for_id   = this.id;
-            indata.grouping_for_type = this.type;
             this.dataInsert({ data:   this.data,
                               id:     ins_id,
                               type:   options.type,
@@ -1327,7 +1325,7 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += the_gid
                ? "&group_id="+the_gid // Search specific group
                : ""; // Search all groups
-  param_str += options.simple                       ? "&lt=simple" : "";
+  param_str += options.simple                       ? "&simple=simple" : "";
   param_str += type == "group" && options.link_type ? "&group_type="+options.link_type : "";
   param_str += options.head === true ||
                options.head === false               ? "&head="+options.head : "";
