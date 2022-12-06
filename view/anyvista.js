@@ -149,26 +149,22 @@
  * A formal description of a data object:
  *
  *        [data_object] = {
- *          grouping:          [grouping_type], // Optional. Default: undefined.
- *          grouping_for_id:   [id],            // Optional. Default: undefined.
- *          grouping_for_type: [type],          // Optional. Default: undefined.
- *          grouping_for_name: [string],        // Optional. Default: undefined.
- *          head | item | list: "[type]",       // Optional, is overridden by a head|item|list specification on level below.
- *          [id]: {                             // Mandatory.
- *            head | item | list: "[type]",     // Optional, overrides a head|item|list specification on level above.
- *            edit: true | false,               // Optional. Default: false.
- *            add:  "[type]"                    // Optional. Default: undefined
- *            page_links: {                     // Optional
- *              from: [start_item_no],          // Mandatory in `page_links`.
- *              to:   [end_item_no],            // Mandatory in `page_links`.
- *              num:  [number_of_items],        // Mandatory in `page_links`.
+ *          head | item | list: "[type]",   // Optional, is overridden by a head|item|list specification on level below.
+ *          [id]: {                         // Mandatory.
+ *            head | item | list: "[type]", // Optional, overrides a head|item|list specification on level above.
+ *            edit: true | false,           // Optional. Default: false.
+ *            add:  "[type]"                // Optional. Default: undefined
+ *            page_links: {                 // Optional
+ *              from: [start_item_no],      // Mandatory in `page_links`.
+ *              to:   [end_item_no],        // Mandatory in `page_links`.
+ *              num:  [number_of_items],    // Mandatory in `page_links`.
  *            },
- *            [type]_name: "[string]",          // Optional, but mandatory if any key / value pairs are given.
- *            [key]: "[value]",                 // Optional. One or more key / value pairs.
+ *            [type]_name: "[string]",      // Optional, but mandatory if any key / value pairs are given.
+ *            [key]: "[value]",             // Optional. One or more key / value pairs.
  *            [key]: "[value]",
  *            [key]: "[value]",
  *            ...
- *            data: [data_object],            // Optional. Subdata.
+ *            data: [data_object],          // Optional. Subdata.
  *          },
  *          ...
  *        };

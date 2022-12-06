@@ -999,7 +999,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
             indata[ins_id].data = item;
             indata[ins_id].head = type;
             indata[ins_id][options.name_key] = type+"s";
-            indata.grouping          = this.grouping;
+            indata.grouping = this.grouping;
             this.dataInsert({ data:   this.data,
                               id:     ins_id,
                               type:   options.type,
