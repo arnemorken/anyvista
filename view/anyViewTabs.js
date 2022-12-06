@@ -28,32 +28,33 @@ $.widget("any.anyViewTabs", $.any.anyView, {
   // "Constructor"
   _create: function() {
     this._super();
-    this.active_tab_panel     = null;
-    this.active_tab_data_id   = null;
-    this.active_tab_header_id = null;
-    this.active_tab_btn_id    = null;
     this.element.addClass("any-datatabs-view");
+    this.first_id_base = null;
   },
 
   _destroy: function() {
+    this.first_id_base = this.options.first_id_base ? this.options.first_id_base : null;
     this.element.removeClass("any-datatabs-view");
-    this.active_tab_panel     = null;
-    this.active_tab_data_id   = null;
-    this.active_tab_header_id = null;
-    this.active_tab_btn_id    = null;
     this._super();
   }
 }); // ViewTabs widget constructor
 
+$.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,kind,data_level,params)
+{
+  let opt = $.any.anyView.prototype.getCreateViewOptions.call(this,model,parent,kind,data_level,params);
+  opt.first_id_base = this.first_id_base;
+  return opt;
+}; // getCreateViewOptions
+
 //
 // Get the current tab container (div), or create a new one if it does not exist
 //
-$.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kind,id_str)
+$.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kind,data_level)
 {
   if (!parent)
     return null;
 
-  let tabs_id  = this.getIdBase()+"_"+type+"_"+kind+"_"+id_str+"_tabs";
+  let tabs_id  = this.getIdBase()+"_"+type+"_"+kind+"_"+data_level+"_tabs";
   let tabs_div = $("#"+tabs_id);
   if (!tabs_div.length) {
     let class_id = "any-datatabs-container w3-bar w3-dark-grey";
@@ -74,13 +75,10 @@ $.any.anyViewTabs.prototype.refreshHeader = function (params)
   if (!params || !params.data || !this.options.showHeader)
     return null;
 
-  let type       = params.type;
-  let kind       = params.kind;
-  let data       = params.data;
-  let par_id_str = params.par_id_str;
-
-  if (this.options.grouping == "tabs" && data.grouping && par_id_str) {
+  if (this.options.grouping == "tabs" && params.data.grouping) {
     // Get the correct filter
+    let type = params.type;
+    let kind = params.kind;
     if (!this.options.filters) {
       this.model.error = type.capitalize()+" "+kind+" "+i18n.error.FILTERS_MISSING;
       console.error(this.model.error);
@@ -116,42 +114,39 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
-  let par_id_str = params.par_id_str;
   let row_id_str = params.row_id_str;
 
   // Get or create a container for the header tab buttons
   let ptype = this._findType(params.pdata,params.pid,type);
   let pkind = this._findKind(params.pdata,params.pid,kind);
-  this.active_tab_panel = this.getOrCreateTabsContainer(parent,ptype,pkind,par_id_str);
+  let tab_panel = this.getOrCreateTabsContainer(parent,ptype,pkind,this.data_level);
 
   // Add a new header tab button in tab panel if it doesnt already exists
-  let tab_btn_id    = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str+"_data_tab_btn";
-  let tab_data_id   = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str+"_data";
-  let tab_header_id = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str+"_header";
+  let id_base = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str;
+  let tab_btn_id    = id_base+"_data_tab_btn";
+  let tab_header_id = id_base+"_header";
+  let tab_data_id   = id_base+"_data";
   if (!$("#"+tab_btn_id).length) {
+    // Create tab button
     let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null;
     let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
     let tab_str  = d && (d[name_key] || d[name_key] == "")
                    ? d[name_key]
                    : "Other "+type+"s"; // TODO i18n
     let tab_btn = $("<button class='anyTabButton w3-bar-item w3-button' id='"+tab_btn_id+"'>"+tab_str+"</button>");
-    this.active_tab_panel.append(tab_btn);
+    tab_panel.append(tab_btn);
     // Bind click on tab
-    let opt = {
-      tab_panel:     this.active_tab_panel,
-      tab_btn_id:    tab_btn_id,    // Id of button that was clicked
-      tab_data_id:   tab_data_id,   // Id of data area to be shown
-      tab_header_id: tab_header_id, // Id of header area to be shown
-    };
-    tab_btn.off("click").on("click",opt,$.proxy(this.openTab,this));
+    tab_btn.off("click").on("click",{ id_base: id_base },$.proxy(this.openTab,this));
   }
-
-  // Remember which tab is the first
-  let num_tab = this.active_tab_panel.children().length;
-  if (num_tab == 1) {
-    this.active_tab_btn_id    = tab_btn_id;    // Remember first tab button
-    this.active_tab_data_id   = tab_data_id;   // Remember first tab data area
-    this.active_tab_header_id = tab_header_id; // Remember first tab header area
+  // Remember the first tab
+  if (this.first_id_base == undefined || this.first_id_base == null)
+    this.first_id_base = id_base;
+  // Open first active tab (hide others)
+  let curr_tab_btn = $("#"+id_base+"_data_tab_btn");
+  let elems = curr_tab_btn.siblings().add(curr_tab_btn);
+  let cid = elems.first().attr("id")
+  if (cid) {
+    this.first_id_base = cid.substring(0,cid.indexOf("_data_tab_btn"));
     this.openTab();
   }
 }; // refreshTabPanel
@@ -160,10 +155,6 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
 $.any.anyViewTabs.prototype.refreshData = function (params)
 {
   let table_div = $.any.anyView.prototype.refreshData.call(this,params);
-  if (this.options.grouping == "tabs" && params && params.data && params.data.grouping && params.data_div) {
-    if (this.active_tab_data_id != null && params.data_div.attr("id") != +this.active_tab_data_id)
-      params.data_div.hide();
-  }
   this.openTab();
   return table_div;
 }; // refreshData
@@ -173,58 +164,30 @@ $.any.anyViewTabs.prototype.refreshData = function (params)
 // If called by a function: Show/activate currently active tab.
 $.any.anyViewTabs.prototype.openTab = function (event)
 {
-  if (event && event.data && event.data.tab_data_id && event.data.tab_header_id && event.data.tab_btn_id) {
-    // Remove attrs identifying old active btn/tab/panel only if new tab is a sibling
-    if ($("#"+this.active_tab_btn_id).siblings().is($("#"+event.data.tab_btn_id))) {
-      if (this.active_tab_panel)
-        this.active_tab_panel.removeAttr("active_tab");
-      $("#"+this.active_tab_btn_id ).removeAttr("active_tab");
-      $("#"+this.active_tab_data_id).removeAttr("active_tab");
-      $("#"+this.active_tab_header_id).removeAttr("active_tab");
-    }
-    // Inactivate and hide old active tab and hide old active button panel (in case we clicked on a tab in another panel)
-    if (this.active_tab_panel)
-      this.active_tab_panel.hide();
-    $("#"+this.active_tab_btn_id).removeClass("w3-blue");
-    $("#"+this.active_tab_data_id).hide();
-    $("#"+this.active_tab_header_id).hide();
-    // Remember new active tab/panel selected by user if no children are active
-    let active_child = $("#"+event.data.tab_data_id).find("[active_tab]");
-    if (!active_child.length) {
-      this.active_tab_panel     = event.data.tab_panel;
-      this.active_tab_btn_id    = event.data.tab_btn_id;
-      this.active_tab_data_id   = event.data.tab_data_id;
-      this.active_tab_header_id = event.data.tab_header_id;
-    }
-    else {
-      this.active_tab_panel     = $("#"+event.data.tab_data_id).find("[active_tab].any-datatabs-container");
-      this.active_tab_btn_id    = $("#"+event.data.tab_data_id).find("[active_tab].anyTabButton").attr("id");
-      this.active_tab_data_id   = $("#"+event.data.tab_data_id).find("[active_tab].any-datatabs-view").attr("id");
-      this.active_tab_header_id = $("#"+event.data.tab_data_id).find("[active_tab].any-header").attr("id");
-    }
-    // Hide siblings of new active tab
-    $("#"+this.active_tab_data_id).siblings(".any-data-view").hide();
-    $("#"+this.active_tab_header_id).siblings(".any-header").hide();
-  }
-  if (!this.active_tab_panel || !this.active_tab_data_id || !this.active_tab_header_id || !this.active_tab_btn_id)
-    return false;
-  // Show new active button panel and its ancestors (including siblings of ancestors)
-  $("#"+this.active_tab_btn_id).addClass("w3-blue");
-  $("#"+this.active_tab_btn_id).attr("active_tab",true);
-  this.active_tab_panel.show();
-  this.active_tab_panel.attr("active_tab",true);
-  this.active_tab_panel.parents(".any-datatabs-container").show();
-  this.active_tab_panel.parents().siblings(".any-datatabs-container").show();//???
-  // Show new active tab
-  $("#"+this.active_tab_data_id).attr("active_tab",true);
-  $("#"+this.active_tab_data_id).parents().show();
-  $("#"+this.active_tab_data_id).show();
-  $("#"+this.active_tab_data_id).find("[active_tab]").show();
-  $("#"+this.active_tab_header_id).attr("active_tab",true);
-  $("#"+this.active_tab_header_id).parents().show();
-  $("#"+this.active_tab_header_id).show();
-  $("#"+this.active_tab_header_id).find("[active_tab]").show();
-  return true;
+  let id_base = event && event.data ? event.data.id_base : event ? event.id_base : this.first_id_base;
+  if (!id_base)
+    return;
+  let curr_tab_btn = $("#"+id_base+"_data_tab_btn");
+  // Inactivate/hide previous
+  curr_tab_btn.siblings().each(function() {
+    $(this).removeClass("w3-blue");
+    let id = $(this).attr("id");
+    let prev_id_base = id.substring(0,id.indexOf("_data_tab_btn"));
+    let prev_tab_header = $("#"+prev_id_base+"_header");
+    let prev_tab_data   = $("#"+prev_id_base+"_data");
+    prev_tab_header.hide();
+    prev_tab_data.hide();
+  });
+  // Activate/show current
+  curr_tab_btn.addClass("w3-blue");
+  let curr_tab_header = $("#"+id_base+"_header");
+  let curr_tab_data   = $("#"+id_base+"_data");
+  curr_tab_header.show();
+  curr_tab_data.show();
+
+  if (this.first_id_base == undefined || this.first_id_base == null)
+    this.first_id_base = id_base;
+  return;
 }; // openTab
 
 })($);
