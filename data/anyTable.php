@@ -1,60 +1,65 @@
 <?php
-/****************************************************************************************
- *
- * anyVista is copyright (C) 2011-2022 Arne D. Morken and Balanse Software.
- *
- * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
- * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
- *
- ****************************************************************************************/
+/********************************************************************************************
+ *                                                                                          *
+ * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.                 *
+ *                                                                                          *
+ * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use. *
+ * Get licences here: http://balanse.info/anyvista/license/ (coming soon).                  *
+ *                                                                                          *
+ ********************************************************************************************/
+
+require_once "permission.php";
+require_once "anyTableFactory.php";
+
 /**
- * __Class for interacting with an anyVista database table.__
+ * Class for interacting with an anyVista database table.
+ *
  * Inherits from `dbTable`, which manages the database connection.
  * Contains methods for doing search, insert, update and delete on a database table.
  * Supports user defined table format, as well as data in (Wordpress) meta tables.
- * The table format must be described in a table class that inherits from this class.
- * See `userTable.php` and `groupTable.php` for examples.
+ * The table format must be described in a table class that inherits from `anyTable` -
+ * see `plugins/user/userTable.php` and `plugins/group/groupTable.php` for examples.
  *
- * Data structure:
+ * ### Data structure:
  *
  * Data read from tables are transferred to the client in the following JSON format:
  *
- *        {
- *          'id':   '[id]',         // Optional. Has a value if searching for an item, null otherwise.
- *          'head': '[type]',       // Optional, but mandatory if 'data' and 'plugins' are specified.
- *          'data': {               // Optional, but mandatory if 'head' and 'plugins' are specified.
- *            '+[id]': {            // Optional
- *              'head':        '[type]',    // Mandatory
- *              '[type]_name': '[value]',   // Optional, but mandatory if any key / value pairs are given.
- *              '[key]':       '[value]',   // Optional. One or more key / value pairs.
- *              ...
- *              'data': {    // Optional
- *                'grouping':          'true',    // Optional
- *                '+[id]': { // Optional
- *                  'head' | 'item' | 'list': '[type]',         // Mandatory.
- *                  'parent_id':              '[id]',           // Optional. Contains the id of the level above, if of the same type.
- *                  'group_type':             '[group_type]',   // Optional. Only valid if [type] == 'group'.
- *                  'group_sort_order':       '[integer]',      // Optional. Only valid if [type] == 'group'.
- *                  '[key]':                  '[value]',        // Optional. One or more key / value pairs.
- *                  ...
- *                },
- *                ...
- *              },
- *            }
- *            ...
- *          }
- *          'plugins': {                        // Optional
- *            [integer]: '[plugin name]',       // Optional. One or more plugin names.
- *            ...
- *          },
- *          'permission': {                     // Mandatory
- *            'current_user_id': '[id]',        // Mandatory
- *            'is_logged_in':    true | false,  // Mandatory
- *            'is_admin':        true | false,  // Mandatory
- *          },
- *          'message': '[string]',              // Optional
- *          'error':   '[string]',              // Optional
- *        }
+ *     {
+ *       'id':   '[id]',         // Optional. Has a value if searching for an item, null otherwise.
+ *       'head': '[type]',       // Optional, but mandatory if 'data' and 'plugins' are specified.
+ *       'data': {               // Optional, but mandatory if 'head' and 'plugins' are specified.
+ *         '+[id]': {            // Optional
+ *           'head':        '[type]',    // Mandatory
+ *           '[type]_name': '[value]',   // Optional, but mandatory if any key / value pairs are given.
+ *           '[key]':       '[value]',   // Optional. One or more key / value pairs.
+ *           ...
+ *           'data': {    // Optional
+ *             'grouping':          'true',    // Optional
+ *             '+[id]': { // Optional
+ *               'head' | 'item' | 'list': '[type]',         // Mandatory.
+ *               'parent_id':              '[id]',           // Optional. Contains the id of the level above, if of the same type.
+ *               'group_type':             '[group_type]',   // Optional. Only valid if [type] == 'group'.
+ *               'group_sort_order':       '[integer]',      // Optional. Only valid if [type] == 'group'.
+ *               '[key]':                  '[value]',        // Optional. One or more key / value pairs.
+ *               ...
+ *             },
+ *             ...
+ *           },
+ *         }
+ *         ...
+ *       }
+ *       'plugins': {                        // Optional
+ *         [integer]: '[plugin name]',       // Optional. One or more plugin names.
+ *         ...
+ *       },
+ *       'permission': {                     // Mandatory
+ *         'current_user_id': '[id]',        // Mandatory
+ *         'is_logged_in':    true | false,  // Mandatory
+ *         'is_admin':        true | false,  // Mandatory
+ *       },
+ *       'message': '[string]',              // Optional
+ *       'error':   '[string]',              // Optional
+ *     }
  *
  * NOTE! When transferring the data structure from a server to the Javascript client the indices of the object will
  * automatically be converted to integers even if they are specified as strings on the server (PHP) side. I.e. "38"
@@ -62,7 +67,9 @@
  * side, which may not be the desired behaviour. In order to avoid this, numeric indices are prefixed with a "+",and the
  * code on the client side then can maintain the ordering of the items.
  *
- * Server filters:
+ * __Example:__ Coming soon.
+ *
+ * ### Server filters:
  *
  * Each type of data (i.e. each plugin) must have a corresponding filter which specifies whether each key of
  * the type should be included in database operations. The keys (e.g. "event_status") should be the same as
@@ -86,35 +93,7 @@
  *       "user_result"      : 0,
  *     }
  *
- * @class anyTable
- * @constructor
- * @param {Array} options An array containing the following entries:
- *                        - "connection": Info about the database connection
- *                        - "tableDefs": An array containing the following entries:
- *                          - "tableName":          Name of the main table, e.g. "any_event".
- *                          - "tableNameMeta":      Name of the meta table, e.g. "any_eventmeta".
- *                          - "tableNameGroupLink": Name of the group link table for this table type, e.g. "any_event_group".
- *                          - "tableNameUserLink":  Name of the user link table for this table type, e.g. "any_event_user".
- *                          - "type":               Type of the table, e.g. "event".
- *                          - "idKey":              The id key used by the client, e.g. "event_id" or "user_id".
- *                          - "idKeyTable":         The id key used in the table, e.g. "event_id" or "ID".
- *                          - "idKeyMetaTable":     The id key used in the meta table, "event_id" or "user_id".
- *                          - "nameKey":            The name key used by the client and in the table, e.g. "event_name" or "login_name".
- *                          - "orderBy":            The field to sort by. e.g. "event_date_start".
- *                          - "orderDir":           The direction of the sort, "ASC" or "DESC".
- *                          - "metaId":             The name of the id foeld in the meta table, e.g. "meta_id" or "umeta_id".
- *                          - "fields":             An array containing the field names of the table.
- *                          - "fieldsMeta":         An array containing the name of the meta keys of the meta table.
- *                          - "fieldsGroup":        An array containing the field names of the group table.
- *                          - "fieldsLeftJoin":     An array containing the field names of the user link table.
- *                          - "filters":            Filters.
- *                          - "plugins":            An array containing the names of the plugins this table can interact with.
- * @example
- *      new anyTable($options);
  */
-require_once "permission.php";
-require_once "anyTableFactory.php";
-
 class anyTable extends dbTable
 {
   protected $mTableDefs = null; // Must be provided by deriving class
@@ -131,9 +110,13 @@ class anyTable extends dbTable
             $mTableFieldsGroup    = null,
             $mTableFieldsLeftJoin = null;
 
-  protected $mData              = null, // List or item data
-            $mType              = null, // Table type
-            $mId                = null, // Null if list, non-null if item
+  protected
+  /** @var array Contains data for a list or an item. See "Data structure" above. */
+            $mData = null,
+  /** @var string The type of the table data (e.g. `user`). */
+            $mType              = null,
+  /** @var string|int Null if list, non-null if item */
+            $mId                = null,
             $mIdKey             = null,
             $mIdKeyTable        = null,
             $mIdKeyMetaTable    = null,
@@ -161,9 +144,37 @@ class anyTable extends dbTable
             $mRecMax            = 100, // Used to avoid infinite recursion
             $mRecDepth          = 0;   // Recursion depth
 
-  //
-  // Constructor
-  //
+/**
+  * Constructor
+  *
+  * @param Array $connection Info about the database connection. See `dbConnection`.
+  * @param Array $defsOrType An array containing the following entries:
+  *                          - tableName:          Name of the main table, e.g. "any_event".
+  *                          - tableNameMeta:      Name of the meta table, e.g. "any_eventmeta".
+  *                          - tableNameGroupLink: Name of the group link table for this table type, e.g. "any_event_group".
+  *                          - tableNameUserLink:  Name of the user link table for this table type, e.g. "any_event_user".
+  *                          - type:               Type of the table, e.g. "event".
+  *                          - idKey:              The id key used by the client, e.g. "event_id" or "user_id".
+  *                          - idKeyTable:         The id key used in the table, e.g. "event_id" or "ID".
+  *                          - idKeyMetaTable:     The id key used in the meta table, "event_id" or "user_id".
+  *                          - nameKey:            The name key used by the client and in the table, e.g. "event_name" or "login_name".
+  *                          - orderBy:            The field to sort by. e.g. "event_date_start".
+  *                          - orderDir:           The direction of the sort, "ASC" or "DESC".
+  *                          - metaId:             The name of the id foeld in the meta table, e.g. "meta_id" or "umeta_id".
+  *                          - fields:             An array containing the field names of the table.
+  *                          - fieldsMeta:         An array containing the name of the meta keys of the meta table.
+  *                          - fieldsGroup:        An array containing the field names of the group table.
+  *                          - fieldsLeftJoin:     An array containing the field names of the user link table.
+  *                          - filters:            Filters.
+  *                          - plugins:            An array containing the names of the plugins this table can interact with.
+  * @return null
+  *
+  * #### Example
+  *```
+  *      $conn = new dbConnection();
+  *      $userTable = new anyTable($conn,"user");
+  *```
+  */
   public function __construct($connection,$defsOrType)
   {
     // Initialize permissions
@@ -384,8 +395,9 @@ class anyTable extends dbTable
   } // validateTableDefs
 
   /**
-   * @method initFilters
-   * @description Extra initialization of filters, override this in deriving classes if needed
+   * initFilters
+   *
+   * Extra initialization of filters, override this in deriving classes if needed
    */
   protected function initFilters($filters)
   {
@@ -396,56 +408,45 @@ class anyTable extends dbTable
   /////////////////////////
 
   /**
-   * @method getTableName
-   * @description Returns the table's name.
+   * Returns the table's name.
    */
   public function getTableName()  { return $this->mTableName; }
 
   /**
-   * @method getTableNameMeta
-   * @description Returns the meta table's name.
+   * Returns the meta table's name.
    */
   public function getTableNameMeta()  { return $this->mTableNameMeta; }
 
   /**
-   * @method getData
-   * @description Returns the data.
+   * Returns the data.
    */
   public function getData()       { return $this->mData; }
   /**
-   * @method getType
-   * @description Returns the type of the table data.
+   * Returns the type of the table data.
    */
   public function getType()       { return $this->mType; }
   /**
-   * @method getId
-   * @description Returns the id of the table data, if an item. If a list, the result is undefined.
+   * Returns the id of the table data, if an item. If a list, the result is undefined.
    */
   public function getId()         { return $this->mId; }
 
   /**
-   * @method getIdKey
-   * @description Returns the id key of the table data.
+   * Returns the id key of the table data.
    */
   public function getIdKey()      { return $this->mIdKey; }
 
   /**
-   * @method getNameKey
-   * @description Returns the name name of the table data.
+   * Returns the name name of the table data.
    */
   public function getNameKey()    { return $this->mNameKey; }
 
-
-
   /**
-   * @method getPermission
-   * @description Returns the permission object.
+   * Returns the permission object.
    */
   public function getPermission() { return $this->mPermission; }
 
   /**
-   * @method hasParentId
-   * @description Override and return true in table classes which have parent_id.
+   * Override and return true in table classes which have parent_id.
    */
   public function hasParentId()
   {
@@ -587,10 +588,17 @@ class anyTable extends dbTable
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * @method dbSearch
-   * @description Search database for an item or a list
-   * @return Data array, or null on error or no data
-   * @example
+   * Search database for an item, a list, a max id or a list of parents.
+   *
+   * If this->mId == "max", search for max id.
+   *
+   * If this->mId == "par", search for parent list.
+   *
+   * If this->mId has another non-null value, search for the item with the given id.
+   *
+   * Otherwise, search for a list.
+   *
+   * @return array|null Data array, or null on error or no data
    */
   public function dbSearch()
   {
@@ -1615,14 +1623,18 @@ class anyTable extends dbTable
   } // dbAttachToGroups
 
   /**
-   * @method prepareData
-   * @description Get all data related to a list or a single item. The data must have been returned by
-   *              `{{#crossLink "anyTable/dbSearch:method"}}{{/crossLink}}`. See the `{{#crossLink "anyTable"}}{{/crossLink}}`
-   *              constructor for a description of the data format. This method is normally not called by derived
-   *              classes, but may be overridden by classes that want to return data in a non-standard format.
-   * @return Data array.
-   * @example
+   * prepareData
+   *
+   * Get all data related to a list or a single item. The data must have been returned by
+   * `{{#crossLink "anyTable/dbSearch:method"}}{{/crossLink}}`. See the `{{#crossLink "anyTable"}}{{/crossLink}}`
+   * constructor for a description of the data format. This method is normally not called by derived
+   * classes, but may be overridden by classes that want to return data in a non-standard format.
+   *
+   * @return array|null Data array, or null on error or no data
+   * #### Example
+   *```
    *      $data = $myTable->prepareData();
+   *```
    */
   public function prepareData(&$inData)
   {
@@ -1748,10 +1760,9 @@ class anyTable extends dbTable
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * @method dbInsert
-   * @description
-   * @return data structure on success, null on failure.
-   * @example
+   * Insert data
+   *
+   * @return array|null Data array, or null on error or no data
    */
   public function dbInsert()
   {
@@ -1870,10 +1881,9 @@ class anyTable extends dbTable
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * @method dbUpdate
-   * @description
-   * @return data structure on success, null on failure.
-   * @example
+   * Update data
+   *
+   * @return array|null Data array, or null on error or no data
    */
   public function dbUpdate()
   {
@@ -2263,11 +2273,9 @@ class anyTable extends dbTable
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * @method dbDelete
-   * @description Deletes an item of given type with given id from a database table
-   *              TODO! Delete a list of items.
-   * @return data structure on success, null on failure.
-   * @example
+   * Deletes an item of given type with given id from a database table. TODO! Delete a list of items.
+   *
+   * @return array|null Data array, or null on error or no data
    */
   public function dbDelete()
   {
