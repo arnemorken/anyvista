@@ -124,9 +124,9 @@ class documentTable extends anyTable
   /////////////////////// Database query fragments ////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function findListWhere($gid,$skipOwnId=false)
+  protected function findListWhere($gid)
   {
-    $where = parent::findListWhere($gid,$skipOwnId);
+    $where = parent::findListWhere($gid);
     return $where;
   } // findListWhere
 

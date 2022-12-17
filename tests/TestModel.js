@@ -759,7 +759,7 @@ function testModel()
 
   asyncTest('dbSearch normal case - item, with header', 4, function() {
     let dm = new anyModel({type:"user",search:false,mode:"remote"});
-    let res = dm.dbSearch({id:"1",head:true});
+    let res = dm.dbSearch({id:"1",header:true});
     deepEqual(res,
               true, "dbSearch({id:'1'}) returns true");
     setTimeout(function() {

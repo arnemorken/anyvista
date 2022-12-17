@@ -165,7 +165,7 @@ class groupTable extends anyTable
   /////////////////////////////////////////////////////////////////////////////
 
   // Return info of one or all groups of a given type
-  protected function dbSearchGroupInfo($type=null,$group_id=null,$flatGroup=false)
+  protected function dbSearchGroupInfo($type=null,$group_id=null)
   {
     $stmt = "SELECT ".$this->getTableName().".group_id,".
                       $this->getTableName().".group_type,".
@@ -196,13 +196,17 @@ class groupTable extends anyTable
       if ($this->mTableFields) {
         for ($t=0; $t<count($this->mTableFields); $t++) {
           $item_id_table = $this->mTableFields[$t];
-          $this->getCellData($item_id_table,$nextrow,$data,$idx,"group",null,"list",$flatGroup);
+          $this->getCellData($item_id_table,$nextrow,$data,$idx,"group",null,"list");
         }
       }
-      $data["group"][$idx]["head"] = "group";
+      if ($type == "group" && $group_id == null)
+        $kind = "list";
+      else
+        $kind = "head";
+      $data["group"][$idx][$kind] = "group";
     }
     //vlog("dbSearchGroupInfo,data:",$data);
-    if ($type != "group" && !$flatGroup) {
+    if ($this->mGrouping) {
       // Get group tree and append data to it
       $data["group"] = $this->buildDataTree($data["group"]);
     }
@@ -217,6 +221,7 @@ class groupTable extends anyTable
       $data["group"]["nogroup"]["head"]       = "group";
     }
     //error_log("dbSearchGroupInfo,d2:".var_export($data,true));
+    $this->mData = $data;
     return $data;
   } // dbSearchGroupInfo
 

@@ -3286,10 +3286,10 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
                ? pager.options.div_info.group_id
                : null, // TODO!
     grouping:  this.options.grouping,
+    simple:    this.options.grouping === null,
+    header:    true, // TODO!
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
-    head:      true, // TODO!
-    simple:    this.options.grouping === null,
   };
   if (this.model.mode == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
     this.options.ref_rec = 0;
@@ -3725,7 +3725,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
     view.model.dbSearch({
       type:     type,
       id:       the_id,
-      head:     true,
+      header:   true,
       grouping: this.options.grouping,
       context:  view.model,
     });
@@ -4189,9 +4189,9 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
    type:        event.data.link_type, // Switch types
    id:          null,
    link_type:   event.data.type,      // Switch types
-   simple:      true,
-   head:        true,
+   header:      true,
    grouping:    null,
+   simple:      true,
    from:        0,
    num:         this.options.itemsPerPage,
    success:     this.dbUpdateLinkListDialog, // Call the view success handler
@@ -4318,7 +4318,7 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
          select:    opt.select,
          unselect:  opt.unselect,
          name_key:  opt.name_key,
-         head:      true,
+         header:    true,
          grouping:  this.options.grouping,
        }))
     return false;

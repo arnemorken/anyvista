@@ -1202,7 +1202,7 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                               of the table should be used in the search. These fields are only
  *                               applied if the server fails to find a filter corresponding to `type`.
  *                               Optional. Default: `undefined`.
- *        [boolean}  head:       A parameter sent to the server to indicate whether a header should be
+ *        [boolean}  header:     A parameter sent to the server to indicate whether a header should be
  *                               auto-generated.
  *                               Optional. Default: `undefined`.
  *        [boolean}  grouping:   If specified, tells the server to group the data before returning.
@@ -1283,7 +1283,7 @@ anyModel.prototype.dbSearch = function (options)
  *        {integer} group_id:
  *        {boolean} simple:
  *        {integer} link_type:
- *        {string}  head:
+ *        {string}  header:
  *        {string}  grouping:
  *        {integer} from:
  *        {integer} num:
@@ -1325,17 +1325,16 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += the_gid
                ? "&group_id="+the_gid // Search specific group
                : ""; // Search all groups
-  param_str += options.simple                       ? "&simple=simple" : "";
   param_str += type == "group" && options.link_type ? "&group_type="+options.link_type : "";
-  param_str += options.head === true ||
-               options.head === false               ? "&head="+options.head : "";
-  param_str += options.grouping === true ||
-               options.grouping === false           ? "&grouping="+options.grouping : "";
-  param_str += options.from || options.from==0      ? "&from="+options.from : "";
-  param_str += options.num                          ? "&num=" +options.num : "";
-  param_str += options.order                        ? "&order="+options.order : "";
-  param_str += options.direction                    ? "&dir="  +options.direction : "";
-  param_str += options.term                         ? "&term=" +options.term : "";
+  param_str += options.header === true ||
+               options.header === false             ? "&header="    +options.header : "";
+  param_str += options.grouping                     ? "&grouping="  +options.grouping : "";
+  param_str += options.simple                       ? "&simple="    +options.simple : "";
+  param_str += options.from || options.from === 0   ? "&from="      +options.from : "";
+  param_str += options.num                          ? "&num="       +options.num : "";
+  param_str += options.order                        ? "&order="     +options.order : "";
+  param_str += options.direction                    ? "&dir="       +options.direction : "";
+  param_str += options.term                         ? "&term="      +options.term : "";
   if (options.term)
     this.last_term = options.term;
   return this._getDataSourceName() + param_str;
@@ -1880,7 +1879,7 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
   if (options.link_id)
     param_str += "&del="+options.link_id;
   param_str += "&sea=y";
-  param_str += options.head     ? "&head="+options.head : "";
+  param_str += options.header   ? "&header="  +options.header : "";
   param_str += options.grouping ? "&grouping="+options.grouping : "";
   let has_add_or_del = false;
   if (options.select && !options.link_id) {

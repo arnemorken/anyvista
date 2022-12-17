@@ -1003,7 +1003,7 @@
  *
         <td class="tooltd"
             onclick="javascript:loadPage('<?php print $gAdmViewArea;?>',
-                                         '<?php print gAnyvistaURL;?>data/plugins/task/task.php?head=true&grouping=true',
+                                         '<?php print gAnyvistaURL;?>data/plugins/task/task.php?header=true&grouping=true',
                                          '<?php print $gAdmURL;?>');"
             title="Tasks">
           <i class="fas fa-file-alt fa-2x"></i><br/>Tasks
