@@ -270,6 +270,13 @@ var anyModel = function (options)
   */
   this.page_links = null;
 
+  /**
+  * @property {Integer} db_timeout_sec
+  * @default 10
+  * @description Number of seconds to wait for database reply nefore timing out.
+  */
+  this.db_timeout_sec = 10;
+
   // Initialise
   this._dataInitDefault();
   this.dataInit(options);
@@ -1108,9 +1115,10 @@ anyModel.prototype.dbCreate = function (options)
 {
   let type  = options.type ? options.type : this.type;
 
-  if (!options.timeoutSec)
-    options.timeoutSec = 10;
-  $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  let db_timeout_sec = options.timeoutSec
+    				   ? options.timeoutSec
+    				   : this.db_timeout_sec;
+  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   this.success = options.success ? options.success : this.dbCreateSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
@@ -1232,9 +1240,10 @@ anyModel.prototype.dbSearch = function (options)
   if (options.id == "max")
     return this.dbSearchNextId(options);
 
-  if (!options.timeoutSec)
-    options.timeoutSec = 10;
-  $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  let db_timeout_sec = options.timeoutSec
+    				   ? options.timeoutSec
+    				   : this.db_timeout_sec;
+  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   this.success = options.success ? options.success : this.dbSearchSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
@@ -1407,9 +1416,10 @@ anyModel.prototype.dbSearchNextId = function (options)
   if (!options || typeof options != "object")
     options = {};
 
-  if (!options.timeoutSec)
-    options.timeoutSec = 10;
-  $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  let db_timeout_sec = options.timeoutSec
+    				   ? options.timeoutSec
+    				   : this.db_timeout_sec;
+  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   $.ajaxSetup({ async: false }); // TODO! Asynchronous database call
   this.success = options.success ? options.success : this.dbSearchNextIdSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
@@ -1591,9 +1601,10 @@ anyModel.prototype.dbUpdate = function (options)
   options.client_id = options.id;     // Update this id in existing data structure with new id from server
   options.data      = the_data;       // Clean up this data structure after server returns successfully
 
-  if (!options.timeoutSec)
-    options.timeoutSec = 10;
-  $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  let db_timeout_sec = options.timeoutSec
+    				   ? options.timeoutSec
+    				   : this.db_timeout_sec;
+  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   if (options.sync)
     $.ajaxSetup({ async: false });
   this.success = options.success ? options.success : this.dbUpdateSuccess;
@@ -1790,6 +1801,8 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *                           Mandatory.
  *        {Object} select:
  *        {Object} unselect:
+ *        {integer} timeoutSec: Number of seconds before timing out.
+ *                              Optional. Default: 10.
  *
  * @return true if the database call was made, false on error.
  */
@@ -1813,9 +1826,10 @@ anyModel.prototype.dbUpdateLinkList = function (options)
     return false;
   }
 
-  if (!options.timeoutSec)
-    options.timeoutSec = 10;
-  $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  let db_timeout_sec = options.timeoutSec
+    				   ? options.timeoutSec
+    				   : this.db_timeout_sec;
+  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   this.success = options.success ? options.success : this.dbUpdateLinkListSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
@@ -1976,9 +1990,10 @@ anyModel.prototype.dbDelete = function (options)
     return false;
   }
 
-  if (!options.timeoutSec)
-    options.timeoutSec = 10;
-  $.ajaxSetup({ timeout: options.timeoutSec*1000 });
+  let db_timeout_sec = options.timeoutSec
+    				   ? options.timeoutSec
+    				   : this.db_timeout_sec;
+  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   this.success = options.success ? options.success : this.dbDeleteSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
