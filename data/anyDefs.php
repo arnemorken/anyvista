@@ -34,7 +34,7 @@ define("gDataSource", $docroot . "/" . gHomeFolder . "/" . gDataScript);
 
 // File upload
 define("gUploadFolder", "upload/"); // Relative to gHomeFolder
-define("gUploadPath", $docroot . "/" . gHomeFolder . "/" . gUploadFolder);
+define("gUploadPath",   $docroot . "/" . gHomeFolder . "/" . gUploadFolder);
 
 //
 // Thirdparty stuff

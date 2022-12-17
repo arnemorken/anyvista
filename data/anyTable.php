@@ -1736,29 +1736,6 @@ class anyTable extends dbTable
     return $data;
   } // prepareData
 
-  public function prepareTypeKindId(&$data)
-  {
-/* TODO! This method may not be needed
-    if (!$data)
-      $data = array();
-    if (isset($this->mId) && $this->mId != "") {
-      $data["id"] = $this->mId != "max"
-                    ? $this->mId
-                    : $this->mMaxId;
-      //$k = "item";
-    }
-    else {
-      $data["id"] = null;
-      $k = "head";
-    }
-    if (isset($this->mType) && $this->mType != "")
-      $data[$k] = $this->mType;
-    else
-      $data[$k] = null;
-*/
-    return $data;
-  } // prepareTypeKindId
-
   public function prepareParents($type,$itemIdKey,$itemNameKey)
   {
     // TODO! Untested. See also searchParents()
@@ -1843,8 +1820,7 @@ class anyTable extends dbTable
     if (method_exists($this,"dbInsertExtra"))
       $res2 = $this->dbInsertExtra();
 
-    $data = array();
-    return $this->prepareTypeKindId($data);
+    return $this->mData;
   } // dbInsert
 
   protected function dbValidateInsert()
@@ -1893,8 +1869,7 @@ class anyTable extends dbTable
     else
       $this->setMessage($this->mInsertNothingToDo);
 
-    $data = array();
-    return $this->prepareTypeKindId($data);
+    return $this->mData;
   } // dbInsertItem
 
   protected function dbPrepareInsertStmt()
@@ -1982,8 +1957,7 @@ class anyTable extends dbTable
     if (method_exists($this,"dbUpdateExtra"))
       $res2 = $this->dbUpdateExtra();
 
-    $data = array();
-    return $this->prepareTypeKindId($data);
+    return $this->mData;
   } // dbUpdate
 
   protected function dbValidateUpdate()
@@ -2018,8 +1992,7 @@ class anyTable extends dbTable
     else
       $this->setMessage($this->mUpdateNothingToDo);
 
-    $data = array();
-    return $this->prepareTypeKindId($data);
+    return $this->mData;
   } // dbUpdateItem
 
   protected function dbPrepareUpdateStmt()
@@ -2271,8 +2244,7 @@ class anyTable extends dbTable
 
       $this->setMessage($this->mJoinedSuccessMsg);
     }
-    $data = array();
-    return $this->prepareTypeKindId($data);
+    return $this->mData;
   } // dbAddLink
 
   // TODO! Neccessary? Can we use dbUpdateLink instead?
@@ -2312,8 +2284,7 @@ class anyTable extends dbTable
 
     $this->setMessage($this->mLeftSuccessMsg);
 
-    $data = array();
-    return $this->prepareTypeKindId($data);
+    return $this->mData;
   } // dbRemoveLink
 
   protected function dbTableHasLink($tableName,$idName1,$id1,$idName2,$id2)
@@ -2394,8 +2365,7 @@ class anyTable extends dbTable
       }
       $this->mId = null;
     }
-    $data = array();
-    return $this->prepareTypeKindId($data);
+    return $this->mData;
   } // dbDelete
 
   protected function dbValidateDelete()
