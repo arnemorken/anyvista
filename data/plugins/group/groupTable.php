@@ -199,10 +199,10 @@ class groupTable extends anyTable
           $this->getCellData($item_id_table,$nextrow,$data,$idx,"group",null,"list");
         }
       }
-      if ($type == "group" && $group_id == null)
-        $kind = "list";
-      else
+      if ($group_id == null)
         $kind = "head";
+      else
+        $kind = "item";
       $data["group"][$idx][$kind] = "group";
     }
     //vlog("dbSearchGroupInfo,data:",$data);
@@ -221,7 +221,10 @@ class groupTable extends anyTable
       $data["group"]["nogroup"]["head"]       = "group";
     }
     //error_log("dbSearchGroupInfo,d2:".var_export($data,true));
-    $this->mData = $data;
+    if ($group_id == null)
+      $this->mData = $data;
+    else
+      $this->mData = $data["group"];
     return $data;
   } // dbSearchGroupInfo
 

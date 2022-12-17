@@ -844,14 +844,18 @@ class anyTable extends dbTable
     $group_id = Parameters::get("group_id");
     if ($group_table != null)
       $group_data = $group_table->mData;
-    else {
+    else
+    if ($this->mType != "group") {
       // Get group data to a "flat" list
+      $my_grouping = $this->mGrouping;
       $group_table = anyTableFactory::create("group",$this);
       $group_table->mGrouping = false;
       $group_data  = $group_table->dbSearchGroupInfo($this->mType,$group_id);
       //vlog("dbSearchList,group_data($this->mType,$group_id):",$group_data);
       if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
         $this->setError($group_table->mError);
+      if ($this->mType == "group")
+        $this->mGrouping = $my_grouping;
     }
     $order = Parameters::get("order");
     if ($order) {
@@ -867,7 +871,7 @@ class anyTable extends dbTable
       $success = $this->dbExecListStmt($data,$group_id,$limit);
     }
     else
-    if (!$this->mGrouping) {
+    if (!$this->mGrouping || $this->mType == "group") {
       // Query all data, non-grouped
       $success = $this->dbExecListStmt($data,null,$limit);
     }
@@ -899,6 +903,10 @@ class anyTable extends dbTable
 
       // Group the data and build the data tree
       if (!$this->mSimpleList) {
+        if (!$group_table) {
+          $group_table = $this;
+          $group_data  = $this->mData;
+        }
         $group_table->mGrouping = true;
         $group_data["group"] = $group_table->buildDataTree($group_data["group"]);
         $this->buildGroupTreeAndAttach($data,$group_data);
@@ -1135,7 +1143,7 @@ class anyTable extends dbTable
       }
     }
     else {
-      if ($this->mGrouping && $this->tableExists($this->mTableNameGroupLink) &&
+      if ($this->mGrouping && $this->mType != "group" && $this->tableExists($this->mTableNameGroupLink) &&
           !($this->hasParentId() && (isset($this->mLinkType) || (isset($this->mId) && $this->mId != "")))) {
         $n_str = $this->mTableNameGroupLink.".group_id is null ";
         if ($where === null)
@@ -1261,8 +1269,13 @@ class anyTable extends dbTable
       // Force idx to be a string in order to maintain ordering when sending JSON data to a json client
       $idx = is_int($idx) ? "+".$idx : $idx;
 
-      if ($kind == "list" || $kind == "head")
-        $data[$gidx][$idx][$kind] = $this->mType;
+      if ($kind == "list" || $kind == "head") {
+        if ($this->mType == "group" && !isset($nextrow["parent_id"]))
+          $k = "head";
+        else
+          $k = $kind;
+        $data[$gidx][$idx][$k] = $this->mType;
+      }
       else // kind == "item"
         $data[$idx][$kind] = $this->mType;
 
@@ -1334,7 +1347,7 @@ class anyTable extends dbTable
       else
         $val = null;
       if ($val != null && $val != "") {
-        if ($kind == "list")
+        if ($kind == "list" || $kind == "head")
             $data[$gidx][$idx][$field] = $val;
         else
           $data[$idx][$field] = $val;
@@ -1713,8 +1726,11 @@ class anyTable extends dbTable
     else {
       // Item
       if (!isset($hdr)) {
-        if (isset($inData["+".$this->mId][$this->mNameKey]))
-          $hdr = $inData["+".$this->mId][$this->mNameKey]; // findDefaultItemHeader
+        $ix = isset($inData["+".$this->mId])
+              ? "+".$this->mId
+              : $this->mId;
+        if (isset($inData[$ix][$this->mNameKey]))
+          $hdr = $inData[$ix][$this->mNameKey]; // findDefaultItemHeader
         else
         if (isset($this->mLinkId))
           $this->setError($this->mNameKey." missing"); // TODO: i18n
