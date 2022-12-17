@@ -624,6 +624,7 @@ $.any.anyView.prototype._clearBeforeRefresh = function ()
 
 $.any.anyView.prototype._addContainerRow = function (parent,prev_type,prev_kind,curr_type,curr_kind,id_str)
 {
+  let the_parent = parent;
   let filter   = this.getFilter(prev_type,prev_kind);
   let num_cols = filter ? Object.size(filter) : 5;
   let row_id   = this.id_base+"_"+curr_type+"_"+curr_kind+"_"+id_str+"_tr";
@@ -635,14 +636,14 @@ $.any.anyView.prototype._addContainerRow = function (parent,prev_type,prev_kind,
     tbody.append(new_tr);
   else {
     let tr = $("#"+this.id_base+"_"+prev_type+"_"+prev_kind+"_"+id_str+"_tr");
-    if (tr.length)
+    if (tr.length) {
       new_tr.insertAfter(tr);
-  }
-  let the_parent = parent;
-  if (new_tr) {
-    the_parent = new_tr.find("td");
-    if (!the_parent.length)
-      the_parent = parent;
+      the_parent = new_tr.find("td");
+      if (!the_parent.length)
+        the_parent = parent;
+    }
+    else
+      $("<div id='"+row_id+"'></div>").insertAfter(parent);
   }
   return the_parent;
 }; // _addContainerRow
@@ -669,7 +670,7 @@ $.any.anyView.prototype.refreshOne = function (params)
   let the_id_str = kind == "list" || kind == "select" ? par_id_str : row_id_str;
 
   if (type == "group")
-    this.group_id = id;
+    this.group_id = id; // TODO! Neccessary?
 
   // Refresh header
   let have_data  = data && Object.size(data[id]) > 0;
@@ -683,30 +684,37 @@ $.any.anyView.prototype.refreshOne = function (params)
   this.refreshData(params);
 
   // If the data contains subdata, make a recursive call
-  if (data && ((data[id] && data[id].data) || (data["+"+id] && data["+"+id].data))) {
-    ++this.options.ref_rec;
-    if (this.options.ref_rec > ANY_MAX_REF_REC) {
-      this.options.ref_rec = 0;
-      throw i18n.error.TOO_MUCH_RECURSION;
-    }
-    if ((kind == "list" || kind == "select"))
-      ++this.options.indent_level;
-    let p = data && data[id] ? data[id].parent_id : null;
-    this.refresh({
-       parent:     params.data_div,
-       type:       type,
-       kind:       kind,
-       data:       data[id] ? data[id].data : data["+"+id].data,
-       id:         null,
-       id_str:     /*p || p === 0 ||*/ (kind=="list" && data[id].list == type) ? par_id_str : row_id_str,
-       pdata:      data,
-       pid:        id,
-       edit:       edit,
-       dont_reset_rec: true,
-    });
-    if ((kind == "list" || kind == "select"))
-      --this.options.indent_level;
-  }
+  if (data) {
+   let d = null;
+   if (data[id] && data[id].data)
+     d = data[id].data;
+   else
+   if (data["+"+id] && data["+"+id].data)
+     d = data["+"+id].data;
+    if (d) {
+      ++this.options.ref_rec;
+      if (this.options.ref_rec > ANY_MAX_REF_REC) {
+        this.options.ref_rec = 0;
+        throw i18n.error.TOO_MUCH_RECURSION;
+      }
+      if ((kind == "list" || kind == "select"))
+        ++this.options.indent_level;
+      this.refresh({
+         parent:     params.data_div,
+         type:       type,
+         kind:       kind,
+         data:       d,
+         id:         null,
+         id_str:     kind=="list" && data[id].list == type ? par_id_str : row_id_str,
+         pdata:      data,
+         pid:        id,
+         edit:       edit,
+         dont_reset_rec: true,
+      });
+      if ((kind == "list" || kind == "select"))
+        --this.options.indent_level;
+    } // if d
+  } // if data
   // Clean up
   if (header_div && !header_div.children().length)
     header_div.remove();
