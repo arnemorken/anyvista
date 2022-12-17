@@ -506,13 +506,13 @@ $.any.anyView.prototype.refresh = function (params)
           let idx = Number.isInteger(parseInt(idc))
                     ? ""+parseInt(idc)
                     : idc;
-           let par_id_str  = curr_kind == "list" || curr_kind == "select"
-                             ? id_str
-                             : id_str
-                               ? curr_kind == "item"
-                                 ? id_str+"_"+idx
-                                 : id_str
-                               : idx;
+          let par_id_str  = curr_kind == "list" || curr_kind == "select"
+                            ? id_str
+                            : id_str
+                              ? curr_kind == "item"
+                                ? id_str+"_"+idx
+                                : id_str
+                              : idx;
           // Create new view whenever we encounter a new type or a new kind
           if (prev_type != curr_type || (prev_kind != curr_kind && prev_kind != "")) {
             // If the new type/kind is contained within a list, create a new row to contain a new parent container
@@ -893,7 +893,7 @@ $.any.anyView.prototype.refreshHeaderEntry = function (parent,data,id,filter_id,
   let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null; // TODO! Do this other places in the code too
   if (!parent || !d)
     return null;
-  let stylestr = (n==0) ? "style='display:inline-block;'" : "";
+  let stylestr = n == 0 ? "style='display:inline-block;'" : "";
   let div = $("<div class='"+filter_id+"' "+stylestr+">"+d[filter_id]+"</div>");
   parent.append(div);
   return div;
@@ -2536,7 +2536,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     id:               parent.attr("id"),
     view:             this,
     id_base:          this.id_base,
-    data_level:       data_level || data_level==0 ? data_level : this.data_level,
+    data_level:       data_level || data_level === 0 ? data_level : this.data_level,
     group_id:         this.group_id, // Current group id (for table headers)
     grouping:         this.options.grouping,
     item_opening:     this.options.item_opening,
@@ -2584,7 +2584,7 @@ $.any.anyView.prototype.getCellEntryStr = function (id,type,kind,id_str,filter_i
   let pid = data_item["parent_id"];
   if (typeof val != "object")
     val = $("<textarea />").html(val).text(); // Convert html entities to real html
-  if (filter_key.EDITABLE===0 || filter_key.EDITABLE===false)
+  if (filter_key.EDITABLE === 0 || filter_key.EDITABLE === false)
     edit = false;
   switch (filter_key.TYPE) {
     case "label":    return this.getLabelStr   (type,kind,id,val); // Always noneditable

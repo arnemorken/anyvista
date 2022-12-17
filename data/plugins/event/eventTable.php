@@ -158,6 +158,7 @@ class eventTable extends anyTable
             $mLeftAlreadyMsg   = "The user is not registered for this event. ",
             $mLeftSuccessMsg   = "Registration cancelled. ";
 
+  protected $mResult  = null;
   private $mFirstDate = "1900-01-01";
   private $mLastDate  = "2099-12-31";
 

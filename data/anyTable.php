@@ -25,29 +25,34 @@ require_once "anyTableFactory.php";
  * Data read from tables are transferred to the client in the following JSON format:
  *
  *     {
- *       'id':   '[id]',         // Optional. Has a value if searching for an item, null otherwise.
- *       'head': '[type]',       // Optional, but mandatory if 'data' and 'plugins' are specified.
- *       'data': {               // Optional, but mandatory if 'head' and 'plugins' are specified.
- *         '+[id]': {            // Optional
- *           'head':        '[type]',    // Mandatory
- *           '[type]_name': '[value]',   // Optional, but mandatory if any key / value pairs are given.
- *           '[key]':       '[value]',   // Optional. One or more key / value pairs.
+ *       'head': '[type]',                                // Optional.
+ *       'data': {                                        // Optional.
+ *         'grouping': 'true',                            // Optional.
+ *         '+[id]': {                                     // Optional.
+ *           'head' | 'item' | 'list': '[type]',          // Mandatory.
+ *           '[type]_name':            '[value]',         // Mandatory.
+ *           '[type]_id':              '[value]',         // Mandatory if 'list' or 'item'.
+ *           'group_type':             '[group_type]',    // Optional. Only valid if [type] == 'group'.
+ *           'group_sort_order':       '[integer]',       // Optional. Only valid if [type] == 'group'.
+ *           '[key]':       '[value]',                    // Optional. One or more key / value pairs.
  *           ...
- *           'data': {    // Optional
- *             'grouping':          'true',    // Optional
- *             '+[id]': { // Optional
- *               'head' | 'item' | 'list': '[type]',         // Mandatory.
- *               'parent_id':              '[id]',           // Optional. Contains the id of the level above, if of the same type.
- *               'group_type':             '[group_type]',   // Optional. Only valid if [type] == 'group'.
- *               'group_sort_order':       '[integer]',      // Optional. Only valid if [type] == 'group'.
- *               '[key]':                  '[value]',        // Optional. One or more key / value pairs.
+ *           'data': {                                    // Optional.
+ *             'grouping': 'true',                        // Optional.
+ *             '+[id]': {                                 // Optional.
+ *               'head' | 'item' | 'list': '[type]',      // Mandatory.
+ *               '[type]_name': '[value]',                // Mandatory.
+ *               '[type]_id':              '[value]',     // Mandatory if 'list' or 'item'.
+ *               'group_type':             '[group_type]',// Optional. Only valid if [type] == 'group'.
+ *               'group_sort_order':       '[integer]',   // Optional. Only valid if [type] == 'group'.
+ *               'parent_id':              '[id]',        // Optional. The id of the level above, if of the same type.
+ *               '[key]':                  '[value]',     // Optional. One or more key / value pairs.
  *               ...
  *             },
  *             ...
- *           },
+ *           }, // data
  *         }
  *         ...
- *       }
+ *       } // data
  *       'plugins': {                        // Optional
  *         [integer]: '[plugin name]',       // Optional. One or more plugin names.
  *         ...
@@ -124,7 +129,12 @@ class anyTable extends dbTable
             $mMetaId            = null,
             $mLinkType          = null, // Used by items that have associated lists
             $mLinkId            = null, // Used by items that have associated lists
+            $mGrouping          = true,  // Group results by default
+            $mSimpleList        = false, // In a "simple" list search we get only the id, name and parent_id
             $mFilters           = null,
+            $mPlugins           = null,
+            $mMaxId             = -1,
+            $mNumResults        = 0,
             $mPermission        = null,
             $mOrderBy           = null,
             $mOrderDir          = "ASC",
@@ -167,7 +177,6 @@ class anyTable extends dbTable
   *                          - fieldsLeftJoin:     An array containing the field names of the user link table.
   *                          - filters:            Filters.
   *                          - plugins:            An array containing the names of the plugins this table can interact with.
-  * @return null
   *
   * #### Example
   *```
@@ -204,6 +213,8 @@ class anyTable extends dbTable
     // Filters should be defined in the options parameter, but may also
     // be specified / manipulated in the initFilters method.
     $this->initFilters($this->mFilters);
+
+    return;
   } // constructor
 
   //
@@ -328,6 +339,11 @@ class anyTable extends dbTable
       ];
     }
 
+    if (!isset($this->mType)) // Option type overrides parameter type
+      $this->mType = ltrim(Parameters::get("type"));
+    if (!isset($this->mType))
+      return "Table type missing. "; // Cannot continue without a type
+
     // Set some common properties if not already set
     if (!isset($this->mOrderBy))
       $this->mOrderBy = $this->mIdKeyTable;
@@ -340,10 +356,6 @@ class anyTable extends dbTable
     if (!isset($this->mDeleteSuccessMsg))
       $this->mDeleteSuccessMsg = ucfirst($this->mType)." deleted. ";
 
-    if (!isset($this->mType)) // Option type overrides parameter type
-      $this->mType = ltrim(Parameters::get("type"));
-    if (!isset($this->mType))
-      return "Table type missing. "; // We must have a type
     if (!isset($this->mId) || $this->mId == "")
       $this->mId   = ltrim(Parameters::get($this->mIdKey));
 
@@ -535,18 +547,17 @@ class anyTable extends dbTable
   public function dbCreate()
   {
       // sql to create table
-      $type = Parameters::get("type");
-      if (!$type)
-        $type = $this->mType;
+      if (!$this->mType)
+        $this->mType = Parameters::get("type"); // Should  never happen
       $tableFields = Parameters::get("table");
 
-      $tableName = "any_".$type;
-      $key_field = $type."_id"; // Default PRIMARY KEY field
+      $tableName = "any_".$this->mType;
+      $key_field = $this->mType."_id"; // Default PRIMARY KEY field
       $sql = "CREATE TABLE $tableName (";
       if (!$tableFields) {
         // Use default fields
-        $sql .= $type."_id bigint(20),";
-        $sql .= $type."_name varchar(50),";
+        $sql .= $this->mType."_id bigint(20),";
+        $sql .= $this->mType."_name varchar(50),";
         $sql .= "PRIMARY KEY (`".$key_field."`)";
       }
       else {
@@ -591,11 +602,8 @@ class anyTable extends dbTable
    * Search database for an item, a list, a max id or a list of parents.
    *
    * If this->mId == "max", search for max id.
-   *
    * If this->mId == "par", search for parent list.
-   *
    * If this->mId has another non-null value, search for the item with the given id.
-   *
    * Otherwise, search for a list.
    *
    * @return array|null Data array, or null on error or no data
@@ -613,22 +621,24 @@ class anyTable extends dbTable
     $this->initFieldsFromParam();
     $this->initFiltersFromParam();
 
-    $this->mGrouping = Parameters::get("grouping");
-    $this->mGrouping = $this->mGrouping !== false && $this->mGrouping !== "false" && $this->mGrouping !== "0";
     if ($this->mId == "max")
-      $res = $this->dbSearchMaxId();
+      $ok = $this->dbSearchMaxId();
     else
     if ($this->mId == "par")
-      $res = $this->dbSearchParents();
+      $ok = $this->dbSearchParents();
     else
     if ($this->mId || $this->mId === 0)
-      $res = $this->dbSearchItem($this->mData,$this->mIdKeyTable,$this->mId);
+      $ok = $this->dbSearchItem($this->mData,$this->mIdKeyTable,$this->mId);
     else {
-      $this->mLinkType = null;
-      $this->mLinkId   = null;
-      $res = $this->dbSearchList($this->mData,false,true);
+      $g = Parameters::get("grouping");
+      $s = Parameters::get("simple");
+      $this->mGrouping   = $g !== false && $g !== "false" && $g !== "0";
+      $this->mSimpleList = $s === true  || $s === "true"  || $s === "1";
+      $this->mLinkType   = null;
+      $this->mLinkId     = null;
+      $ok = $this->dbSearchList($this->mData);
     }
-    if (!$res)
+    if (!$ok)
       return null;
     return $this->prepareData($this->mData);
   } // dbSearch
@@ -642,15 +652,17 @@ class anyTable extends dbTable
   } // dbValidateSearch
 
   //
-  // Find max id for a table. Only for tables with AUTO_INCREMENT rows
+  // Find max id for a table. Will only work for tables with AUTO_INCREMENT rows.
   //
   protected function dbSearchMaxId()
   {
-    $table = $this->mTableName;
-  //$id    = $this->mIdKeyTable;
-  //$stmt  = "SELECT MAX(".$id.") FROM ".$table;
+    $this->mError    = "";
+    $this->mData     = null;
+    $this->mGrouping = false;
+
+  //$stmt = "SELECT MAX(".$this->mIdKeyTable.") FROM ".$this->mTableName;
     $stmt  = "SELECT AUTO_INCREMENT FROM information_schema.tables ".
-              "WHERE table_name = '".$table."' ".
+             "WHERE table_name = '".$this->mTableName."' ".
               "AND table_schema = DATABASE( )";
     //elog("dbSearchMaxId query:".$stmt);
     if (!$this->query($stmt))
@@ -664,13 +676,17 @@ class anyTable extends dbTable
   } // dbSearchMaxId
 
   //
-  // Find all items of a certain type and return simple list of id/name pairs
+  // Find all items of a certain type and return simple list of id/name pairs.
   //
   protected function dbSearchParents()
   {
-    $this->mData = null;
-    $this->mGrouping = true;
-    if (!$this->dbSearchList($this->mData,true))
+    $this->mError      = "";
+    $this->mData       = null;
+    $this->mGrouping   = true;
+    $this->mSimpleList = true;
+    $this->mLinkType   = null;
+    $this->mLinkId     = null;
+    if (!$this->dbSearchList($this->mData))
       return null;
     return $this->prepareData($this->mData);
   } // dbSearchParents
@@ -679,16 +695,17 @@ class anyTable extends dbTable
 
   //
   // Search database for an item, including meta data and linked lists.
+  //
   // Returns true on success, false on error.
   //
-  protected function dbSearchItem(&$data,$key,$val,$skipLinks=false,$leftJoinUser=true)
+  protected function dbSearchItem(&$data,$key,$val,$skipLinks=false,$includeUser=true)
   {
     if ($key === null || $key == "" || $val === null || $val == "") {
-      $this->setError("Missing key ($key) or value ($val)");
+      $this->setError("Missing key ($key) or value ($val). ");
       return false;
     }
     // Build and execute the query
-    $stmt = $this->dbPrepareSearchItemStmt($key,$val,$leftJoinUser);
+    $stmt = $this->dbPrepareSearchItemStmt($key,$val,$includeUser);
     //elog("dbSearchItem:".$stmt);
     if (!$stmt || !$this->query($stmt))
       return false; // An error occured
@@ -702,12 +719,17 @@ class anyTable extends dbTable
     return !$this->isError();
   } // dbSearchItem
 
-  protected function dbPrepareSearchItemStmt($key,$val,$leftJoinUser=true)
+  protected function dbPrepareSearchItemStmt($key,$val,$includeUser=true)
   {
     // Get query fragments
     $this->mError = "";
-    $select       = $this->findItemSelect($leftJoinUser);
-    $left_join    = $this->findItemLeftJoin($leftJoinUser);
+    $includeUser  = $includeUser &&
+                    $this->mType != "user" &&
+                    isset($this->mTableFieldsLeftJoin) &&
+                    isset($this->mTableFieldsLeftJoin["user"]) &&
+                    $this->tableExists($this->mTableNameUserLink);
+    $select       = $this->findItemSelect($includeUser);
+    $left_join    = $this->findItemLeftJoin($includeUser);
     $where        = $this->findItemWhere($key,$val);
     $stmt = $select.
             "FROM ".$this->mTableName." ".
@@ -716,21 +738,15 @@ class anyTable extends dbTable
     return $stmt;
   } // dbPrepareSearchItemStmt
 
-  protected function findItemSelect($leftJoinUser)
+  protected function findItemSelect($includeUser)
   {
     // Select from own table
     $si = "SELECT DISTINCT ".$this->mTableName.".* ";
 
     // Select from left joined user table (if this is not a user table)
-    if ($leftJoinUser) {
-    if ($this->mType != "user" &&
-        isset($this->mTableFieldsLeftJoin) &&
-        isset($this->mTableFieldsLeftJoin["user"]) &&
-        $this->tableExists($this->mTableNameUserLink)) {
+    if ($includeUser)
       foreach ($this->mTableFieldsLeftJoin["user"] as $field)
         $si .= ", ".$this->mTableNameUserLink.".".$field;
-      }
-    }
     // Get parent name
     if ($this->hasParentId())
       $si .= ", temp.".$this->mNameKey." AS parent_name";
@@ -738,21 +754,16 @@ class anyTable extends dbTable
     return $si;
   } // findItemSelect
 
-  protected function findItemLeftJoin($leftJoinUser)
+  protected function findItemLeftJoin($includeUser)
   {
     $lj = "";
     // Left join user table (if this is not a user table)
-    if ($leftJoinUser) {
+    if ($includeUser) {
+      $lj .= "LEFT JOIN ".$this->mTableNameUserLink." ".
+             "ON "       .$this->mTableNameUserLink.".".$this->mIdKeyTable."='".$this->mId."' ";
       $cur_uid = $this->mPermission["current_user_id"];
-    if ($this->mType != "user" &&
-        isset($this->mTableFieldsLeftJoin) &&
-        isset($this->mTableFieldsLeftJoin["user"]) &&
-        $this->tableExists($this->mTableNameUserLink)) {
-        $lj .= "LEFT JOIN ".$this->mTableNameUserLink." ".
-               "ON "       .$this->mTableNameUserLink.".".$this->mIdKeyTable."='".$this->mId."' ";
-        if ($cur_uid || $cur_uid === 0)
+      if ($cur_uid || $cur_uid === 0)
         $lj .= "AND ".$this->mTableNameUserLink.".user_id='".$cur_uid."' ";
-      }
     }
     // Get parent name
     if ($this->hasParentId())
@@ -775,9 +786,9 @@ class anyTable extends dbTable
     // If no plugins found, return with no error
     if (!isset($this->mPlugins))
       return true;
-    // Must have a type and an id
-    if (!$this->mType || !isset($this->mId) || $this->mId == "") {
-      $err = "Type or id missing (type=$this->mType,id=$this->mId). ";
+    // Must have an id
+    if (!isset($this->mId) || $this->mId == "") {
+      $err = "Id missing while searching for linked lists. "; // TODO! i18n
       $this->setError($err);
       return false;
     }
@@ -962,7 +973,7 @@ class anyTable extends dbTable
     // Select from other tables (link tables)
     if (isset($this->mPlugins)) {
       foreach($this->mPlugins as $i => $plugin) {
-        if ("group" != $plugin && $plugin != $this->mType) {
+        if ($plugin != "group" && $plugin != $this->mType) {
           if ((isset($this->mLinkType) || $plugin == "user")) {
             if (isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin[$plugin])) {
               $linktable = $this->findLinkTableName($plugin);
@@ -1215,7 +1226,7 @@ class anyTable extends dbTable
       //elog("getRowData,nextrow:".var_export($nextrow,true));
       ++$this->mLastNumRows;
       $gid  = isset($nextrow["group_id"])
-                ? $nextrow["group_id"]
+              ? $nextrow["group_id"]
               : "nogroup";
       $gidx = !$flat && !$simple
               ? $gid
@@ -1225,12 +1236,14 @@ class anyTable extends dbTable
              : null;
       if (!$idx && $idx !== 0)
         continue;
+
       // Force idx to be a string in order to maintain ordering when sending JSON data to a json client
       $idx = is_int($idx) ? "+".$idx : $idx;
       if ($kind == "list")
           $data[$gidx][$idx][$kind] = $this->mType;
       else // kind == "item"
         $data[$idx][$kind] = $this->mType;
+
       // Main table
       if (isset($this->mTableFields)) {
         for ($t=0; $t<count($this->mTableFields); $t++) {
@@ -1239,6 +1252,7 @@ class anyTable extends dbTable
           $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$kind,$simple);
         } // for
       }
+
       // Meta table
       if (isset($this->mTableFieldsMeta) && $has_meta_table) {
         for ($t=0; $t<count($this->mTableFieldsMeta); $t++) {
@@ -1458,7 +1472,7 @@ class anyTable extends dbTable
       }
     }
     //vlog("buildGroupTreeAndAttach,data before building tree:",$data);
-      $data_tree = array();
+    $data_tree = array();
     $data_tree["grouping"] = $this->mGrouping;
     foreach ($data as $gidx => $grp) {
       if ($this->mGrouping && !empty($data[$gidx])) { // Add a head data layer
@@ -1469,8 +1483,8 @@ class anyTable extends dbTable
           $data_tree[$ngidx]["group_type"] = $this->mType;
           $data_tree[$ngidx]["group_id"]   = $ngidx;
           $gname = isset($group_data) && isset($group_data["group"][$ngidx])
-                ? $group_data["group"][$ngidx]["group_name"]
-                : ucfirst($data_tree[$ngidx]["group_type"])." groups";
+                   ? $group_data["group"][$ngidx]["group_name"]
+                   : ucfirst($data_tree[$ngidx]["group_type"])." groups";
           if ($this->mType != "group") {
             if (!$gname)
               $gname = "Other ".$this->mType."s"; // TODO i18n
@@ -1491,9 +1505,9 @@ class anyTable extends dbTable
         }
       $num = 0; // Used by page links
       $data_tree[$ngidx]["data"] = $this->buildDataTree($data[$gidx],null,false,$num);
-        // Preserve "grouping_num_results" value
-        if (isset($data[$gidx]["grouping_num_results"]))
-          $data_tree[$ngidx]["data"]["grouping_num_results"] = $data[$gidx]["grouping_num_results"];
+      // Preserve "grouping_num_results" value
+      if (isset($data[$gidx]["grouping_num_results"]))
+        $data_tree[$ngidx]["data"]["grouping_num_results"] = $data[$gidx]["grouping_num_results"];
       if ($data_tree[$ngidx]["data"] === null)
         unset($data_tree[$ngidx]["data"]);
       } // if mGrouping
@@ -1623,14 +1637,17 @@ class anyTable extends dbTable
   } // dbAttachToGroups
 
   /**
-   * prepareData
+   * Prepare data related to a list or a single item. May add a user-specified or default top header.
    *
-   * Get all data related to a list or a single item. The data must have been returned by
-   * `{{#crossLink "anyTable/dbSearch:method"}}{{/crossLink}}`. See the `{{#crossLink "anyTable"}}{{/crossLink}}`
-   * constructor for a description of the data format. This method is normally not called by derived
-   * classes, but may be overridden by classes that want to return data in a non-standard format.
+   * The data must have been returned by `{{#crossLink "anyTable/dbSearch:method"}}{{/crossLink}}`.
+   * See the `{{#crossLink "anyTable"}}{{/crossLink}}` constructor for a description of the data format.
+   * This method is normally not called by derived classes, but may be overridden by classes that want
+   * to return data in a non-standard format.
+   *
+   * @param inData
    *
    * @return array|null Data array, or null on error or no data
+   *
    * #### Example
    *```
    *      $data = $myTable->prepareData();
@@ -1703,7 +1720,7 @@ class anyTable extends dbTable
 
   public function prepareParents($type,$itemIdKey,$itemNameKey)
   {
-    // TODO! Untested
+    // TODO! Untested. See also searchParents()
     return null;
     $lf   = $this->mLinkType;
     $lfid = $this->mLinkId;

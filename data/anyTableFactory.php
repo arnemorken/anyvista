@@ -17,20 +17,22 @@ require_once dirname(__FILE__)."/db/dbTable.php";
 
 class anyTableFactory
 {
-  protected static $mDBConn  = null;
-  private   static $mError   = "";
-  private   static $mTables  = array();
+  protected static $mDBConn = null;
+  private   static $mError  = "";
+  private   static $mTables = array();
 
   public static function getError()  { return self::$mError; }
   public static function getTables() { return self::$mTables; }
 
   /**
-   * @method create
-   * @description Creates an anyVista table of type `type`, or returns it if it already exists.
-   * @param {String} type      The table type.
-   * @param {Table}  hostTable An optional "host table".
-   * @return The table on success, null on error.
-   * @example
+   * Creates an anyVista table of type `type`, or returns it if it already exists.
+   *
+   * @param String type      The table type.
+   * @param Object hostTable An optional "host table".
+   *
+   * @return Object|null Data object, or null on error or no data
+   *
+   * #### Example
    *    $myTable = anyTableFactory::create("user")
    */
   public static function create($type,$hostTable=null)

@@ -206,7 +206,6 @@ class groupTable extends anyTable
       // Get group tree and append data to it
       $data["group"] = $this->buildDataTree($data["group"]);
     }
-
     //vlog("dbSearchGroupInfo,d1:",$data);
 
     // Add the default "nogroup" group

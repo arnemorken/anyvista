@@ -26,14 +26,15 @@ define("gVersion", "0.0.5.alpha");
 define("gDataScript",       "data/anyGetData.php"); // Relative to gHomeFolder
 
 // Paths
-define("gHomePath",   $_SERVER['DOCUMENT_ROOT']."/".gHomeFolder);
+$docroot = $_SERVER['DOCUMENT_ROOT'];
+define("gHomePath",   $docroot."/".gHomeFolder);
 define("gAnyvistaURL", gServer . gHomeFolder);
 
-define("gDataSource", $_SERVER['DOCUMENT_ROOT'] . "/" . gHomeFolder . "/" . gDataScript);
+define("gDataSource", $docroot . "/" . gHomeFolder . "/" . gDataScript);
 
 // File upload
 define("gUploadFolder", "upload/"); // Relative to gHomeFolder
-define("gUploadPath",   $_SERVER['DOCUMENT_ROOT'] . "/" . gHomeFolder . "/" . gUploadFolder);
+define("gUploadPath", $docroot . "/" . gHomeFolder . "/" . gUploadFolder);
 
 //
 // Thirdparty stuff
