@@ -900,15 +900,13 @@ class anyTable extends dbTable
         call_user_func($this->mSortFunction);
 
       // Group the data and build the data tree
-      if (!$this->mSimpleList) {
-        if (!$group_table) {
-          $group_table = $this;
-          $group_data  = $this->mData;
-        }
-        $group_table->mGrouping = true;
-        $group_data["group"] = $group_table->buildDataTree($group_data["group"]);
-        $this->buildGroupTreeAndAttach($data,$group_data);
+      if (!$group_table) {
+        $group_table = $this;
+        $group_data  = $this->mData;
       }
+      $group_table->mGrouping = true;
+      $group_data["group"] = $group_table->buildDataTree($group_data["group"]);
+      $this->buildGroupTreeAndAttach($data,$group_data);
     }
     return !$this->isError();
   } // dbSearchList
@@ -945,7 +943,7 @@ class anyTable extends dbTable
           $gr_idx = "nogroup";
         }
         else
-        if (is_int(intval($gid)))
+        if (isInteger($gid))
           $gr_idx = intval($gid);
         else
           $gr_idx = $gid;
@@ -1021,8 +1019,7 @@ class anyTable extends dbTable
     $cur_uid = $this->mPermission["current_user_id"];
     $lj = "";
     // Always left join group table, except if has parent_id while being a list-for list
-    if ($this->mType != "group" /*&&
-        !($this->hasParentId() && (isset($this->mLinkType) || (isset($this->mId) && $this->mId != "")))*/)
+    if ($this->mType != "group")
       $lj .= $this->findListLeftJoinOne($cur_uid,"group",$gid);
 
     // Left join other tables (link tables)
@@ -1265,7 +1262,7 @@ class anyTable extends dbTable
         continue;
 
       // Force idx to be a string in order to maintain ordering when sending JSON data to a json client
-      $idx = is_int($idx) ? "+".$idx : $idx;
+      $idx = isInteger($idx) ? "+".$idx : $idx;
 
       if ($kind == "list" || $kind == "head") {
         if ($this->mType == "group" && !isset($nextrow["parent_id"]))
@@ -1511,7 +1508,7 @@ class anyTable extends dbTable
     foreach ($data as $gidx => $grp) {
       $ngidx = isset($this->mLinkId)
                ? $this->mType
-               : ( is_int($gidx)
+               : ( isInteger($gidx)
                    ? "+".$gidx
                    : $gidx );
       $data_tree[$ngidx] = array();
@@ -1554,7 +1551,7 @@ class anyTable extends dbTable
     //
     // If grouping is specified, build group tree and stick data tree to it
     //
-    if ($this->mGrouping &&
+    if ($this->mGrouping && !$this->mSimpleList &&
         (!isset($this->mId) || $this->mId == "") &&
         !isset($this->mLinkId)) {
       $this->dbAttachToGroups($group_data["group"],$data_tree);
