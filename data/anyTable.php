@@ -362,8 +362,6 @@ class anyTable extends dbTable
     // Make sure some vital fields exist
     if (!in_array($this->mOrderBy,$this->mTableFields))
       $this->mOrderBy = $this->mTableFields[0];
-    if (!in_array($this->mIdKey,$this->mTableFields))
-      $this->mIdKey = $this->mTableFields[0];
     if (!in_array($this->mIdKeyTable,$this->mTableFields))
       $this->mIdKeyTable = $this->mTableFields[0];
 
