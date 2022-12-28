@@ -638,6 +638,8 @@ class anyTable extends dbTable
     }
     if (!$ok)
       return null;
+    if ($this->mId == "max" || $this->mId == "par") // dbSearchMaxId() and dbSearchParents() call prepareData()
+      return ($this->mData);
     return $this->prepareData($this->mData);
   } // dbSearch
 
@@ -1701,9 +1703,12 @@ class anyTable extends dbTable
   public function prepareData(&$inData)
   {
     //vlog("inData before prepare:",$inData);
-    $data = [];
-    if (!$inData)
-      return $data;
+    if (!$inData) {
+      $inData = [];
+      if (isset($this->mMaxId))
+        $inData["id"] = $this->mMaxId;
+      return $inData;
+    }
     $d = &$data["data"]["+0"];
 
     // Header
