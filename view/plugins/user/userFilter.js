@@ -68,6 +68,7 @@ var userFilter = function (options)
       select: {
         user_id:         { HEADER:"User id",          DISPLAY:0, TYPE:"label" },
         user_name:       { HEADER:"User name",        DISPLAY:1, TYPE:"link"},
+        display_name:    { HEADER:"Disp name",        DISPLAY:1, TYPE:"link"},
         first_name:      { HEADER:"First name",       DISPLAY:0, TYPE:"text"},
         last_name:       { HEADER:"Last name",        DISPLAY:0, TYPE:"text"},
       },

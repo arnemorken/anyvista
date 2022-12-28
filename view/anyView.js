@@ -416,26 +416,25 @@ $.any.anyView.prototype.empty = function (params)
  * @description Displays data in a DOM element. If an element matching the type/kind/id combination
  *              is found in the DOM, that element will be used for displaying the data. Otherwise,
  *              new elements will be created as needed.
- * @params {Object}  params  An object which may contain these elements:
+ * @params {Object}  params  Undefined or an object which may contain these elements:
  *
- *         {Object}  parent   The element in which to display data.
- *                            Default: `this.element`.
- *         {string}  type     The type of the data to display.
- *                            Default: null.
- *         {string}  kind     The kind of the data to display.
- *                            Default: null.
- *         {Object}  data     The data to display / display from.
- *                            Default: `this.model.data`.
- *         {string}  id       The id of the data to display. If given, only the matching item (`data[id]`)
- *                            and its subdata will be refreshed, otherwise the entire data structure will
- *                            be refreshed.
- *                            Default: null.
- *         {Object}  pdata    The data on the level above `data`.
- *                            Default: null.
- *         {string}  pid      The id in `pdata` where `data` may be found (`pdata[pid] == data`).
- *                            Default: null.
- *         {boolean} edit     If true, the item should be displayed as editable.
- *                            Default: false.
+ *         {Object}  parent  The element in which to display data.
+ *                           Default: `this.element`.
+ *         {string}  type    The type of the data to display.
+ *                           Default: "".
+ *         {string}  kind    The kind of the data to display.
+ *                           Default: "".
+ *         {Object}  data    The data to display / display from.
+ *                           Default: `this.model.data` if set, null otherwise.
+ *         {string}  id_str  Default: null.
+ *         {Object}  pdata   The data on the level above `data`.
+ *                           Default: null.
+ *         {string}  pid     The id in `pdata` where `data` may be found (`pdata[pid] == data`).
+ *                           Default: null.
+ *         {boolean} edit    If true, the item should be displayed as editable.
+ *                           Default: false.
+ *         {integer} from    Default: 1.
+ *         {integer} to      Default: `this.options.itemsPerPage`.
  *
  * @return this
  *
@@ -446,17 +445,16 @@ $.any.anyView.prototype.refresh = function (params)
   if (!params || !params.dont_reset_rec)
     this.options.ref_rec = 0; // Reset on every call to refresh, unless specifically told not to do so
 
-  let parent     = params && params.parent     ? params.parent : this.element;
-  let type       = params && params.type       ? params.type   : ""; //this.model && this.model.type ? this.model.type : "";
-  let kind       = params && params.kind       ? params.kind   : "";
-  let data       = params && params.data       ? params.data   : this.model && this.model.data ? this.model.data : null;
-  let id         = params && params.id         ? params.id     : "";
-  let id_str     = params && params.id_str     ? params.id_str : ""; // Id string accumulated through recursion
-  let pdata      = params && params.pdata      ? params.pdata  : null;
-  let pid        = params && params.pid        ? params.pid    : "";
-  let edit       = params && params.edit       ? params.edit   : false;
-  let from       = params && params.from       ? params.from   : 1;
-  let num        = params && params.num        ? params.num    : this.options.itemsPerPage;
+  let parent = params && params.parent ? params.parent : this.element;
+  let type   = params && params.type   ? params.type   : ""; //this.model && this.model.type ? this.model.type : "";
+  let kind   = params && params.kind   ? params.kind   : "";
+  let data   = params && params.data   ? params.data   : this.model && this.model.data ? this.model.data : null;
+  let id_str = params && params.id_str ? params.id_str : ""; // Id string accumulated through recursion
+  let pdata  = params && params.pdata  ? params.pdata  : null;
+  let pid    = params && params.pid    ? params.pid    : "";
+  let edit   = params && params.edit   ? params.edit   : false;
+  let from   = params && params.from   ? params.from   : 1;
+  let num    = params && params.num    ? params.num    : this.options.itemsPerPage;
 
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
@@ -663,8 +661,8 @@ $.any.anyView.prototype.refreshOne = function (params)
   let id         = params.id;
   let par_id_str = params.par_id_str;
   let row_id_str = params.row_id_str;
-  let pdata      = params.pdata;
-  let pid        = params.pid;
+//let pdata      = params.pdata;
+//let pid        = params.pid;
   let edit       = params.edit;
 
   let the_id_str = kind == "list" || kind == "select" ? par_id_str : row_id_str;
@@ -876,12 +874,14 @@ $.any.anyView.prototype.refreshHeader = function (params,skipName)
   let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null; // TODO! Do this other places in the code too
   let n = 0;
   for (let filter_id in filter) {
-    let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
-    let dont_display = skipName && filter_id == name_key;
-    if (d && d[filter_id] && !dont_display) {
-      let filter_key = filter[filter_id];
-      if (filter_key && filter_key.DISPLAY)
-        this.refreshHeaderEntry(parent,data,id,filter_id,n++);
+    if (filter.hasOwnProperty(filter_id)) {
+      let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
+      let dont_display = skipName && filter_id == name_key;
+      if (d && d[filter_id] && !dont_display) {
+        let filter_key = filter[filter_id];
+        if (filter_key && filter_key.DISPLAY)
+          this.refreshHeaderEntry(parent,data,id,filter_id,n++);
+      }
     }
   }
   // Clean up
@@ -934,13 +934,13 @@ $.any.anyView.prototype.refreshIngress = function (params)
     return null;
 
   let ingress_div = params.ingress_div;
-  let type        = params.type;
-  let kind        = params.kind;
+//let type        = params.type;
+//let kind        = params.kind;
   let data        = params.data;
   let id          = params.id;
   let row_id_str  = params.row_id_str;
-  let pdata       = params.pdata;
-  let pid         = params.pid;
+//let pdata       = params.pdata;
+//let pid         = params.pid;
 
   if (!ingress_div)
     return null;
@@ -1309,7 +1309,7 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let par_id_str = params.par_id_str;
-  let pdata      = params.pdata;
+//let pdata      = params.pdata;
   let pid        = params.pid;
 
   let num_results = 0;
@@ -2492,7 +2492,7 @@ $.any.anyView.prototype.createView = function (params)
   try {
     let view_opt = this.getCreateViewOptions(model,parent,kind,data_level,params);
     if (params.showHeader === false)
-      view_opt.showHeader = false
+      view_opt.showHeader = false;
     v_str = params && params.view_class
             ? params.view_class
             : view_opt.grouping
@@ -2946,7 +2946,7 @@ $.any.anyView.prototype.getUploadStr = function (type,kind,id,val,edit,data_item
 {
   // Shows a clickable label that opens a file select dialog when pressed
   let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id; // element id
-  let name    = data_item[type+"_name"];                                 // real file name from user
+//let name    = data_item[type+"_name"];                                 // real file name from user
   let style   = "style='cursor:pointer;'";
   let title   = "title='Select a new file for upload'"; // TODO i18n
   let filter  = this.getFilter(type,kind);
@@ -3331,7 +3331,7 @@ $.any.anyView.prototype._processKeyup = function (event)
     if (event.data) {
       let data   = event.data.data;
       let id     = event.data.id;
-      let is_new = event.data.is_new ? event.data.is_new : data && data[id] ? data[id].is_new : false
+      let is_new = event.data.is_new ? event.data.is_new : data && data[id] ? data[id].is_new : false;
       event.data.is_new = is_new;
       event.data.indata = event.data.data;
       if (this.options.onEnterCallDatabase)
@@ -3821,7 +3821,6 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
         pid:        opt.pid,
         edit:       opt.edit,
       };
-      let have_data = Object.size(opt.data) > 0;
       new_params.data_div  = this.getOrCreateDataContainer(this.element,opt.type,opt.kind,opt.par_id_str);
       new_params.table_div = this.getOrCreateTable(new_params.data_div,opt.type,opt.kind,opt.par_id_str);
       this.refreshData(new_params);

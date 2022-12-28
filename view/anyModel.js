@@ -508,7 +508,7 @@ anyModel.prototype._getDataSourceName = function ()
 {
   if (this.mode == "remote")
     return any_defs.dataScript;
-  this.message = "No local data source. "; // TODO i18n
+  this.message = "No local data source. "; // TODO! i18n
   console.warn("anyModel._getDataSourceName: "+this.message);
   return "";
 }; // _getDataSourceName
@@ -536,7 +536,7 @@ anyModel.prototype._getDataSourceName = function ()
  * @example
  *      mymodel.dataSearch({type:"user",id:"38"});
 */
-// TODO: Not tested with non-numerical indexes
+// TODO! Not tested with non-numerical indexes
 anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
 {
   if (!options || typeof options != "object") {
@@ -560,7 +560,9 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     return null; // Not found
 
   let name_key = type == this.type
-                 ? (this.name_key ? this.name_key : type+"_name")
+                 ? ( this.name_key
+                     ? this.name_key
+                     : type+"_name" )
                  : type+"_name";
   let data_ptr = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
   let dp_type  = data_ptr ? data_ptr.list ? data_ptr.list : data_ptr.item ? data_ptr.item : data_ptr.head ? data_ptr.head : prev_type: prev_type;
@@ -690,7 +692,7 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
   let name_key = type == this.type
                  ? (this.name_key ? this.name_key : type+"_name")
                  : type+"_name";
-  for (let idx in data) { // TODO Should we search entire this.data in case of duplicate ids?
+  for (let idx in data) { // TODO! Should we search entire this.data in case of duplicate ids?
     if (data.hasOwnProperty(idx) && data[idx]) {
       if (isInt(idx)) {
         let dtype = data[idx].list ? data[idx].list : data[idx].item ? data[idx].item : data[idx].head ? data[idx].head : null;
@@ -752,7 +754,7 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
  * @example
  *      mymodel.dataInsert({type:"user",id:"38",indata:{user_name:"Foo Bar"}});
  */
-// TODO: Not tested with non-numerical indexes
+// TODO! Not tested with non-numerical indexes
 anyModel.prototype.dataInsert = function (options)
 {
   if (!options || typeof options != "object") {
@@ -1015,7 +1017,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                            });
           }
           else
-            console.warn("Couldn't add item for "+type+" "+id+" (not found in indata). "); // TODO i18n
+            console.warn("Couldn't add item for "+type+" "+id+" (not found in indata). "); // TODO! i18n
         } // if
       } // if
     } // for
@@ -1038,7 +1040,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
  *
  * @return A pointer to the place where the data was deleted on success, or null if the place was not found or on error.
  */
-// TODO What if type/id combination exists several places in data structure?
+// TODO! What if type/id combination exists several places in data structure?
 anyModel.prototype.dataDelete = function (options)
 {
   if (!options || typeof options != "object") {
@@ -1116,8 +1118,8 @@ anyModel.prototype.dbCreate = function (options)
   let type  = options.type ? options.type : this.type;
 
   let db_timeout_sec = options.timeoutSec
-    				   ? options.timeoutSec
-    				   : this.db_timeout_sec;
+                       ? options.timeoutSec
+                       : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   this.success = options.success ? options.success : this.dbCreateSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
@@ -1241,8 +1243,8 @@ anyModel.prototype.dbSearch = function (options)
     return this.dbSearchNextId(options);
 
   let db_timeout_sec = options.timeoutSec
-    				   ? options.timeoutSec
-    				   : this.db_timeout_sec;
+                       ? options.timeoutSec
+                       : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   this.success = options.success ? options.success : this.dbSearchSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
@@ -1417,8 +1419,8 @@ anyModel.prototype.dbSearchNextId = function (options)
     options = {};
 
   let db_timeout_sec = options.timeoutSec
-    				   ? options.timeoutSec
-    				   : this.db_timeout_sec;
+                       ? options.timeoutSec
+                       : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   $.ajaxSetup({ async: false }); // TODO! Asynchronous database call
   this.success = options.success ? options.success : this.dbSearchNextIdSuccess;
@@ -1602,8 +1604,8 @@ anyModel.prototype.dbUpdate = function (options)
   options.data      = the_data;       // Clean up this data structure after server returns successfully
 
   let db_timeout_sec = options.timeoutSec
-    				   ? options.timeoutSec
-    				   : this.db_timeout_sec;
+                       ? options.timeoutSec
+                       : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   if (options.sync)
     $.ajaxSetup({ async: false });
@@ -1827,8 +1829,8 @@ anyModel.prototype.dbUpdateLinkList = function (options)
   }
 
   let db_timeout_sec = options.timeoutSec
-    				   ? options.timeoutSec
-    				   : this.db_timeout_sec;
+                       ? options.timeoutSec
+                       : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   this.success = options.success ? options.success : this.dbUpdateLinkListSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
@@ -1991,8 +1993,8 @@ anyModel.prototype.dbDelete = function (options)
   }
 
   let db_timeout_sec = options.timeoutSec
-    				   ? options.timeoutSec
-    				   : this.db_timeout_sec;
+                       ? options.timeoutSec
+                       : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   this.success = options.success ? options.success : this.dbDeleteSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
