@@ -224,7 +224,10 @@ class groupTable extends anyTable
     if ($group_id == null)
       $this->mData = $data;
     else
+    if (count($data) > 0 && isset($data["group"]))
       $this->mData = $data["group"];
+    else
+      error_log("Warning: No group data. ");
     return $data;
   } // dbSearchGroupInfo
 
