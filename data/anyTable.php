@@ -1711,6 +1711,8 @@ class anyTable extends dbTable
         $inData["id"] = $this->mMaxId;
       return $inData;
     }
+
+    $data = array("data" => array("+0" => null)); // Make room for a top header
     $d = &$data["data"]["+0"];
 
     // Header
