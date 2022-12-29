@@ -1139,6 +1139,7 @@ class anyTable extends dbTable
         $where .= "AND ".$this->mTableNameGroupLink.".group_id=CAST(".$gid." AS INT) ";
       }
     }
+    /*
     else {
       if ($this->mGrouping && $this->mType != "group" && $this->tableExists($this->mTableNameGroupLink) &&
           !($this->hasParentId() && (isset($this->mLinkType) || (isset($this->mId) && $this->mId != "")))) {
@@ -1149,6 +1150,7 @@ class anyTable extends dbTable
           $where .= " AND ".$n_str;
       }
     }
+    */
     return $where;
   } // findListWhere
 
