@@ -199,8 +199,6 @@ $.widget("any.anyView", {
                       ? this.options.data_level
                       : 0;
 
-    this.group_id = this.options.group_id; // TODO! Can we get rid of this?
-
     this.model = this.options.model
                  ? this.options.model
                  : null;
@@ -664,9 +662,6 @@ $.any.anyView.prototype.refreshOne = function (params)
   let edit       = params.edit;
 
   let the_id_str = kind == "list" || kind == "select" ? par_id_str : row_id_str;
-
-  if (type == "group")
-    this.group_id = id; // TODO! Neccessary?
 
   // Refresh header
   let have_data  = data && Object.size(data[id]) > 0;
@@ -1229,7 +1224,6 @@ $.any.anyView.prototype.refreshThead = function (params)
                          filter_id:  filter_id,
                          filter_key: filter_key,
                          type:       type,
-                         group_id:   this.group_id,
                        };
           th.off("click").on("click",th_opt,$.proxy(fun,this));
         }
@@ -1354,9 +1348,8 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
       let searcher_id = this.id_base+"_"+type+"_"+kind+"_"+par_id_str+"_searcher_foot";
       searcher = $("<div id='"+searcher_id+"' style='display:inline-block;float:right;padding-top:10px;'>"+search_box+"</div>"); // TODO! CSS
       extra_foot.append(searcher);
-      let search_opt = { data: data,
-                         type: type,
-                         group_id: pid,
+      let search_opt = { data:   data,
+                         type:   type,
                          inp_id: search_box_id,
                        };
       searcher.off("keypress").on("keypress", search_opt, $.proxy(this._processSearch,this));
@@ -2542,7 +2535,6 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     view:             this,
     id_base:          this.id_base,
     data_level:       data_level || data_level === 0 ? data_level : this.data_level,
-    group_id:         this.group_id, // Current group id (for table headers)
     grouping:         this.options.grouping,
     item_opening:     this.options.item_opening,
     top_view:         this.options.top_view,
@@ -3136,9 +3128,8 @@ $.any.anyView.prototype.sortTable = function (event)
     console.log("sortTable: Missing event or event.data. "); // TODO! i18n
     return;
   }
-  let type     = event.data.type;
-  let group_id = event.data.group_id;
-  let order    = event.data.filter_id;
+  let type  = event.data.type;
+  let order = event.data.filter_id;
   let last_sort_by = this.options.sortBy;
   this.options.sortBy = order;
   if (this.options.sortBy == last_sort_by)
@@ -3164,7 +3155,6 @@ $.any.anyView.prototype.sortTable = function (event)
   let mod_opt = {
     context:   this.model,
     type:      type,
-    group_id:  group_id,
     from:      from,
     num:       num,
     order:     order,
@@ -3287,9 +3277,6 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     num:       num,
     context:   this.model,
     type:      pager.options.div_info.type,
-    group_id:  this.options.grouping
-               ? pager.options.div_info.group_id
-               : null, // TODO!
     grouping:  this.options.grouping,
     simple:    this.options.grouping === null,
     header:    true, // TODO!
