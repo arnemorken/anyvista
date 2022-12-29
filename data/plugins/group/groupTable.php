@@ -199,10 +199,10 @@ class groupTable extends anyTable
           $this->getCellData($item_id_table,$nextrow,$data,$idx,"group",null,"list");
         }
       }
-      if ($group_id == null)
-        $kind = "head";
+      if ($type == "group" && $group_id == null)
+        $kind = "list";
       else
-        $kind = "item";
+        $kind = "head";
       $data["group"][$idx][$kind] = "group";
     }
     //vlog("dbSearchGroupInfo,data:",$data);
