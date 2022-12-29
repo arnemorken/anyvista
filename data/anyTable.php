@@ -1333,22 +1333,24 @@ class anyTable extends dbTable
 
   protected function getCellData($field,$nextrow,&$data,$idx,$gidx,$filter,$kind)
   {
-    if (isset($nextrow[$field])) {
+    if ($nextrow != null) {
       if ($field == $this->mIdKeyTable)
         $field = $this->mIdKey; // Map id name (e.g. "user_id" and not "ID")
-      if ($field == "user_pass") // TODO! "user_pass" is Wordpress specific
-        $val = ""; // Never send password to client
-      else
-      if ($filter === null || (isset($filter[$field]) && $filter[$field] == 1))
-        $val = htmlentities((string)$nextrow[$field],ENT_QUOTES,'utf-8',FALSE);
-      else
-        $val = null;
-      if ($val != null && $val != "") {
-        if ($kind == "list" || $kind == "head")
-            $data[$gidx][$idx][$field] = $val;
+      if (isset($nextrow[$field])) {
+        if ($field == "user_pass") // TODO! "user_pass" is Wordpress specific
+          $val = ""; // Never send password to client
         else
-          $data[$idx][$field] = $val;
-        //elog("getCellData:".$gidx.",".$idx.",".$field.":".$val);
+        if (($filter === null || (isset($filter[$field]) && $filter[$field] == 1)))
+          $val = htmlentities((string)$nextrow[$field],ENT_QUOTES,'utf-8',FALSE);
+        else
+          $val = null;
+        if ($val != null && $val != "") {
+          if ($kind == "list" || $kind == "head")
+              $data[$gidx][$idx][$field] = $val;
+          else
+            $data[$idx][$field] = $val;
+          //elog("getCellData:".$gidx.",".$idx.",".$field.":".$val);
+        }
       }
     }
   } // getCellData
