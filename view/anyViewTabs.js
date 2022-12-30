@@ -71,7 +71,7 @@ $.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kin
   return tabs_div;
 }; // getOrCreateTabsContainer
 
-$.any.anyViewTabs.prototype.refreshHeader = function (params)
+$.any.anyViewTabs.prototype.refreshHeader = function (params,skipName)
 {
   if (!params || !params.data || !this.options.showHeader)
     return null;
@@ -102,7 +102,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (params)
     }
   }
   // Normal header
-  return $.any.anyView.prototype.refreshHeader.call(this,params);
+  return $.any.anyView.prototype.refreshHeader.call(this,params,skipName);
 }; // refreshHeader
 
 $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
