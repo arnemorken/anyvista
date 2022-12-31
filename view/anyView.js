@@ -1182,7 +1182,7 @@ $.any.anyView.prototype.refreshThead = function (params)
     return null;
   }
   let add_opt = null;
-  if (this.options.showButtonAdd && !this.options.isSelectable && !this.model.data) {
+  if (this.options.showButtonAdd && !this.options.isSelectable /*&& !this.model.data*/) {
     add_opt = {
       type:       type,
       kind:       kind,
@@ -2554,8 +2554,12 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     top_view:         this.options.top_view,
     currentPage:      this.options.currentPage,
     showHeader:       this.options.showHeader,
-    showTableHeader:  params && params.showTableHeader !== undefined ? params.showTableHeader : this.options.showTableHeader,
-    showTableFooter:  params && params.showTableFooter !== undefined ? params.showTableFooter : this.options.showTableFooter,
+    showTableHeader:  params && params.showTableHeader  !== undefined ? params.showTableHeader  : this.options.showTableHeader,
+    showTableFooter:  params && params.showTableFooter  !== undefined ? params.showTableFooter  : this.options.showTableFooter,
+    showButtonEdit:   params && params.showButtonEdit   !== undefined ? params.showButtonEdit   : this.options.showButtonEdit,
+    showButtonUpdate: params && params.showButtonUpdate !== undefined ? params.showButtonUpdate : this.options.showButtonUpdate,
+    showButtonCancel: params && params.showButtonCancel !== undefined ? params.showButtonCancel : this.options.showButtonCancel,
+    onEscEndEdit:     params && params.onEscEndEdit     !== undefined ? params.onEscEndEdit     : this.options.onEscEndEdit,
     showToolbar:      this.options.showToolbar,
     showSearcher:     this.options.showSearcher,
     showPaginator:    this.options.showPaginator,
@@ -2576,10 +2580,6 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     itemLinkClicked:  this.options.itemLinkClicked,
     clickContext:     this.options.clickContext,
     preselected:      this.options.isSelectable ? this.options.preselected : null,
-    showButtonEdit:   params && params.showButtonEdit   !== undefined ? params.showButtonEdit   : this.options.showButtonEdit,
-    showButtonUpdate: params && params.showButtonUpdate !== undefined ? params.showButtonUpdate : this.options.showButtonUpdate,
-    showButtonCancel: params && params.showButtonCancel !== undefined ? params.showButtonCancel : this.options.showButtonCancel,
-    onEscEndEdit:     params && params.onEscEndEdit     !== undefined ? params.onEscEndEdit     : this.options.onEscEndEdit,
   };
 }; // getCreateViewOptions
 
