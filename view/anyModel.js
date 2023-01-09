@@ -515,9 +515,8 @@ anyModel.prototype._getDataSourceName = function ()
 
 /**
  * @method dataSearch
- * @description Search for item of type "type" and id "id" in "data".
- *              If "data" is omitted, `this.data` is used.
- *              If a "type/id" combination exists several places in the tree,
+ * @description Search for item of type `type` and id `id` in `data`.
+ *              If a type/id combination exists several places in the tree,
  *              only the first occurence found is returned.
  * @param {Object} options An object which may contain these elements:
  *
@@ -575,7 +574,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
   }
   let itemlist = [];
   for (let idx in data) {
-    if (data.hasOwnProperty(idx) && data[idx] && !["head","item","list"].includes(idx)) {
+    if (data.hasOwnProperty(idx) && data[idx] && !idx.startsWith("grouping") &&  !["head","item","list"].includes(idx)) {
       let item = null;
       let dtype = data[idx].list ? data[idx].list : data[idx].item ? data[idx].item : data[idx].head ? data[idx].head : prev_type;
       if (dtype == type || (!dtype && data[idx][name_key])) {
@@ -602,7 +601,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
         let p_idx  = options.parent ? idx  : null;
         let data_ptr  = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
         let prev_type = data_ptr ? data_ptr.list ? data_ptr.list : data_ptr.item ? data_ptr.item : data_ptr.head ? data_ptr.head : this.type: this.type;
-        item = this.dataSearch({data:data[idx].data,id:id,type:type,prev_type},p_data,p_idx);
+        item = this.dataSearch({data:data[idx].data,id:id,type:type,prev_type:prev_type},p_data,p_idx);
         if (item && item.data)
           item = item.data;
       }
@@ -940,6 +939,8 @@ anyModel.prototype.dataUpdate = function (options)
  *        {integer} insert_id: The id of the item where the selected items should be inserted.
  *                             Mandatory if `indata` is specified.
  *        {String}  name_key:
+ *        {integer} link_id:
+ *        {String}  link_type:
  *
  * @return true on success, false on error.
  *
@@ -964,13 +965,6 @@ anyModel.prototype.dataUpdateLinkList = function (options)
     this.data = options.data;
   else {
     // Delete items
-    if (options.link_id) {
-      this.dataDelete({ data: this.data,
-                        id:   options.link_id,
-                        type: options.link_type,
-                     });
-    }
-    else
     if (options.unselect) {
       for (let id of options.unselect) {
         if (parseInt(id) != parseInt(options.link_id)) {
@@ -983,6 +977,13 @@ anyModel.prototype.dataUpdateLinkList = function (options)
           //  delete this.data[this.id];
         }
       } // for
+    } // if
+    else
+    if (options.link_id) {
+      this.dataDelete({ data: this.data,
+                        id:   options.link_id,
+                        type: options.link_type,
+                     });
     } // if
   } // else
   // Insert items
@@ -1827,7 +1828,6 @@ anyModel.prototype.dbUpdateLinkList = function (options)
     console.error("anyModel.dbUpdateLinkList: "+i18n.error.ID_ILLEGAL);
     return false;
   }
-
   let db_timeout_sec = options.timeoutSec
                        ? options.timeoutSec
                        : this.db_timeout_sec;
