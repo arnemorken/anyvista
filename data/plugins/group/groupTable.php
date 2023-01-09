@@ -167,44 +167,46 @@ class groupTable extends anyTable
   // Return info of one or all groups of a given type
   protected function dbSearchGroupInfo($type=null,$group_id=null)
   {
-    $stmt = "SELECT ".$this->getTableName().".group_id,".
-                      $this->getTableName().".group_type,".
-                      $this->getTableName().".group_name,".
-                      $this->getTableName().".group_description,".
-                      $this->getTableName().".group_sort_order,".
-                      $this->getTableName().".parent_id ".
-            "FROM ".$this->getTableName()." ";
-    $where = "";
-    if ($type && $type != "group")
-      $where = "WHERE group_type='".$type."' ";
-    if ($group_id && $group_id != "nogroup") {
-      $db_gid = is_numeric($group_id) ? "CAST(".$group_id." AS INT)" : "'".$group_id."'";
-      if ($where == null)
-        $where .= "WHERE group_id=".$db_gid." ";
-      else
-        $where .= "AND group_id=".$db_gid." ";
-    }
-    $stmt .= $where."ORDER BY group_sort_order,group_id,group_type";
-    //error_log("dbSearchGroupInfo:".$stmt);
-    if (!$this->tableExists($this->getTableName()) ||
-        !$this->query($stmt))
-      error_log("Warning: No group tree. ");
-
     $data = array();
-    while (($nextrow = $this->getNext(true)) != null) {
-      $idx = "+".$nextrow[$this->mIdKeyTable];
-      if ($this->mTableFields) {
-        for ($t=0; $t<count($this->mTableFields); $t++) {
-          $item_id_table = $this->mTableFields[$t];
-          $this->getCellData($item_id_table,$nextrow,$data,$idx,"group",null,"list");
-        }
+    if ($group_id != "nogroup") { // No need to search if we say we dont want a group!
+      $stmt = "SELECT ".$this->getTableName().".group_id,".
+                        $this->getTableName().".group_type,".
+                        $this->getTableName().".group_name,".
+                        $this->getTableName().".group_description,".
+                        $this->getTableName().".group_sort_order,".
+                        $this->getTableName().".parent_id ".
+              "FROM ".$this->getTableName()." ";
+      $where = "";
+      if ($type && $type != "group")
+        $where = "WHERE group_type='".$type."' ";
+      if ($group_id && $group_id != "nogroup") {
+        $db_gid = is_numeric($group_id) ? "CAST(".$group_id." AS INT)" : "'".$group_id."'";
+        if ($where == null)
+          $where .= "WHERE group_id=".$db_gid." ";
+        else
+          $where .= "AND group_id=".$db_gid." ";
       }
-      if ($type == "group" && $group_id == null)
-        $kind = "list";
-      else
-        $kind = "head";
-      $data["group"][$idx][$kind] = "group";
-    }
+      $stmt .= $where."ORDER BY group_sort_order,group_id,group_type";
+      //error_log("dbSearchGroupInfo:".$stmt);
+      if (!$this->tableExists($this->getTableName()) ||
+          !$this->query($stmt))
+        error_log("Warning: No group tree. ");
+
+      while (($nextrow = $this->getNext(true)) != null) {
+        $idx = "+".$nextrow[$this->mIdKeyTable];
+        if ($this->mTableFields) {
+          for ($t=0; $t<count($this->mTableFields); $t++) {
+            $item_id_table = $this->mTableFields[$t];
+            $this->getCellData($item_id_table,$nextrow,$data,$idx,"group",null,"list");
+          }
+        }
+        if ($type == "group" && $group_id == null)
+          $kind = "list";
+        else
+          $kind = "head";
+        $data["group"][$idx][$kind] = "group";
+      }
+    } // if
     //vlog("dbSearchGroupInfo,data:",$data);
     if ($this->mGrouping) {
       // Get group tree and append data to it
