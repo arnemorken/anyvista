@@ -1338,8 +1338,9 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
                    hideGoto:     true,
                    // Set in paginator options that are sent to onClick handler:
                    div_info: {
-                     type: type,
-                     kind: kind,
+                     type:     type,
+                     kind:     kind,
+                     group_id: params.pid,
                    },
                 });
         pager.numItems(num_results);
@@ -3290,10 +3291,11 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     from:      from,
     num:       num,
     context:   this.model,
+    group_id:  pager.options.div_info.group_id,
     type:      pager.options.div_info.type,
     grouping:  this.options.grouping,
     simple:    this.options.grouping === null,
-    header:    true, // TODO!
+    header:    false, // TODO!
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
   };
