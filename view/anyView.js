@@ -4261,11 +4261,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           select_list_view.options.preselected     = parent_view.model.dataSearch({ type:list_type });
           let mod_opt = { select: new Set() };
           if (select_list_view.options && select_list_view.options.preselected)
-            for (var val of select_list_view.options.preselected) {
-              let sel_id = val[select_list_view.model.id_key];
-              if (sel_id && sel_id != self.id && (self.type != val.list || !val.parent_id || val.parent_id == self.id))
-                mod_opt.select.add(parseInt(val[select_list_view.model.id_key]));
-            }
+            parent_view._addSelections(self.type,self.id,select_list_view.model,select_list_view.options.preselected,mod_opt);
           select_list_view.model.dataInit(mod_opt);
           let par_view_id = parent_view.id_base+"_"+self.type+"_head_0_data";
           w3_modaldialog({
@@ -4310,6 +4306,18 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
   }
   return context;
 }; // dbUpdateLinkListDialog
+
+$.any.anyView.prototype._addSelections = function (type,id,model,preselected,mod_opt)
+{
+  for (var val in preselected) {
+    let d = preselected[val];
+    let sel_id = d[model.id_key];
+    if (sel_id && parseInt(sel_id) != parseInt(id) /*&& (type != d.list || !d.parent_id || d.parent_id == id)*/)
+      mod_opt.select.add(parseInt(d[model.id_key]));
+    if (d.data)
+      this._addSelections(type,id,model,d.data,mod_opt);
+  }
+}; // _addSelections
 
 $.any.anyView.prototype.dbUpdateLinkList = function (opt)
 {
