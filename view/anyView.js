@@ -3990,20 +3990,20 @@ $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,
         let the_id    = Number.isInteger(parseInt(options.child_id)) ? parseInt(options.child_id) : options.child_id;
         let id_str    = "0_"+the_id;
         let data      = serverdata.data;
-        let item_id = view.id_base+"_"+options.type+"_"+kind+"_"+id_str+"_parent_id .itemSelect";
+        let itemsel_id = view.id_base+"_"+options.type+"_"+kind+"_"+id_str+"_parent_id .itemSelect";
         let did_select = "selected='true'";
         $.each(data,function (id,item) {
           if (parseInt(id) != the_id) {
             let sel = parseInt(id) == parseInt(options.parent_id) ? "selected='true'" : "";
             let pname = data[id][type_name];
-            $("#"+item_id).append($("<option "+sel+">").attr("value",parseInt(id)).text(pname));
+            $("#"+itemsel_id).append($("<option "+sel+">").attr("value",parseInt(id)).text(pname));
             if (sel != "") {
-              $("#"+item_id+"-button .ui-selectmenu-text").text(item[type_name]); // TODO! .ui-selectmenu-text no longer used
+              $("#"+itemsel_id+"-button .ui-selectmenu-text").text(item[type_name]); // TODO! .ui-selectmenu-text no longer used
               did_select = "";
             }
           }
         });
-        $("#"+item_id).prepend($("<option "+did_select+">").attr("value","null").text("[None]")); // TODO! i18n
+        $("#"+itemsel_id).prepend($("<option "+did_select+">").attr("value","null").text("[None]")); // TODO! i18n
       } // if view
     }
   }
