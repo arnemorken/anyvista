@@ -4362,7 +4362,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   let id        = event.data.id;
   let pdata     = event.data.pdata;
   let pid       = event.data.pid;
-  let id_str    = event.data.id_str;
+  let id_str    = event.data.row_id_str;
   let link_id   = pid && pdata && pdata[pid] ? pid : null;
   let link_type = pid && pdata && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
   if (!data || !data[id]) {
