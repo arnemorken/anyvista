@@ -53,12 +53,12 @@ $.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,kind,da
 //
 // Get the current tab container (div), or create a new one if it does not exist
 //
-$.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kind,id_str)
+$.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kind,data_level)
 {
   if (!parent)
     return null;
 
-  let tabs_id  = this.getIdBase()+"_"+type+"_"+kind+"_"+id_str+"_tabs";
+  let tabs_id  = this.getIdBase()+"_"+type+"_"+kind+"_"+data_level+"_tabs";
   let tabs_div = $("#"+tabs_id);
   if (!tabs_div.length) {
     let class_id = "any-datatabs-container w3-bar w3-dark-grey";
@@ -119,12 +119,11 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
   let data       = params.data;
   let id         = params.id;
   let row_id_str = params.row_id_str;
-  let par_id_str = params.par_id_str;
 
   // Get or create a container for the header tab buttons
   let ptype = this._findType(params.pdata,params.pid,type);
   let pkind = this._findKind(params.pdata,params.pid,kind);
-  let tab_panel = this.getOrCreateTabsContainer(parent,ptype,pkind,par_id_str);
+  let tab_panel = this.getOrCreateTabsContainer(parent,ptype,pkind,this.data_level);
 
   // Add a new header tab button in tab panel if it doesnt already exists
   let id_base = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str;
