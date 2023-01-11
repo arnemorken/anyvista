@@ -41,9 +41,9 @@ $.widget("any.anyViewTabs", $.any.anyView, {
   }
 }); // ViewTabs widget constructor
 
-$.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,kind,data_level,params)
+$.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,kind,data_level,indent_level,params)
 {
-  let opt = $.any.anyView.prototype.getCreateViewOptions.call(this,model,parent,kind,data_level,params);
+  let opt = $.any.anyView.prototype.getCreateViewOptions.call(this,model,parent,kind,data_level,indent_level,params);
   opt.first_id_base   = this.first_id_base;
   opt.current_id_base = this.current_id_base;
   opt.grouping        = "tabs";

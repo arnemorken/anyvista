@@ -161,9 +161,9 @@ $.widget("any.anyView", {
     reset_listeners:   true, // The array of listeners will be erased on each call to the constructor.
     top_view:          null, // The top view for all views in the view tree (used by dialogs and item view)
     id_base:           "",
-    data_level:        0,    // Current "vertical" level in data tree (used for class ids)
+    data_level:        0,    // Current vertical level in data tree (used for class ids)
     indent_tables:     false,
-    indent_level:      0,
+    indent_level:      0,    // Current horisontal level in data tree (used for indentation of rows)
     indent_amount:     20,
     cutoff:            100,
     item_opening:      false,
@@ -198,6 +198,10 @@ $.widget("any.anyView", {
     this.data_level = this.options.data_level
                       ? this.options.data_level
                       : 0;
+
+    this.indent_level = this.options.indent_level
+                        ? this.options.indent_level
+                        : 0;
 
     this.model      = this.options.model
                       ? this.options.model
@@ -519,14 +523,15 @@ $.any.anyView.prototype.refresh = function (params)
             let view_class = params && params.view_class ? params.view_class : null;
             let mdl        = params && params.model      ? params.model      : null;
             view = view.createView({
-                      parent:     the_parent,
-                      type:       curr_type,
-                      kind:       curr_kind,
-                      data:       data,
-                      id:         idc,
-                      data_level: view.data_level,
-                      view_class: view_class,
-                      model:      mdl, // Let the calling method specify the model explicitely
+                      parent:       the_parent,
+                      type:         curr_type,
+                      kind:         curr_kind,
+                      data:         data,
+                      id:           idc,
+                      data_level:   view.data_level,
+                      indent_level: view.indent_level,
+                      view_class:   view_class,
+                      model:        mdl, // Let the calling method specify the model explicitely
                    });
           }
           if (view) {
@@ -2442,15 +2447,16 @@ $.any.anyView.prototype.bindTableDataCellEdit = function (elem,params)
 //
 $.any.anyView.prototype.createView = function (params)
 {
-  let parent     = params && params.parent     ? params.parent     : null;
-  let type       = params && params.type       ? params.type       : null;
-  let kind       = params && params.kind       ? params.kind       : null;
-  let data       = params && params.data       ? params.data       : null;
-  let id         = params && params.id         ? params.id         : "";
-  let data_level = params && params.data_level ? params.data_level : 0;
-  let model      = params && (params.model || params.model===null)
-                   ? params.model
-                   : null;
+  let parent       = params && params.parent       ? params.parent       : null;
+  let type         = params && params.type         ? params.type         : null;
+  let kind         = params && params.kind         ? params.kind         : null;
+  let data         = params && params.data         ? params.data         : null;
+  let id           = params && params.id           ? params.id           : "";
+  let data_level   = params && params.data_level   ? params.data_level   : 0;
+  let indent_level = params && params.indent_level ? params.indent_level : 0;
+  let model        = params && (params.model || params.model===null)
+                     ? params.model
+                     : null;
   if (!parent)
     parent = this.element;
   if (!parent)
@@ -2492,7 +2498,7 @@ $.any.anyView.prototype.createView = function (params)
   let v_str = "";
   let view = null;
   try {
-    let view_opt = this.getCreateViewOptions(model,parent,kind,data_level,params);
+    let view_opt = this.getCreateViewOptions(model,parent,kind,data_level,indent_level,params);
     if (params.showHeader === false)
       view_opt.showHeader = false;
     v_str = params && params.view_class
@@ -2538,7 +2544,7 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
 }; // getCreateModelOptions
 
 // TODO! options.localRemove etc. must be sent as params when creating new view
-$.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_level,params)
+$.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_level,indent_level,params)
 {
   return {
     model:            model,
@@ -2546,7 +2552,8 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     id:               parent.attr("id"),
     view:             this,
     id_base:          this.id_base,
-    data_level:       data_level || data_level === 0 ? data_level : this.data_level,
+    data_level:       data_level   || data_level   === 0 ? data_level   : this.data_level,
+    indent_level:     indent_level || indent_level === 0 ? indent_level : this.indent_level,
     grouping:         this.options.grouping,
     item_opening:     this.options.item_opening,
     top_view:         this.options.top_view,
@@ -3212,11 +3219,13 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
     let ll_contents = $("<div id='"+ll_id+"'></div>");
 
     let search_view = self.createView({
-                         parent: ll_contents,
-                         data:   self.model.data,
-                         id:     null,
-                         type:   list_type,
-                         kind:   "list",
+                         parent:       ll_contents,
+                         data:         self.model.data,
+                         data_level:   0,
+                         indent_level: 0,
+                         id:           null,
+                         type:         list_type,
+                         kind:         "list",
                       });
     if (search_view) {
       if (search_view.model && self.model)
@@ -3292,10 +3301,12 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     type:      pager.options.div_info.type,
     grouping:  this.options.grouping,
     simple:    this.options.grouping === null,
-    header:    false, // TODO!
+    header:    false,
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
   };
+  this.options.data_level = 0;
+  this.data_level = 0; // TODO! Why is this in 2 places?
   if (this.model.mode == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
     this.options.ref_rec = 0;
     mod_opt.from -= 1; // from is 0-based on server
@@ -3692,13 +3703,14 @@ $.any.anyView.prototype._doShowItem = function (opt)
 
   // Create and prepare a new display area
   let view = this.createView({
-    parent:     this.element,
-    model:      null, // Create a new model
-    type:       type,
-    kind:       kind,
-    data:       the_item,
-    id:         the_id,
-    data_level: 0, // Reset data_level for the new view
+    parent:       this.element,
+    model:        null, // Create a new model
+    type:         type,
+    kind:         kind,
+    data:         the_item,
+    id:           the_id,
+    data_level:   0, // Reset data_level for the new view
+    indent_level: 0, // Reset indent_level for the new view
     showHeader:       opt.showHeader       === false     ? false                : true,
     showButtonEdit:   opt.showButtonEdit   !== undefined ? opt.showButtonEdit   : this.options.showButtonEdit,
     showButtonUpdate: opt.showButtonUpdate !== undefined ? opt.showButtonUpdate : this.options.showButtonUpdate,
@@ -4247,6 +4259,8 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                                   kind:   "list",
                                   data:   serverdata.data,
                                   id:     null,
+                                  data_level:   0,
+                                  indent_level: 0,
                                });
         if (select_list_view) {
           select_list_view.id_base = new_id_base;
