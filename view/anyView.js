@@ -587,12 +587,11 @@ $.any.anyView.prototype.refresh = function (params)
     if (!this.options.isSelectable && this.model.type && this.data_level==0 && id_str == "" &&
         (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
       this.refreshToolbarBottom({
-         parent:     parent,
-         type:       this.model.type,
-         kind:       this.model.kind,
-         data:       data,
-         id:         this.model.id,
-         par_id_str: "",
+         parent: parent,
+         type:   this.model.type,
+         kind:   this.model.kind,
+         data:   data,
+         id:     this.model.id,
       });
     }
   }
@@ -674,7 +673,7 @@ $.any.anyView.prototype.refreshOne = function (params)
                                                      have_data:  have_data,
                                                      doNotEmpty: false,
                                                   });
-  params.parent  = header_div;
+  params.parent = header_div;
   this.refreshHeader(params);
 
   // Refresh data
@@ -739,12 +738,11 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
   if (!params)
     return null;
 
-  let parent     = params.parent;
-  let type       = params.type;
-  let kind       = params.kind;
-  let data       = params.data;
-  let id         = params.id;
-  let par_id_str = params.par_id_str;
+  let parent = params.parent;
+  let type   = params.type;
+  let kind   = params.kind;
+  let data   = params.data;
+  let id     = params.id;
 
   if (!parent || !type)
     return null;
@@ -752,7 +750,7 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
     return null;
 
   // Create container
-  let div_id   = this.id_base+"_"+type+"_"+par_id_str+"_toolbar";
+  let div_id   = this.id_base+"_"+type+"_toolbar";
   let class_id = "any-toolbar-bottom any-toolbar any-toolbar-"+this.data_level;
   if ($("#"+div_id).length)
     $("#"+div_id).remove();
@@ -769,13 +767,12 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
   }
   if (this.options.showButtonNew) {
     // Create a "new item"  button
-    this.refreshNewItemButton({ parent:     bardiv,
-                                type:       type,
-                                kind:       "item",
-                                data:       data,
-                                id:         id, // Find a new id
-                                par_id_str: par_id_str,
-                                is_new:     true,
+    this.refreshNewItemButton({ parent: bardiv,
+                                type:   type,
+                                kind:   "item",
+                                data:   data,
+                                id:     id, // Find a new id
+                                is_new: true,
                              });
   }
   if (this.options.showButtonAddLink && this.model.id) {
@@ -827,7 +824,7 @@ $.any.anyView.prototype.getOrCreateHeaderContainer = function (params)
   let haveData   = params.have_data;
   let doNotEmpty = params.doNotEmpty;
 
-  if (!parent || !this.options.showHeader)
+  if (!parent || !type || !this.options.showHeader)
     return null;
 
   let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_header";
@@ -965,14 +962,14 @@ $.any.anyView.prototype.refreshData = function (params)
   let edit       = params.edit;
   let par_id_str = params.par_id_str;
 
-  let extra_foot = this.getOrCreateExtraFoot(table_div,type,kind,par_id_str);
+  let extra_foot = this.getOrCreateDataFooter(table_div,type,kind,par_id_str);
   if (extra_foot) {
-    this.refreshExtraFoot({
+    this.refreshDataFooter({
        parent:     extra_foot,
        type:       type,
        kind:       kind,
        data:       data,
-       id:         id,
+       id:         id, // Not used
        pdata:      pdata,
        pid:        pid,
        edit:       edit,
@@ -1041,7 +1038,7 @@ $.any.anyView.prototype.getOrCreateDataContainer = function (params)
   let kind   = params.kind;
   let id_str = params.id_str;
 
-  if (!parent)
+  if (!parent || !type)
     return null;
 
   let div_id   = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_data";
@@ -1067,7 +1064,7 @@ $.any.anyView.prototype.getOrCreateTable = function (params)
   let kind   = params.kind;
   let id_str = params.id_str;
 
-  if (!parent)
+  if (!parent || !type)
     return null;
 
   let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_table";
@@ -1140,20 +1137,20 @@ $.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
 //
 // Create a special footer to contain pager, search box, etc.
 //
-$.any.anyView.prototype.getOrCreateExtraFoot = function (table,type,kind,id_str)
+$.any.anyView.prototype.getOrCreateDataFooter = function (table,type,kind,id_str)
 {
   if (!table || !type || !kind ||
       (kind != "list" && kind != "select"))
     return null;
 
-  let foot_div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_extrafoot";
-  let foot_div = $("#"+foot_div_id); // Can we reuse extrafoot?
+  let foot_div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_datafooter";
+  let foot_div = $("#"+foot_div_id); // Can we reuse datafooter?
   if (!foot_div.length) {
-    foot_div = $("<div id='"+foot_div_id+"' class='table_extrafoot'></div>");
+    foot_div = $("<div id='"+foot_div_id+"' class='table_datafooter'></div>");
     foot_div.insertAfter(table);
   }
   return foot_div;
-}; // getOrCreateExtraFoot
+}; // getOrCreateDataFooter
 
 //
 // Refresh a table header
@@ -1302,7 +1299,7 @@ $.any.anyView.prototype.refreshTfoot = function (params)
 //
 // Refresh the extra table footer
 //
-$.any.anyView.prototype.refreshExtraFoot = function (params)
+$.any.anyView.prototype.refreshDataFooter = function (params)
 {
   if (!params || !params.parent)
     return null;
@@ -1369,7 +1366,7 @@ $.any.anyView.prototype.refreshExtraFoot = function (params)
     extra_foot.data("searcher",searcher);
   } // if
   return extra_foot;
-}; // refreshExtraFoot
+}; // refreshDataFooter
 
 //
 // Refresh a single table row
@@ -2144,7 +2141,7 @@ $.any.anyView.prototype.refreshNewItemButton = function (opt)
 
   let tit_str = this.options.newButtonLabel ? this.options.newButtonLabel : i18n.button.buttonNew+" "+opt.type;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'> "+/*tit_str+*/"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_"+opt.par_id_str+"_new_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.kind+"_new_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-new-icon any-icon pointer' title='"+tit_str+"'>"+
@@ -3153,7 +3150,7 @@ $.any.anyView.prototype.sortTable = function (event)
   let num  = null;
   let table = $("#"+event.data.table_id);
   if (table.length && this.options.showPaginator) {
-    let extra_foot = table.parent().find(".table_extrafoot");
+    let extra_foot = table.parent().find(".table_datafooter");
     if (extra_foot.length) {
       let pager = extra_foot.data("pager");
       if (pager) {
@@ -4294,13 +4291,12 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
     if (view.options.showToolbar) {
       view.options.item_opening = true; // To make top right close icon appear
       view.refreshToolbarBottom({
-         parent:     view.element,
-         type:       view.model.type,
-         kind:       view.model.kind,
-         data:       view.model.data,
-         id:         view.model.id,
-         par_id_str: "",
-         edit:       false,
+         parent: view.element,
+         type:   view.model.type,
+         kind:   view.model.kind,
+         data:   view.model.data,
+         id:     view.model.id,
+         edit:   false,
       });
     }
   }
@@ -4363,7 +4359,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   let pdata     = event.data.pdata;
   let pid       = event.data.pid;
   let id_str    = event.data.row_id_str;
-  let link_id   = pid && pdata && pdata[pid] ? pid : null;
+  let link_id   = pid && pdata && pdata[pid] ? pid : null; // TODO! Set correct link_id here, not in model!
   let link_type = pid && pdata && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
   if (!data || !data[id]) {
     console.warn("Data not found ("+type+" id="+id+"). ");
