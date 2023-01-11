@@ -29,11 +29,13 @@ $.widget("any.anyViewTabs", $.any.anyView, {
   _create: function() {
     this._super();
     this.element.addClass("any-datatabs-view");
-    this.first_id_base = null;
+    this.first_id_base   = this.options.first_id_base   ? this.options.first_id_base : null;
+    this.current_id_base = this.options.current_id_base ? this.options.current_id_base : null;
   },
 
   _destroy: function() {
-    this.first_id_base = this.options.first_id_base ? this.options.first_id_base : null;
+    this.first_id_base   = null;
+    this.current_id_base = null;
     this.element.removeClass("any-datatabs-view");
     this._super();
   }
@@ -42,20 +44,21 @@ $.widget("any.anyViewTabs", $.any.anyView, {
 $.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,kind,data_level,params)
 {
   let opt = $.any.anyView.prototype.getCreateViewOptions.call(this,model,parent,kind,data_level,params);
-  opt.first_id_base = this.first_id_base;
-  opt.grouping      = "tabs";
+  opt.first_id_base   = this.first_id_base;
+  opt.current_id_base = this.current_id_base;
+  opt.grouping        = "tabs";
   return opt;
 }; // getCreateViewOptions
 
 //
 // Get the current tab container (div), or create a new one if it does not exist
 //
-$.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kind,data_level)
+$.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kind,id_str)
 {
   if (!parent)
     return null;
 
-  let tabs_id  = this.getIdBase()+"_"+type+"_"+kind+"_"+data_level+"_tabs";
+  let tabs_id  = this.getIdBase()+"_"+type+"_"+kind+"_"+id_str+"_tabs";
   let tabs_div = $("#"+tabs_id);
   if (!tabs_div.length) {
     let class_id = "any-datatabs-container w3-bar w3-dark-grey";
@@ -116,17 +119,19 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
   let data       = params.data;
   let id         = params.id;
   let row_id_str = params.row_id_str;
+  let par_id_str = params.par_id_str;
 
   // Get or create a container for the header tab buttons
   let ptype = this._findType(params.pdata,params.pid,type);
   let pkind = this._findKind(params.pdata,params.pid,kind);
-  let tab_panel = this.getOrCreateTabsContainer(parent,ptype,pkind,this.data_level);
+  let tab_panel = this.getOrCreateTabsContainer(parent,ptype,pkind,par_id_str);
 
   // Add a new header tab button in tab panel if it doesnt already exists
   let id_base = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str;
   let tab_btn_id    = id_base+"_data_tab_btn";
   let tab_header_id = id_base+"_header";
   let tab_data_id   = id_base+"_data";
+  let first = false;
   if (!$("#"+tab_btn_id).length) {
     // Create tab button
     let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null;
@@ -134,10 +139,11 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
     let tab_str  = d && (d[name_key] || d[name_key] == "")
                    ? d[name_key]
                    : "Other "+type+"s"; // TODO i18n
-    let tab_btn = $("<button class='anyTabButton w3-bar-item w3-button' id='"+tab_btn_id+"'>"+tab_str+"</button>");
+    let tab_btn = $("<button id='"+tab_btn_id+"' class='anyTabButton w3-bar-item w3-button'>"+tab_str+"</button>");
     tab_panel.append(tab_btn);
     // Bind click on tab
     tab_btn.off("click").on("click",{ id_base: id_base },$.proxy(this.openTab,this));
+    first = true;
   }
   // Remember the first tab
   if (this.first_id_base == undefined || this.first_id_base == null)
@@ -148,7 +154,9 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
   let cid = elems.first().attr("id")
   if (cid) {
     this.first_id_base = cid.substring(0,cid.indexOf("_data_tab_btn"));
-    this.openTab();
+    if (!first && id_base != this.current_id_base)
+      this.current_id_base = id_base;
+    this.openTab({ id_base:this.current_id_base });
   }
 }; // refreshTabPanel
 
@@ -156,16 +164,20 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
 $.any.anyViewTabs.prototype.refreshData = function (params)
 {
   let table_div = $.any.anyView.prototype.refreshData.call(this,params);
-  this.openTab();
+  this.openTab({id_base:this.current_id_base});
   return table_div;
 }; // refreshData
 
 // Display a tab
 // If called by user clicking a tab: Hide/inactivate currently active tab and show/activate new tab.
 // If called by a function: Show/activate currently active tab.
-$.any.anyViewTabs.prototype.openTab = function (event)
+$.any.anyViewTabs.prototype.openTab = function (eventOrData)
 {
-  let id_base = event && event.data ? event.data.id_base : event ? event.id_base : this.first_id_base;
+  let id_base = eventOrData && eventOrData.data
+                ? eventOrData.data.id_base
+                : eventOrData && eventOrData.id_base
+                  ? eventOrData.id_base
+                  : this.first_id_base;
   if (!id_base)
     return;
   let curr_tab_btn = $("#"+id_base+"_data_tab_btn");
@@ -188,6 +200,7 @@ $.any.anyViewTabs.prototype.openTab = function (event)
 
   if (this.first_id_base == undefined || this.first_id_base == null)
     this.first_id_base = id_base;
+  this.current_id_base = id_base;
   return;
 }; // openTab
 
