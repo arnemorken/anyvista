@@ -786,8 +786,8 @@ function testModel()
       deepEqual(dm.data !== null,
                 true, "dbSearch({id:'1'}) returns item data:"+JSON.stringify(dm.data));
       deepEqual(dm.data !== null &&
-                dm.data["+1"]["user_id"]   === "1" &&
-                dm.data["+1"]["user_name"] === "Administrator",
+                dm.data["+0"].data["+1"]["user_id"]   === "1" &&
+                dm.data["+0"].data["+1"]["user_name"] === "Administrator",
                 true, "dbSearch({id:'1'}) returns expected data");
       start();
     }, millisec);
@@ -902,7 +902,7 @@ function testModel()
       let dm2 = new anyModel({type:"user",search:false,mode:"remote",data:null});
       dm2.dbSearch({type:"user",id:2});
       setTimeout(function() {
-        deepEqual(dm2.data && dm2.data["+2"].user_name === "The faz user",
+        deepEqual(dm2.data && dm2.data["+0"].data["+2"].user_name === "The faz user",
                   true, "dbUpdate({type:'user',id:2}) returns with correct data in database");
         start();
       }, millisec);
@@ -1002,9 +1002,9 @@ function testModel()
       let dm2 = new anyModel({type:"user",search:false,mode:"remote",data:null});
       dm2.dbSearch({type:"user",id:2});
       setTimeout(function() {
-        deepEqual(dm2.data["+2"].user_name === "The faz user",
+        deepEqual(dm2.data["+0"].data["+2"].user_name === "The faz user",
                   true, "dbUpdate({type:'user',id:2}) with different model type returns with correct data in database:"+
-                        dm2.data["+2"].user_name);
+                        dm2.data["+0"].data["+2"].user_name);
         start();
       }, millisec);
     }, millisec);
