@@ -134,7 +134,7 @@ $.widget("any.anyView", {
     onFocusoutRemoveEmpty: true,
   //onUpdateEndEdit:       true, // TODO! NOT IMPLEMENTED
     useOddEven:            true,
-    defaultKind:           "list",
+    defaultKind:           "head",
     itemsPerPage:          20,
     currentPage:           1,
     grouping:              "",
@@ -334,8 +334,6 @@ $.any.anyView.prototype._findType = function (data,id,otype)
   if (!type)
     type = otype;
   if (!type)
-    type = this.model.type;
-  if (!type)
     type = "";
   return type;
 }; // _findType
@@ -499,11 +497,6 @@ $.any.anyView.prototype.refresh = function (params)
           // Find the type and kind of the current data item
           let curr_type = view._findType(data,idc,prev_type);
           let curr_kind = view._findKind(data,idc,prev_kind);
-          // Skip the current data item if we could not determine its type or kind
-          if (!curr_type || !curr_kind) {
-            console.warn(i18n.error.TYPEKIND_MISSING+idc+" ("+curr_type+","+curr_kind+")");
-            continue;
-          }
           // Find identifier strings for containers and rows
           let idx = Number.isInteger(parseInt(idc))
                     ? ""+parseInt(idc)
@@ -516,7 +509,7 @@ $.any.anyView.prototype.refresh = function (params)
                                 : id_str
                               : idx;
           // Create new view whenever we encounter a new type or a new kind
-          if (prev_type != curr_type || (prev_kind != curr_kind && prev_kind != "")) {
+          if (curr_type != "" && (prev_type != curr_type || (prev_kind != curr_kind && prev_kind != ""))) {
             // If the new type/kind is contained within a list, create a new row to contain a new parent container
             if (prev_kind == "list" || prev_kind == "select")
               the_parent = view._addContainerRow(parent,prev_type,prev_kind,curr_type,curr_kind,par_id_str);
@@ -2574,7 +2567,6 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     sortBy:           this.options.sortBy,
     sortDirection:    this.options.sortDirection,
     link_options:     this.options.link_options,
-    indent_level:     this.options.indent_level,
     cutoff:           this.options.cutoff,
     // Give same permissions to new view as the current one. This may not always
     // be the desired behaviour, in that case override this method and correct.
