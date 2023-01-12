@@ -1719,11 +1719,11 @@ class anyTable extends dbTable
 
     // Header
     $h = Parameters::get("header");
-    if ($h && $h != "true" && $h != "1")
+    if ($h && $h != "false" && $h != "true")
       $hdr = $h; // Use the header provided in the in-parameter
     if (!isset($this->mId) || $this->mId == "") {
       // List
-      if (!isset($hdr) && ($h == "true" || $h == "1"))
+      if (!isset($hdr) && $h == "true")
         $hdr = $this->findDefaultListHeader($this->mType);
       // Number of results.
       if (!$this->mGrouping)
