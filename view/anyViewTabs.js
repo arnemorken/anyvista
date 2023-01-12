@@ -150,12 +150,13 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
   // Open first active tab (hide others)
   let curr_tab_btn = $("#"+id_base+"_data_tab_btn");
   let elems = curr_tab_btn.siblings().add(curr_tab_btn);
-  let cid = elems.first().attr("id")
+  let cid = elems.first().attr("id");
   if (cid) {
     this.first_id_base = cid.substring(0,cid.indexOf("_data_tab_btn"));
-    if (!first && id_base != this.current_id_base)
+    if (first)
+      this.current_id_base = this.first_id_base;
+    else
       this.current_id_base = id_base;
-    this.openTab({ id_base:this.current_id_base });
   }
 }; // refreshTabPanel
 
@@ -163,7 +164,7 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
 $.any.anyViewTabs.prototype.refreshData = function (params)
 {
   let table_div = $.any.anyView.prototype.refreshData.call(this,params);
-  this.openTab({id_base:this.current_id_base});
+  this.openTab({ id_base:this.current_id_base });
   return table_div;
 }; // refreshData
 
