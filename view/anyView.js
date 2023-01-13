@@ -447,16 +447,18 @@ $.any.anyView.prototype.refresh = function (params)
   if (!params || !params.dont_reset_rec)
     this.options.ref_rec = 0; // Reset on every call to refresh, unless specifically told not to do so
 
-  let parent = params && params.parent ? params.parent : this.element;
-  let type   = params && params.type   ? params.type   : ""; //this.model && this.model.type ? this.model.type : "";
-  let kind   = params && params.kind   ? params.kind   : "";
-  let data   = params && params.data   ? params.data   : this.model && this.model.data ? this.model.data : null;
-  let id_str = params && params.id_str ? params.id_str : ""; // Id string accumulated through recursion
-  let pdata  = params && params.pdata  ? params.pdata  : null;
-  let pid    = params && params.pid    ? params.pid    : "";
-  let edit   = params && params.edit   ? params.edit   : false;
-  let from   = params && params.from   ? params.from   : 1;
-  let num    = params && params.num    ? params.num    : this.options.itemsPerPage;
+  let parent    = params && params.parent    ? params.parent    : this.element;
+  let type      = params && params.type      ? params.type      : "";
+  let kind      = params && params.kind      ? params.kind      : "";
+  let data      = params && params.data      ? params.data      : this.model && this.model.data ? this.model.data : null;
+  let pdata     = params && params.pdata     ? params.pdata     : null;
+  let pid       = params && params.pid       ? params.pid       : "";
+  let item_id   = params && params.item_id   ? params.item_id   : null;
+  let item_type = params && params.item_type ? params.item_type : null;
+  let edit      = params && params.edit      ? params.edit      : false;
+  let id_str    = params && params.id_str    ? params.id_str    : ""; // Id string accumulated through recursion
+  let from      = params && params.from      ? params.from      : 1;
+  let num       = params && params.num       ? params.num       : this.options.itemsPerPage;
 
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
@@ -540,6 +542,8 @@ $.any.anyView.prototype.refresh = function (params)
                  kind:       curr_kind,
                  data:       data,
                  id:         idc,
+                 item_id:    curr_kind == "item" ? idc       : item_id,
+                 item_type:  curr_kind == "item" ? curr_type : item_type,
                  pdata:      pdata,
                  pid:        pid,
                  edit:       edit,
@@ -567,6 +571,8 @@ $.any.anyView.prototype.refresh = function (params)
                  id:         null,
                  pdata:      pdata,
                  pid:        pid,
+                 item_id:    item_id,
+                 item_type:  item_type,
                  edit:       edit,
                  par_id_str: "",
                  row_id_str: "",
@@ -656,6 +662,8 @@ $.any.anyView.prototype.refreshOne = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
+  let item_id    = params.item_id;
+  let item_type  = params.item_type;
   let par_id_str = params.par_id_str;
   let row_id_str = params.row_id_str;
   let edit       = params.edit;
@@ -708,6 +716,8 @@ $.any.anyView.prototype.refreshOne = function (params)
                      kind:       kind,
                      data:       d,
                      id:         null,
+                     item_id:    item_id,
+                     item_type:  item_type,
                      pdata:      data,
                      pid:        id,
                      edit:       edit,
@@ -955,6 +965,8 @@ $.any.anyView.prototype.refreshData = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
+  let item_id    = params.item_id;
+  let item_type  = params.item_type;
   let pdata      = params.pdata;
   let pid        = params.pid;
   let edit       = params.edit;
@@ -999,6 +1011,8 @@ $.any.anyView.prototype.refreshData = function (params)
          kind:       kind,
          data:       data,
          id:         id,
+         item_id:    item_id,
+         item_type:  item_type,
          pdata:      pdata,
          pid:        pid,
          edit:       edit,
@@ -1391,6 +1405,8 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
+  let item_id    = params.item_id;
+  let item_type  = params.item_type;
   let pdata      = params.pdata;
   let pid        = params.pid;
   let edit       = params.edit;
@@ -1441,6 +1457,8 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     kind:       kind,
     data:       data,
     id:         id,
+    item_id:    item_id,
+    item_type:  item_type,
     pdata:      pdata,
     pid:        pid,
     edit:       edit,
@@ -1467,6 +1485,8 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
+  let item_id    = params.item_id;
+  let item_type  = params.item_type;
   let pdata      = params.pdata;
   let pid        = params.pid;
   let edit       = params.edit;
@@ -1523,6 +1543,8 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
+  let item_id    = params.item_id;
+  let item_type  = params.item_type;
   let pdata      = params.pdata;
   let pid        = params.pid;
   let edit       = params.edit;
@@ -1648,6 +1670,8 @@ $.any.anyView.prototype.refreshTableDataItemCells = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
+  let item_id    = params.item_id;
+  let item_type  = params.item_type;
   let pdata      = params.pdata;
   let pid        = params.pid;
   let edit       = params.edit;
@@ -1698,6 +1722,8 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
+  let item_id    = params.item_id;
+  let item_type  = params.item_type;
   let pdata      = params.pdata;
   let pid        = params.pid;
   let edit       = params.edit;
@@ -1723,6 +1749,8 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
     kind:       kind,
     data:       data,
     id:         id,
+    item_id:    item_id,
+    item_type:  item_type,
     pdata:      pdata,
     pid:        pid,
     par_id_str: par_id_str,
@@ -1774,6 +1802,8 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
+  let item_id    = params.item_id;
+  let item_type  = params.item_type;
   let pdata      = params.pdata;
   let pid        = params.pid;
   let edit       = params.edit;
@@ -1802,6 +1832,8 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
         kind:       kind,
         data:       data,
         id:         id,
+        item_id:    item_id,
+        item_type:  item_type,
         pdata:      pdata,
         pid:        pid,
         edit:       edit,
@@ -4312,12 +4344,14 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
 $.any.anyView.prototype._addSelections = function (type,id,model,preselected,mod_opt)
 {
   for (var val in preselected) {
-    let d = preselected[val];
-    let sel_id = d[model.id_key];
-    if (sel_id && parseInt(sel_id) != parseInt(id) /*&& (type != d.list || !d.parent_id || d.parent_id == id)*/)
-      mod_opt.select.add(parseInt(d[model.id_key]));
-    if (d.data)
-      this._addSelections(type,id,model,d.data,mod_opt);
+    if (preselected.hasOwnProperty(val)) {
+      let d = preselected[val];
+      let sel_id = d[model.id_key];
+      if (sel_id && parseInt(sel_id) != parseInt(id) /*&& (type != d.list || !d.parent_id || d.parent_id == id)*/)
+        mod_opt.select.add(parseInt(d[model.id_key]));
+      if (d.data)
+        this._addSelections(type,id,model,d.data,mod_opt);
+    }
   }
 }; // _addSelections
 
@@ -4329,17 +4363,22 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
 
-  this.removeFromView(opt); // TODO! Neccessary?
-
   // Update database
   this.options.item_opening = true; // To make top right close icon appear
+  let the_id    = opt.item_id ? opt.item_id   : opt.id;
+  let the_type  = opt.item_id ? opt.item_type : opt.type;
+  let link_id   = opt.item_id ? opt.id        : opt.link_id;
+  let link_type = opt.item_id ? opt.type      : opt.link_type;
+
+  this.removeFromView(opt);
+
   if (!this.model.dbUpdateLinkList({ // TODO! What if mode == "local"?
          view:      opt.view, // Refresh only this view
-         type:      opt.type,
          data:      opt.data,
-         id:        opt.id,
-         link_type: opt.link_type,
-         link_id:   opt.link_id,
+         type:      the_type,
+         id:        the_id,
+         link_type: link_type,
+         link_id:   link_id,
          select:    opt.select,
          unselect:  opt.unselect,
          name_key:  opt.name_key,
@@ -4362,6 +4401,8 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   let kind      = event.data.kind;
   let data      = event.data.data;
   let id        = event.data.id;
+  let item_id   = event.data.item_id;
+  let item_type = event.data.item_type;
   let pdata     = event.data.pdata;
   let pid       = event.data.pid;
   let id_str    = event.data.row_id_str;
@@ -4409,6 +4450,8 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         type:       type,
         kind:       kind,
         id:         id,
+        item_id:    item_id,
+        item_type:  item_type,
         data:       data,
         id_str:     id_str,
         link_type:  link_type,
@@ -4423,6 +4466,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         kind:      kind,
         data:      data,
         id:        id,
+        item_id:    item_id,
         id_str:    id_str,
         link_type: link_type,
         link_id:   link_id,
