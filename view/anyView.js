@@ -4292,7 +4292,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           if (select_list_view.options && select_list_view.options.preselected)
             parent_view._addSelections(self.type,self.id,select_list_view.model,select_list_view.options.preselected,mod_opt);
           select_list_view.model.dataInit(mod_opt);
-          let par_view_id = parent_view.id_base+"_"+self.type+"_head_0_data";
+          let par_view_id = parent_view.id_base+"_group_head_0_data";
           w3_modaldialog({
             parentId:   par_view_id,
             elementId:  "",

@@ -1519,7 +1519,7 @@ class anyTable extends dbTable
                    : $gidx );
       $data_tree[$ngidx] = array();
       if ($this->mGrouping && !empty($data[$gidx])) { // Add a head data layer
-        $data_tree[$ngidx]["head"] = $this->mType;
+        $data_tree[$ngidx]["head"] = "group";
         if (!isset($this->mId) || $this->mId == "") {
           $data_tree[$ngidx]["group_type"] = $this->mType;
           $data_tree[$ngidx]["group_id"]   = $ngidx;
@@ -1743,10 +1743,11 @@ class anyTable extends dbTable
       }
       // Item type
       $d["data"]["+".$this->mId]["item"] = $this->mType; // TODO! Do this elsewhere?
+      $d["data"]["id"] = $this->mId;
     }
     if (isset($hdr)) {
-      $d["head"] = $this->mType;
-      $d[$this->mNameKey] = $hdr;
+      $d["head"] = "group";
+      $d["group_name"] = $hdr;
     }
 
     // Data
@@ -1755,6 +1756,7 @@ class anyTable extends dbTable
     // Plugins
     $data["plugins"] = $this->mPlugins;
     //vlog("data after prepare:",$data);
+
     return $data;
   } // prepareData
 
@@ -1836,12 +1838,13 @@ class anyTable extends dbTable
     $this->initFieldsFromParam();
 
     $res = $this->dbInsertItem();
-    if (!$res)
+    if ($res === null)
       return null;
 
     if (method_exists($this,"dbInsertExtra"))
       $res2 = $this->dbInsertExtra();
 
+    $this->mData["id"] = $this->mId;
     return $this->mData;
   } // dbInsert
 
