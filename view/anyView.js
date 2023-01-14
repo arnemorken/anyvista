@@ -1785,7 +1785,7 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
 {
   if (!params)
     return false;
-  if (!((this.options.isSelectable && this.options.showButtonSelect == 2 && (params.kind == "list" || params.kind == "select")) ||
+  if (!((this.options.isSelectable && this.options.showButtonSelect == 2 && params.kind == "list") ||
         (this.options.isAddable    && this.options.showButtonAdd == 2) ||
         (this.options.isRemovable  && this.options.showButtonRemove == 2) ||
         (this.options.isEditable   && (this.options.showButtonEdit == 2 || this.options.showButtonUpdate == 2 ||  this.options.showButtonDelete == 2 || this.options.showButtonCancel == 2))))
