@@ -260,12 +260,12 @@ $.any.anyView.prototype.getIdBase = function ()
  * @description
  * @return If neither `type` nor `kind` are given or if only `kind` is given, `this.options.filters` is returned.
  *         `this.options.filters` is an object containing all the view's data filters (indexed by type (e.g. "event")
- *         and kind ("item", "list", "head" or "select")).
+ *         and kind ("item", "list" or "head")).
  *         If only `type` is given, the filters of the given type are returned.
  *         If both `type` and `kind` are given, the filter of the given type and kind is returned.
  *         If no filters exist, `null` is returned.
  * @param {String} type Object type (e.g. "event"). Optional, but mandatory if `kind` is given.
- * @param {String} kind "item", "list", "head" or "select". Ignored if `type` is not given.
+ * @param {String} kind "item", "list" or "head". Ignored if `type` is not given.
  */
 $.any.anyView.prototype.getFilter = function (type,kind)
 {
@@ -354,8 +354,6 @@ $.any.anyView.prototype._findKind = function (data,id,okind)
     kind = okind;
   if (!kind)
     kind = this.options.defaultKind; // If not found, set default
-  if (kind == "list" && this.options.isSelectable)
-    kind = "select";
   return kind;
 }; // _findKind
 
@@ -503,7 +501,7 @@ $.any.anyView.prototype.refresh = function (params)
           let idx = Number.isInteger(parseInt(idc))
                     ? ""+parseInt(idc)
                     : idc;
-          let par_id_str  = curr_kind == "list" || curr_kind == "select"
+          let par_id_str  = curr_kind == "list"
                             ? id_str
                             : id_str
                               ? curr_kind == "item"
@@ -513,7 +511,7 @@ $.any.anyView.prototype.refresh = function (params)
           // Create new view whenever we encounter a new type or a new kind
           if (curr_type != "" && (prev_type != curr_type || (prev_kind != curr_kind && prev_kind != ""))) {
             // If the new type/kind is contained within a list, create a new row to contain a new parent container
-            if (prev_kind == "list" || prev_kind == "select")
+            if (prev_kind == "list")
               the_parent = view._addContainerRow(parent,prev_type,prev_kind,curr_type,curr_kind,par_id_str);
             let view_class = params && params.view_class ? params.view_class : null;
             let mdl        = params && params.model      ? params.model      : null;
@@ -668,7 +666,7 @@ $.any.anyView.prototype.refreshOne = function (params)
   let row_id_str = params.row_id_str;
   let edit       = params.edit;
 
-  let the_id_str = kind == "list" || kind == "select" ? par_id_str : row_id_str;
+  let the_id_str = kind == "list" ? par_id_str : row_id_str;
 
   // Refresh header
   let have_data  = data && Object.size(data[id]) > 0;
@@ -709,7 +707,7 @@ $.any.anyView.prototype.refreshOne = function (params)
         this.options.ref_rec = 0;
         throw i18n.error.TOO_MUCH_RECURSION;
       }
-      if ((kind == "list" || kind == "select"))
+      if (kind == "list")
         ++this.options.indent_level;
       this.refresh({ parent:     params.data_div,
                      type:       type,
@@ -724,7 +722,7 @@ $.any.anyView.prototype.refreshOne = function (params)
                      id_str:     kind=="list" && data[id].list == type ? par_id_str : row_id_str,
                      dont_reset_rec: true,
                   });
-      if ((kind == "list" || kind == "select"))
+      if ((kind == "list"))
         --this.options.indent_level;
     } // if d
   } // if data
@@ -1002,7 +1000,7 @@ $.any.anyView.prototype.refreshData = function (params)
          par_id_str: par_id_str,
       });
   }
-  if (kind == "list" || kind == "select" || kind == "item") {
+  if (kind == "list" || kind == "item") {
     let tbody = this.getOrCreateTbody(table_div,type,kind,par_id_str);
     if (tbody) {
       this.refreshTbodyRow({
@@ -1115,7 +1113,7 @@ $.any.anyView.prototype.getOrCreateThead = function (table,type,kind,id_str)
 {
   if (!table || !type || !kind ||
       !this.options.showTableHeader ||
-      (kind != "list" && kind != "select"))
+      kind != "list")
     return null;
 
   let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_thead";
@@ -1134,7 +1132,7 @@ $.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
 {
   if (!table || !type || !kind ||
       !this.options.showTableFooter ||
-      (kind != "list" && kind != "select"))
+      kind != "list")
     return null;
 
   let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_tfoot";
@@ -1151,8 +1149,7 @@ $.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
 //
 $.any.anyView.prototype.getOrCreateDataFooter = function (table,type,kind,id_str)
 {
-  if (!table || !type || !kind ||
-      (kind != "list" && kind != "select"))
+  if (!table || !type || !kind || kind != "list")
     return null;
 
   let foot_div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_datafooter";
@@ -1206,7 +1203,7 @@ $.any.anyView.prototype.refreshThead = function (params)
   let tr = $("<tr></tr>");
   thead.append(tr);
   // First tool cell for editable list
-  if ((this.options.isSelectable && this.options.showButtonSelect == 1 && (kind == "list" || kind == "select")) ||
+  if ((this.options.isSelectable && this.options.showButtonSelect == 1 && kind == "list") ||
       (this.options.isAddable    && this.options.showButtonAdd == 1) ||
       (this.options.isRemovable  && this.options.showButtonRemove == 1) ||
       (this.options.isEditable   && (this.options.showButtonEdit == 1 || this.options.showButtonUpdate == 1 ||  this.options.showButtonDelete == 1 || this.options.showButtonCancel == 1))) {
@@ -1253,7 +1250,7 @@ $.any.anyView.prototype.refreshThead = function (params)
     }
   }
   // Last tool cell for editable list
-  if ((this.options.isSelectable && this.options.showButtonSelect == 2 && (kind == "list" || kind == "select")) ||
+  if ((this.options.isSelectable && this.options.showButtonSelect == 2 && kind == "list") ||
       (this.options.isAddable    && this.options.showButtonAdd == 2) ||
       (this.options.isRemovable  && this.options.showButtonRemove == 2) ||
       (this.options.isEditable   && (this.options.showButtonEdit == 2 || this.options.showButtonUpdate == 2 ||  this.options.showButtonDelete == 2 || this.options.showButtonCancel == 2))) {
@@ -1388,7 +1385,7 @@ $.any.anyView.prototype.refreshTbodyRow = function (params)
   if (!params)
     return null;
 
-  if (params.kind == "list" || params.kind == "select")
+  if (params.kind == "list")
     return this.refreshListTableDataRow(params);
   if (params.kind == "item")
     return this.refreshItemTableDataRow(params);
@@ -1424,7 +1421,7 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
                ? this.options.filters[type][kind]
                : null;
   if (!filter) {
-    if (kind == "select")
+    if (kind == "list")
       filter = this.options.filters[type]["list"];
     if (!filter) {
       this.model.message = i18n.error.FILTER_NOT_FOUND.replace("%%", type+" "+kind+"");
@@ -1705,7 +1702,7 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
 {
   if (!params)
     return false;
-  if (!((this.options.isSelectable && this.options.showButtonSelect == 1 && (params.kind == "list" || params.kind == "select")) ||
+  if (!((this.options.isSelectable && this.options.showButtonSelect == 1 && params.kind == "list") ||
         (this.options.isAddable    && this.options.showButtonAdd == 1) ||
         (this.options.isRemovable  && this.options.showButtonRemove == 1) ||
         (this.options.isEditable   && (this.options.showButtonEdit == 1 || this.options.showButtonUpdate == 1 ||  this.options.showButtonDelete == 1 || this.options.showButtonCancel == 1))))
@@ -1751,7 +1748,7 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
     row_id_str: row_id_str,
     filter:     filter,
   };
-  if (this.options.isSelectable && this.options.showButtonSelect==1 && (kind == "list" || kind == "select")) {
+  if (this.options.isSelectable && this.options.showButtonSelect==1 && kind == "list") {
     let checked = this.model.select.has(parseInt(id));
     first_opt.checked = checked;
     this.refreshSelectButton(first_opt);
@@ -1816,7 +1813,7 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
   tr.append(td);
   if (!first)
     return;
-  if (this.options.isSelectable && (kind == "list" || kind == "select")) {
+  if (this.options.isSelectable && kind == "list") {
   }
   else {
     if (this.options.isEditable || this.options.isRemovable || edit) {
@@ -2418,7 +2415,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,pa
                         ); // Allow digits and '.' only
   }
   // Bind a function to be called when clicking/pressings the element
-  if (filter_key.FUNCTION && filter_key.TYPE != "select") {
+  if (filter_key.FUNCTION) {
     let func_name = filter_key.FUNCTION;
     let func = isFunction(this[func_name])
                ? this[func_name] // Method in view class
@@ -3363,7 +3360,7 @@ $.any.anyView.prototype._processKeyup = function (event)
       if (this.options.onEnterCallDatabase)
         this.dbUpdate(event);
       let kind = event.data.kind;
-      if (kind == "list" || kind == "select") {
+      if (kind == "list") {
         this.current_edit = null;
         if (this.options.onEnterInsertNew) {
           // Add a new row to the list
@@ -4171,7 +4168,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
                                   });
   if (item && item[id])
     delete item[id].is_new; // TODO! Neccessary?
-  if (kind == "list" || kind == "select") {
+  if (kind == "list") {
     let tr_id = this.id_base+"_"+type+"_"+kind+"_"+row_id_str+"_tr";
     let tr    = $("#"+tr_id);
     if (!tr.length) {
@@ -4595,7 +4592,7 @@ $.any.anyView.prototype.removeFromView = function (opt)
   let id     = opt.id;
   let id_str = opt.id_str;
 
-  if (kind == "list" || kind == "select") {
+  if (kind == "list") {
     let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str +"_tr";
     let tr = $("#"+elem_id);
     if (tr.length)
