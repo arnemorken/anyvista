@@ -804,24 +804,26 @@ class anyTable extends dbTable
       $table = anyTableFactory::create($plugin,$this);
       if ($table) {
         $link_table = $this->findLinkTableName($plugin);
-        if ($this->tableExists($link_table)) {
-          $g = Parameters::get("grouping");
-          $s = Parameters::get("simple");
-          $table->mGrouping   = $g !== false && $g !== "false" && $g !== "0";
-          $table->mSimpleList = $s === true  || $s === "true"  || $s === "1";
-          $table->mLinkType   = $this->mType;
-          $table->mLinkId     = $this->mId;
-          $table_data         = null;
-          if (!$table->dbSearchList($table_data,$group_table))
-            $this->mError .= $table->getError();
-          if ($table_data) {
-            $pl_idx   = "plugin-".$plugin;
-            $name_key = $table->getNameKey();
-            $data[$idx]["data"]["grouping"] = $table->mGrouping;
-            $data[$idx]["data"][$pl_idx]["grouping"] = $table->mGrouping;
-            $data[$idx]["data"][$pl_idx]["head"]     = $plugin;
-            $data[$idx]["data"][$pl_idx][$name_key]  = $this->findDefaultItemListHeader($plugin,$table_data,true);
-            $data[$idx]["data"][$pl_idx]["data"]     = $table_data;
+        if ($table->mType != $this->mType || $this->hasParentId()) {
+          if ($this->tableExists($link_table)) {
+            $g = Parameters::get("grouping");
+            $s = Parameters::get("simple");
+            $table->mGrouping   = $g !== false && $g !== "false" && $g !== "0";
+            $table->mSimpleList = $s === true  || $s === "true"  || $s === "1";
+            $table->mLinkType   = $this->mType;
+            $table->mLinkId     = $this->mId;
+            $table_data         = null;
+            if (!$table->dbSearchList($table_data,$group_table))
+              $this->mError .= $table->getError();
+            if ($table_data) {
+              $pl_idx   = "plugin-".$plugin;
+              $name_key = $table->getNameKey();
+              $data[$idx]["data"]["grouping"] = $table->mGrouping;
+              $data[$idx]["data"][$pl_idx]["grouping"] = $table->mGrouping;
+              $data[$idx]["data"][$pl_idx]["head"]     = $plugin;
+              $data[$idx]["data"][$pl_idx][$name_key]  = $this->findDefaultItemListHeader($plugin,$table_data,true);
+              $data[$idx]["data"][$pl_idx]["data"]     = $table_data;
+            }
           }
         }
       }
