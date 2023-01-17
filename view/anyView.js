@@ -3646,8 +3646,8 @@ $.any.anyView.prototype._foundNextIdFromDB = function (context,serverdata,option
     let view = options.context ? options.context : null;
     self.model.dbSearchNextIdSuccess(self.model,serverdata,options);
     if (view) {
-      serverdata.view = view;
-      view._doShowItem(serverdata);
+      options.id = serverdata.id;
+      view._doShowItem(options);
     }
   }
 }; // _foundNextIdFromDB

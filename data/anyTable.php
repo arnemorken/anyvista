@@ -1709,13 +1709,12 @@ class anyTable extends dbTable
   public function prepareData(&$inData)
   {
     //vlog("inData before prepare:",$inData);
-    if (!$inData) {
+
+    if (isset($this->mMaxId)) {
       $inData = [];
-      if (isset($this->mMaxId))
-        $inData["id"] = $this->mMaxId;
+      $inData["id"] = $this->mMaxId;
       return $inData;
     }
-
     $data = array("data" => array("+0" => null)); // Make room for a top header
     $d = &$data["data"]["+0"];
 
