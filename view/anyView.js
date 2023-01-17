@@ -73,6 +73,7 @@
  *        {boolean} onUpdateEndEdit:       Pressing the update button will close the element currently being edited for editing. Default: true.
  *        {boolean} useOddEven:            If true, tags for odd and even columns will be generated for list entries. Default: false.
  *        {string}  defaultKind:           The default kind to use. One of `head`. `list` or `item`. Default: `list`.
+ *        {string}  defaultType:           The default type to use. Default: "".
  *        {integer} itemsPerPage:          The number of rows to show per page. Only applicable for "list" and "select" kinds.
  *        {integer} currentPage:           The current page to show. Only applicable for "list" and "select" kinds.
  *        {string}  grouping:              How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
@@ -135,6 +136,7 @@ $.widget("any.anyView", {
   //onUpdateEndEdit:       true, // TODO! NOT IMPLEMENTED
     useOddEven:            true,
     defaultKind:           "head",
+    defaultType:           "",
     itemsPerPage:          20,
     currentPage:           1,
     grouping:              "",
@@ -334,7 +336,7 @@ $.any.anyView.prototype._findType = function (data,id,otype)
   if (!type)
     type = otype;
   if (!type)
-    type = "";
+    type = this.options.defaultType;
   return type;
 }; // _findType
 
@@ -2587,6 +2589,8 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_l
     showServerErrors: this.options.showServerErrors,
     showButtonNew:    this.options.showButtonNew,
     showButtonAddLink:this.options.showButtonAddLink,
+    defaultKind:      this.options.defaultKind,
+    defaultType:      this.options.defaultType,
     sortBy:           this.options.sortBy,
     sortDirection:    this.options.sortDirection,
     link_options:     this.options.link_options,
