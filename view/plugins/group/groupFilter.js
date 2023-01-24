@@ -22,7 +22,7 @@ var groupFilter = function (options)
         group_name:        { HEADER:"Group name",  DISPLAY:1, TYPE:"link" },
         group_type:        { HEADER:"Group type",  DISPLAY:1, TYPE:"select", SELECT: {"group":"Group","user":"User","event":"Event","document":"Document"} },
         group_description: { HEADER:"Description", DISPLAY:1, TYPE:"textarea" },
-        parent_id:         { HEADER:"Parent group",DISPLAY:0, TYPE:"select", SELECT: "dbSearchParents" },
+        parent_id:         { HEADER:"Parent group",DISPLAY:1, TYPE:"select", SELECT: "dbSearchParents" },
         group_sort_order:  { HEADER:"Sort order",  DISPLAY:1, TYPE:"text" },
       //group_status:      { HEADER:"Status",      DISPLAY:1, TYPE:"select", /*SELECT: status*/ },
         group_privacy:     { HEADER:"Privacy",     DISPLAY:1, TYPE:"select", SELECT: {"0":"Public","1":"Private"} },
