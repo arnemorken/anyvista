@@ -2797,7 +2797,7 @@ $.any.anyView.prototype.getSelectStr = function (type,kind,id,val,edit,filter_ke
       let o_str = "";
       for (let fid in sval) {
         if (sval.hasOwnProperty(fid)) {
-          let sel = (fid != "" && fid == parseInt(val)) ? "selected" : "";
+          let sel = (fid != "" && (fid == val || fid == parseInt(val))) ? "selected" : "";
           o_str += "<option class='itemOption' id='"+parseInt(fid)+"' name='"+fid+"' "+"value='"+fid+"' "+sel+">"+sval[fid]+"</option>";
         }
       }
