@@ -1042,33 +1042,34 @@ class anyTable extends dbTable
   protected function findListLeftJoinOne($cur_uid,$plugin,$gid)
   {
     $lj = "";
-    $linktable      = $this->findLinkTableName($plugin);
-    $plugintable    = $this->findPluginTableName($plugin);
-    $metatable      = $this->findMetaTableName($plugin);
-    $linktable_id   = $this->findLinkTableId($plugin);
-    $plugintable_id = $this->findPluginTableId($plugin);
-    $metatable_id   = $plugin."_id";
-    if ($this->tableExists($linktable)) {
+    $linktable       = $this->findLinkTableName($plugin);
+    $plugintable     = $this->findPluginTableName($plugin);
+    $metatable       = $this->findMetaTableName($plugin);
+    $linktable_id    = $this->findLinkTableId($plugin);
+    $plugintable_id  = $this->findPluginTableId($plugin);
+    $has_linktable   = $this->tableExists($linktable);
+    $has_plugintable = $this->tableExists($plugintable);
+    $has_metatable   = $this->tableExists($metatable);
+    $metatable_id    = $plugin."_id";
+    if ($has_linktable) {
       $lj .= "LEFT JOIN ".$linktable.  " ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ";
       if (!isset($this->mLinkType) && $plugin == "user" && $cur_uid)
         $lj .= "AND CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$cur_uid." AS INT) "; // Only return results for current user
-      if ($this->tableExists($plugintable)) {
+      if ($has_plugintable) {
         if ($plugin != "group") {
           $lj .= "LEFT JOIN ".$plugintable." ON CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$plugintable.".".$plugintable_id." AS INT) ";
-          if ($this->tableExists($metatable))
+          if ($has_metatable)
             $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=CAST(".$plugintable.".".$plugintable_id." AS INT) ";
         }
-        else {
-          if ($gid) {
-            $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
-            $lj .= "LEFT JOIN ".$plugintable." ON CAST(".$plugintable.".".$plugintable_id." AS INT)=".$db_gid." ";
-            $lj .= "AND ".$this->mTableNameGroup.".group_type='".$this->mType."' ";
-            if ($this->tableExists($metatable)) {
-              $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=".$db_gid." ";
-              $lj .= "AND ".$this->mTableNameGroup.".group_type='".$this->mType."' ";
-            }
-          }
-        }
+      }
+    }
+    if ($has_plugintable && $plugin == "group" && $gid) {
+      $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
+      $lj .= "LEFT JOIN ".$plugintable." ON CAST(".$plugintable.".".$plugintable_id." AS INT)=".$db_gid." ";
+      $lj .= "AND ".$this->mTableNameGroup.".group_type='".$this->mType."' ";
+      if ($has_metatable) {
+        $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=".$db_gid." ";
+        $lj .= "AND ".$this->mTableNameGroup.".group_type='".$this->mType."' ";
       }
     }
     return $lj;
@@ -1076,6 +1077,7 @@ class anyTable extends dbTable
 
   protected function findListWhere($gid)
   {
+    $has_group_linktable = $this->tableExists($this->mTableNameGroupLink);
     $skipOwnType = $this->mLinkType == $this->mType;
     $where = null;
     $link_table = $this->findLinkTableName($this->mLinkType);
@@ -1100,7 +1102,7 @@ class anyTable extends dbTable
           $where  = "WHERE (".$gstr.") ";
         else
           $where .= " OR (".$gstr.") ";
-        if (isset($gid))
+        if (isset($gid) && $has_group_linktable)
           $where .= "AND ".$this->mTableNameGroupLink.".group_id=CAST(".$gid." AS INT) ";
       }
     }
@@ -1130,18 +1132,24 @@ class anyTable extends dbTable
           $where .= " AND ".$gt_str;
       }
       if (!isset($this->mLinkType)) {
-        $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
-        $lf_str = $this->mTableNameGroup.".group_id=".$db_gid." ";
-        if ($where === null)
-          $where  = " WHERE ".$lf_str;
-        else
-          $where .= " AND ".$lf_str;
-        $where .= "AND ".$this->mTableNameGroupLink.".group_id=CAST(".$gid." AS INT) ";
+        if ($has_group_linktable) {
+          $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
+          $lf_str = $this->mTableNameGroup.".group_id=".$db_gid." ";
+          if ($where === null)
+            $where  = " WHERE ".$lf_str;
+          else
+            $where .= " AND ".$lf_str;
+          $where .= "AND ".$this->mTableNameGroupLink.".group_id=CAST(".$gid." AS INT) ";
+        }
+        else {
+          if ($this->mMessage == "")
+            $this->mMessage .= "No link table for '$this->mType' group. ";
+        }
       }
     }
     /*
     else {
-      if ($this->mGrouping && $this->mType != "group" && $this->tableExists($this->mTableNameGroupLink) &&
+      if ($this->mGrouping && $this->mType != "group" && $has_group_linktable &&
           !($this->hasParentId() && (isset($this->mLinkType) || (isset($this->mId) && $this->mId != "")))) {
         $n_str = $this->mTableNameGroupLink.".group_id is null ";
         if ($where === null)
