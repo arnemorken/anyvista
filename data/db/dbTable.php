@@ -167,7 +167,7 @@ class dbTable
     else {
       $this->mNumRowsChanged = $this->mDBConnection->mDBHandle->exec($stmt);
       if ($this->mNumRowsChanged === false) {
-        $this->mError = "dbTable::query4: ".$this->mDBConnection->getError();
+        $this->mError = "dbTable::query5: ".$this->mDBConnection->getError();
         $this->mError .= "\nQuery was: ".$stmt;
         error_log($this->mError);
       }
@@ -296,7 +296,6 @@ class dbTable
         $res->free();
         $res = null;
       }
-      $this->mError = "";
       return false;
     }
     return true;

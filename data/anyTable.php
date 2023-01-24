@@ -224,7 +224,8 @@ class anyTable extends dbTable
   //
   private function initProperties($defsOrType)
   {
-    $this->mError = "";
+    $this->mError   = "";
+    $this->mMessage = "";
 
     $fields = Parameters::get("fields");
 
@@ -962,11 +963,10 @@ class anyTable extends dbTable
   protected function dbPrepareSearchListStmt($gid=null)
   {
     // Get query fragments
-    $this->mError = "";
-    $select       = $this->findListSelect($gid);
-    $left_join    = $this->findListLeftJoin($gid);
-    $where        = $this->findListWhere($gid);
-    $order_by     = $this->findListOrderBy();
+    $select    = $this->findListSelect($gid);
+    $left_join = $this->findListLeftJoin($gid);
+    $where     = $this->findListWhere($gid);
+    $order_by  = $this->findListOrderBy();
 
     // Build the query
     $stmt = $select.
@@ -1190,7 +1190,7 @@ class anyTable extends dbTable
   protected function dbSearchMeta(&$data,$kind)
   {
     if (!$this->tableExists($this->mTableNameMeta)) {
-      $this->mMessage = "No meta table for '$this->mType' type. ";
+      $this->mMessage .= "No meta table for '$this->mType' type. ";
       return false;
     }
 
