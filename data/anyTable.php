@@ -988,11 +988,8 @@ class anyTable extends dbTable
         !($this->hasParentId() && (isset($this->mLinkType) || (isset($this->mId) && $this->mId != "")))*/) {
       if ($this->mType != "group" &&
           $this->tableExists($this->mTableNameGroup)) {
-        $linktable = $this->findLinkTableName("group");
-        if ($this->tableExists($linktable)) {
-          foreach ($this->mTableFieldsGroup as $field)
-            $sl .= ", ".$this->mTableNameGroup.".".$field;
-        }
+        foreach ($this->mTableFieldsGroup as $field)
+          $sl .= ", ".$this->mTableNameGroup.".".$field;
       }
     }
     // Select from other tables (link tables)
