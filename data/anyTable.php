@@ -1341,17 +1341,19 @@ class anyTable extends dbTable
     return true;
   } // getRowData
 
-  protected function getCellData($field,$nextrow,&$data,$idx,$gidx,$filter,$kind)
+  protected function getCellData($tablefield,$nextrow,&$data,$idx,$gidx,$filter,$kind)
   {
     if ($nextrow != null) {
-      if ($field == $this->mIdKeyTable)
+      if ($tablefield == $this->mIdKeyTable)
         $field = $this->mIdKey; // Map id name (e.g. "user_id" and not "ID")
-      if (isset($nextrow[$field])) {
-        if ($field == "user_pass") // TODO! "user_pass" is Wordpress specific
+      else
+        $field = $tablefield;
+      if (isset($nextrow[$tablefield])) {
+        if ($tablefield == "user_pass") // TODO! "user_pass" is Wordpress specific
           $val = ""; // Never send password to client
         else
         if (($filter === null || (isset($filter[$field]) && $filter[$field] == 1)))
-          $val = htmlentities((string)$nextrow[$field],ENT_QUOTES,'utf-8',FALSE);
+          $val = htmlentities((string)$nextrow[$tablefield],ENT_QUOTES,'utf-8',FALSE);
         else
           $val = null;
         if ($val != null && $val != "") {
@@ -1359,7 +1361,7 @@ class anyTable extends dbTable
               $data[$gidx][$idx][$field] = $val;
           else
             $data[$idx][$field] = $val;
-          //elog("getCellData:".$gidx.",".$idx.",".$field.":".$val);
+          //elog("getCellData:$gidx,$idx,$tablefield,$field:".$val);
         }
       }
     }
