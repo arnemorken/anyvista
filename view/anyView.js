@@ -1085,7 +1085,7 @@ $.any.anyView.prototype.getOrCreateTable = function (params)
     // Create the table
     let class_id = "any-table any-"+kind+"-table any-table-"+this.data_level;
     table_div = $("<table id='"+div_id+"' class='"+class_id+"'></table>");
-    parent.append(table_div);
+    parent.prepend(table_div);
   }
   return table_div;
 }; // getOrCreateTable
