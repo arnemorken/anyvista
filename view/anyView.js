@@ -3137,7 +3137,7 @@ $.any.anyView.prototype.initComponents = function ()
  *                               If null, `this.model` is assumed.
  * @return `this`.
  */
-$.any.anyView.prototype.showMessages = function (modelOrString)
+$.any.anyView.prototype.showMessages = function (modelOrString,spin)
 {
   let div_id = this.id_base+"_any_message";
   let msgdiv = $("#"+div_id);
@@ -3148,13 +3148,20 @@ $.any.anyView.prototype.showMessages = function (modelOrString)
     let close_icon = "<span id='"+div_id+"_close' style='padding-right:5px;' class='far fa-window-close'></span>";
     if (typeof modelOrString == "object") {
       let err = this.options.showServerErrors && modelOrString.error_server ? modelOrString.error_server : modelOrString.error;
-      if (err || modelOrString.message)
-        msgdiv.append(close_icon+"<span style='color:red;'>"+err+"</span> "+modelOrString.message);
+      if (err)
+        msgdiv.append(close_icon+"<span style='color:red;'>"+err+"</span>");
+      if (modelOrString.message) {
+        if (!err)
+          msgdiv.append(close_icon);
+        msgdiv.append(modelOrString.message);
+      }
     }
     else
     if (typeof modelOrString == "string") {
         msgdiv.append(close_icon+"<span style='color:red;'>"+modelOrString+"</span>");
     }
+    if (spin)
+      msgdiv.append("<i class='fas fa-spinner fa-spin'></i>");
     $("#"+div_id+"_close").off("click").on("click",function(event) { let msgdiv = $("#"+div_id); msgdiv.empty(); });
   }
   return this;
@@ -3203,6 +3210,7 @@ $.any.anyView.prototype.sortTable = function (event)
     // Will (normally) call refresh via onModelChange
     this.options.indent_level = -1;
     this.options.ref_rec = 0;
+    this.showMessages("",true);
     this.model.dbSearch(mod_opt);
   } // if remote
   else {
@@ -3221,6 +3229,7 @@ $.any.anyView.prototype._processSearch = function (event)
     search_opt.grouping  = this.options.grouping;
     search_opt.order     = this.options.sortBy;
     search_opt.direction = this.options.sortDirection;
+    this.showMessages("",true);
     this.model.dbSearch(search_opt);
   }
 }; // _processSearch
@@ -3331,6 +3340,7 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     mod_opt.from -= 1; // from is 0-based on server
     if (this.model.last_term && this.model.last_term != "")
       mod_opt.term = this.model.last_term;
+    this.showMessages("",true);
     this.model.dbSearch(mod_opt);
   }
   else {
@@ -3462,6 +3472,7 @@ $.any.anyView.prototype.addListEntry = function (event)
       let the_id = Number.isInteger(parseInt(new_id)) ? parseInt(new_id) : new_id;
       let row_id_str = par_id_str ? par_id_str+"_"+the_id : ""+the_id;
       let f = []; f[0] = this.model.id_key;
+      this.showMessages("",true);
       this.model.dbSearchNextId({
          type:       type,
          data:       the_data,
@@ -3612,6 +3623,7 @@ $.any.anyView.prototype.showItem = function (event)
     else { // remote
       if ((!id && id !== 0) || id < 0) {
         let f = []; f[0] = this.model.id_key;
+        this.showMessages({message:"Wait... "},true); // TODO! i18n
         this.model.dbSearchNextId({
            type:    type,
            is_new:  true,
@@ -3758,6 +3770,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
   // Display the item data
   if (view.model.mode == "remote" && !is_new) {
     // Remote search: Will (normally) call refresh via onModelChange
+    view.showMessages("",true);
     view.model.dbSearch({
       type:     type,
       id:       the_id,
@@ -3981,8 +3994,10 @@ $.any.anyView.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
    success:   this.createParentDropdownMenu,
    context:   this,
   };
-  if (edit)
+  if (edit) {
+    this.showMessages("",true);
     return this.model.dbSearch(options); // TODO! What if mode == "local"?
+  }
   else {
     options.id = id;
     let item = this.model.dataSearch(options);
@@ -4239,6 +4254,7 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
    num:         this.options.itemsPerPage,
    success:     this.dbUpdateLinkListDialog, // Call the view success handler
   };
+  this.showMessages("",true);
   return this.model.dbSearch(options); // TODO! What if mode == "local"?
 }; // dbSearchLinks
 
