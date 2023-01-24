@@ -1718,10 +1718,9 @@ class anyTable extends dbTable
   {
     //vlog("inData before prepare:",$inData);
 
-    if (isset($this->mMaxId)) {
+    if (isset($this->mMaxId) && $this->mMaxId >= 0) {
       $inData = [];
       $inData["id"] = $this->mMaxId;
-      return $inData;
     }
     $data = array("data" => array("+0" => null)); // Make room for a top header
     $d = &$data["data"]["+0"];
