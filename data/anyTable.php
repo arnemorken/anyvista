@@ -909,7 +909,8 @@ class anyTable extends dbTable
         $group_table = $this;
         $group_data  = $this->mData;
       }
-      $group_table->mGrouping = true;
+      if ($this->mType != "group")
+        $group_table->mGrouping = true;
       $group_data["group"] = $group_table->buildDataTree($group_data["group"]);
       $this->buildGroupTreeAndAttach($data,$group_data);
     }
