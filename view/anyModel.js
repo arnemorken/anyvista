@@ -1423,7 +1423,6 @@ anyModel.prototype.dbSearchNextId = function (options)
                        ? options.timeoutSec
                        : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
-  $.ajaxSetup({ async: false }); // TODO! Asynchronous database call
   this.success = options.success ? options.success : this.dbSearchNextIdSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
