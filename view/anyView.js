@@ -4036,19 +4036,22 @@ $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,
         let id_str    = "0_"+the_id;
         let data      = serverdata.data;
         let itemsel_id = view.id_base+"_"+options.type+"_"+kind+"_"+id_str+"_parent_id .itemSelect";
+        let itemsel_dd = $("#"+itemsel_id);
         let did_select = "selected='true'";
+        data = data["0"] ? data["0"].data : data["+0"] ? data["+0"].data : data;
+        data = data[options.type] ? data[options.type].data : data;
         $.each(data,function (id,item) {
           if (parseInt(id) != the_id) {
             let sel = parseInt(id) == parseInt(options.parent_id) ? "selected='true'" : "";
             let pname = data[id][type_name];
-            $("#"+itemsel_id).append($("<option "+sel+">").attr("value",parseInt(id)).text(pname));
+            itemsel_dd.append($("<option "+sel+">").attr("value",parseInt(id)).text(pname));
             if (sel != "") {
               $("#"+itemsel_id+"-button .ui-selectmenu-text").text(item[type_name]); // TODO! .ui-selectmenu-text no longer used
               did_select = "";
             }
           }
         });
-        $("#"+itemsel_id).prepend($("<option "+did_select+">").attr("value","null").text("[None]")); // TODO! i18n
+        itemsel_dd.prepend($("<option "+did_select+">").attr("value","null").text("[None]")); // TODO! i18n
       } // if view
     }
   }
