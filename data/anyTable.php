@@ -869,7 +869,7 @@ class anyTable extends dbTable
     $limit = !$this->mSimpleList ? $this->findLimit() : ""; // Use same limit for all groups
     $this->mNumResults = 0; // Init total number of results
     // Build and execute the query
-    if ($group_id) {
+    if ($group_id && $this->mType != "group") {
       // Query data from the given group (or "nogroup")
       $success = $this->dbExecListStmt($data,$group_id,$limit);
     }
