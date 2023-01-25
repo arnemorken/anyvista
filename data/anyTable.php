@@ -893,7 +893,7 @@ class anyTable extends dbTable
         }
       }
       // Build and execute the query for ungrouped data
-      if (!$has_nogroup)
+      if ($has_nogroup)
         $success = $this->dbExecListStmt($data,"nogroup",$limit) || $success;
     }
     if ($success) {
