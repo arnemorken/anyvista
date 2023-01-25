@@ -885,7 +885,8 @@ class anyTable extends dbTable
       if ($group_data && isset($group_data["group"])) {
         foreach ($group_data["group"] as $gid => $group) {
           if ($group["group_type"] == $this->mType) {
-            $success = $this->dbExecListStmt($data,$gid,$limit) || $success;
+            if ($this->tableExists($this->mTableNameGroupLink))
+              $success = $this->dbExecListStmt($data,$gid,$limit) || $success;
             if ($gid == "nogroup")
               $has_nogroup = true;
           }
