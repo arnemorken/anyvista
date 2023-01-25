@@ -1263,7 +1263,7 @@ class anyTable extends dbTable
       $gid  = isset($nextrow["group_id"])
               ? $nextrow["group_id"]
               : "nogroup";
-      $gidx = $this->mGrouping && !$this->mSimpleList && $this->mType != "group"
+      $gidx = $this->mGrouping && $this->mType != "group"
               ? $gid
               : $this->mType;
       $idx = isset($nextrow[$this->mIdKeyTable])
@@ -1275,13 +1275,8 @@ class anyTable extends dbTable
       // Force idx to be a string in order to maintain ordering when sending JSON data to a json client
       $idx = isInteger($idx) ? "+".$idx : $idx;
 
-      if ($kind == "list" || $kind == "head") {
-        if ($this->mType == "group" && !isset($nextrow["parent_id"]))
-          $k = "head";
-        else
-          $k = $kind;
-        $data[$gidx][$idx][$k] = $this->mType;
-      }
+      if ($kind == "list" || $kind == "head")
+        $data[$gidx][$idx][$kind] = $this->mType;
       else // kind == "item"
         $data[$idx][$kind] = $this->mType;
 
