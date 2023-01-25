@@ -797,7 +797,6 @@ class anyTable extends dbTable
     $group_id    = Parameters::get("group_id");
     $group_table = anyTableFactory::create("group",$this);
     $group_table->mGrouping = false;
-    $group_table->dbSearchGroupInfo($this->mType,$group_id);
 
     // Search through all registered plugins (link tables)
     $idx = "+".$this->mId;
@@ -814,6 +813,7 @@ class anyTable extends dbTable
             $table->mLinkType   = $this->mType;
             $table->mLinkId     = $this->mId;
             $table_data         = null;
+            $group_table->dbSearchGroupInfo($table->mType,$group_id);
             if (!$table->dbSearchList($table_data,$group_table))
               $this->mError .= $table->getError();
             if ($table_data) {
