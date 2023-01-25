@@ -1148,7 +1148,6 @@ class anyTable extends dbTable
         }
       }
     }
-    /*
     else {
       if ($this->mGrouping && $this->mType != "group" && $has_group_linktable &&
           !($this->hasParentId() && (isset($this->mLinkType) || (isset($this->mId) && $this->mId != "")))) {
@@ -1159,7 +1158,6 @@ class anyTable extends dbTable
           $where .= " AND ".$n_str;
       }
     }
-    */
     return $where;
   } // findListWhere
 
