@@ -523,6 +523,7 @@ $.any.anyView.prototype.refresh = function (params)
                       kind:         curr_kind,
                       data:         data,
                       id:           idc,
+                      id_str:       id_str,
                       data_level:   view.data_level,
                       indent_level: view.indent_level,
                       view_class:   view_class,
@@ -2470,6 +2471,7 @@ $.any.anyView.prototype.createView = function (params)
   let kind         = params && params.kind         ? params.kind         : null;
   let data         = params && params.data         ? params.data         : null;
   let id           = params && params.id           ? params.id           : "";
+  let id_str       = params && params.id_str       ? params.id_str       : "";
   let data_level   = params && params.data_level   ? params.data_level   : 0;
   let indent_level = params && params.indent_level ? params.indent_level : 0;
   let model        = params && (params.model || params.model===null)
@@ -2516,7 +2518,7 @@ $.any.anyView.prototype.createView = function (params)
   let v_str = "";
   let view = null;
   try {
-    let view_opt = this.getCreateViewOptions(model,parent,kind,data_level,indent_level,params);
+    let view_opt = this.getCreateViewOptions(model,parent,type,kind,id_str,data_level,indent_level,params);
     if (params.showHeader === false)
       view_opt.showHeader = false;
     v_str = params && params.view_class
@@ -2562,12 +2564,13 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
 }; // getCreateModelOptions
 
 // TODO! options.localRemove etc. must be sent as params when creating new view
-$.any.anyView.prototype.getCreateViewOptions = function(model,parent,kind,data_level,indent_level,params)
+$.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,kind,id_str,data_level,indent_level,params)
 {
+  let view_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_data";
   return {
     model:            model,
     filters:          this._getOrCreateFilters(model), // Create filter if we don't already have one
-    id:               parent.attr("id"),
+    id:               view_id,
     view:             this,
     id_base:          this.id_base,
     data_level:       data_level   || data_level   === 0 ? data_level   : this.data_level,
@@ -3252,6 +3255,7 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
                          data_level:   0,
                          indent_level: 0,
                          id:           null,
+                         id_str:       "", // TODO!
                          type:         list_type,
                          kind:         "list",
                       });
@@ -3740,6 +3744,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
     kind:         kind,
     data:         the_item,
     id:           the_id,
+    id_str:       "", // TODO!
     data_level:   0, // Reset data_level for the new view
     indent_level: 0, // Reset indent_level for the new view
     showHeader:       opt.showHeader       === false     ? false                : true,
@@ -4297,6 +4302,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                                   kind:   "list",
                                   data:   serverdata.data,
                                   id:     null,
+                                  id_str: "", // TODO!
                                   data_level:   0,
                                   indent_level: 0,
                                });
