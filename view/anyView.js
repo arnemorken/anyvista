@@ -4384,9 +4384,13 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
   let link_id   = opt.item_id ? opt.id        : opt.link_id;
   let link_type = opt.item_id ? opt.type      : opt.link_type;
 
+  this.model.dataDelete({
+               type: opt.type,
+               data: opt.data,
+               id:   opt.id,
+             });
   this.removeFromView(opt);
-
-  if (!this.model.dbUpdateLinkList({ // TODO! What if mode == "local"?
+  if (!this.model.dbUpdateLinkList({
          view:      opt.view, // Refresh only this view
          data:      opt.data,
          type:      the_type,
@@ -4424,11 +4428,6 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   let link_type = pid && pdata && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
   if (!data || !data[id]) {
     console.warn("Data not found ("+type+" id="+id+"). ");
-    return null;
-  }
-  if (!link_id || !link_type) {
-    // No parent, it must be a new and unsaved entry, so just update view and return
-    this.removeFromView(event.data);
     return null;
   }
   if (this.options.confirmRemove && !data[id].is_new) {
@@ -4629,6 +4628,7 @@ $.any.anyView.prototype.removeFromView = function (opt)
     if (!item || !item[id])
       return null; // Should never happen
     if (item[id].data) {
+      // Remove subdata
       for (let new_id in item[id].data) {
         if (item[id].data.hasOwnProperty(new_id)) {
           let the_id = Number.isInteger(parseInt(new_id)) ? parseInt(new_id) : new_id;
