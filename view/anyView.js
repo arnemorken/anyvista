@@ -3691,9 +3691,17 @@ $.any.anyView.prototype._doShowItem = function (opt)
   if (the_data && the_data["+"+id])
     the_id = "+"+id;
   if (!the_id && is_new)
-    the_id = id;
-  if (!the_id && the_id !== 0) {
-    console.error("System error: Could not find id. "); // Should never happen TODO! i18n
+    if (id)
+      the_id = id;
+    else
+      the_id = 0;
+  if (!the_id && the_id !== 0 || this.model.error) {
+    console.error("System error: Could not find id. "); // TODO! i18n
+    if (this.message)
+      console.log("anyView._doShowItem: "+this.message);
+    if (this.error_server)
+      console.error("anyView._doShowItem: "+this.error_server);
+    this.showMessages(i18n.error.SERVER_ERROR);
     return false;
   }
 

@@ -673,6 +673,8 @@ class anyTable extends dbTable
                     ? $nextrow["AUTO_INCREMENT"]
                     : -1;
     //elog("dbSearchMaxId,mMaxId:".$this->mMaxId);
+    if ($this->mMaxId == -1)
+      $this->setError("Max id not found, AUTO_INCREMENT missing from table? ");
     return $this->prepareData($this->mData);
   } // dbSearchMaxId
 
