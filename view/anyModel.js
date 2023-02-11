@@ -1342,8 +1342,9 @@ anyModel.prototype.dbSearchGetURL = function (options)
                ? "&group_id="+the_gid // Search specific group
                : ""; // Search all groups
   param_str += type == "group" && options.link_type ? "&group_type="+options.link_type : "";
-  param_str += options.header === true ||
-               options.header === false             ? "&header="    +options.header : "";
+  param_str += options.header === true  ||
+               options.header === false ||
+               typeof options.header == "string"    ? "&header="    +options.header : "";
   param_str += options.grouping                     ? "&grouping="  +options.grouping : "";
   param_str += options.simple                       ? "&simple="    +options.simple : "";
   param_str += options.from || options.from === 0   ? "&from="      +options.from : "";
