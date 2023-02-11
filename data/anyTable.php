@@ -1315,23 +1315,6 @@ class anyTable extends dbTable
     } // while
     //elog("getRowData1 ($this->mType),data:".var_export($data,true));
 
-/* BUGGY as of 20221124
-    if ($kind == "list" && $this->mType != "group" && $this->mGrouping) {
-      // Check and fix conflicts in parent_id / group_id in lists
-      // TODO! Check for circular parent-child relationship.
-      // TODO! Make this work for groups also.
-      $iter = 0;
-      $maxiter = 20;
-      $lastsn = -1;
-      $sn     = $this->fixConflicts($data);
-      while ($sn != $lastsn && $iter < $maxiter) {
-        $lastsn = $sn;
-        $sn = $this->fixConflicts($data,1);
-        ++$iter;
-      }
-    }
-    elog("getRowData2 ($this->mType),data:".var_export($data,true));
-*/
     if ($data === null || empty($data))
       return false;
     return true;
@@ -1731,7 +1714,7 @@ class anyTable extends dbTable
         $hdr = $this->findDefaultListHeader($this->mType);
       // Number of results.
       if (!$this->mGrouping)
-        $d["data"][$this->mType]["data"]["grouping_num_results"] = $this->mNumResults; // TODO! Do this elsewhere?
+        $d["data"][$this->mType]["data"]["grouping_num_results"] = $this->mNumResults;
     }
     else {
       // Item
@@ -1746,7 +1729,7 @@ class anyTable extends dbTable
           $this->setError($this->mNameKey." missing"); // TODO: i18n
       }
       // Item type
-      $d["data"]["+".$this->mId]["item"] = $this->mType; // TODO! Do this elsewhere?
+      $d["data"]["+".$this->mId]["item"] = $this->mType;
       $d["data"]["id"] = $this->mId;
     }
     if (isset($hdr)) {
@@ -1890,7 +1873,7 @@ class anyTable extends dbTable
     }
 
     // Insert in association table, if association id is given
-    // TODO! Missing code
+    // TODO! Not implemented yet
 
     // Set result message and return
     if ($this->mNumRowsChanged > 0)
@@ -1903,7 +1886,7 @@ class anyTable extends dbTable
 
   protected function dbPrepareInsertStmt()
   {
-    // TODO Check for all fields empty
+    // TODO! Check for all fields empty
     $unique_table_fields = array_unique($this->mTableFields);
     $stmt = "INSERT IGNORE INTO ".$this->mTableName." (";
     $auto_id = Parameters::get("auto_id");
