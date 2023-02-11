@@ -1534,7 +1534,7 @@ class anyTable extends dbTable
                    : ucfirst($data_tree[$ngidx]["group_type"])." groups";
           if ($this->mType != "group") {
             if (!$gname)
-              $gname = "Other ".$this->mType."s"; // TODO i18n
+              $gname = $this->findDefaultHeader($this->mType);
           }
           else {
             if (!$gname)
