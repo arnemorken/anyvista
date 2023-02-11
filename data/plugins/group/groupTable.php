@@ -179,7 +179,7 @@ class groupTable extends anyTable
       $where = "";
       if ($type && $type != "group")
         $where = "WHERE group_type='".$type."' ";
-      if ($group_id && $group_id != "nogroup") {
+      if ($group_id) {
         $db_gid = is_numeric($group_id) ? "CAST(".$group_id." AS INT)" : "'".$group_id."'";
         if ($where == null)
           $where .= "WHERE group_id=".$db_gid." ";
@@ -217,9 +217,11 @@ class groupTable extends anyTable
     // Add the default "nogroup" group
     $group_id = Parameters::get("group_id");
     if ((!$group_id || $group_id == "nogroup") && $type) {
+      $data["group"]["nogroup"]["group_name"] = count($data) > 0 && isset($data["group"])
+      						? $this->findDefaultHeader($type)
+      						: "";
       $data["group"]["nogroup"]["group_id"]   = "nogroup";
       $data["group"]["nogroup"]["group_type"] = $type;
-      $data["group"]["nogroup"]["group_name"] = $this->findDefaultHeader($type);
       $data["group"]["nogroup"]["head"]       = "group";
     }
     //error_log("dbSearchGroupInfo,d2:".var_export($data,true));
