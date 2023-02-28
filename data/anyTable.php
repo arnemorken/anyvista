@@ -997,7 +997,7 @@ class anyTable extends dbTable
       }
     }
     // Select from other tables (link tables)
-    if (isset($this->mPlugins)) {
+    if (isset($this->mLinkId) && $this->mLinkId != "" && isset($this->mPlugins)) {
       foreach($this->mPlugins as $i => $plugin) {
         if ($plugin != "group" && $plugin != $this->mType) {
           if ((isset($this->mLinkType) || $plugin == "user")) {
@@ -1029,7 +1029,7 @@ class anyTable extends dbTable
       $lj .= $this->findListLeftJoinOne($cur_uid,"group",$gid);
 
     // Left join other tables (link tables)
-    if (isset($this->mPlugins)) {
+    if (isset($this->mLinkId) && $this->mLinkId != "" && isset($this->mPlugins)) {
       foreach($this->mPlugins as $i => $plugin) {
         if ($plugin != "group" && $plugin != $this->mType) {
           if (isset($this->mLinkType) || $plugin == "user") {
