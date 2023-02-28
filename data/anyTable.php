@@ -544,41 +544,42 @@ class anyTable extends dbTable
   /////////////////////////////////////////////////////////////////////////////
 
   public function dbCreate()
+  // TODO! Move to dbTable
   {
-      // sql to create table
-      if (!$this->mType)
-        $this->mType = Parameters::get("type"); // Should  never happen
-      $tableFields = Parameters::get("table");
+    // sql to create table
+    if (!$this->mType)
+      $this->mType = Parameters::get("type"); // Should  never happen
+    $tableFields = Parameters::get("table");
 
-      $tableName = "any_".$this->mType;
-      $key_field = $this->mType."_id"; // Default PRIMARY KEY field
-      $sql = "CREATE TABLE $tableName (";
-      if (!$tableFields) {
-        // Use default fields
-        $sql .= $this->mType."_id bigint(20),";
-        $sql .= $this->mType."_name varchar(50),";
-        $sql .= "PRIMARY KEY (`".$key_field."`)";
+    $tableName = "any_".$this->mType;
+    $key_field = $this->mType."_id"; // Default PRIMARY KEY field
+    $sql = "CREATE TABLE $tableName (";
+    if (!$tableFields) {
+      // Use default fields
+      $sql .= $this->mType."_id bigint(20),";
+      $sql .= $this->mType."_name varchar(50),";
+      $sql .= "PRIMARY KEY (`".$key_field."`)";
+    }
+    else {
+      // Use user-supplied fields
+      if (!in_array($key_field,$tableFields)) {
+        // Default PRIMARY KEY field does not exist, so use first value in array for this
+        $key_field = array_key_first($tableFields);
       }
-      else {
-        // Use user-supplied fields
-        if (!in_array($key_field,$tableFields)) {
-          // Default PRIMARY KEY field does not exist, so use first value in array for this
-          $key_field = array_key_first($tableFields);
-        }
-        foreach ($tableFields as $name => $val)
-          $sql .= $name." ".$val.",";
-        $sql .= "PRIMARY KEY (`".$key_field."`)";
-      }
-      $unique = Parameters::get("unique");
-      if (isset($unique))
-        $sql .= ",UNIQUE KEY(".$unique.")";
-      $sql .= ")";
-      //elog("dbCreate,sql:$sql");
-      if ($this->query($sql))
-        elog("Table $tableName created successfully");
-      else
-        elog("Error creating table $tableName:".$this->getError());
-      return null;
+      foreach ($tableFields as $name => $val)
+        $sql .= $name." ".$val.",";
+      $sql .= "PRIMARY KEY (`".$key_field."`)";
+    }
+    $unique = Parameters::get("unique");
+    if (isset($unique))
+      $sql .= ",UNIQUE KEY(".$unique.")";
+    $sql .= ")";
+    //elog("dbCreate,sql:$sql");
+    if ($this->query($sql))
+      elog("Table $tableName created successfully");
+    else
+      elog("Error creating table $tableName:".$this->getError());
+    return null;
   } // dbCreate
 
   private function initFiltersFromParam()
@@ -662,9 +663,9 @@ class anyTable extends dbTable
     $this->mGrouping = false;
 
   //$stmt = "SELECT MAX(".$this->mIdKeyTable.") FROM ".$this->mTableName;
-    $stmt  = "SELECT AUTO_INCREMENT FROM information_schema.tables ".
-             "WHERE table_name = '".$this->mTableName."' ".
-              "AND table_schema = DATABASE( )";
+    $stmt = "SELECT AUTO_INCREMENT FROM information_schema.tables ".
+            "WHERE table_name = '".$this->mTableName."' ".
+            "AND table_schema = DATABASE( )";
     //elog("dbSearchMaxId query:".$stmt);
     if (!$this->query($stmt))
       return false;
@@ -2132,9 +2133,9 @@ class anyTable extends dbTable
     return true;
   } // dbMetaInsertOrUpdateSingle
 
-  ///////////////////////////////////////////////////////////////////////
-  //////////////////////// Insert or update link ////////////////////////
-  ///////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
+  /////////////////////////// Insert or update link ///////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
 
   protected function dbUpdateLink()
   {

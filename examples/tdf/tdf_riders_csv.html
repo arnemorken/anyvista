@@ -229,6 +229,9 @@ function table2display()
   //
   doLog("Reading data from table...");
   $( document ).ready(function() {
+    //
+    // Create data model
+    //
     let data_model = new anyModel({type:   "rider",
                                    mode:   "remote",
                                    fields: ["r_id","rank","rider_name","rider_no",
@@ -299,7 +302,9 @@ function csv2display()
       //
       // Create data model
       //
-      let data_model = new anyModel({type:"rider",mode:"local",search:false});
+      let data_model = new anyModel({type:   "rider",
+      								 mode:   "local",
+      								 search: false});
       //
       // Create data view
       //

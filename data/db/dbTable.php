@@ -271,6 +271,7 @@ class dbTable
    * @description Returns true if table exists, false otherwise.
    * @param  {String} tableName Name of table to check.
    * @return true | false
+   * TODO! Move this to dbConnection?
    */
   public function tableExists($tableName)
   {
