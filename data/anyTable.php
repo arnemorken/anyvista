@@ -996,25 +996,18 @@ class anyTable extends dbTable
           $sl .= ", ".$this->mTableNameGroup.".".$field;
       }
     }
-    // Select from other tables (link tables)
-    if (isset($this->mLinkId) && $this->mLinkId != "" && isset($this->mPlugins)) {
-      foreach($this->mPlugins as $i => $plugin) {
-        if ($plugin != "group" && $plugin != $this->mType) {
-          if ((isset($this->mLinkType) || $plugin == "user")) {
-            if (isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin[$plugin])) {
-              $linktable = $this->findLinkTableName($plugin);
-              if ($this->tableExists($linktable)) {
-                foreach ($this->mTableFieldsLeftJoin[$plugin] as $field)
-                  $sl .= ", ".$linktable.".".$field;
-              }
-            }
-          }
+    // Select from link table
+    if (isset($this->mLinkId) && $this->mLinkId != "" && isset($this->mLinkType)) {
+      if ($this->mLinkType != "group" &&
+          isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin[$this->mLinkType])) {
+        $linktable = $this->findLinkTableName($this->mLinkType);
+        if ($this->tableExists($linktable)) {
+          foreach ($this->mTableFieldsLeftJoin[$this->mLinkType] as $field)
+            $sl .= ", ".$linktable.".".$field;
         }
       }
       if ($this->hasParentId())
-        $sl .= ",";
-      if ($this->hasParentId())
-        $sl .= " temp.".$this->mNameKey." AS parent_name";
+        $sl .= ", temp.".$this->mNameKey." AS parent_name";
     }
     $sl .= " ";
     return $sl;
@@ -1028,14 +1021,11 @@ class anyTable extends dbTable
     if ($this->mType != "group")
       $lj .= $this->findListLeftJoinOne($cur_uid,"group",$gid);
 
-    // Left join other tables (link tables)
-    if (isset($this->mLinkId) && $this->mLinkId != "" && isset($this->mPlugins)) {
-      foreach($this->mPlugins as $i => $plugin) {
-        if ($plugin != "group" && $plugin != $this->mType) {
-          if (isset($this->mLinkType) || $plugin == "user") {
-            $lj .= $this->findListLeftJoinOne($cur_uid,$plugin,$gid);
-          }
-        }
+    // Left join link  table
+    if (isset($this->mLinkId) && $this->mLinkId != "" && isset($this->mLinkType)) {
+      if ($this->mLinkType != "group" &&
+          isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin[$this->mLinkType])) {
+        $lj .= $this->findListLeftJoinOne($cur_uid,$this->mLinkType,$gid);
       }
     }
     if ($this->hasParentId())
