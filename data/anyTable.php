@@ -1035,16 +1035,19 @@ class anyTable extends dbTable
 
   protected function findListLeftJoinOne($cur_uid,$plugin,$gid)
   {
-    $lj = "";
     $linktable       = $this->findLinkTableName($plugin);
     $plugintable     = $this->findPluginTableName($plugin);
     $metatable       = $this->findMetaTableName($plugin);
+
     $linktable_id    = $this->findLinkTableId($plugin);
     $plugintable_id  = $this->findPluginTableId($plugin);
+    $metatable_id    = $plugin."_id";
+
     $has_linktable   = $this->tableExists($linktable);
     $has_plugintable = $this->tableExists($plugintable);
     $has_metatable   = $this->tableExists($metatable);
-    $metatable_id    = $plugin."_id";
+
+    $lj = "";
     if ($has_linktable) {
       $lj .= "LEFT JOIN ".$linktable.  " ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ";
       if (!isset($this->mLinkType) && $plugin == "user" && $cur_uid)
@@ -1079,7 +1082,7 @@ class anyTable extends dbTable
         isset($this->mLinkType) &&
         isset($this->mLinkId)   && $this->mLinkId != "nogroup" &&
         $this->tableExists($link_table)) {
-      $where_id = $link_table.".".$this->mLinkType."_id='".$this->mLinkId."' ";
+      $where_id = $link_table.".".$this->mLinkType."_id='".$this->mLinkId."' "; // TODO! semi-hardcoded id of link table
       $where = "WHERE ".$where_id;
     }
     // If has parent_id while being a list-for list
@@ -1269,7 +1272,7 @@ class anyTable extends dbTable
       $idx = isInteger($idx) ? "+".$idx : $idx;
 
       if ($kind == "list" || $kind == "head")
-        $data[$gidx][$idx][$kind] = $this->mType;
+        $data[$gidx][$idx][$kind] = $this->mType; // TODO! Shouldnt it be data[gidx]["data"][idx] ?
       else // kind == "item"
         $data[$idx][$kind] = $this->mType;
 
