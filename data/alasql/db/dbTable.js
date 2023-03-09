@@ -25,6 +25,8 @@ var dbTable = function (connection)
 {
   this.connection = connection;
   this.data       = null;
+  this.error      = null;
+  this.message    = null;
 }; // constructor
 
 //
