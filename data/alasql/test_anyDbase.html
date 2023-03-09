@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+
+<script src="../../../../../javascript/jquery/jquery-3.6.0.min.js"></script>
+<script src="../../../../../javascript/jquery/jquery-widget-1.12.1.min.js"></script>
+<link  href="../../../../../javascript/w3css/w3.css"           rel="stylesheet"/>
+<link  href="../../../../../javascript/fontawesome/fa.min.css" rel="stylesheet"/>
+
+<script src="./alasql.min.js"></script>
+<script src="./db/dbConnection.js"></script>
+<script src="./db/dbTable.js"></script>
+<script src="./anyTable.js"></script>
+<script src="./anyTableFactory.js"></script>
+<script src="./types/anyGroup.js"></script>
+<script src="./types/anyEvent.js"></script>
+<script src="./types/anyUser.js"></script>
+
+<link  href="../../view/skin/default/anyvista.css" rel="stylesheet"/>
+<script src="../../view/functions.js"></script>
+<script src="../../view/anyStrings_en-GB.js"></script>
+<script src="../../view/anyFilter.js"></script>
+<script src="../../view/anyModel.js"></script>
+<script src="../../view/anyView.js"></script>
+<script src="../../view/anyViewTabs.js"></script>
+</head>
+
+<script>
+let gDbase = null;
+
+function testAnyDbase()
+{
+  let options = {
+    dbname:    "test_anydbase",
+    dbversion: "1",
+    onSuccess: connectSuccess,
+    onFail:    connectFail,
+  };
+  gDbase = new dbConnection(options);
+  if (gDbase.error) {
+    console.error(gDbase.error);
+    return;
+  }
+}
+
+async function connectSuccess(options)
+{
+  let sqlInsertGroup = [
+    "INSERT INTO any_group (group_id,group_name,group_description) VALUES (\
+      33,\
+      'a grp',\
+      'blah'\
+     );",
+  ];
+  let sqlInsertEvent = [
+    "INSERT INTO any_event (event_id,event_name,event_description) VALUES (\
+      11,\
+      'the event',\
+      'what is this?'\
+     );",
+    "INSERT INTO any_event (event_id,event_name,event_description) VALUES (\
+      22,\
+      'something happening',\
+      'This is great'\
+     );",
+  ];
+  let sqlInsertUser = [
+    "INSERT INTO any_user (user_id,user_name,user_description) VALUES (\
+      98,\
+      'Mrs. Woman',\
+      'I am she'\
+     );",
+    "INSERT INTO any_user (user_id,user_name,user_description) VALUES (\
+      99,\
+      'Mr. Man',\
+      'I am he'\
+     );",
+  ];
+
+  //console.log("connectSuccess");
+  let factory = new anyTableFactory(gDbase);
+
+  // Create table classes
+  let grtab = factory.create("anyGroup",true);
+  let ustab = factory.create("anyUser",true);
+  let evtab = factory.create("anyEvent",true);
+
+let d1 = null;
+let d2 = null;
+  // Create tables
+  grtab.createTable()
+  .then( () => {
+    return ustab.createTable()
+  })
+  .then( () => {
+    return evtab.createTable();
+  })
+  .then( () => {
+    return evtab.createLinkTables();
+  })
+  .then( async () => {
+    return grtab.query(sqlInsertGroup,true,true)
+  })
+  .then( () => {
+    return ustab.query(sqlInsertUser,true,true);
+  })
+  .then( () => {
+    return evtab.query(sqlInsertEvent,true,true);
+  })
+  .then( () => {
+    return evtab.insertLinkTables();
+  })
+  .then( () => {
+    return evtab.dbSearchItem(11)
+    .then( function(data) {
+      d1 = evtab.data;
+    });
+  })
+  .then( () => {
+    return ustab.dbSearchItem(99)
+    .then( function(data) {
+      d2 = ustab.data;
+    });
+  })
+  .then( () => {
+    var my_model1 = new anyModel({data: d1});
+    var my_view1  = new anyViewTabs({
+      model:   my_model1,
+      id:      "view1",
+    });
+    my_view1.refresh();
+    var my_model2 = new anyModel({data: d2});
+    var my_view2  = new anyViewTabs({
+      model:   my_model2,
+      id:      "view2",
+    });
+    my_view2.refresh();
+  })
+
+}
+
+function connectFail(error)
+{
+  console.log("connectFail:"+error);
+}
+
+testAnyDbase();
+
+</script>
+
+<body>
+Test of anyDbase - check console.
+<div id="view1"></div>
+<div id="view2"></div>
+</body>

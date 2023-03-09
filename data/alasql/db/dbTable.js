@@ -1,0 +1,48 @@
+var dbTable = function (connection,tablename)
+{
+  this.connection = connection;
+  this.tablename  = tablename;
+  this.data       = null;
+}; // constructor
+
+//
+// Create the database table associated with the class
+//
+dbTable.prototype.createTable = async function(mergeArray)
+{
+  if (!this.sqlCreate)
+    return Promise.resolve(false);
+  return await this.query(this.sqlCreate,mergeArray,true); // Create tables
+}; // createTable
+
+//
+// Perform a single query if SQL is a string or multiple queries if SQL is an array.
+// `SQL` should contain one or more SQL statements separated by `;` or an array of
+// SQL statements (currently not working due to an error in alasql).
+//
+dbTable.prototype.query = function(SQL,mergeArray,disregardResult)
+{
+  if (!SQL)
+    return Promise.resolve(false);
+  if (Array.isArray(SQL) && (mergeArray==true || mergeArray===undefined)) {
+    // Convert array to string
+    let sql_str = "";
+    SQL.forEach(function(str) { sql_str += str; });
+    SQL = sql_str;
+  }
+  //console.log("dbTable query:"+SQL);
+  let self = this;
+  return alasql.promise(SQL)
+  .then( function (data) {
+    if (!disregardResult)
+      self.data = data;
+    return Promise.resolve(data);
+  });
+}; // query
+
+dbTable.prototype.tableExists = function(tableName)
+{
+  return this.connection.aladbase.tables[tableName] != undefined
+         ? true
+         : false;
+}; // tableExists
