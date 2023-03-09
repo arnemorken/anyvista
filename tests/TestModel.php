@@ -13,7 +13,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <?php
-  require_once dirname(__FILE__)."/../data/anyDefs.php";
+  require_once dirname(__FILE__)."/../data/mysql/anyDefs.php";
 ?>
 
 <!-- jQuery -->

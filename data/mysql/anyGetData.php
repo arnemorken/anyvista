@@ -15,6 +15,41 @@ require_once dirname(__FILE__)."/anyTableFactory.php";
 
 function anyGetData($doEcho=false)
 {
+/*
+Parameters::set("header","true");
+Parameters::set("grouping","true");
+Parameters::set("type","event");
+Parameters::set("from","0");
+Parameters::set("num","20");
+Parameters::set("order","event_date_start");
+Parameters::set("dir","DESC");
+*/
+/*
+Parameters::set("echo","y");
+Parameters::set("type","event");
+Parameters::set("event_id","21150");
+Parameters::set("header","true");
+*/
+/*
+Parameters::set("grouping","false");
+Parameters::set("from","0");
+Parameters::set("num","20");
+Parameters::set("fields",array (
+  0 => 'r_id',
+  1 => 'rank',
+  2 => 'rider_name',
+  3 => 'rider_no',
+  4 => 'times',
+  5 => 'gap',
+  6 => 'team',
+  7 => 'year',
+  8 => 'distance',
+  9 => 'num_stages',
+  10 => 'total_sec',
+  11 => 'gap_sec',
+  12 => 'result_type',
+));
+*/
   $type = ltrim(Parameters::get("type"));
   $cmd  = ltrim(Parameters::get("cmd"));
 

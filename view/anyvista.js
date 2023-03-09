@@ -396,7 +396,7 @@
  * <hr/>
  *
  * <a name="server_api"></a>
- * <h2>Server API (PHP)</h2>
+ * <h2>MySql server API (PHP)</h2>
  *
  * The server API implements a simplified abstraction of a general database table as well as some specific table
  * classes corresponding to types in the client API. Currently the following types are implemented:
@@ -404,7 +404,7 @@
  * The anyVista server API is developed for and tested in the Apache/MySQL
  * (and Wordpress) environment but should also work in other settings.
  *
- * The file <b>`data/anyDefs.php`</b> should be edited to match the `anyDefs.js` file of the client.
+ * The file <b>`data/mysql/mysql/anyDefs.php`</b> should be edited to match the `anyDefs.js` file of the client.
  * See <a href="#server_api_anyDefs">configuration files</a> below for more info on this.
  *
  * <hr style="color:#eee;"/>
@@ -415,14 +415,14 @@
  * The general database abstraction is implemented through:
  * - an interface to the <a href="https://www.php.net/manual/en/intro.pdo.php" target="_blank">PDO (PHP Data Objects)
  *   <img style="width:10px;height:10px" src="../../../doc/img/external_link.png"/></a> extension to PHP. This interface
- *   is found under `data/db/`. The user should edit the <b>`data/db/dbDefs.php`</b> file and set the host name, database
- *   name and database user/password, but would normally not bother with the other  files in the `data/db/` folder,
- * - the class <a href="../../data/out/classes/anyTable.html">`anyTable`</a> contains the abstract database table
+ *   is found under `data/mysql/db/`. The user should edit the <b>`data/mysql/db/dbDefs.php`</b> file and set the host name, database
+ *   name and database user/password, but would normally not bother with the other  files in the `data/mysql/db/` folder,
+ * - the class <a href="../../data/mysql/out/classes/anyTable.html">`anyTable`</a> contains the abstract database table
  *   interface and has methods that call the actual database operations such as  search, insert, update, delete, etc.
  *   User defined type classes may extend this class and provide the methods `createFilters()`, `getSelectItem()`,
  *   `getLeftJoinItem()`, `getSelectList()`, `getLeftJoinList()` and `getOrderByList`. More info on these methods can be
  *   found in the documentation for the `anyTable` class,
- * - a helper class <a href="../../data/classes/anyTableFactory.html">`anyTableFactory`</a> in `data/anyTableFactory.php`.
+ * - a helper class <a href="../../data/mysql/classes/anyTableFactory.html">`anyTableFactory`</a> in `data/mysql/anyTableFactory.php`.
  *
  * <hr style="color:#eee;"/>
  *
@@ -564,7 +564,7 @@
  *
  * `gDataScript`:
  * The location of a script, relative to `gHomeFolder`, that delivers data on the correct JSON format. Default
- * value is `data/anyGetData.php`, which is the default script that gets data from the PHP backend. It is used by
+ * value is `data/mysql/anyGetData.php`, which is the default script that gets data from the PHP backend. It is used by
  * the db* methods of `anyModel` and only when the `this.mode` variable is set to `remote`, otherwise the
  * setting is ignored. If a script is not specified in `gDataScript`, the data must be delivered to anyVista by some
  * other method. Refer to the included examples.
@@ -585,8 +585,8 @@
  *      let gServer       = "//localhost/";
  *      let gHomeFolder   = "projects/anyvista/testserver/wp-content/plugins/anyvista/";
  *      let gThirdpartyJS = "projects/anyvista/thirdparty/javascript/";
- *      let gDataScript   = "data/anyGetData.php"; // Relative to gHomeFolder
- *      let gUploadFolder = "upload/";             // Relative to gHomeFolder
+ *      let gDataScript   = "data/mysql/anyGetData.php"; // Relative to gHomeFolder
+ *      let gUploadFolder = "upload/";                   // Relative to gHomeFolder
  *      let gSkin         = "default";
  *
  *      // Do not edit below unless you really know what you are doing.
@@ -610,8 +610,8 @@
  *      define("gServer",       "//localhost/");
  *      define("gHomeFolder",   "projects/anyvista/testserver/wp-content/plugins/anyvista/");
  *      define("gThirdpartyJS", "projects/anyvista/thirdparty/");
- *      define("gDataScript",   "data/anyGetData.php"); // Relative to gHomeFolder
- *      define("gUploadFolder", "wordpress/upload/");   // Relative to gHomeFolder
+ *      define("gDataScript",   "data/mysql/anyGetData.php"); // Relative to gHomeFolder
+ *      define("gUploadFolder", "wordpress/upload/");         // Relative to gHomeFolder
  *      define("gSkin",         "default");
  *
  *      // Do not edit below unless you really know what you are doing.
@@ -637,7 +637,7 @@
  *
  * <h4>dbDefs.php</h4>
  *
- * Finally, there is the <b>dbDefs.php</b> file, located under `data/db/`, that defines the connection to the
+ * Finally, there is the <b>dbDefs.php</b> file, located under `data/mysql/db/`, that defines the connection to the
  * database. The user should edit this file and set the host name, database name and database user/password.
  *
  * Sample listing of the `dbDefs.php` file:
@@ -822,7 +822,7 @@
  * A server side type should have three files placed in a folder below the `types` folder, in this case `client.php`,
  * `task.php` and `taskTable.php`.
  *
- * 1) Create the folder "task" under data/types/.
+ * 1) Create the folder "task" under data/mysql/types/.
  *
  * 2) Create empty files for the database table file (`taskTable.php`), the file for accessing the
  *    task server directly (`task.php`) and the file for interacting with other type classes (`client.php`):
@@ -1003,7 +1003,7 @@
  *
         <td class="tooltd"
             onclick="javascript:loadPage('<?php print $gAdmViewArea;?>',
-                                         '<?php print gAnyvistaURL;?>data/types/task/task.php?header=true&grouping=true',
+                                         '<?php print gAnyvistaURL;?>data/mysql/types/task/task.php?header=true&grouping=true',
                                          '<?php print $gAdmURL;?>');"
             title="Tasks">
           <i class="fas fa-file-alt fa-2x"></i><br/>Tasks

@@ -13,7 +13,7 @@
 var gServer        = "//localhost/";
 var gHomeFolder    = "Prosjekter/testserver/wp-content/plugins/anyvista/";
 var gThirdpartyPHP = "Prosjekter/testserver/php/";
-var gDataScript    = "data/anyGetData.php"; // Relative to gHomeFolder
+var gDataScript    = "data/mysql/anyGetData.php"; // Relative to gHomeFolder
 var gUploadScript  = "ajaxfileupload.php";  // Relative to gThirdpartyPHP
 var gUploadFolder  = "upload/";             // Relative to gHomeFolder
 var gSkin          = "default";
