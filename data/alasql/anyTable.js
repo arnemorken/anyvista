@@ -10,7 +10,6 @@
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).                  *
  *                                                                                          *
  ********************************************************************************************/
-
 /**
  * Class for interacting with an anyVista Alasql database table.
  *
@@ -30,11 +29,15 @@
  */
 var anyTable = function (connection,tablename,type,idKey,nameKey)
 {
-  dbTable.call(this,connection,tablename);
+  // Initiate the database connection
+  dbTable.call(this,connection);
 
-  this.type    = type;
-  this.idKey   = idKey;
-  this.nameKey = nameKey;
+  // Initialize properties
+  this.tablename = tablename;
+  this.type      = type;
+  this.idKey     = idKey;
+  this.nameKey   = nameKey;
+
   this.linking = null;
 }; // constructor
 
@@ -72,8 +75,9 @@ anyTable.prototype.dbSearch = function(options)
   });
 }; // dbSearch
 
-anyTable.prototype._dbSearch = function(options)
+// Internal method, do not call directly.
 // Error handling is done by dbSearch
+anyTable.prototype._dbSearch = function(options)
 {
   let type = options.type;
   if (!type)

@@ -1,7 +1,29 @@
-var dbTable = function (connection,tablename)
+/* jshint sub:true */
+/* jshint esversion: 9 */
+/* globals $,i18n,any_defs,isFunction,w3_modaldialog,w3_modaldialog_close,tinyMCE,tinymce */
+"use strict";
+/********************************************************************************************
+ *                                                                                          *
+ * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.                 *
+ *                                                                                          *
+ * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use. *
+ * Get licences here: http://balanse.info/anyvista/license/ (coming soon).                  *
+ *                                                                                          *
+ ********************************************************************************************/
+/**
+ * Base class for an Alasql database table.
+ * Manages the database connection and performs SQL queries.
+ *
+ * @class dbTable
+ * @constructor
+ * @param {dbConnection} connection Info about the database connection
+ * @example
+ *      dbTable.call(this,connection)
+ *
+*/
+var dbTable = function (connection)
 {
   this.connection = connection;
-  this.tablename  = tablename;
   this.data       = null;
 }; // constructor
 

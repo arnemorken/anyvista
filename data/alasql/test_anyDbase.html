@@ -32,6 +32,7 @@ let gDbase = null;
 function testAnyDbase()
 {
   let options = {
+    dbtype:    "INDEXEDDB", // "LOCALSTORAGE"
     dbname:    "test_anydbase",
     dbversion: "1",
     onSuccess: connectSuccess,
