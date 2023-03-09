@@ -17,7 +17,7 @@ require_once "dbConnection.php";
  * @constructor
  * @param {dbConnection} connection Info about the database connection
  * @example
- *      new dbTable($dbconn);
+ *      new dbTable($connection);
  *
 */
 class dbTable

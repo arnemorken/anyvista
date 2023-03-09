@@ -10,7 +10,7 @@
 require_once "dbDefs.php";
 
 /**
- * __Abstract base class for a PDO database connection.__
+ * __Class for connecting to a PDO database.__
  *
  * @class dbConnection
  * @constructor

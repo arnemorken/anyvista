@@ -158,7 +158,7 @@ class anyTable extends dbTable
 /**
   * Constructor
   *
-  * @param Array $connection Info about the database connection. See `dbConnection`.
+  * @param Array $connection Info about the database connection. See `db/dbConnection`.
   * @param Array $defsOrType An array containing the following entries:
   *                          - tableName:          Name of the main table, e.g. "any_event".
   *                          - tableNameMeta:      Name of the meta table, e.g. "any_eventmeta".
@@ -201,7 +201,7 @@ class anyTable extends dbTable
       $this->setError("Login required. ");
       return;
     }
-    // Set up the database connection
+    // Initiate the database connection
     parent::__construct($connection);
     if (!$this->getConnection()) {
       $this->setError("No connection to database. ");
