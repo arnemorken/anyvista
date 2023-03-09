@@ -45,7 +45,7 @@ function testModel()
               dm1.id_key                     === "" &&
               dm1.name_key                   === "" &&
               dm1.data                       === null &&
-              dm1.plugins                    === null &&
+              dm1.types                      === null &&
               dm1.select   && dm1.select.size   === 0 &&
               dm1.unselect && dm1.unselect.size === 0 &&
               dm1.mode                       === "local" &&

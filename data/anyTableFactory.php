@@ -49,9 +49,9 @@ class anyTableFactory
       return null;
     }
     if (!array_key_exists($type,self::$mTables)) {
-      chdir(dirname(__FILE__)); // Make sure we are in the right place to include plugin files
+      chdir(dirname(__FILE__)); // Make sure we are in the right place to include type files
       $class_name = $type."Table";
-      $file_name  = "plugins/".$type."/".$class_name.".php";
+      $file_name  = "types/".$type."/".$class_name.".php";
       if (!file_exists($file_name)) {
         self::$mError = "anyTableFactory: Table file '$file_name' not found, using default table file 'anyTable.php'. ";
         error_log(self::$mError);

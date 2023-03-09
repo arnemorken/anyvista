@@ -146,7 +146,7 @@ class eventTable extends anyTable
         "user_attended"       => 1,
       ],
     ],
-    "plugins" => [/*"document",*/"group","user"],
+    "types" => ["document","group","user"],
   ];
 
   protected $mInsertSuccessMsg  = "Event created. ",

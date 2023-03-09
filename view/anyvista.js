@@ -13,15 +13,15 @@
  More uses for anyVista can probably be conceived of.
  </p>
  <p>
- The anyVista API is plugin-based and some plugins are included, specifically `user`, `group`, `event` and
- `document`, all described below. More plugins are under development. Plugins may be linked, e.g. users
+ The anyVista API alows for user-defined types and some types are included, specifically `user`, `group`, `event`
+ and `document`, all described below. More types are under development. Types may be "linked", e.g. users
  may attend events, groups may have a number of documents, events may publish notes, and so on. When anyVista
- is used with Wordpress, these plugins can offer useful functionality otherwise provided by several separate
+ is used with Wordpress, these types can offer useful functionality otherwise provided by several separate
  Wordpress plugins.
  </p>
  <p>
  Below we describe the anyVista client API, the server API for using anyVista with a database in a PHP environment,
- how to write anyVista plugins and how to use anyVista with Wordpress.
+ how to write anyVista types and how to use anyVista with Wordpress.
  </p>
  *
  * __TABLE OF CONTENTS__
@@ -38,7 +38,7 @@
  * &nbsp;&nbsp;&nbsp;<a href="#server_api_data_filter">- Data filter</a><br/>
  * &nbsp;&nbsp;&nbsp;<a href="#server_api_anyDefs">- Configuration files</a><br/>
  * <br/>
- * &nbsp;<a href="#api_plugin_classes">anyVista plugins</a><br/>
+ * &nbsp;<a href="#api_type_classes">User defined types</a><br/>
  * <br/>
  * &nbsp;<a href="#wordpress_anyVista">anyVista and Wordpress</a><br/>
  * <br/>
@@ -69,7 +69,7 @@
  *
  * anyVista currently contains three basic classes: `anyModel`, `anyView` and `anyViewTabs`.
  *
- * Plugins, such as `event` or `user`, inherits from `anyModel` and either `anyView` or `anyViewTabs`.
+ * Type classes, such as `anyEvent` or `anyUser`, inherits from `anyModel` and either `anyView` or `anyViewTabs`.
  *
  * __<a href="../classes/anyModel.html">`anyModel`</a>__: Keeps data in a tree structure in memory and optionally
  * synchronizes it with a database.
@@ -115,7 +115,7 @@
  *   If this entry is not specified, the last preceding entry in the data structure is assumed.
  *   If there is no preceding entry, `list` is the default value assumed for "kind" and the current model's type is
  *   the default value for assumed for "type" and if the model has no type, "type" will be set to the empty string.
- *   If used with a database backend, "type" corresponds to a specific database table / plugin.<br/>
+ *   If used with a database backend, "type" corresponds to a specific database table.<br/>
  *   *Example: `list:"event"`.
  *
  * - An `edit` entry, specifying that this part of the data structure should be editable in a view even though the
@@ -399,8 +399,9 @@
  * <h2>Server API (PHP)</h2>
  *
  * The server API implements a simplified abstraction of a general database table as well as some specific table
- * classes corresponding to types (plugins) in the client API. Currently the following plugins are implemented:
- * `user`, `event`, `document` and `group`. The anyVista server API is developed for and tested in the Apache/MySQL
+ * classes corresponding to types in the client API. Currently the following types are implemented:
+ * `user`, `event`, `document` and `group`. The user can easily defined other types as needed.
+ * The anyVista server API is developed for and tested in the Apache/MySQL
  * (and Wordpress) environment but should also work in other settings.
  *
  * The file <b>`data/anyDefs.php`</b> should be edited to match the `anyDefs.js` file of the client.
@@ -418,9 +419,9 @@
  *   name and database user/password, but would normally not bother with the other  files in the `data/db/` folder,
  * - the class <a href="../../data/out/classes/anyTable.html">`anyTable`</a> contains the abstract database table
  *   interface and has methods that call the actual database operations such as  search, insert, update, delete, etc.
- *   Plugins may extend this class and provide the methods `createFilters()`, `getSelectItem()`, `getLeftJoinItem()`,
- *   `getSelectList()`, `getLeftJoinList()` and `getOrderByList`. More info on these methods can be found in the
- *   documentation for the `anyTable` class,
+ *   User defined type classes may extend this class and provide the methods `createFilters()`, `getSelectItem()`,
+ *   `getLeftJoinItem()`, `getSelectList()`, `getLeftJoinList()` and `getOrderByList`. More info on these methods can be
+ *   found in the documentation for the `anyTable` class,
  * - a helper class <a href="../../data/classes/anyTableFactory.html">`anyTableFactory`</a> in `data/anyTableFactory.php`.
  *
  * <hr style="color:#eee;"/>
@@ -429,12 +430,12 @@
  * <h3>Data format</h3>
  *
  * On the server side, data from the database are handled by the (abstract) `anyTable` class.
- * Each class that derives from `anyTable` corresponds to a type/plugin/database table.
+ * Each class that derives from `anyTable` corresponds to a type/database table.
  * A `anyTable` may set an id in which case it contains data for a single item. If id is not set, `anyTable` is
  * assumed to contain data for a list. Note that an item may contain lists as subdata.
  * `anyTable` uses an id key and a name key which must correspond to the `id_key` and `name_key` in the `anyModel`
- * class on the client side. These values must be set by the plugin classes deriving from `anyTable` (see
- * <a href="#api_plugin_classes">anyVista plugins</a> below).
+ * class on the client side. These values must be set by the type classes deriving from `anyTable` (see
+ * <a href="#api_type_classes">User defined types</a> below).
  *
  * Data returned from the server is formatted by the `anyTable` class into a hierarchical tree structure
  * that can be displayed by the `anyView` class on the client. This structure is exactly the same
@@ -488,7 +489,7 @@
  * simplifications: The server will always put the data into <i>groups</i>, even if it's just a single
  * item. This is done in order to be able to directly display grouped data with the view classes on the
  * client side. It is not something most users will need to think about, unless they are writing new
- * plugins or extending anyVista itself.
+ * server side type classes interacting with database tables.
  *
  * <div style="border:1px solid #888; padding:5px;padding-bottom:0px;">
  * <b>A NOTE ON DATA INSULATION:</b>
@@ -516,7 +517,7 @@
  *   - which data should be included in database operations `SEARCH`, `INSERT`, `UPDATE` and `DELETE`,
  *   - which data should be transferred to the client.
  *
- * Filters are defined for each plugin/type in the plugin's table file (e.g. `eventTable.php`).
+ * Filters are defined for each anyVista type in the type's table file (e.g. `eventTable.php`).
  * There is one filter for items and one for lists and they are defined in the `createFilters()`
  * method.
  *
@@ -569,7 +570,7 @@
  * other method. Refer to the included examples.
  *
  * `gUploadFolder`:
- * The location of an upload folder, relative to gHomeFolder. Used by the `document` plugin.
+ * The location of an upload folder, relative to gHomeFolder. Used by the `document` type.
  *
  * `gSkin`:
  * The skin (CSS) to use. Skins are found in the `view/skin/` folder.
@@ -656,28 +657,27 @@
  *
  * <hr/>
  *
- * <a name="api_plugin_classes"></a>
- * <h3>Plugins</h3>
+ * <a name="api_type_classes"></a>
+ * <h3>User defined types</h3>
  *
- * Each plugin on the client side corresponds to a plugin on the server side (e.g. "event", "user",
- * "document", "group", etc.). A plugin also corresponds to a `type` in the data model and a table
- * in the database.
+ * Each anyVista type on the client side corresponds to a type on the server side (e.g. "event", "user",
+ * "document", "group", etc.). A type also corresponds to `type` in the data model and a table in the database.
  *
- * Below we will use the "task" plugin a an example. Follow the naming convention outlined.
+ * Below we will use the "task" type a an example. Follow the naming convention outlined.
  * To keep things simple, the code below does not actually contain any useful methods, just the
- * scaffolding for setting up the plugin.
+ * scaffolding for setting up the type.
  *
- * <h4>Writing new plugins</h4>
+ * <h4>Writing new types</h4>
  *
  * **A) Client side code**
  *
- * It should be noted that it is not absolutely neccessary to create a client side plugin in order to
- * interact with a server side plugin - the default `anyModel` and `anyView` (or `anyViewTabs`)
- * classes might be used. If a client side plugin <i>is</i> created, it should inherit from `anyModel`
+ * It should be noted that it is not absolutely neccessary to create a client side type in order to
+ * interact with a server side type - the default `anyModel` and `anyView` (or `anyViewTabs`)
+ * classes might be used. If a client side type <i>is</i> created, it should inherit from `anyModel`
  * and `anyView` (or `anyViewTabs`) and should set the `type` (and optionally the `id_key` and
  * `name_key`) variable(s).
  *
- * 1) Create the folder "task" under view/plugins/ and create empty model, view, filter and validator files:
+ * 1) Create the folder "task" under view/types/ and create empty model, view, filter and validator files:
  *
  *        task/taskModel.js
  *        task/taskView.js
@@ -811,21 +811,21 @@
  *
  * It should be noted that this step is only neccessary if you want to use the server side database connection.
  *
- * On the server side a plugin corresponds to a table (and optionally a meta table) and inherits from `anyTable`.
- * Each plugin table class defines the following:
- * - a number of defining characteristica of the plugin table and meta table,
- * - the plugin's specific table (and optionally meta table) fields,
- * - the plugin's filter that describes which fields are used in database operations and transferred to and from
+ * On the server side a type corresponds to a table (and optionally a meta table) and inherits from `anyTable`.
+ * Each type table class defines the following:
+ * - a number of defining characteristica of the table and meta table,
+ * - the type's specific table (and optionally meta table) fields,
+ * - the type's filter that describes which fields are used in database operations and transferred to and from
  *   the client,
- * - how the plugin interacts with other plugins (link table fields).
+ * - how the type class interacts with other type classes (link table fields).
  *
- * A server side plugin should have three files placed in a folder below the `plugins` folder, in this case `client.php`,
+ * A server side type should have three files placed in a folder below the `types` folder, in this case `client.php`,
  * `task.php` and `taskTable.php`.
  *
- * 1) Create the folder "task" under data/plugins/.
+ * 1) Create the folder "task" under data/types/.
  *
  * 2) Create empty files for the database table file (`taskTable.php`), the file for accessing the
- *    task server directly (`task.php`) and the file for interacting with other plugins (`client.php`):
+ *    task server directly (`task.php`) and the file for interacting with other type classes (`client.php`):
  *
  *      task/taskTable.php
  *      task/task.php
@@ -900,7 +900,7 @@
                   "task_status"      => 1,
                 ],
               ],
-              "plugins" => ["task","group","user","document"],
+              "types" => ["task","group","user","document"],
             ];
 
             protected $mInsertSuccessMsg = "Task created. ",
@@ -959,10 +959,10 @@
         if (serverdata && serverdata.JSON_CODE)
           serverdata = serverdata.JSON_CODE;
         var model = new taskModel({ data:        serverdata ? serverdata.data : null,
-                                     permission: serverdata ? serverdata.permission : null,
-                                     plugins:    serverdata ? serverdata.plugins : null,
-                                     mode:       "remote",
-                                  });
+                                    permission: serverdata ? serverdata.permission : null,
+                                    types:      serverdata ? serverdata.types : null,
+                                    mode:       "remote",
+                                 });
         var data_id = "<?php echo Parameters::get("task_id");?>";
         var is_new  = (data_id == "new" || parseInt(data_id) == -1);
 
@@ -975,13 +975,13 @@
         view.refresh({parent:null,data:null,id:null,type:"task"});
         </script>
  *
- * 5) Create the file for letting other plugins interact with the task plugin (`client.php`):
+ * 5) Create the file for letting other types interact with the task type (`client.php`):
  *
-        <link  href="<?php print gAnyvistaURL;?>view/plugins/task/skin/<?php print gSkin;?>/task.css" rel="stylesheet"/>
-        <script src="<?php print gAnyvistaURL;?>view/plugins/task/taskModel.js"></script>
-        <script src="<?php print gAnyvistaURL;?>view/plugins/task/taskFilter.js"></script>
-        <script src="<?php print gAnyvistaURL;?>view/plugins/task/taskView.js"></script>
-        <script src="<?php print gAnyvistaURL;?>view/plugins/task/taskValidator.js"></script>
+        <link  href="<?php print gAnyvistaURL;?>view/types/task/skin/<?php print gSkin;?>/task.css" rel="stylesheet"/>
+        <script src="<?php print gAnyvistaURL;?>view/types/task/taskModel.js"></script>
+        <script src="<?php print gAnyvistaURL;?>view/types/task/taskFilter.js"></script>
+        <script src="<?php print gAnyvistaURL;?>view/types/task/taskView.js"></script>
+        <script src="<?php print gAnyvistaURL;?>view/types/task/taskValidator.js"></script>
  *
  * 6) Create the database table (MariaDB) with this SQL code:
  *
@@ -1003,30 +1003,30 @@
  *
         <td class="tooltd"
             onclick="javascript:loadPage('<?php print $gAdmViewArea;?>',
-                                         '<?php print gAnyvistaURL;?>data/plugins/task/task.php?header=true&grouping=true',
+                                         '<?php print gAnyvistaURL;?>data/types/task/task.php?header=true&grouping=true',
                                          '<?php print $gAdmURL;?>');"
             title="Tasks">
           <i class="fas fa-file-alt fa-2x"></i><br/>Tasks
         </td>
  *
- * **D) Using the plugin**
+ * **D) Using the user defined type**
  *
- * The plugin can now be accessed, either through the Wordpress integration described above, by accessing the
- * `task.php` file directly or by using the plugin in your own files.
+ * The type can now be accessed, either through the Wordpress integration described above, by accessing the
+ * `task.php` file directly or by using the type in your own files.
  *
- * 1) Accessing the plugin through Wordpress: Pressing the "Task" icon should bring up a list containing the one task
+ * 1) Accessing the type through Wordpress: Pressing the "Task" icon should bring up a list containing the one task
  *    that was inserted by the by the SQL script above.
  *
- * 2) Accessing the plugin with the `task.php` file by entering the following URL in a browser:
+ * 2) Accessing the type with the `task.php` file by entering the following URL in a browser:
  *
  *
  *
- * <h4>Included pre-defined plugins</h4>
+ * <h4>Included pre-defined types</h4>
  *
- * A number of useful plugins are included with anyVista. They may be modified to suit the user's need.
- * Currently, anyVista includes the following plugins:
+ * A number of useful types are included with anyVista. They may be modified to suit the user's need.
+ * Currently, anyVista includes the following types:
  *
- * - <b>Group</b>: Grouping of other types/plugins.
+ * - <b>Group</b>: Grouping of other types.
  *
  * - <b>User</b>: Interacts with a user table on the database server. In a Wordpress environment, this
  *   means the `wp_users` table. It does not have methods for handling login, as this is done better
@@ -1050,7 +1050,7 @@
  *
  * Learning by example is an excellent way to master new programming libraries and concepts.
  * Below you will find a  number of examples ranging from the simple "hello world" to writing
- * complex anyVista plugins in a client-server environment.
+ * complex anyVista types in a client-server environment.
  *
  * 1) <a href="http://localhost/prosjekter/anyvista/testserver/wp-content/plugins/anyvista/examples/1_hello_world/">Hello world</a>
  *

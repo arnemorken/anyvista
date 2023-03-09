@@ -8,7 +8,7 @@
  *
  ****************************************************************************************/
 /*
- * Include this file in plugins that are using the anyVista user plugin with a server backend
+ * Include this file in user defined type classes that are using the anyVista user type with a server backend
  */
   require_once dirname(__FILE__)."/../../anyDefs.php";
   require_once dirname(__FILE__)."/../client.php";
@@ -34,7 +34,7 @@ var model = new userModel({ mode:         "remote",
                             message:      serverdata ? serverdata.message: null,
                             error_server: serverdata ? serverdata.error: null,
                             permission:   serverdata ? serverdata.permission : null,
-                            plugins:      serverdata ? serverdata.plugins : null,
+                            types:        serverdata ? serverdata.types : null,
                          });
 var data_id      = "<?php echo Parameters::get("user_id");?>";
 var is_admin     = model.permission && model.permission.is_admin;

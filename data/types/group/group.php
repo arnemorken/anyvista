@@ -8,7 +8,7 @@
  *
  ****************************************************************************************/
 /*
- * Include this file in plugins that are using the anyVista event plugin with a server backend
+ * Include this file in user defined type classes that are using the anyVista group type with a server backend
  */
   require_once dirname(__FILE__)."/../../anyDefs.php";
   require_once dirname(__FILE__)."/../client.php";
@@ -18,11 +18,9 @@
   require_once dirname(__FILE__)."/../event/client.php";
   require_once gDataSource;
   $gViewArea = "any_content";
-  Parameters::set("type", "event");
-  Parameters::set("from", "0");
-  Parameters::set("num",  "20");
-  Parameters::set("order","event_date_start");
-  Parameters::set("dir",  "DESC");
+  Parameters::set("type","group");
+  Parameters::set("from","0");
+  Parameters::set("num","20");
   $the_data = anyGetData();
 ?>
 <div id="<?php print $gViewArea;?>"/>
@@ -31,31 +29,25 @@
 var serverdata = <?php echo $the_data;?>;
 if (serverdata && serverdata.JSON_CODE)
   serverdata = serverdata.JSON_CODE;
-var model = new eventModel({ mode:         "remote",
+var model = new groupModel({ mode:         "remote",
                              data:         serverdata ? serverdata.data : null,
                              message:      serverdata ? serverdata.message: null,
                              error_server: serverdata ? serverdata.error: null,
                              permission:   serverdata ? serverdata.permission : null,
-                             plugins:      serverdata ? serverdata.plugins : null,
+                             types:        serverdata ? serverdata.types : null,
                           });
-var data_id      = "<?php echo Parameters::get("event_id");?>";
+var data_id      = "<?php echo Parameters::get("group_id");?>";
 var is_admin     = model.permission && model.permission.is_admin;
 var is_logged_in = model.permission && model.permission.is_logged_in && parseInt(model.permission.current_user_id) > 0;
-var is_new       = (data_id == "new" || parseInt(data_id) == -1) && (!is_logged_in || is_admin);
+var is_new       = (data_id == "new" || parseInt(data_id) == -1);
 var is_me        = model.permission && parseInt(model.permission.current_user_id) == parseInt(data_id);
-var grouping     = "<?php echo Parameters::get("grouping");?>";
-var view = new eventViewTabs({ id:               "<?php print $gViewArea;?>",
-                               model:            model,
-                               showSearcher:     20,
-                               isEditable:       true,
-                               isDeletable:      true,
-                               isRemovable:      true,
-                               sortBy:           "event_date_start",
-                               sortDirection:    "DESC",
-                               edit:             is_new,
-                               grouping:         (!grouping || grouping == "false") && grouping != "" ? false : "tabs",
-                               event_date_start: "<?php echo Parameters::get('event_date_start'); ?>",
-                               event_date_end:   "<?php echo Parameters::get('event_date_end'); ?>",
+var view = new groupViewTabs({ id:          "<?php print $gViewArea;?>",
+                               model:       model,
+                               isEditable:  true, //is_admin || is_new,
+                               isDeletable: true, //is_admin || is_new,
+                               isRemovable: false,
+                               edit:        is_new,
+                               defaultKind: "list",
                             });
 view.refresh();
 </script>

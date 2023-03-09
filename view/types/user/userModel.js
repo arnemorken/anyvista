@@ -17,7 +17,7 @@ var userModel = function (options)
 {
   this.type     = "user";
   this.id_key   = "user_id";
-  this.name_key = "user_name";
+  this.name_key = "display_name"; // "user_name"
   anyModel.call(this,options);
 };
 

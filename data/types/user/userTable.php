@@ -13,7 +13,7 @@ require_once "anyTable.php";
  * Inherits from `anyTable`, which manages the basic database operations.
  * This class (along with the `groupTable` class) is mandatory for the anyVista server backend.
  * The class supports login/user authentication through the Wordpress user login API, but will
- * also work as a normal anyVista plugin table with or without Wordpress.
+ * also work as a normal anyVista type table with or without Wordpress.
  *
  * See `anyTable` for a description of the data structure the class uses.
  *
@@ -150,7 +150,7 @@ class userTable extends anyTable
         "user_role"        => 1,
       ],
     ],
-    "plugins" => [/*"document",*/"event","group"],
+    "types" => [/*"document",*/"event","group"],
   ];
 
   protected $mInsertSuccessMsg  = "User created. ",

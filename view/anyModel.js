@@ -52,7 +52,7 @@
  *                                   Default: "[type]_id" if type is set, "" otherwise.
  *      {String}   name_key:         Name key, e.g. "user_name".
  *                                   Default: "[type]_name" if type is set, "" otherwise.
- *      {Object}   plugins:          The plugins the model might interact with.
+ *      {Object}   types:            The types the model might interact with.
  *                                   Default: null.
  *      {Array}    select:           List of ids that are marked as selected.
  *                                   Default: new Set().
@@ -145,11 +145,11 @@ var anyModel = function (options)
     this.name_key = this.type ? this.type+"_name" : "";
 
   /**
-  * @property {Object} plugins
+  * @property {Object} types
   * @default null
-  * @description The model's plugins. Optional.
+  * @description The model's types. Optional.
   */
-  this.plugins = null;
+  this.types = null;
 
   /**
   * @property {Object} select
@@ -308,7 +308,7 @@ anyModel.prototype._dataInitDefault = function ()
 {
   this.data             = null;
   this.id               = null;
-  this.plugins          = null;
+  this.types            = null;
   this.mode             = "local";
   this.search           = false;
   this.search_term      = "";
@@ -385,7 +385,7 @@ anyModel.prototype.dataInit = function (options)
     if (options.name_key)                              { this.name_key         = options.name_key; }
     else
     if (!this.name_key && this.type)                   { this.name_key         = this.type+"_name"; }
-    if (options.plugins)                               { this.plugins          = options.plugins; }
+    if (options.types)                                 { this.types            = options.types; }
     if (options.select)                                { this.select           = options.select; }
     if (options.unselect)                              { this.unselect         = options.unselect; }
     if (options.mode)                                  { this.mode             = options.mode; }
@@ -1003,7 +1003,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
           if (item) {
             let ins_id = options.insert_id;
             if (!ins_id)
-              ins_id = "plugin-"+type; // TODO! Not general enough
+              ins_id = "link-"+type; // TODO! Not general enough
             let indata = {};
             indata[ins_id] = {};
             indata[ins_id].data = item;

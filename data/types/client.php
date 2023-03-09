@@ -8,7 +8,7 @@
  *
  ****************************************************************************************/
 /*
- * Include this file in anyVista plugins that are using a server backend
+ * Include this file in user defined type classes that are using a server backend
  */
 ?>
 <!-- jQuery -->

@@ -18,7 +18,7 @@ require_once "anyTableFactory.php";
  * Contains methods for doing search, insert, update and delete on a database table.
  * Supports user defined table format, as well as data in (Wordpress) meta tables.
  * The table format must be described in a table class that inherits from `anyTable` -
- * see `plugins/user/userTable.php` and `plugins/group/groupTable.php` for examples.
+ * see `types/user/userTable.php` and `types/group/groupTable.php` for examples.
  *
  * ### Data structure:
  *
@@ -53,8 +53,8 @@ require_once "anyTableFactory.php";
  *         }
  *         ...
  *       } // data
- *       'plugins': {                        // Optional
- *         [integer]: '[plugin name]',       // Optional. One or more plugin names.
+ *       'types': {                          // Optional
+ *         [integer]: '[type name]',         // Optional. One or more type names.
  *         ...
  *       },
  *       'permission': {                     // Mandatory
@@ -76,11 +76,12 @@ require_once "anyTableFactory.php";
  *
  * ### Server filters:
  *
- * Each type of data (i.e. each plugin) must have a corresponding filter which specifies whether each key of
- * the type should be included in database operations. The keys (e.g. "event_status") should be the same as
- * those in the corresponding filter, though not every name in the filter has to be present as a key. Also,
- * keys that are not described in the filter will be ignored. The filters are not part of the data structure
- * sent to the client, which uses its own filters for display. The server filters have the following format:
+ * Each type of data must have a corresponding filter which specifies whether each key of the type
+ * should be included in database operations. The keys (e.g. "event_status") should be the same as
+ * those in the corresponding filter, though not every name in the filter has to be present as a key.
+ * Also keys that are not described in the filter will be ignored. The filters are not part of the
+ * data structure sent to the client, which uses its own filters for display. The server filters have
+ * the following format:
  *
  *      [key]: 1 | 0
  *
@@ -176,7 +177,7 @@ class anyTable extends dbTable
   *                          - fieldsGroup:        An array containing the field names of the group table.
   *                          - fieldsLeftJoin:     An array containing the field names of the user link table.
   *                          - filters:            Filters.
-  *                          - plugins:            An array containing the names of the plugins this table can interact with.
+  *                          - types:              An array containing the names of the anyVista types this table can interact with.
   *
   * #### Example
   *```
@@ -220,7 +221,7 @@ class anyTable extends dbTable
   //
   // Set variables from table definitions or type.
   // Setting variables from type can be used in simple situations where
-  // the plugin doesnt need to supply its own mTableDefs object.
+  // the type doesnt need to supply its own mTableDefs object.
   //
   private function initProperties($defsOrType)
   {
@@ -277,9 +278,9 @@ class anyTable extends dbTable
       // Set table filters
       if (isset($defsOrType["filters"]))
         $this->mFilters = $defsOrType["filters"];
-      // Set plugins
-      if (isset($defsOrType["plugins"]))
-        $this->mLinking = $defsOrType["plugins"];
+      // Set types this class may interact
+      if (isset($defsOrType["types"]))
+        $this->mLinking = $defsOrType["types"];
     }
     else
     if (!$defsOrType || gettype($defsOrType) == "string") {
@@ -366,13 +367,13 @@ class anyTable extends dbTable
     if (!in_array($this->mIdKeyTable,$this->mTableFields))
       $this->mIdKeyTable = $this->mTableFields[0];
 
-    $str = Parameters::get("plugins");
+    $str = Parameters::get("types");
     if ($str)
       $this->mLinking = explode(',', $str);
     if (!isset($this->mLinking))
       $this->mLinking = array();
     if (!in_array($this->mType,$this->mLinking))
-      array_unshift($this->mLinking,$this->mType); // Add the current type as a "plugin" in order to work with sub-items
+      array_unshift($this->mLinking,$this->mType); // Add the current type as a "link" in order to work with sub-items
 
     return true;
   } // initProperties
@@ -494,50 +495,56 @@ class anyTable extends dbTable
     return $other.$type."s";             // TODO: i18n
   } // findDefaultHeader
 
-  protected function findMetaTableName($pluginType)
+  protected function findMetaTableId($type)
   {
-    if ($pluginType == "user")
+    $str = $type."_id";
+    return $str;
+  } // findMetaTableId
+
+  protected function findMetaTableName($type)
+  {
+    if ($type == "user")
       $str = ANY_DB_USERMETA_TABLE;
     else
-      $str = "any_".$pluginType."meta";
+      $str = "any_".$type."meta";
     return $str;
   } // findMetaTableName
 
-  protected function findLinkTableId($pluginType)
+  protected function findLinkTableId($type)
   {
-    $str = $pluginType."_id";
+    $str = $type."_id";
     return $str;
   } // findLinkTableId
 
-  protected function findLinkTableName($pluginType)
+  protected function findLinkTableName($type)
   {
-    if ($pluginType === null || $pluginType === "")
+    if ($type === null || $type === "")
       return null;
-    if ($pluginType == $this->mType)
+    if ($type == $this->mType)
       return $this->mTableName;
-    $ltn = [$pluginType,$this->mType];
+    $ltn = [$type,$this->mType];
     sort($ltn);
     $ltn = "any_".implode("_",$ltn);
     return $ltn;
   } // findLinkTableName
 
-  protected function findPluginTableId($pluginType)
+  protected function findTypeTableId($type)
   {
-    if ($pluginType == "user")
+    if ($type == "user")
       $str = ANY_DB_USER_ID;
     else
-      $str = $pluginType."_id";
+      $str = $type."_id";
     return $str;
-  } // findPluginTableId
+  } // findTypeTableId
 
-  protected function findPluginTableName($pluginType)
+  protected function findTypeTableName($type)
   {
-    if ($pluginType == "user")
+    if ($type == "user")
       $str = ANY_DB_USER_TABLE;
     else
-      $str = "any_".$pluginType;
+      $str = "any_".$type;
     return $str;
-  } // findPluginTableName
+  } // findTypeTableName
 
   /////////////////////////////////////////////////////////////////////////////
   //////////////////////////////// Create /////////////////////////////////////
@@ -787,7 +794,7 @@ class anyTable extends dbTable
   //
   protected function dbSearchItemLists(&$data)
   {
-    // If no plugins found, return with no error
+    // If no link types found, return with no error
     if (!isset($this->mLinking))
       return true;
     // Must have an id
@@ -801,12 +808,12 @@ class anyTable extends dbTable
     $group_table = anyTableFactory::create("group",$this);
     $group_table->mGrouping = false;
 
-    // Search through all registered plugins (link tables)
+    // Search through all registered link types/tables
     $idx = "+".$this->mId;
-    foreach ($this->mLinking as $i => $plugin) {
-      $table = anyTableFactory::create($plugin,$this);
+    foreach ($this->mLinking as $i => $link_type) {
+      $table = anyTableFactory::create($link_type,$this);
       if ($table) {
-        $link_table = $this->findLinkTableName($plugin);
+        $link_table = $this->findLinkTableName($link_type);
         if ($table->mType != $this->mType || $this->hasParentId()) {
           if ($this->tableExists($link_table)) {
             $g = Parameters::get("grouping");
@@ -820,12 +827,12 @@ class anyTable extends dbTable
             if (!$table->dbSearchList($table_data,$group_table))
               $this->mError .= $table->getError();
             if ($table_data) {
-              $pl_idx   = "plugin-".$plugin;
+              $pl_idx   = "link-".$link_type; // TODO! Not general enough
               $name_key = $table->getNameKey();
               $data[$idx]["data"]["grouping"] = $table->mGrouping;
               $data[$idx]["data"][$pl_idx]["grouping"] = $table->mGrouping;
-              $data[$idx]["data"][$pl_idx]["head"]     = $plugin;
-              $data[$idx]["data"][$pl_idx][$name_key]  = $this->findDefaultItemListHeader($plugin,$table_data,true);
+              $data[$idx]["data"][$pl_idx]["head"]     = $link_type;
+              $data[$idx]["data"][$pl_idx][$name_key]  = $this->findDefaultItemListHeader($link_type,$table_data,true);
               $data[$idx]["data"][$pl_idx]["data"]     = $table_data;
             }
           }
@@ -1033,36 +1040,36 @@ class anyTable extends dbTable
     return $lj;
   } // findListLeftJoin
 
-  protected function findListLeftJoinOne($cur_uid,$plugin,$gid)
+  protected function findListLeftJoinOne($cur_uid,$link_type,$gid)
   {
-    $linktable       = $this->findLinkTableName($plugin);
-    $plugintable     = $this->findPluginTableName($plugin);
-    $metatable       = $this->findMetaTableName($plugin);
+    $linktable     = $this->findLinkTableName($link_type);
+    $typetable     = $this->findTypeTableName($link_type);
+    $metatable     = $this->findMetaTableName($link_type);
 
-    $linktable_id    = $this->findLinkTableId($plugin);
-    $plugintable_id  = $this->findPluginTableId($plugin);
-    $metatable_id    = $plugin."_id";
+    $linktable_id  = $this->findLinkTableId($link_type);
+    $typetable_id  = $this->findTypeTableId($link_type);
+    $metatable_id  = $this->findMetaTableId($link_type);
 
-    $has_linktable   = $this->tableExists($linktable);
-    $has_plugintable = $this->tableExists($plugintable);
-    $has_metatable   = $this->tableExists($metatable);
+    $has_linktable = $this->tableExists($linktable);
+    $has_typetable = $this->tableExists($typetable);
+    $has_metatable = $this->tableExists($metatable);
 
     $lj = "";
     if ($has_linktable) {
       $lj .= "LEFT JOIN ".$linktable.  " ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ";
-      if (!isset($this->mLinkType) && $plugin == "user" && $cur_uid)
+      if (!isset($this->mLinkType) && $link_type == "user" && $cur_uid)
         $lj .= "AND CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$cur_uid." AS INT) "; // Only return results for current user
-      if ($has_plugintable) {
-        if ($plugin != "group") {
-          $lj .= "LEFT JOIN ".$plugintable." ON CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$plugintable.".".$plugintable_id." AS INT) ";
+      if ($has_typetable) {
+        if ($link_type != "group") {
+          $lj .= "LEFT JOIN ".$typetable." ON CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$typetable.".".$typetable_id." AS INT) ";
           if ($has_metatable)
-            $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=CAST(".$plugintable.".".$plugintable_id." AS INT) ";
+            $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=CAST(".$typetable.".".$typetable_id." AS INT) ";
         }
       }
     }
-    if ($has_plugintable && $plugin == "group" && $gid) {
+    if ($has_typetable && $link_type == "group" && $gid) {
       $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
-      $lj .= "LEFT JOIN ".$plugintable." ON CAST(".$plugintable.".".$plugintable_id." AS INT)=".$db_gid." ";
+      $lj .= "LEFT JOIN ".$typetable." ON CAST(".$typetable.".".$typetable_id." AS INT)=".$db_gid." ";
       $lj .= "AND ".$this->mTableNameGroup.".group_type='".$this->mType."' ";
       if ($has_metatable) {
         $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=".$db_gid." ";
@@ -1296,10 +1303,10 @@ class anyTable extends dbTable
 
       // Link tables for item
       if (isset($this->mLinking)) {
-        foreach ($this->mLinking as $i => $plugin) {
-          if (isset($this->mTableFieldsLeftJoin[$plugin])) {
-            for ($t=0; $t<count($this->mTableFieldsLeftJoin[$plugin]); $t++) {
-              $field = $this->mTableFieldsLeftJoin[$plugin][$t];
+        foreach ($this->mLinking as $i => $link_type) {
+          if (isset($this->mTableFieldsLeftJoin[$link_type])) {
+            for ($t=0; $t<count($this->mTableFieldsLeftJoin[$link_type]); $t++) {
+              $field = $this->mTableFieldsLeftJoin[$link_type][$t];
               if (!$this->mSimpleList || $field == $this->mIdKey || $field == $this->mNameKey || $field == "parent_id")
                 $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$kind);
             } // for
@@ -1734,8 +1741,8 @@ class anyTable extends dbTable
     // Data
     $d["data"] = $inData;
 
-    // Plugins
-    $data["plugins"] = $this->mLinking;
+    // Link types
+    $data["types"] = $this->mLinking;
     //vlog("data after prepare:",$data);
 
     return $data;
@@ -2362,9 +2369,9 @@ class anyTable extends dbTable
       }
       // Delete from associated tables
       if (isset($this->mLinking)) {
-        foreach ($this->mLinking as $idx => $plugin) {
-          $table = anyTableFactory::create($plugin,$this);
-          if ($this->mType !== $plugin) {
+        foreach ($this->mLinking as $idx => $link_type) {
+          $table = anyTableFactory::create($link_type,$this);
+          if ($this->mType !== $link_type) {
             $this->dbDeleteAssoc($table);
           }
         }

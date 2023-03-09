@@ -91,7 +91,7 @@ class documentTable extends anyTable
         "parent_name"          => 1,
       ],
     ],
-    "plugins" => ["event","group","user"],
+    "types" => ["event","group","user"],
   ];
 
   protected $mInsertSuccessMsg = "Document created. ",

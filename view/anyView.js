@@ -2192,7 +2192,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
 {
   if (!opt)
     return null;
-  if (!this.model.plugins || !this.options.linkIcons)
+  if (!this.model.types || !this.options.linkIcons)
     return;
 
   let parent  = opt.parent;
@@ -2243,15 +2243,15 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
   };
 
   // Add the clickable menu entries
-  for (let plugin_type in this.options.linkIcons) {
-    if (this.options.linkIcons.hasOwnProperty(plugin_type)) {
-      let plugin_opt = { data:      opt.data,
-                         id:        opt.id,
-                         type:      opt.type,
-                         link_type: plugin_type,
-                         link_icon: this.options.linkIcons[plugin_type],
-                       };
-      let link_btn = this.refreshLinkButton(plugin_opt,this.dbSearchLinks);
+  for (let link_type in this.options.linkIcons) {
+    if (this.options.linkIcons.hasOwnProperty(link_type)) {
+      let link_opt = { data:      opt.data,
+                       id:        opt.id,
+                       type:      opt.type,
+                       link_type: link_type,
+                       link_icon: this.options.linkIcons[link_type],
+                     };
+      let link_btn = this.refreshLinkButton(link_opt,this.dbSearchLinks);
       dd_menu.append(link_btn); // Subevents
     }
   }
@@ -2337,7 +2337,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,pa
     row_id_str: row_id_str,
     filter:     filter,
     filter_id:  filter_id,
-    plugins:    this.model.plugins,
+    types:      this.model.types,
     options:    this.options,
   };
   // Bind a method that is called while clicking on the text link, file view or file name (in non-edit mode)
@@ -2556,7 +2556,7 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
     mode:       this.model.mode,
     fields:     this.model.fields,
     permission: this.model.permission,
-    plugins:    this.model.plugins,
+    types:      this.model.types,
     select:     this.model.select,
     unselect:   this.model.unselect,
     last_term:  this.model.last_term,
@@ -3983,7 +3983,7 @@ $.any.anyView.prototype._toggleChecked = function (event)
 /**
  * @method dbSearchParents
  * @description Search for the list of possible parent items for the item with the given id.
- *              Called when processing plugin filters.
+ *              Called when processing type filters.
  *              The success metod builds a dropdown menu.
  * @param  type
  * @param  kind

@@ -87,7 +87,7 @@ class groupTable extends anyTable
         "membership"        => 1,
       ],
     ],
-    "plugins" => ["document","event","user"],
+    "types" => ["document","event","user"],
   ];
 
   protected $mInsertSuccessMsg  = "Group created. ",
