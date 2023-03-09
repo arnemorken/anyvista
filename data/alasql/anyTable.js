@@ -27,18 +27,22 @@
  * @param {String} idKey      The id key used in the table, e.g. "event_id".
  * @param {String} nameKey    The name key used in the table, e.g. "event_name".
  */
-var anyTable = function (connection,tablename,type,idKey,nameKey)
+var anyTable = function (connection,tablename,type,idKey,nameKey,orderBy,orderDir)
 {
   // Initiate the database connection
   dbTable.call(this,connection);
 
   // Initialize properties
   this.tablename = tablename;
+  this.data      = null;
   this.type      = type;
   this.idKey     = idKey;
   this.nameKey   = nameKey;
+  this.orderBy   = orderBy;
+  this.orderDir  = orderDir ? orderDir : "ASC";
 
-  this.linking = null;
+  this.linking   = null;
+  this.maxId     = -1;
 }; // constructor
 
 anyTable.prototype = new dbTable();
@@ -327,7 +331,11 @@ anyTable.prototype.findListWhere = function(type,linkType,linkId)
 
 anyTable.prototype.findListOrderBy = function()
 {
-  return "";
+  if (!this.orderBy)
+    return "";
+  let dir = this.orderDir ? this.orderDir : "";
+  let ob  = "ORDER BY " + this.tablename + "." + this.orderBy + " " + dir + " ";
+  return ob;
 }; // findListOrderBy
 
 /////////////////////////////////////////////////////////////////////////////
