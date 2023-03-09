@@ -12,7 +12,7 @@ require_once "permission.php";
 require_once "anyTableFactory.php";
 
 /**
- * Class for interacting with an anyVista database table.
+ * Class for interacting with an anyVista MySql database table.
  *
  * Inherits from `dbTable`, which manages the database connection.
  * Contains methods for doing search, insert, update and delete on a database table.
@@ -127,12 +127,12 @@ class anyTable extends dbTable
             $mIdKeyMetaTable    = null,
             $mNameKey           = null,
             $mMetaId            = null,
-            $mLinkType          = null, // Used by items that have associated lists
-            $mLinkId            = null, // Used by items that have associated lists
+            $mLinkType          = null,  // Used by items that have associated lists // TODO! Send as parameter to methods
+            $mLinkId            = null,  // Used by items that have associated lists // TODO! Send as parameter to methods
             $mGrouping          = true,  // Group results by default
             $mSimpleList        = false, // In a "simple" list search we get only the id, name and parent_id
             $mFilters           = null,
-            $mPlugins           = null,
+            $mLinking           = null,
             $mMaxId             = -1,
             $mNumResults        = 0,
             $mPermission        = null,
@@ -170,7 +170,7 @@ class anyTable extends dbTable
   *                          - nameKey:            The name key used by the client and in the table, e.g. "event_name" or "login_name".
   *                          - orderBy:            The field to sort by. e.g. "event_date_start".
   *                          - orderDir:           The direction of the sort, "ASC" or "DESC".
-  *                          - metaId:             The name of the id foeld in the meta table, e.g. "meta_id" or "umeta_id".
+  *                          - metaId:             The name of the id field in the meta table, e.g. "meta_id" or "umeta_id".
   *                          - fields:             An array containing the field names of the table.
   *                          - fieldsMeta:         An array containing the name of the meta keys of the meta table.
   *                          - fieldsGroup:        An array containing the field names of the group table.
@@ -279,7 +279,7 @@ class anyTable extends dbTable
         $this->mFilters = $defsOrType["filters"];
       // Set plugins
       if (isset($defsOrType["plugins"]))
-        $this->mPlugins= $defsOrType["plugins"];
+        $this->mLinking = $defsOrType["plugins"];
     }
     else
     if (!$defsOrType || gettype($defsOrType) == "string") {
@@ -368,11 +368,11 @@ class anyTable extends dbTable
 
     $str = Parameters::get("plugins");
     if ($str)
-      $this->mPlugins = explode(',', $str);
-    if (!isset($this->mPlugins))
-      $this->mPlugins = array();
-    if (!in_array($this->mType,$this->mPlugins))
-      array_unshift($this->mPlugins,$this->mType); // Add the current type as a "plugin" in order to work with sub-items
+      $this->mLinking = explode(',', $str);
+    if (!isset($this->mLinking))
+      $this->mLinking = array();
+    if (!in_array($this->mType,$this->mLinking))
+      array_unshift($this->mLinking,$this->mType); // Add the current type as a "plugin" in order to work with sub-items
 
     return true;
   } // initProperties
@@ -788,7 +788,7 @@ class anyTable extends dbTable
   protected function dbSearchItemLists(&$data)
   {
     // If no plugins found, return with no error
-    if (!isset($this->mPlugins))
+    if (!isset($this->mLinking))
       return true;
     // Must have an id
     if (!isset($this->mId) || $this->mId == "") {
@@ -803,7 +803,7 @@ class anyTable extends dbTable
 
     // Search through all registered plugins (link tables)
     $idx = "+".$this->mId;
-    foreach ($this->mPlugins as $i => $plugin) {
+    foreach ($this->mLinking as $i => $plugin) {
       $table = anyTableFactory::create($plugin,$this);
       if ($table) {
         $link_table = $this->findLinkTableName($plugin);
@@ -1295,8 +1295,8 @@ class anyTable extends dbTable
       }
 
       // Link tables for item
-      if (isset($this->mPlugins)) {
-        foreach ($this->mPlugins as $i => $plugin) {
+      if (isset($this->mLinking)) {
+        foreach ($this->mLinking as $i => $plugin) {
           if (isset($this->mTableFieldsLeftJoin[$plugin])) {
             for ($t=0; $t<count($this->mTableFieldsLeftJoin[$plugin]); $t++) {
               $field = $this->mTableFieldsLeftJoin[$plugin][$t];
@@ -1735,7 +1735,7 @@ class anyTable extends dbTable
     $d["data"] = $inData;
 
     // Plugins
-    $data["plugins"] = $this->mPlugins;
+    $data["plugins"] = $this->mLinking;
     //vlog("data after prepare:",$data);
 
     return $data;
@@ -2361,8 +2361,8 @@ class anyTable extends dbTable
           return null;
       }
       // Delete from associated tables
-      if (isset($this->mPlugins)) {
-        foreach ($this->mPlugins as $idx => $plugin) {
+      if (isset($this->mLinking)) {
+        foreach ($this->mLinking as $idx => $plugin) {
           $table = anyTableFactory::create($plugin,$this);
           if ($this->mType !== $plugin) {
             $this->dbDeleteAssoc($table);
