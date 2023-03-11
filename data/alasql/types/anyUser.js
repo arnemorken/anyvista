@@ -16,8 +16,8 @@ var anyUser = function (connection)
       parent_id        INT,\
       UNIQUE (user_id));\
     CREATE TABLE IF NOT EXISTS any_event_user (\
-      event_id          INT PRIMARY KEY AUTOINCREMENT,\
-      user_id           INT PRIMARY KEY AUTOINCREMENT,\
+      event_id          INT PRIMARY KEY,\
+      user_id           INT PRIMARY KEY,\
       UNIQUE (event_id,user_id));\
     ";
 }; // constructor

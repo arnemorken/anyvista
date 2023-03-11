@@ -20,7 +20,8 @@ var anyGroup = function (connection)
       group_privacy     varchar(11),\
       domain_id         integer,\
       header_image      varchar(64),\
-      group_payment     varchar(10));\
+      group_payment     varchar(10),\
+      UNIQUE(group_id));\
     ";
 }; // constructor
 
