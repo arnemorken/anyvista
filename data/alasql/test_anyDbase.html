@@ -55,15 +55,17 @@ async function connectSuccess(options)
      );",
   ];
   let sqlInsertEvent = [
-    "INSERT INTO any_event (event_id,event_name,event_description) VALUES (\
+    "INSERT INTO any_event (event_id,event_name,event_description,parent_id) VALUES (\
       11,\
-      'the event',\
-      'what is this?'\
+      'Parent event no. 1',\
+      'I am a parent',\
+      null\
      );",
-    "INSERT INTO any_event (event_id,event_name,event_description) VALUES (\
-      22,\
-      'something happening',\
-      'This is great'\
+    "INSERT INTO any_event (event_id,event_name,event_description,parent_id) VALUES (\
+      21,\
+      'Child event no 1',\
+      'I am a child',\
+      '11'\
      );",
   ];
   let sqlInsertUser = [
@@ -113,7 +115,7 @@ let d2 = null;
     return evtab.insertLinkTables();
   })
   .then( () => {
-    return evtab.dbSearchItem(11)
+    return evtab.dbSearchList()
     .then( function(data) {
       d1 = evtab.data;
     });
@@ -125,13 +127,13 @@ let d2 = null;
     });
   })
   .then( () => {
-    var my_model1 = new anyModel({data: d1});
+    var my_model1 = new anyModel({data: d1, type: "event"});
     var my_view1  = new anyViewTabs({
       model:   my_model1,
       id:      "view1",
     });
     my_view1.refresh();
-    var my_model2 = new anyModel({data: d2});
+    var my_model2 = new anyModel({data: d2, type: "user"});
     var my_view2  = new anyViewTabs({
       model:   my_model2,
       id:      "view2",
