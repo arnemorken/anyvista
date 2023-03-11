@@ -26,6 +26,8 @@
  * @param {String} type       Type of the table, e.g. "event".
  * @param {String} idKey      The id key used in the table, e.g. "event_id".
  * @param {String} nameKey    The name key used in the table, e.g. "event_name".
+ * @param {String} orderBy    The field to sort by. e.g. "event_date_start".
+ * @param {String} orderDir   The direction of the sort, "ASC" or "DESC".
  */
 var anyTable = function (connection,tablename,type,idKey,nameKey,orderBy,orderDir)
 {
@@ -175,7 +177,7 @@ anyTable.prototype.dbSearchItem = function(id)
   .then (function(rows) {
     //console.log("raw item data:");
     //console.log(rows);
-    self.data = self.getRowData(self.data,self.type,rows,"item");
+    self.data = self.getRowData(rows,self.data,self.type,"item");
     //console.log("item data:");
     //console.log(self.data);
     if (!self.data || Object.keys(self.data).length === 0)
@@ -266,7 +268,8 @@ anyTable.prototype.dbSearchList = function(type,linkType,linkId)
   .then( function(data) {
     //console.log("list data:");
     //console.log(data);
-    return Promise.resolve(data);
+    self.data = self.buildGroupTreeAndAttach(data,linkId);
+    return Promise.resolve(self.data);
   });
 }; // dbSearchList
 
@@ -280,7 +283,7 @@ anyTable.prototype.dbExecListStmt = function(type,linkType,linkId)
   .then( function(rows) {
     //console.log("raw list data:");
     //console.log(rows);
-    let data = self.getRowData(self.data,self.type,rows,"list");
+    let data = self.getRowData(rows,self.data,self.type,"list");
     return Promise.resolve(data);
   });
 }; // dbExecListStmt
@@ -342,7 +345,10 @@ anyTable.prototype.findListOrderBy = function()
 /////////////////////////////// Data retrieval //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-anyTable.prototype.getRowData = function(data,type,rows,kind)
+//
+// Get the data from query result (rows) to data array.
+//
+anyTable.prototype.getRowData = function(rows,data,type,kind)
 {
   if (!data) {
     if (!this.data)
@@ -352,36 +358,138 @@ anyTable.prototype.getRowData = function(data,type,rows,kind)
   for (let i=0; i<rows.length; i++) {
     //console.log(i+":"+JSON.stringify(rows[i]));
     let idKey = type+"_id";
-    let gid      = rows[i]["group_id"]
-                   ? rows[i]["group_id"]
-                   : "nogroup";
-    let gidx     = type != "group"
-                   ? gid
-                   : type;
-    let idx = rows[i][idKey]
-              ? rows[i][idKey]
-              : null;
-    if (idx) {
-      let d1 = null;
-      if ((kind == "list" || kind == "head") && !data[gidx])
+    let gid   = rows[i]["group_id"]
+                ? rows[i]["group_id"]
+                : "nogroup";
+    let gidx  = type != "group"
+                ? gid
+                : type;
+    let idx   = rows[i][idKey]
+                ? rows[i][idKey]
+                : null;
+    if (!idx && idx !== 0)
+      continue;
+    if ((kind == "list" || kind == "head")) {
+      if (!data[gidx])
         data[gidx] = {};
-      else
+      data[gidx][idx]       = rows[i];
+      data[gidx][idx][kind] = type;
+    }
+    else {
       if (!data[idx])
         data[idx] = {};
-      if (kind == "list" || kind == "head") {
-        data[gidx]["data"] = {};
-        data[gidx]["data"][idx]       = rows[i];
-        data[gidx]["data"][idx][kind] = type;
-      }
-      else {
-        data[idx]       = rows[i];
-        data[idx][kind] = type;
-      }
-    } // if idx
+      data[idx]       = rows[i];
+      data[idx][kind] = type;
+    }
   }
   //console.log("getRowData,data:"); console.log(data);
   return data;
 }; // getRowData
+
+anyTable.prototype.buildGroupTreeAndAttach = function(data,linkId)
+{
+  if (!data)
+    return null;
+
+  // Make sure parent/child items are present in all groups where parent exists
+  for (var gidx in data) {
+    let grp = data[gidx];
+    for (var idx in grp) {
+      let item = grp[idx];
+      if (item && item["parent_id"]) {
+        let pid = item["parent_id"];
+        for (var gidx2 in data) {
+          let grp2 = data[gidx2];
+          let item_parent = grp2[pid] || grp2[pid] === 0
+                            ? grp2[pid]
+                            : grp2["+"+pid] || grp2["+"+pid] === 0
+                              ? grp2["+"+pid]
+                              : null;
+          if (item_parent && gidx2 != gidx) {
+            //console.log("found child "+idx+" in group "+gidx+" with parent "+pid+"...");
+            if (!grp2[idx] && !grp2["+"+idx])
+              grp2[idx] = item;  // Copy child to other group
+            if (!grp[pid] && !grp["+"+pid]) {
+              let name = item[this.nameKey];
+              let err = "Warning: Item "+idx+" ("+name+") does not have parent in same group. ";
+              this.setMessage(err);
+              console.log(err);
+            }
+          } // if
+        } // for
+      } // if
+    } // for
+  } // for
+
+  // Build data tree
+  let data_tree = {};
+  data_tree["grouping"] = true; // TODO! Should be able to specify this via option
+  for (var gidx in data) {
+    let grp = data[gidx];
+    let ngidx = linkId
+                ? this.type
+                : Number.isInteger(gidx)
+                  ? "+"+gidx
+                  : gidx;
+    data_tree[ngidx] = {};
+    data_tree[ngidx]["data"] = this.buildDataTree(data[gidx],null);
+    if (!data_tree[ngidx]["data"])
+      delete data_tree[ngidx]["data"];
+  } // for
+
+  // If grouping is specified, build group tree and stick data tree to it
+  if (false) { // TODO!
+  }
+  else {
+    if (linkId)
+      data = data_tree[this.type] && data_tree[this.type]["data"]
+             ? data_tree[this.type]["data"]
+             : data_tree;
+    else
+      data = data_tree;
+  }
+  return data;
+}; // buildGroupTreeAndAttach
+
+// Build data tree from parent-child relations
+anyTable.prototype.buildDataTree = function(flatdata,parentId)
+{
+  if (!flatdata)
+    return null;
+  let retval = {};
+  let id_name = this.idKey;
+  for (var idx in flatdata) {
+    let subdata = flatdata[idx];
+    if (!idx.startsWith("grouping")) {
+      let sub_pid = subdata["parent_id"];
+      let parent_not_in_group = sub_pid && sub_pid != "" &&
+                                !flatdata[sub_pid] && !flatdata["+"+sub_pid];
+      let pid = null;
+      if (parent_not_in_group) {
+        pid = subdata["parent_id"];
+        delete subdata["parent_id"];
+      }
+      if (!subdata["parent_id"])
+        subdata["parent_id"] = null;
+      if (subdata["parent_id"] == parentId) {
+        var children = null;
+        if (subdata[id_name] && subdata[id_name] != "")
+          children = this.buildDataTree(flatdata,subdata[id_name]);
+        if (children)
+          subdata["data"] = children;
+        if (parent_not_in_group)
+          subdata["parent_id"] = pid;
+        retval[idx] = subdata;
+        subdata = null;
+      }
+      else {
+        if (pid != null)
+          subdata["parent_id"] = pid;
+      }
+    }
+  }
+  return retval;
+}; // buildDataTree
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Insert //////////////////////////////////////
