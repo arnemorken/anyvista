@@ -118,7 +118,7 @@ class anyTable extends dbTable
 
   protected
   /** @var array Contains data for a list or an item. See "Data structure" above. */
-            $mData = null,
+            $mData              = null,
   /** @var string The type of the table data (e.g. `user`). */
             $mType              = null,
   /** @var string|int Null if list, non-null if item */
@@ -150,7 +150,7 @@ class anyTable extends dbTable
             $mDeleteNothingToDo = "Nothing to delete";
 
   private   $mNumRowsChanged    = 0,
-            $mLastNumRows       = 0,
+            $mLastNumRows       = 0,   // Used to break (theoretical) infinite recursion
             $mPageSize          = 30,  // Number of items returned per page
             $mRecMax            = 100, // Used to avoid infinite recursion
             $mRecDepth          = 0;   // Recursion depth
@@ -1338,7 +1338,7 @@ class anyTable extends dbTable
           $val = null;
         if ($val != null && $val != "") {
           if ($kind == "list" || $kind == "head")
-              $data[$gidx][$idx][$field] = $val;
+            $data[$gidx][$idx][$field] = $val;
           else
             $data[$idx][$field] = $val;
           //elog("getCellData:$gidx,$idx,$tablefield,$field:".$val);
@@ -1470,9 +1470,9 @@ class anyTable extends dbTable
     if (!$data)
       return;
     $this->mRecDepth = 0;
-    //vlog("buildGroupTreeAndAttach,group_data:",$group_data);
-    //vlog("buildGroupTreeAndAttach,data before copying parent/child:",$data);
+
     // Make sure parent/child items are present in all groups where parent exists
+    //vlog("buildGroupTreeAndAttach,data before copying parent/child:",$data);
     foreach ($data as $gidx => $grp) {
       foreach ($grp as $idx => $item) {
         if (isset($item["parent_id"])) {
@@ -1498,6 +1498,9 @@ class anyTable extends dbTable
         }
       }
     }
+
+    // Build data tree
+    //vlog("buildGroupTreeAndAttach,group_data:",$group_data);
     //vlog("buildGroupTreeAndAttach,data before building tree:",$data);
     $data_tree = array();
     $data_tree["grouping"] = $this->mGrouping;
@@ -1603,16 +1606,13 @@ class anyTable extends dbTable
     }
     if (!$flatdata)
       return null;
-    $retval = array();
-    $type_list = $this->mType;
-    $id_name   = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
+    $retval  = array();
+    $id_name = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
     foreach ($flatdata as $idx => &$subdata) {
       $has_grouping_data = (strpos($idx,"grouping") === 0);
       if (!$has_grouping_data) {
-        $parent_not_in_group = isset($subdata["parent_id"]) &&
-                               $subdata["parent_id"] != "" &&
-                               !isset($flatdata[$subdata["parent_id"]]) &&
-                               !isset($flatdata["+".$subdata["parent_id"]]);
+        $parent_not_in_group = isset($subdata["parent_id"]) && $subdata["parent_id"] != "" &&
+                               !isset($flatdata[$subdata["parent_id"]]) && !isset($flatdata["+".$subdata["parent_id"]]);
         $pid = null;
         if ($parent_not_in_group) {
           $pid = $subdata["parent_id"];
