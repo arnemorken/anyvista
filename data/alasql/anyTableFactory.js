@@ -1,3 +1,7 @@
+/* jshint sub:true */
+/* jshint esversion: 9 */
+"use strict";
+
 var anyTableFactory = function (connection)
 {
   this.connection = connection;
@@ -6,28 +10,28 @@ var anyTableFactory = function (connection)
 //
 // Create a new table class, optionally also create the associated database table
 //
-anyTableFactory.prototype.create = function(classname)
+anyTableFactory.prototype.create = function(className)
 {
-  if (!classname) {
+  if (!className) {
     this.error = "Class name missing. ";
     console.error(this.error);
     return false;
   }
   var head = document.getElementsByTagName('head')[0];
   var js   = document.createElement("script");
-  var path = "types/" + classname + ".js";
+  var path = "types/" + className + ".js";
   if (!isScriptLoaded(path)) {
     //console.log("loading "+path);
     js.src = path;
   }
   try {
     head.appendChild(js);
-    let table_class = new window[classname](this.connection);
-    table_class.classname = classname;
+    let table_class = new window[className](this.connection);
+    table_class.className = className;
     return table_class;
   }
   catch (err) {
-    this.error = "Could not initialise "+classname+":"+err;
+    this.error = "Could not initialise "+className+":"+err;
     console.error(this.error);
     return false;
   }

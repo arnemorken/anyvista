@@ -22,20 +22,20 @@
  * @class anyTable
  * @constructor
  * @param {Object} connection Info about the database connection. See `db/dbConnection.js`
- * @param {String} tablename  Name of the main table, e.g. "any_event".
+ * @param {String} tableName  Name of the main table, e.g. "any_event".
  * @param {String} type       Type of the table, e.g. "event".
  * @param {String} idKey      The id key used in the table, e.g. "event_id".
  * @param {String} nameKey    The name key used in the table, e.g. "event_name".
  * @param {String} orderBy    The field to sort by. e.g. "event_date_start".
  * @param {String} orderDir   The direction of the sort, "ASC" or "DESC".
  */
-var anyTable = function (connection,tablename,type,idKey,nameKey,orderBy,orderDir)
+var anyTable = function (connection,tableName,type,idKey,nameKey,orderBy,orderDir)
 {
   // Initiate the database connection
   dbTable.call(this,connection);
 
   // Initialize properties
-  this.tablename = tablename;
+  this.tableName = tableName;
   this.data      = null;
   this.type      = type;
   this.idKey     = idKey;
@@ -146,7 +146,7 @@ anyTable.prototype._dbSearch = function(options)
 //
 anyTable.prototype.dbSearchMaxId = function()
 {
-  let stmt = "SELECT MAX("+this.idKey+") FROM "+this.tablename;
+  let stmt = "SELECT MAX("+this.idKey+") FROM "+this.tableName;
   let self = this;
   return alasql.promise(stmt)
   .then (function(data) {
@@ -191,9 +191,9 @@ anyTable.prototype.dbSearchItem = function(id)
 anyTable.prototype.dbPrepareSearchItemStmt = function(key,val)
 {
   let select = "SELECT DISTINCT "+"* "+
-               "FROM  "          +this.tablename+" ";
+               "FROM  "          +this.tableName+" ";
   if (val)
-    select  += "WHERE "          +this.tablename+"."+key+"="+val+" ";
+    select  += "WHERE "          +this.tableName+"."+key+"="+val+" ";
   return select;
 }; // dbPrepareSearchItemStmt
 
@@ -247,7 +247,7 @@ anyTable.prototype.findLinkTableName = function(linkType)
   if (!linkType)
     return "";
   if (linkType == this.type)
-    return this.tablename;
+    return this.tableName;
   let ltn = [linkType,this.type].sort();
   ltn = "any_"+ltn[0]+"_"+ltn[1];
   return ltn;
@@ -301,12 +301,12 @@ anyTable.prototype.dbPrepareSearchListStmt = function(type,linkType,linkId)
 anyTable.prototype.findListSelect = function(type,linkType)
 {
   // Select from own table
-  let sl = "SELECT DISTINCT "+this.tablename+".* ";
+  let sl = "SELECT DISTINCT "+this.tableName+".* ";
   if (linkType) {
     let link_table_name = this.findLinkTableName(type);
     sl += ", " + link_table_name + ".* ";
   }
-  sl += "FROM "+this.tablename+" ";
+  sl += "FROM "+this.tableName+" ";
   return sl;
 }; // findListSelect
 
@@ -316,7 +316,7 @@ anyTable.prototype.findListLeftJoin = function(type,linkType)
   if (linkType) {
     let link_table_name = this.findLinkTableName(type);
     lj += "LEFT JOIN " + link_table_name + " " +
-          "ON " + link_table_name + "." + this.idKey + "=" + this.tablename + "." + this.idKey + " ";
+          "ON " + link_table_name + "." + this.idKey + "=" + this.tableName + "." + this.idKey + " ";
   }
   return lj;
 }; // findListLeftJoin
@@ -337,7 +337,7 @@ anyTable.prototype.findListOrderBy = function()
   if (!this.orderBy)
     return "";
   let dir = this.orderDir ? this.orderDir : "";
-  let ob  = "ORDER BY " + this.tablename + "." + this.orderBy + " " + dir + " ";
+  let ob  = "ORDER BY " + this.tableName + "." + this.orderBy + " " + dir + " ";
   return ob;
 }; // findListOrderBy
 
@@ -392,13 +392,13 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,linkId)
     return null;
 
   // Make sure parent/child items are present in all groups where parent exists
-  for (var gidx in data) {
+  for (let gidx in data) {
     let grp = data[gidx];
-    for (var idx in grp) {
+    for (let idx in grp) {
       let item = grp[idx];
       if (item && item["parent_id"]) {
         let pid = item["parent_id"];
-        for (var gidx2 in data) {
+        for (let gidx2 in data) {
           let grp2 = data[gidx2];
           let item_parent = grp2[pid] || grp2[pid] === 0
                             ? grp2[pid]
@@ -424,7 +424,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,linkId)
   // Build data tree
   let data_tree = {};
   data_tree["grouping"] = true; // TODO! Should be able to specify this via option
-  for (var gidx in data) {
+  for (let gidx in data) {
     let grp = data[gidx];
     let ngidx = linkId
                 ? this.type
@@ -458,7 +458,7 @@ anyTable.prototype.buildDataTree = function(flatdata,parentId)
     return null;
   let retval = {};
   let id_name = this.idKey;
-  for (var idx in flatdata) {
+  for (let idx in flatdata) {
     let subdata = flatdata[idx];
     if (!idx.startsWith("grouping")) {
       let sub_pid = subdata["parent_id"];

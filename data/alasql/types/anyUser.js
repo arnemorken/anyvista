@@ -1,8 +1,8 @@
 var anyUser = function (connection)
 {
-  this.tablename = "any_user";
-  this.classname = "anyUser";
-  anyTable.call(this,connection,this.tablename,"user","user_id","user_name");
+  this.tableName = "any_user";
+  this.className = "anyUser";
+  anyTable.call(this,connection,this.tableName,"user","user_id","user_name");
 
   this.linking = { "group":    [ "any_group_user",    "anyGroup" ],
                    "event":    [ "any_event_user",    "anyEvent" ],
