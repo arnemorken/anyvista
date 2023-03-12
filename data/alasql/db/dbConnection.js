@@ -69,13 +69,3 @@ var dbConnection = function (options)
            : false;
   });
 }; // constructor
-
-dbConnection.prototype.tableExists = function(tableName)
-{
-  if (!this.aladbase)
-    return false;
-  let res = this.aladbase.tables && this.aladbase.tables[tableName];
-  return res === undefined
-         ? false
-         : res;
-}; // tableExists

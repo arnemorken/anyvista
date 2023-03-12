@@ -66,6 +66,8 @@ dbTable.prototype.query = function(SQL,mergeArray,disregardResult)
 
 dbTable.prototype.tableExists = function(tableName)
 {
+  if (!this.connection || !this.connection.aladbase || !this.connection.aladbase.tables)
+    return false;
   return this.connection.aladbase.tables[tableName] != undefined
          ? true
          : false;
