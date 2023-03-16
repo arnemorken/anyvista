@@ -474,19 +474,30 @@ class anyTable extends dbTable
     return ucfirst($type." list"); // TODO: i18n
   } // findDefaultListHeader
 
-  protected function findDefaultItemHeader($type)
+  protected function findDefaultItemHeader($type,$inData)
   {
-    return ucfirst($type);
+    if (!$inData)
+      return ucfirst($type);
+    $ix = isset($inData["+".$this->mId])
+          ? "+".$this->mId
+          : $this->mId;
+    $hdr = "";
+    if (isset($inData[$ix][$this->mNameKey]))
+      $hdr = $inData[$ix][$this->mNameKey];
+    else
+    if (isset($this->mLinkId))
+      $this->setError($this->mNameKey." missing"); // TODO: i18n
+    return $hdr;
   } // findDefaultItemHeader
 
   protected function findDefaultNogroupHeader($type,$data=null,$skipOther=false)
   {
-      return $this->findDefaultHeader($type,$data,$skipOther);
+    return $this->findDefaultHeader($type,$data,$skipOther);
   } // findDefaultNogroupHeader
 
   protected function findDefaultItemListHeader($type,$data=null,$skipOther=false)
   {
-      return $this->findDefaultHeader($type,$data,$skipOther);
+    return $this->findDefaultHeader($type,$data,$skipOther);
   } // findDefaultItemListHeader
 
   protected function findDefaultHeader($type,$data=null,$skipOther=false)
@@ -501,12 +512,12 @@ class anyTable extends dbTable
     return $str;
   } // findMetaTableId
 
-  protected function findMetaTableName($type)
+  protected function findMetaTableName($linkType)
   {
-    if ($type == "user")
+    if ($linkType == "user")
       $str = ANY_DB_USERMETA_TABLE;
     else
-      $str = "any_".$type."meta";
+      $str = "any_".$linkType."meta";
     return $str;
   } // findMetaTableName
 
@@ -647,8 +658,8 @@ class anyTable extends dbTable
     }
     if (!$ok)
       return null;
-    if ($this->mId == "max" || $this->mId == "par") // dbSearchMaxId() and dbSearchParents() call prepareData()
-      return ($this->mData);
+    if ($this->mId == "max" || $this->mId == "par")
+      return ($this->mData); // dbSearchMaxId() and dbSearchParents() do not need to call prepareData()
     return $this->prepareData($this->mData);
   } // dbSearch
 
@@ -683,7 +694,9 @@ class anyTable extends dbTable
     //elog("dbSearchMaxId,mMaxId:".$this->mMaxId);
     if ($this->mMaxId == -1)
       $this->setError("Max id not found, AUTO_INCREMENT missing from table? ");
-    return $this->prepareData($this->mData);
+    $this->mData = [];
+    $this->mData["id"] = $this->mMaxId;
+    return $this->mData;
   } // dbSearchMaxId
 
   //
@@ -726,6 +739,9 @@ class anyTable extends dbTable
       $this->dbSearchMeta($data,"item"); // Search and get the meta data
       if (!$skipLinks)
         $this->dbSearchItemLists($data); // Get lists associated with the item
+      $data["+".$this->mId]["item"] = $this->mType;
+      $data["id"] = $this->mId;
+  
     }
     return !$this->isError();
   } // dbSearchItem
@@ -827,13 +843,14 @@ class anyTable extends dbTable
             if (!$table->dbSearchList($table_data,$group_table))
               $this->mError .= $table->getError();
             if ($table_data) {
-              $pl_idx   = "link-".$link_type; // TODO! Not general enough
+              $link_idx = "link-".$link_type;
               $name_key = $table->getNameKey();
               $data[$idx]["data"]["grouping"] = $table->mGrouping;
-              $data[$idx]["data"][$pl_idx]["grouping"] = $table->mGrouping;
-              $data[$idx]["data"][$pl_idx]["head"]     = $link_type;
-              $data[$idx]["data"][$pl_idx][$name_key]  = $this->findDefaultItemListHeader($link_type,$table_data,true);
-              $data[$idx]["data"][$pl_idx]["data"]     = $table_data;
+              $data[$idx]["data"][$link_idx]["grouping"] = $table->mGrouping;
+              $data[$idx]["data"][$link_idx]["head"]     = $link_type;
+              $data[$idx]["data"][$link_idx]["data"]     = $table_data;
+              if ($name_key)
+                $data[$idx]["data"][$link_idx][$name_key] = $this->findDefaultItemListHeader($link_type,$table_data,true);
             }
           }
         }
@@ -1697,56 +1714,43 @@ class anyTable extends dbTable
   public function prepareData(&$inData)
   {
     //vlog("inData before prepare:",$inData);
+    // Make room for a top level header
+    $data = array("data" => array("+0" => null));
 
-    if (isset($this->mMaxId) && $this->mMaxId >= 0) {
-      $inData = [];
-      $inData["id"] = $this->mMaxId;
+    // Find and set the header
+    $hdr = $this->findHeader($inData);
+    if (isset($hdr) && $hdr != "") {
+      $data["data"]["+0"]["head"] = "group";
+      $data["data"]["+0"]["group_name"] = $hdr;
     }
-    $data = array("data" => array("+0" => null)); // Make room for a top header
-    $d = &$data["data"]["+0"];
 
-    // Header
+    // Set data
+    $data["data"]["+0"]["data"] = $inData;
+
+    // Set link types
+    $data["types"] = $this->mLinking;
+
+    //vlog("data after prepare:",$data);
+    return $data;
+  } // prepareData
+
+  protected function findHeader($inData)
+  {
+    $hdr = "";
     $h = Parameters::get("header");
     if ($h && $h != "false" && $h != "true")
       $hdr = $h; // Use the header provided in the in-parameter
+    else
     if (!isset($this->mId) || $this->mId == "") {
-      // List
-      if (!isset($hdr) && $h == "true")
+      if ($h == "true")
         $hdr = $this->findDefaultListHeader($this->mType);
-      // Number of results.
-      if (!$this->mGrouping)
-        $d["data"][$this->mType]["data"]["grouping_num_results"] = $this->mNumResults;
     }
     else {
-      // Item
-      if (!isset($hdr)) {
-        $ix = isset($inData["+".$this->mId])
-              ? "+".$this->mId
-              : $this->mId;
-        if (isset($inData[$ix][$this->mNameKey]))
-          $hdr = $inData[$ix][$this->mNameKey]; // findDefaultItemHeader
-        else
-        if (isset($this->mLinkId))
-          $this->setError($this->mNameKey." missing"); // TODO: i18n
-      }
-      // Item type
-      $d["data"]["+".$this->mId]["item"] = $this->mType;
-      $d["data"]["id"] = $this->mId;
+      if ($h != "false")
+        $hdr = $this->findDefaultItemHeader($this->mType,$inData);
     }
-    if (isset($hdr)) {
-      $d["head"] = "group";
-      $d["group_name"] = $hdr;
-    }
-
-    // Data
-    $d["data"] = $inData;
-
-    // Link types
-    $data["types"] = $this->mLinking;
-    //vlog("data after prepare:",$data);
-
-    return $data;
-  } // prepareData
+    return $hdr;
+  } // findHeader
 
   public function prepareParents($type,$itemIdKey,$itemNameKey)
   {
