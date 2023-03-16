@@ -1086,7 +1086,7 @@ anyModel.prototype.dataDelete = function (options)
 
   // The deleted item may have been the only one containing a kind:type entry, we can't have that
   for (var key in item)
-    if (kind && item.hasOwnProperty(key))
+    if (kind && item.hasOwnProperty(key) && !key.startsWith("grouping"))
       item[key][kind] = type;
 
   if (this.auto_callback)
