@@ -52,7 +52,6 @@ class eventTable extends anyTable
       "event_arranger_id",
       "event_instructor_id",
       "parent_id",
-      "parent_name",
       "event_header_image",
     ],
     "fieldsMeta" => [

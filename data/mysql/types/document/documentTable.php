@@ -43,7 +43,6 @@ class documentTable extends anyTable
       "document_status",
       "document_privacy",
       "parent_id",
-      "parent_name",
     ],
     "fieldsMeta" => [
     ],

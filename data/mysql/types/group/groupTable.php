@@ -39,7 +39,6 @@ class groupTable extends anyTable
       "group_name",
       "group_description",
       "parent_id",
-      "parent_name",
       "group_sort_order",
       "group_status",
       "group_privacy",
@@ -218,8 +217,8 @@ class groupTable extends anyTable
     $group_id = Parameters::get("group_id");
     if ((!$group_id || $group_id == "nogroup") && $type) {
       $data["group"]["nogroup"]["group_name"] = count($data) > 0 && isset($data["group"])
-      						? $this->findDefaultHeader($type)
-      						: "";
+                                                ? $this->findDefaultHeader($type)
+                                                : "";
       $data["group"]["nogroup"]["group_id"]   = "nogroup";
       $data["group"]["nogroup"]["group_type"] = $type;
       $data["group"]["nogroup"]["head"]       = "group";
