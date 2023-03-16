@@ -13,9 +13,9 @@
 <script src="./db/dbTable.js"></script>
 <script src="./anyTable.js"></script>
 <script src="./anyTableFactory.js"></script>
-<script src="./types/anyGroup.js"></script>
-<script src="./types/anyEvent.js"></script>
-<script src="./types/anyUser.js"></script>
+<script src="./types/groupTable.js"></script>
+<script src="./types/eventTable.js"></script>
+<script src="./types/userTable.js"></script>
 
 <link  href="../../view/skin/default/anyvista.css" rel="stylesheet"/>
 <script src="../../view/functions.js"></script>
@@ -85,9 +85,9 @@ async function connectSuccess(options)
   let factory = new anyTableFactory(gDbase);
 
   // Create table classes
-  let grtab = factory.create("anyGroup",true);
-  let ustab = factory.create("anyUser",true);
-  let evtab = factory.create("anyEvent",true);
+  let grtab = factory.create("groupTable",true);
+  let ustab = factory.create("userTable",true);
+  let evtab = factory.create("eventTable",true);
 
 let d1 = null;
 let d2 = null;
