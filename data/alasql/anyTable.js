@@ -17,7 +17,7 @@
  * Contains methods for doing search, insert, update and delete on a database table.
  * Supports user defined table format.
  * The table format must be described in a table class that inherits from `anyTable` -
- * see `types/user/anyUser.js` and `types/group/anyGroup.js` for examples.
+ * see `types/userTable.js` and `types/groupTable.js` for examples.
  *
  * @class anyTable
  * @constructor
@@ -50,6 +50,31 @@ var anyTable = function (connection,tableName,type,idKey,nameKey,orderBy,orderDi
 anyTable.prototype = new dbTable();
 anyTable.prototype.constructor = anyTable;
 
+/////////////////////////
+//////// finders ////////
+/////////////////////////
+
+anyTable.prototype.findDefaultItemListHeader = function(linkType)
+{
+  return linkType+"s"; // TODO!
+}; // findDefaultItemListHeader
+
+anyTable.prototype.findDefaultHeader = function(linkType)
+{
+  return "Other "+linkType+"s"; // TODO!
+}; // findDefaultHeader
+
+anyTable.prototype.findLinkTableName = function(linkType)
+{
+  if (!linkType)
+    return "";
+  if (linkType == this.type)
+    return this.tableName;
+  let ltn = [linkType,this.type].sort();
+  ltn = "any_"+ltn[0]+"_"+ltn[1];
+  return ltn;
+}; // findLinkTableName
+
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Searches ////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
@@ -57,9 +82,9 @@ anyTable.prototype.constructor = anyTable;
 /**
  * Search database for an item, a list, a max id or a list of parents.
  *
- * If this.id == "max", search for max id.
- * If this.id == "par", search for parent list.
- * If this.id has another non-null value, search for the item with the given id.
+ * If options.id == "max", search for max id.
+ * If options.id == "par", search for parent list.
+ * If options.id has another non-null value, search for the item with the given id.
  * Otherwise, search for a list.
  *
  * @return array|null Data array, or null on error or no data
@@ -217,17 +242,17 @@ anyTable.prototype.dbSearchItemLists = async function(id,linking)
       //console.log("created "+link_classname);
       await tab.dbSearchList(self.type,tab.type,id)
       .then( function(data) {
-        let link_idx = "link-"+link_type; // TODO! Not general enough
-        if (!self.data[id])
-          self.data[id]               = { };
-        if (!self.data[id].data)
-          self.data[id].data          = { };
+        let link_idx = "link-"+link_type;
         let name_key = tab.nameKey;
-        self.data[id]["data"][link_idx] = { data: { } };
-        self.data[id]["data"][link_idx]["head"] = link_type;
-        self.data[id]["data"][link_idx]["data"] = tab.data;
+        if (!self.data[id])
+          self.data[id]              = { };
+        if (!self.data[id].data)
+          self.data[id].data         = { };
+        self.data[id].data[link_idx] = { data: { } };
+        self.data[id].data[link_idx]["head"] = link_type;
+        self.data[id].data[link_idx]["data"] = tab.data;
         if (name_key)
-          self.data[id]["data"][link_idx][name_key] = self.findDefaultItemListHeader(link_type);
+          self.data[id].data[link_idx][name_key] = self.findDefaultItemListHeader(link_type);
         //console.log("item list "+link_type+":");
         //console.log(self.data);
         return Promise.resolve(data);
@@ -236,22 +261,6 @@ anyTable.prototype.dbSearchItemLists = async function(id,linking)
   }
   return Promise.resolve(true);
 }; // dbSearchItemLists
-
-anyTable.prototype.findDefaultItemListHeader = function(linkType)
-{
-  return linkType+"s"; // TODO!
-}; // findDefaultItemListHeader
-
-anyTable.prototype.findLinkTableName = function(linkType)
-{
-  if (!linkType)
-    return "";
-  if (linkType == this.type)
-    return this.tableName;
-  let ltn = [linkType,this.type].sort();
-  ltn = "any_"+ltn[0]+"_"+ltn[1];
-  return ltn;
-}; // findLinkTableName
 
 anyTable.prototype.dbSearchList = function(type,linkType,linkId)
 {
@@ -432,6 +441,21 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,linkId)
                   ? "+"+gidx
                   : gidx;
     data_tree[ngidx] = {};
+    if (data[gidx]) {
+      let gname = null;
+      data_tree[ngidx]["head"] = "group";
+      if (!linkId) {
+        data_tree[ngidx]["group_type"] = this.type;
+        data_tree[ngidx]["group_id"]   = ngidx;
+        gname = this.findDefaultHeader(this.type);
+        data_tree[ngidx]["group_name"] = gname;
+      }
+      else {
+        let idx = data[gidx][linkId] ? linkId : "+" + linkId;
+        if (data[gidx][idx])
+          data_tree[ngidx][this.nameKey] = data[gidx][idx][this.nameKey];
+      }
+    }
     data_tree[ngidx]["data"] = this.buildDataTree(data[gidx],null);
     if (!data_tree[ngidx]["data"])
       delete data_tree[ngidx]["data"];
