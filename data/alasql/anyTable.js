@@ -29,7 +29,7 @@
  * @param {String} orderBy    The field to sort by. e.g. "event_date_start".
  * @param {String} orderDir   The direction of the sort, "ASC" or "DESC".
  */
-var anyTable = function (connection,tableName,type,idKey,nameKey,orderBy,orderDir)
+var anyTable = function (connection,tableName,type,id,idKey,nameKey,orderBy,orderDir)
 {
   // Initiate the database connection
   dbTable.call(this,connection);
@@ -38,6 +38,7 @@ var anyTable = function (connection,tableName,type,idKey,nameKey,orderBy,orderDi
   this.tableName = tableName;
   this.data      = null;
   this.type      = type;
+  this.id        = id;
   this.idKey     = idKey;
   this.nameKey   = nameKey;
   this.orderBy   = orderBy;
@@ -54,15 +55,38 @@ anyTable.prototype.constructor = anyTable;
 //////// finders ////////
 /////////////////////////
 
+anyTable.prototype.findDefaultHeader = function(type)
+{
+  return "Other "+type+"s"; // TODO!
+}; // findDefaultHeader
+
+anyTable.prototype.findDefaultListHeader = function(type)
+{
+  return type.charAt(0).toUpperCase() + type.slice(1) + " list"; // TODO: i18n
+} // findDefaultListHeader
+
+anyTable.prototype.findDefaultItemHeader = function(type,inData)
+{
+  let hdr = "";
+  if (!inData)
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  let ix = inData["+" + this.id]
+           ? "+" + this.id
+           : this.id;
+  hdr = "";
+  if (inData[ix][this.nameKey])
+    hdr = inData[ix][this.nameKey];
+  else
+  if (this.linkId)
+    this.error = this.nameKey + " missing"; // TODO: i18n
+  return hdr;
+}; // findDefaultItemHeader
+
 anyTable.prototype.findDefaultItemListHeader = function(linkType)
 {
-  return linkType+"s"; // TODO!
+  let s = linkType.charAt(0).toUpperCase() + linkType.slice(1);
+  return s+"s"; // TODO! i18n
 }; // findDefaultItemListHeader
-
-anyTable.prototype.findDefaultHeader = function(linkType)
-{
-  return "Other "+linkType+"s"; // TODO!
-}; // findDefaultHeader
 
 anyTable.prototype.findLinkTableName = function(linkType)
 {
@@ -91,28 +115,29 @@ anyTable.prototype.findLinkTableName = function(linkType)
  */
 anyTable.prototype.dbSearch = function(options)
 {
-  if (!options) {
-    let err = "dbSearch: options missing. ";
+  let type = options && options.type ? options.type : this.type;
+  let id   = options && options.id   ? options.id   : this.id;
+  if (id)
+    this.id = id;
+  if (!type) {
+    let err = "dbSearch: type missing. ";
     console.log(err);
     this.error = err;
     return Promise.resolve(null);
   }
   let self = this;
-  return this._dbSearch(options)
+  return this._dbSearch(type,id)
   .catch(function(err) {
     console.log(err);
     self.error = err;
-    return Promise.resolve(false);
+    return Promise.resolve(null);
   });
 }; // dbSearch
 
 // Internal method, do not call directly.
 // Error handling is done by dbSearch
-anyTable.prototype._dbSearch = function(options)
+anyTable.prototype._dbSearch = function(type,id)
 {
-  let type = options.type;
-  if (!type)
-    type = this.type;
   if (!type) {
     // Error
     let err = "dbSearch: type missing. ";
@@ -120,7 +145,6 @@ anyTable.prototype._dbSearch = function(options)
     this.error = err;
     return Promise.resolve(null);
   }
-  let id     = options.id;
   this.error = null;
   this.data  = null;
   let self   = this;
@@ -137,33 +161,34 @@ anyTable.prototype._dbSearch = function(options)
     .then(function(data) {
     });
   }
-  else
-  if (id || id === 0) {
-    // Search for an item
-    return this.dbSearchItem(id)
-    .then(function(data) {
-      if (!data) {
-        let err = "Warning: Cold not find "+type+" with id "+id+". ";
-        console.warn(err);
-        self.error = err;
-      }
-      self.data = data ? data : null;
-      return Promise.resolve(self.data);
-    });
-  }
   else {
-    // Search for a list
-    return this.dbSearchList(type)
-    .then(function(data) {
-      if (!data) {
-        let err = "Warning: Cold not find "+type+" list. ";
-        console.warn(err);
-        self.error = err;
-      }
-      self.data = data ? data : null;
-      return Promise.resolve(self.data);
-    });
-  }
+    if (id || id === 0) {
+      // Search for an item
+      return this.dbSearchItem(id)
+      .then(function(data) {
+        if (!data) {
+          let err = "Warning: Cold not find "+type+" with id "+id+". ";
+          console.warn(err);
+          self.error = err;
+        }
+        self.data = self.prepareData(data);
+        return Promise.resolve(self.data);
+      });
+    }
+    else {
+      // Search for a list
+      return this.dbSearchList(type)
+      .then(function(data) {
+        if (!data) {
+          let err = "Warning: Cold not find "+type+" list. ";
+          console.warn(err);
+          self.error = err;
+        }
+        self.data = self.prepareData(data);
+        return Promise.resolve(self.data);
+      });
+    }
+  } // else
 }; // _dbSearch
 
 //
@@ -207,9 +232,7 @@ anyTable.prototype.dbSearchItem = function(id)
     //console.log(self.data);
     if (!self.data || Object.keys(self.data).length === 0)
       return Promise.resolve(null);
-    return self.dbSearchItemLists(id,self.linking)
-    .then (function(res) {
-    });
+    return self.dbSearchItemLists(id,self.linking);
   });
 }; // dbSearchItem
 
@@ -228,7 +251,7 @@ anyTable.prototype.dbPrepareSearchItemStmt = function(key,val)
 anyTable.prototype.dbSearchItemLists = async function(id,linking)
 {
   if (!id || !linking) {
-    return Promise.resolve(false);
+    return Promise.resolve(null);
   }
   let factory = new anyTableFactory(gDbase);
   let self = this;
@@ -259,7 +282,7 @@ anyTable.prototype.dbSearchItemLists = async function(id,linking)
       });
     }
   }
-  return Promise.resolve(true);
+  return Promise.resolve(this.data);
 }; // dbSearchItemLists
 
 anyTable.prototype.dbSearchList = function(type,linkType,linkId)
@@ -514,6 +537,50 @@ anyTable.prototype.buildDataTree = function(flatdata,parentId)
   }
   return retval;
 }; // buildDataTree
+
+/**
+ * Prepare data related to a list or a single item. Adds a default top header.
+ */
+anyTable.prototype.prepareData = function(inData)
+{
+  //console.log("inData before prepare:"); console.log(inData);
+  // Make room for a top level header
+  let data = {"data": { "+0": {} }};
+
+  // Find and set the header
+  let hdr = this.findHeader(inData);
+  if (hdr && hdr != "") {
+    data["data"]["+0"]["head"] = "group";
+    data["data"]["+0"]["group_name"] = hdr;
+  }
+
+  // Set data
+  data["data"]["+0"]["data"] = inData;
+
+  // Set link types
+  data["types"] = this.linking;
+
+  //console.log("data after prepare:"); console.log(data);
+  return data;
+}; // prepareData
+
+anyTable.prototype.findHeader = function(inData)
+{
+  let hdr = "";
+  let h = this.options ? this.options.header : null;
+  if (h && h != "false" && h != "true")
+    hdr = h; // Use the header provided in the in-parameter
+  else
+  if (!this.id || this.id == "") {
+    if (h == "true")
+      hdr = this.findDefaultListHeader(this.type);
+  }
+  else {
+    if (h != "false")
+      hdr = this.findDefaultItemHeader(this.type,inData);
+  }
+  return hdr;
+} // findHeader
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Insert //////////////////////////////////////
