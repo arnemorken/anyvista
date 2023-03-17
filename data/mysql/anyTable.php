@@ -469,9 +469,15 @@ class anyTable extends dbTable
   //////// finders ////////
   /////////////////////////
 
+  protected function findDefaultHeader($type,$skipOther=false)
+  {
+    $other = $skipOther ? "" : "Other "; // TODO: i18n
+    return $other.$type."s";             // TODO: i18n
+  } // findDefaultHeader
+
   protected function findDefaultListHeader($type)
   {
-    return ucfirst($type." list"); // TODO: i18n
+    return ucfirst($type)." list"; // TODO: i18n
   } // findDefaultListHeader
 
   protected function findDefaultItemHeader($type,$inData)
@@ -490,21 +496,15 @@ class anyTable extends dbTable
     return $hdr;
   } // findDefaultItemHeader
 
-  protected function findDefaultNogroupHeader($type,$data=null,$skipOther=false)
-  {
-    return $this->findDefaultHeader($type,$data,$skipOther);
-  } // findDefaultNogroupHeader
-
   protected function findDefaultItemListHeader($type,$data=null,$skipOther=false)
   {
-    return $this->findDefaultHeader($type,$data,$skipOther);
+    return $this->findDefaultHeader($type,$skipOther);
   } // findDefaultItemListHeader
 
-  protected function findDefaultHeader($type,$data=null,$skipOther=false)
+  protected function findDefaultNogroupHeader($type,$skipOther=false)
   {
-    $other = $skipOther ? "" : "Other "; // TODO: i18n
-    return $other.$type."s";             // TODO: i18n
-  } // findDefaultHeader
+    return $this->findDefaultHeader($type,$skipOther);
+  } // findDefaultNogroupHeader
 
   protected function findMetaTableId($type)
   {
@@ -712,7 +712,47 @@ class anyTable extends dbTable
     $this->mLinkId     = null;
     if (!$this->dbSearchList($this->mData))
       return null;
-    return $this->prepareData($this->mData);
+
+    // TODO! Untested code below.
+    /*
+    $lf   = $this->mLinkType;
+    $lfid = $this->mLinkId;
+    $this->mLinkType = null;
+    $this->mLinkId   = null;
+    $this->mSimpleList = false;
+    $this->dbSearchList($items);
+    $this->mLinkType = $lf;
+    $this->mLinkId   = $lfid;
+    //elog("dbSearchParents,items:".var_export($items,true));
+    $sel_arr = array();
+    if ($items != null) {
+      $item_id       = Parameters::get($itemIdKey);
+      $item_id_key   = $itemIdKey;
+      $item_name_key = $itemNameKey;
+      $i = 0;
+      $children = array();
+      if ($item_id_key != null)
+      foreach ($items as $gid => $group) {
+        if ($group != null)
+        foreach ($group as $id => $item) {
+          if (isset($item[$item_id_key])) {
+            $sel_arr[$item[$item_id_key]] = $item[$item_name_key];
+            if (isset($item["parent_id"]) && $item["parent_id"] != "") {
+              // Check that (grand)child is not available as parent
+              if ($item["parent_id"] == $item_id || in_array($item_id,$children)) {
+                $children[$i++] = $item_id;
+                unset($sel_arr[$item[$item_id_key]]);
+              }
+            }
+          }
+        }
+      }
+    }
+    //elog(var_export($sel_arr,true));
+    $this->mData = $sel_arr;
+    */
+
+    return $this->mData;
   } // dbSearchParents
 
   //////////////////////////////// Item search ////////////////////////////////
@@ -741,7 +781,7 @@ class anyTable extends dbTable
         $this->dbSearchItemLists($data); // Get lists associated with the item
       $data["+".$this->mId]["item"] = $this->mType;
       $data["id"] = $this->mId;
-  
+
     }
     return !$this->isError();
   } // dbSearchItem
@@ -1695,7 +1735,7 @@ class anyTable extends dbTable
   } // dbAttachToGroups
 
   /**
-   * Prepare data related to a list or a single item. May add a user-specified or default top header.
+   * Prepare data related to a list or a single item.  Adds a default top header.
    *
    * The data must have been returned by `{{#crossLink "anyTable/dbSearch:method"}}{{/crossLink}}`.
    * See the `{{#crossLink "anyTable"}}{{/crossLink}}` constructor for a description of the data format.
@@ -1708,7 +1748,7 @@ class anyTable extends dbTable
    *
    * #### Example
    *```
-   *      $data = $myTable->prepareData();
+   *      $data = $myTable->prepareData($inData);
    *```
    */
   public function prepareData(&$inData)
@@ -1751,47 +1791,6 @@ class anyTable extends dbTable
     }
     return $hdr;
   } // findHeader
-
-  public function prepareParents($type,$itemIdKey,$itemNameKey)
-  {
-    // TODO! Untested. See also searchParents()
-    return null;
-    $lf   = $this->mLinkType;
-    $lfid = $this->mLinkId;
-    $this->mLinkType = null;
-    $this->mLinkId   = null;
-    $this->mSimpleList = false;
-    $this->dbSearchList($items);
-    $this->mLinkType = $lf;
-    $this->mLinkId   = $lfid;
-    //elog("prepareParents,items:".var_export($items,true));
-    $sel_arr = array();
-    if ($items != null) {
-      $item_id       = Parameters::get($itemIdKey);
-      $item_id_key   = $itemIdKey;
-      $item_name_key = $itemNameKey;
-      $i = 0;
-      $children = array();
-      if ($item_id_key != null)
-      foreach ($items as $gid => $group) {
-        if ($group != null)
-        foreach ($group as $id => $item) {
-          if (isset($item[$item_id_key])) {
-            $sel_arr[$item[$item_id_key]] = $item[$item_name_key];
-            if (isset($item["parent_id"]) && $item["parent_id"] != "") {
-              // Check that (grand)child is not available as parent
-              if ($item["parent_id"] == $item_id || in_array($item_id,$children)) {
-                $children[$i++] = $item_id;
-                unset($sel_arr[$item[$item_id_key]]);
-              }
-            }
-          }
-        }
-      }
-    }
-    //elog(var_export($sel_arr,true));
-    return $sel_arr;
-  } // prepareParents
 
   public function prepareSetting($settingName)
   {
