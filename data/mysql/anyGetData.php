@@ -62,6 +62,7 @@ Parameters::set("fields",array (
   if ($cmd != "perm" && $type != null && $type != "") {
     $table = anyTableFactory::create($type,null);
     if ($table != null) {
+      //$start = microtime(true);
       switch ($cmd) {
         case "cre": $data = $table->dbCreate();     break;
         case "ins": $data = $table->dbInsert();     break;
@@ -71,6 +72,8 @@ Parameters::set("fields",array (
         case "del": $data = $table->dbDelete();     break;
         default:    $data = $table->dbSearch();     break;
       }
+      //$time_elapsed_secs = microtime(true) - $start;
+      //error_log("anyGetData: time_elapsed_secs: $time_elapsed_secs");
       if ($table->isError() ||
           Parameters::get("search") === "no" || Parameters::get("search") === "false" ||
           Parameters::get($table->getIdKey()) === "") {
