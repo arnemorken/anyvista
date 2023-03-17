@@ -115,15 +115,15 @@ let d2 = null;
     return evtab.insertLinkTables();
   })
   .then( () => {
-    return evtab.dbSearchList()
+    return evtab.dbSearch()
     .then( function(data) {
-      d1 = evtab.data;
+      d1 = evtab.data.data;
     });
   })
   .then( () => {
-    return ustab.dbSearchItem(99)
+    return ustab.dbSearch({id:99})
     .then( function(data) {
-      d2 = ustab.data;
+      d2 = ustab.data.data;
     });
   })
   .then( () => {
