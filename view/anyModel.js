@@ -1270,8 +1270,11 @@ anyModel.prototype.dbSearch = function (options)
       item_to_send.fields = this.fields;
     else
       item_to_send = null;
+     //const start = Date.now();
     $.getJSON(url,item_to_send) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
+    //const end = Date.now();
+    //console.log("anyModel.dbSearch execution time: ${end - start} ms");
       return self.success ? self.success(self.context,serverdata,options) : false;
     })
     .fail(function(jqXHR,textStatus,error) {
