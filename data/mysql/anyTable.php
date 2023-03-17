@@ -1792,6 +1792,47 @@ class anyTable extends dbTable
     return $hdr;
   } // findHeader
 
+  public function prepareParents($type,$itemIdKey,$itemNameKey)
+  {
+    // TODO! Untested. See also searchParents()
+    return null;
+    $lf   = $this->mLinkType;
+    $lfid = $this->mLinkId;
+    $this->mLinkType = null;
+    $this->mLinkId   = null;
+    $this->mSimpleList = false;
+    $this->dbSearchList($items);
+    $this->mLinkType = $lf;
+    $this->mLinkId   = $lfid;
+    //elog("prepareParents,items:".var_export($items,true));
+    $sel_arr = array();
+    if ($items != null) {
+      $item_id       = Parameters::get($itemIdKey);
+      $item_id_key   = $itemIdKey;
+      $item_name_key = $itemNameKey;
+      $i = 0;
+      $children = array();
+      if ($item_id_key != null)
+      foreach ($items as $gid => $group) {
+        if ($group != null)
+        foreach ($group as $id => $item) {
+          if (isset($item[$item_id_key])) {
+            $sel_arr[$item[$item_id_key]] = $item[$item_name_key];
+            if (isset($item["parent_id"]) && $item["parent_id"] != "") {
+              // Check that (grand)child is not available as parent
+              if ($item["parent_id"] == $item_id || in_array($item_id,$children)) {
+                $children[$i++] = $item_id;
+                unset($sel_arr[$item[$item_id_key]]);
+              }
+            }
+          }
+        }
+      }
+    }
+    //elog(var_export($sel_arr,true));
+    return $sel_arr;
+  } // prepareParents
+
   public function prepareSetting($settingName)
   {
     // TODO! Not implemented yet
