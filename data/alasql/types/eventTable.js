@@ -1,12 +1,12 @@
-var anyEvent = function (connection)
+var eventTable = function (connection)
 {
   this.tableName = "any_event";
-  this.className = "anyEvent";
-  anyTable.call(this,connection,this.tableName,"event","event_id","event_name");
+  this.className = "eventTable";
+  anyTable.call(this,connection,this.tableName,"event",null,"event_id","event_name");
 
-  this.linking = { "group":    [ "any_event_group",    "anyGroup" ],
-                   "user":     [ "any_event_user",     "anyUser" ],
-                   "document": [ "any_document_event", "anyDocument" ],
+  this.linking = { "group":    [ "any_event_group",    "groupTable" ],
+                   "user":     [ "any_event_user",     "userTable" ],
+                   "document": [ "any_document_event", "documentTable" ],
                  };
   this.sqlCreate = "\
     CREATE TABLE IF NOT EXISTS any_event (\
@@ -29,15 +29,15 @@ var anyEvent = function (connection)
     ";
 }; // constructor
 
-anyEvent.prototype = new anyTable(null);
-anyEvent.prototype.constructor = anyEvent;
+eventTable.prototype = new anyTable(null);
+eventTable.prototype.constructor = eventTable;
 
-anyEvent.prototype.createLinkTables = function()
+eventTable.prototype.createLinkTables = function()
 {
   return this.query(this.sqlCreateLinks,true,true);
 }; // createLinkTables
 
-anyEvent.prototype.insertLinkTables = function()
+eventTable.prototype.insertLinkTables = function()
 {
   return this.query(this.sqlInsertEventUser,true,true);
 }; // insertLinkTables

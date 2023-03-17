@@ -1,12 +1,12 @@
-var anyGroup = function (connection)
+var groupTable = function (connection)
 {
   this.tableName = "any_group";
-  this.className = "anyGroup";
-  anyTable.call(this,connection,this.tableName,"group","group_id","group_name");
+  this.className = "groupTable";
+  anyTable.call(this,connection,this.tableName,"group",null,"group_id","group_name");
 
-  this.linking = { "event":    [ "any_event_group",    "anyEvent" ],
-                   "document": [ "any_document_group", "anyDocument" ],
-                   "user":     [ "any_group_user",     "anyUser" ],
+  this.linking = { "event":    [ "any_event_group",    "eventTable" ],
+                   "document": [ "any_document_group", "documentTable" ],
+                   "user":     [ "any_group_user",     "userTable" ],
                  };
   this.sqlCreate = "\
     CREATE TABLE IF NOT EXISTS any_group (\
@@ -25,5 +25,5 @@ var anyGroup = function (connection)
     ";
 }; // constructor
 
-anyGroup.prototype = new anyTable(null);
-anyGroup.prototype.constructor = anyGroup;
+groupTable.prototype = new anyTable(null);
+groupTable.prototype.constructor = groupTable;
