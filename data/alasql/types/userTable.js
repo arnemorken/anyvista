@@ -1,8 +1,8 @@
-var userTable = function (connection)
+var userTable = function (connection,parameters)
 {
   this.tableName = "any_user";
   this.className = "userTable";
-  anyTable.call(this,connection,this.tableName,"user",null,"user_id","user_name");
+  anyTable.call(this,connection,parameters,this.tableName,"user",null,"user_id","user_name");
 
   this.linking = { "group":    [ "any_group_user",    "groupTable" ],
                    "event":    [ "any_event_user",    "eventTable" ],

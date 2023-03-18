@@ -10,7 +10,7 @@ var anyTableFactory = function (connection)
 //
 // Create a new table class, optionally also create the associated database table
 //
-anyTableFactory.prototype.create = function(className)
+anyTableFactory.prototype.create = function(className,parameters)
 {
   if (!className) {
     this.error = "Class name missing. ";
@@ -26,7 +26,7 @@ anyTableFactory.prototype.create = function(className)
   }
   try {
     head.appendChild(js);
-    let table_class = new window[className](this.connection);
+    let table_class = new window[className](this.connection,parameters);
     table_class.className = className;
     return table_class;
   }

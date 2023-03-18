@@ -1778,15 +1778,15 @@ class anyTable extends dbTable
   {
     $hdr = "";
     $h = Parameters::get("header");
-    if ($h && $h != "false" && $h != "true")
+    if ($h && $h !== true && $h !== "true" && $h !== false && $h !== "false")
       $hdr = $h; // Use the header provided in the in-parameter
     else
     if (!isset($this->mId) || $this->mId == "") {
-      if ($h == "true")
+      if ($h === true || $h === "true")
         $hdr = $this->findDefaultListHeader($this->mType);
     }
     else {
-      if ($h != "false")
+      if ($h !== false && $h !== "false")
         $hdr = $this->findDefaultItemHeader($this->mType,$inData);
     }
     return $hdr;

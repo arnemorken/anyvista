@@ -85,9 +85,9 @@ async function connectSuccess(options)
   let factory = new anyTableFactory(gDbase);
 
   // Create table classes
-  let grtab = factory.create("groupTable",true);
-  let ustab = factory.create("userTable",true);
-  let evtab = factory.create("eventTable",true);
+  let grtab = factory.create("groupTable",{header:true});
+  let ustab = factory.create("userTable", {header:true});
+  let evtab = factory.create("eventTable",{header:true});
 
 let d1 = null;
 let d2 = null;

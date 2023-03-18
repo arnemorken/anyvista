@@ -29,8 +29,10 @@
  * @param {String} orderBy    The field to sort by. e.g. "event_date_start".
  * @param {String} orderDir   The direction of the sort, "ASC" or "DESC".
  */
-var anyTable = function (connection,tableName,type,id,idKey,nameKey,orderBy,orderDir)
+var anyTable = function (connection,parameters,tableName,type,id,idKey,nameKey,orderBy,orderDir)
 {
+  this.parameters = parameters ? parameters : {};
+
   // Initiate the database connection
   dbTable.call(this,connection);
 
@@ -567,16 +569,16 @@ anyTable.prototype.prepareData = function(inData)
 anyTable.prototype.findHeader = function(inData)
 {
   let hdr = "";
-  let h = this.options ? this.options.header : null;
-  if (h && h != "false" && h != "true")
+  let h = this.parameters.header;
+  if (h && h !== "false" && h !== "true" && h !== false && h !== true)
     hdr = h; // Use the header provided in the in-parameter
   else
   if (!this.id || this.id == "") {
-    if (h == "true")
+    if (h === true || h === "true")
       hdr = this.findDefaultListHeader(this.type);
   }
   else {
-    if (h != "false")
+    if (h !== false && h !== "false")
       hdr = this.findDefaultItemHeader(this.type,inData);
   }
   return hdr;
