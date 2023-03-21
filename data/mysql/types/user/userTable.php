@@ -370,9 +370,9 @@ class userTable extends anyTable
   /////////////////////////////// Insert //////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function dbInsertItem()
+  protected function dbInsert()
   {
-    if ($this->dbValidateInsert() != "")
+    if (!$this->dbValidateInsert())
       return null;
 
     if (!Parameters::get(ANY_DB_USER_LOGIN))
@@ -404,14 +404,14 @@ class userTable extends anyTable
     }
     else {
       $user_id = null;
-      error_log("Non-Wordpress user handling not implemented, using standard dbInsertItem method. ");
-      $res = parent::dbInsertItem();
+      error_log("Non-Wordpress user handling not implemented, using standard dbInsert method. ");
+      $res = parent::dbInsert();
       $this->mMessage = $this->mInsertSuccessMsg;
       return $res;
     }
     //error_log($this->getError().":".var_export($user_id,true));
     return $user_id;
-  } // dbInsertItem
+  } // dbInsert
 
   protected function dbLoginUser()
   {

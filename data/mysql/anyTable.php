@@ -1852,53 +1852,38 @@ class anyTable extends dbTable
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Insert data
+   * Insert data in table.
+   * Also sets mId and mData["id"] if a the new id was auto-created by the database.
    *
-   * @return array|null Data array, or null on error or no data
+   * @return Boolean true on success, false on error
    */
   public function dbInsert()
   {
-    $err = $this->dbValidateInsert();
-    if ($err != "") {
-      $this->setError($err);
-      return null;
-    }
-    $this->mError = "";
-    $this->mData  = null;
+    if (!$this->dbValidateInsert())
+      return false;
+
+    $this->mId             = -1;
+    $this->mData           = null;
     $this->mNumRowsChanged = 0;
 
     $this->initFieldsFromParam();
 
-    $res = $this->dbInsertItem();
-    if ($res === null)
-      return null;
-
-    if (method_exists($this,"dbInsertExtra"))
-      $res2 = $this->dbInsertExtra();
-
-    $this->mData["id"] = $this->mId;
-    return $this->mData;
-  } // dbInsert
-
-  protected function dbValidateInsert()
-  {
-    $err = "";
-    return $err;
-  } // dbValidateInsert
-
-  protected function dbInsertItem()
-  {
-    $this->mNumRowsChanged = 0;
     // Insert in normal table
     $stmt = $this->dbPrepareInsertStmt();
-    //elog("dbInsertItem:".$stmt);
+    //elog("dbInsert stmt:".$stmt);
     if (!$stmt || !$this->query($stmt))
-      return null;
-    $this->mNumRowsChanged += $this->getNumRowsChanged();
+      return false;
 
-    // Get the id that was auto-created
-    $this->mId = $this->getLastInsertID($this->mTableName);
-    Parameters::set($this->mIdKey,$this->mId);
+    // mNumRowsChanged == 1 if the insert succeeded
+    $this->mNumRowsChanged = $this->getNumRowsChanged();
+    if ($this->mNumRowsChanged == 0) {
+      $this->setMessage($this->mInsertNothingToDo);
+      return false;
+    }
+    // An id will have been auto-created if the insert succeeded
+    $this->mId = $this->getLastInsertID($this->mTableName); // TODO! Is it correct to assign to mId here?
+    $this->mData["id"] = $this->mId;           // TODO! Neccessary?
+    Parameters::set($this->mIdKey,$this->mId); // TODO! Neccessary?
 
     // Insert in meta table
     $this->dbMetaInsertOrUpdate($this->mId);
@@ -1913,21 +1898,30 @@ class anyTable extends dbTable
                 "VALUES ('".$gid."','".$this->mId."')";
         //error_log("stmt:".$stmt);
         if (!$this->query($stmt))
-          return null;
+          return false;
       }
     }
-
     // Insert in association table, if association id is given
     // TODO! Not implemented yet
 
-    // Set result message and return
-    if ($this->mNumRowsChanged > 0)
-      $this->setMessage($this->mInsertSuccessMsg);
-    else
-      $this->setMessage($this->mInsertNothingToDo);
+    // Set result message
+    $this->setMessage($this->mInsertSuccessMsg);
 
-    return $this->mData;
-  } // dbInsertItem
+    // Call success handler
+    if (method_exists($this,"dbInsertSuccess"))
+      $res2 = $this->dbInsertSuccess();
+
+    return true;
+  } // dbInsert
+
+  protected function dbValidateInsert()
+  {
+    $this->mError = "";
+    // Validate here, set $this->mError
+    if ($this->mError != "")
+      return false;
+    return true;
+  } // dbValidateInsert
 
   protected function dbPrepareInsertStmt()
   {
