@@ -8,6 +8,11 @@ var groupTable = function (connection,parameters)
                    "document": [ "any_document_group", "documentTable" ],
                    "user":     [ "any_group_user",     "userTable" ],
                  };
+  this.fields = [
+    "group_id",
+    "group_name",
+    "group_description",
+  ];
   this.sqlCreate = "\
     CREATE TABLE IF NOT EXISTS any_group (\
       group_id          varchar(16) PRIMARY KEY AUTOINCREMENT,\

@@ -8,6 +8,11 @@ var userTable = function (connection,parameters)
                    "event":    [ "any_event_user",    "eventTable" ],
                    "document": [ "any_document_user", "documentTable" ],
                  };
+  this.fields = [
+    "user_id",
+    "user_name",
+    "user_description",
+  ];
   this.sqlCreate = "\
     CREATE TABLE IF NOT EXISTS any_user (\
       user_id          INT PRIMARY KEY AUTOINCREMENT,\
