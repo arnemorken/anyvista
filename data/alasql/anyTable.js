@@ -48,6 +48,9 @@ var anyTable = function (connection,parameters,tableName,type,id,idKey,nameKey,o
 
   this.linking   = null;
   this.maxId     = -1;
+
+  this.insertSuccessMsg  = "Insert ok. ";
+  this.insertNothingToDo = "Nothing to insert. ";
 }; // constructor
 
 anyTable.prototype = new dbTable();
@@ -446,7 +449,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,linkId)
             if (!grp[pid] && !grp["+"+pid]) {
               let name = item[this.nameKey];
               let err = "Warning: Item "+idx+" ("+name+") does not have parent in same group. ";
-              this.setMessage(err);
+              this.error = err;
               console.log(err);
             }
           } // if
@@ -588,9 +591,86 @@ anyTable.prototype.findHeader = function(inData)
 /////////////////////////////// Insert //////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-anyTable.prototype.dbInsert = function(options)
+anyTable.prototype.dbInsert = async function(options)
 {
+  if (!options || !options.keys || !options.values || !this.dbValidateInsert(options))
+    return Promise.resolve(null);
+
+  // Insert in normal table
+  let stmt = this.dbPrepareInsertStmt(options.keys,options.values);
+  //console.log("dbInsert stmt:"+stmt);
+  if (!stmt)
+    return null;
+  stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
+  let self = this;
+  return await alasql.promise(stmt)
+  .then( async function(res) {
+    // numRowsChanged == 1 if the insert succeeded
+    self.numRowsChanged = res;
+    console.log("RES:"+res);
+    if (self.numRowsChanged == 0) {
+      self.message = self.insertNothingToDo;
+      return null;
+    }
+    // An id will have been auto-created if the insert succeeded
+    self.last_insert_id = await self.queryMaxId(self.tableName);
+
+    // Set result message
+    self.message = self.insertSuccessMsg;
+
+    // Call success handler
+    if (options.successHandler && options.context)
+      options.successHandler.call(options.context,res);
+
+    return res;
+  })
+  .catch(error => {
+     console.error("Database error: "+error);
+     return null;
+  })
 }; // dbInsert
+
+anyTable.prototype.dbValidateInsert = function(options)
+{
+  this.error = "";
+  // Validate here, set this.error
+  if (this.error != "")
+    return false;
+  return true;
+}; // dbValidateInsert
+
+anyTable.prototype.dbPrepareInsertStmt = function(keys,values)
+{
+  if (!keys || !values)
+    return null;
+  let stmt = "INSERT INTO "+this.tableName+" (";
+  let at_least_one = false;
+  for (var i=0; i<keys.length; i++) {
+    let key = keys[i];
+    let val = values[i];
+    if (val && val !== "") {
+      at_least_one = true;
+      stmt += key+",";
+    }
+  }
+  if (at_least_one) {
+    let pos = stmt.length-1;
+    stmt = stmt.substring(0,pos) + "" + stmt.substring(pos+1); // Replace last "," with ""
+  }
+  else
+    return null;
+  stmt += ") VALUES (";
+  for (var i=0; i<keys.length; i++) {
+    let key = keys[i];
+    let val = values[i];
+    if (val && val !== "")
+      stmt += "'"+val+"',";
+  }
+  let pos = stmt.length-1;
+  stmt = stmt.substring(0,pos) + "" + stmt.substring(pos+1); // Replace last "," with ""
+  stmt += ")";
+  return stmt;
+}; // dbPrepareInsertStmt
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Update //////////////////////////////////////
