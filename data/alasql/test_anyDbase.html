@@ -89,8 +89,8 @@ async function connectSuccess(options)
   let ustab = factory.create("userTable", {header:true});
   let evtab = factory.create("eventTable",{header:true});
 
-let d1 = null;
-let d2 = null;
+  let d1 = null;
+  let d2 = null;
   // Create tables
   grtab.createTable()
   .then( () => {
@@ -115,32 +115,37 @@ let d2 = null;
     return evtab.insertLinkTables();
   })
   .then( () => {
-    return evtab.dbSearch()
-    .then( function(data) {
-      d1 = evtab.data.data;
-    });
+    return evtab.dbInsert({ keys:   ["event_id","event_name"],
+                            values: ['4242','Something was happening, mrs. Jones'],
+                         });
   })
   .then( () => {
     return ustab.dbSearch({id:99})
     .then( function(data) {
-      d2 = ustab.data.data;
+      d1 = ustab.data.data;
     });
   })
   .then( () => {
-    var my_model1 = new anyModel({data: d1, type: "event"});
+    evtab.parameters.header = "Upcoming events";
+    return evtab.dbSearch()
+    .then( function(data) {
+      d2 = evtab.data.data;
+    });
+  })
+  .then( () => {
+    var my_model1 = new anyModel({data: d1, type: "user"});
     var my_view1  = new anyViewTabs({
       model:   my_model1,
       id:      "view1",
     });
     my_view1.refresh();
-    var my_model2 = new anyModel({data: d2, type: "user"});
+    var my_model2 = new anyModel({data: d2, type: "event"});
     var my_view2  = new anyViewTabs({
       model:   my_model2,
       id:      "view2",
     });
     my_view2.refresh();
-  })
-
+  });
 }
 
 function connectFail(error)
