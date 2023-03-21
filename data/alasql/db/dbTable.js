@@ -64,8 +64,45 @@ dbTable.prototype.query = function(SQL,mergeArray,disregardResult)
   });
 }; // query
 
+// Returns highest id of table, or -1 if no id was found (empty table), or null on error.
+dbTable.prototype.queryMaxId = async function(tableName)
+{
+  if (!tableName)
+    tableName = this.tableName;
+  if (!tableName)
+    return null;
+
+  let dataType = tableName == "acugroup" ? "group" : tableName;
+  this.err = "";
+  let self = this;
+  if (!this.tableExists(tableName)) {
+    this.err = "Table does not exist:"+tableName+". ";
+    console.error(this.err);
+    return Promise.resolve(null);
+  }
+  let query_str = "SELECT MAX("+this.idKey+") AS "+this.idKey+" FROM "+tableName;
+  return await alasql.promise(query_str)
+    .then (function(rows) {
+      if (!rows[0][self.idKey]) {
+        rows[0][self.idKey] = 0;
+      }
+      self.max_id = parseInt(rows[0][self.idKey]);
+      return self.max_id;
+    })
+    .catch(function(err) {
+      self.err = err;
+      console.error(self.err);
+      return null;
+    });
+}; // queryMaxId
+
 dbTable.prototype.tableExists = function(tableName)
 {
+  if (!tableName)
+    tableName = this.tableName;
+  if (!tableName)
+    return null;
+
   if (!this.connection || !this.connection.aladbase || !this.connection.aladbase.tables)
     return false;
   return this.connection.aladbase.tables[tableName] != undefined
