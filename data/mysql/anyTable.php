@@ -1860,7 +1860,7 @@ class anyTable extends dbTable
   public function dbInsert()
   {
     if (!$this->dbValidateInsert())
-      return false;
+      return null;
 
     $this->mId             = -1;
     $this->mData           = null;
@@ -1872,13 +1872,13 @@ class anyTable extends dbTable
     $stmt = $this->dbPrepareInsertStmt();
     //elog("dbInsert stmt:".$stmt);
     if (!$stmt || !$this->query($stmt))
-      return false;
+      return null;
 
     // mNumRowsChanged == 1 if the insert succeeded
     $this->mNumRowsChanged = $this->getNumRowsChanged();
     if ($this->mNumRowsChanged == 0) {
       $this->setMessage($this->mInsertNothingToDo);
-      return false;
+      return null;
     }
     // An id will have been auto-created if the insert succeeded
     $this->mId = $this->getLastInsertID($this->mTableName); // TODO! Is it correct to assign to mId here?
@@ -1898,7 +1898,7 @@ class anyTable extends dbTable
                 "VALUES ('".$gid."','".$this->mId."')";
         //error_log("stmt:".$stmt);
         if (!$this->query($stmt))
-          return false;
+          return null;
       }
     }
     // Insert in association table, if association id is given
@@ -1909,9 +1909,9 @@ class anyTable extends dbTable
 
     // Call success handler
     if (method_exists($this,"dbInsertSuccess"))
-      $res2 = $this->dbInsertSuccess();
+      $this->dbInsertSuccess();
 
-    return true;
+    return $this->mData;
   } // dbInsert
 
   protected function dbValidateInsert()
