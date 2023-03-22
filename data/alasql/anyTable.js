@@ -49,8 +49,10 @@ var anyTable = function (connection,parameters,tableName,type,id,idKey,nameKey,o
   this.linking   = null;
   this.maxId     = -1;
 
-  this.insertSuccessMsg  = "Insert ok. ";
+  this.insertSuccessMsg  = "Insert succeeded. ";
   this.insertNothingToDo = "Nothing to insert. ";
+  this.itemExists        = "Item already exist. ";
+  this.itemUnexists      = "Item does not exist. ";
 }; // constructor
 
 anyTable.prototype = new dbTable();
@@ -68,7 +70,7 @@ anyTable.prototype.findDefaultHeader = function(type)
 anyTable.prototype.findDefaultListHeader = function(type)
 {
   return type.charAt(0).toUpperCase() + type.slice(1) + " list"; // TODO: i18n
-} // findDefaultListHeader
+}; // findDefaultListHeader
 
 anyTable.prototype.findDefaultItemHeader = function(type,inData)
 {
@@ -585,7 +587,7 @@ anyTable.prototype.findHeader = function(inData)
       hdr = this.findDefaultItemHeader(this.type,inData);
   }
   return hdr;
-} // findHeader
+}; // findHeader
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Insert //////////////////////////////////////
@@ -597,17 +599,19 @@ anyTable.prototype.dbInsert = async function(options)
     return Promise.resolve(null);
 
   // Insert in normal table
-  let stmt = this.dbPrepareInsertStmt(options.keys,options.values);
+  let stmt = await this.dbPrepareInsertStmt(options.keys,options.values);
   //console.log("dbInsert stmt:"+stmt);
-  if (!stmt)
+  if (!stmt) {
+    console.log(this.error);
     return null;
+  }
   stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
   let self = this;
   return await alasql.promise(stmt)
   .then( async function(res) {
     // numRowsChanged == 1 if the insert succeeded
     self.numRowsChanged = res;
-    console.log("RES:"+res);
+    console.log("ins res:"+res);
     if (self.numRowsChanged == 0) {
       self.message = self.insertNothingToDo;
       return null;
@@ -625,9 +629,9 @@ anyTable.prototype.dbInsert = async function(options)
     return res;
   })
   .catch(error => {
-     console.error("Database error: "+error);
+     console.error("Insert error: "+error);
      return null;
-  })
+  });
 }; // dbInsert
 
 anyTable.prototype.dbValidateInsert = function(options)
@@ -639,18 +643,26 @@ anyTable.prototype.dbValidateInsert = function(options)
   return true;
 }; // dbValidateInsert
 
-anyTable.prototype.dbPrepareInsertStmt = function(keys,values)
+anyTable.prototype.dbPrepareInsertStmt = async function(keys,values)
 {
   if (!keys || !values)
     return null;
   let stmt = "INSERT INTO "+this.tableName+" (";
   let at_least_one = false;
-  for (var i=0; i<keys.length; i++) {
+  for (let i=0; i<keys.length; i++) {
     let key = keys[i];
     let val = values[i];
     if (val && val !== "") {
       at_least_one = true;
       stmt += key+",";
+    }
+    if (key == this.idKey) {
+      // Check if item with this id key exists
+      let res = await this.dbItemExists(val);
+      if (res) {
+        this.error = this.type + this.itemExists;
+        return null;
+      }
     }
   }
   if (at_least_one) {
@@ -660,7 +672,7 @@ anyTable.prototype.dbPrepareInsertStmt = function(keys,values)
   else
     return null;
   stmt += ") VALUES (";
-  for (var i=0; i<keys.length; i++) {
+  for (let i=0; i<keys.length; i++) {
     let key = keys[i];
     let val = values[i];
     if (val && val !== "")
@@ -676,9 +688,105 @@ anyTable.prototype.dbPrepareInsertStmt = function(keys,values)
 /////////////////////////////// Update //////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-anyTable.prototype.dbUpdate = function(options)
+anyTable.prototype.dbUpdate = async function(options)
 {
+  if (!options || !options.keys || !options.values || !this.dbValidateUpdate(options))
+    return Promise.resolve(null);
+
+  if (!options.id || options.id == "")
+    return this.dbInsert(options); // No id, assume it is a new item to be inserted
+  this.id = options.id;
+
+  // Update normal table
+  let stmt = await this.dbPrepareUpdateStmt(options.keys,options.values);
+  console.log("dbUpdate stmt:"+stmt);
+  if (!stmt) {
+    console.log(this.error);
+    return null;
+  }
+  stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
+  let self = this;
+  return await alasql.promise(stmt)
+  .then( async function(res) {
+    // numRowsChanged >= 1 if the update succeeded
+    self.numRowsChanged = res;
+    console.log("upd res:"+res);
+    if (self.numRowsChanged == 0) {
+      self.message = self.updateNothingToDo;
+      return null;
+    }
+    // Set result message
+    self.message = self.updateSuccessMsg;
+
+    // Call success handler
+    if (options.successHandler && options.context)
+      options.successHandler.call(options.context,res);
+
+    return res;
+  })
+  .catch(error => {
+     console.error("Update error: "+error);
+     return null;
+  });
 }; // dbUpdate
+
+anyTable.prototype.dbValidateUpdate = function(options)
+{
+  this.error = "";
+  // Validate here, set this.error
+  if (this.error != "")
+    return false;
+  return true;
+}; // dbValidateUpdate
+
+anyTable.prototype.dbPrepareUpdateStmt = async function(keys,values)
+{
+  if (!keys || !values)
+    return null;
+  let res = await this.dbItemExists(this.id);
+  if (!res) {
+    this.error = this.type + this.itemUnexists + " ("+this.id+") ";
+    return null;
+  }
+  let stmt = "UPDATE "+this.tableName+" SET ";
+  let to_set = "";
+  for (let i=0; i<keys.length; i++) {
+    let key = keys[i];
+    let val = values[i];
+    if (val && val !== "") {
+      to_set += this.dbPrepareUpdateStmtKeyVal(key,val);
+    }
+  }
+  if (to_set == "")
+    return null;
+  let pos = to_set.length-1;
+  to_set = to_set.substring(0,pos) + "" + to_set.substring(pos+1); // Replace last "," with ""
+  stmt += to_set + " WHERE " + this.idKey + "=" + this.id + " ";
+  return stmt;
+}; // dbPrepareUpdateStmt
+
+anyTable.prototype.dbPrepareUpdateStmtKeyVal = function(key,val)
+{
+  if (!val || val === "")
+    return key + "=NULL,";
+  return key + "='" + val + "',";
+}; // dbPrepareUpdateStmtKeyVal
+
+anyTable.prototype.dbItemExists = async function(id)
+{
+  let stmt = "SELECT * FROM " + this.tableName + " WHERE " + this.idKey + "=" + id;
+  console.log("dbItemExists,stmt:"+stmt);
+  return await alasql.promise(stmt)
+  .then( function(res) {
+    if (res.length)
+      return true;
+    return false;
+  })
+  .catch(error => {
+     console.error("dbItemExists error: "+error);
+     return null;
+  });
+}; // dbItemExists
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////// Insert or update link ///////////////////////////
