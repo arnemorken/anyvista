@@ -133,13 +133,6 @@ class documentTable extends anyTable
   /////////////////////////////// Update //////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function dbUpdateItem()
-  {
-    if (!anyTable::dbUpdateItem())
-      return false;
-    return true;
-  } // dbUpdateItem
-
   protected function dbUpdateExtra()
   {
   } // dbUpdateExtra

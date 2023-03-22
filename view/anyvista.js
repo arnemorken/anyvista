@@ -925,13 +925,6 @@
               return $where;
             }
 
-            protected function dbUpdateItem()
-            {
-              if (!anyTable::dbUpdateItem())
-                return false;
-              return true;
-            }
-
             protected function dbUpdateExtra()
             {
             }

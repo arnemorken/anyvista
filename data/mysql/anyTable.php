@@ -1972,27 +1972,39 @@ class anyTable extends dbTable
    */
   public function dbUpdate()
   {
-    $err = $this->dbValidateUpdate();
-    if ($err != "") {
-      $this->setError($err);
+    if (!$this->dbValidateUpdate())
       return null;
-    }
-    $this->mError = "";
-    $this->mData  = null;
+
+    $this->mData           = null;
     $this->mNumRowsChanged = 0;
 
     $this->initFieldsFromParam();
 
-    if (!isset($this->mId) || $this->mId == "") {
-      // No id, assume it is a new item
-      return $this->dbInsert();
-    }
+    if (!isset($this->mId) || $this->mId == "")
+      return $this->dbInsert(); // No id, assume it is a new item
+
     // We have an id, so we are updating an existing item or a link to one.
     $upd_what = Parameters::get("upd");
     if (!$upd_what) {
-      $res = $this->dbUpdateItem();
-      if (!$res)
+      // Update normal table
+      $stmt = $this->dbPrepareUpdateStmt();
+      //elog("dbUpdateItem:".$stmt);
+      if ($stmt) { // May be null if we only update meta fields
+        if (!$this->query($stmt))
+          return null;
+      }
+      if ($this->isError())
         return null;
+      $this->mNumRowsChanged = $this->getNumRowsChanged();
+
+      // Update meta table
+      $this->dbMetaInsertOrUpdate($this->mId);
+
+      // Set result message
+      if ($this->mNumRowsChanged > 0)
+        $this->setMessage($this->mUpdateSuccessMsg);
+      else
+        $this->setMessage($this->mUpdateNothingToDo);
     }
     else
     if ($upd_what == "link") {
@@ -2004,47 +2016,21 @@ class anyTable extends dbTable
       $this->setError("Illegal parameter value: $upd_what. ");
       return null;
     }
-
-    if (method_exists($this,"dbUpdateExtra"))
-      $res2 = $this->dbUpdateExtra();
+    // Call success handler
+    if (method_exists($this,"dbUpdateSuccess"))
+      $this->dbUpdateSuccess();
 
     return $this->mData;
   } // dbUpdate
 
   protected function dbValidateUpdate()
   {
-    $err = "";
-    return $err;
+    $this->mError = "";
+    // Validate here, set $this->mError
+    if ($this->mError != "")
+      return false;
+    return true;
   } // dbValidateUpdate
-
-  protected function dbUpdateItem()
-  {
-    if (!isset($this->mId) || $this->mId == "")
-      return null;
-    $this->mNumRowsChanged = 0;
-    // Update normal table
-    $stmt = $this->dbPrepareUpdateStmt();
-    //elog("dbUpdateItem:".$stmt);
-    if ($stmt) { // May be null if we only update meta fields
-      if (!$this->query($stmt))
-        return null;
-    }
-    else
-    if ($this->isError())
-      return null;
-    $this->mNumRowsChanged += $this->getNumRowsChanged();
-
-    // Update meta table
-    $this->dbMetaInsertOrUpdate($this->mId);
-
-    // Set result message and return
-    if ($this->mNumRowsChanged > 0)
-      $this->setMessage($this->mUpdateSuccessMsg);
-    else
-      $this->setMessage($this->mUpdateNothingToDo);
-
-    return $this->mData;
-  } // dbUpdateItem
 
   protected function dbPrepareUpdateStmt()
   {

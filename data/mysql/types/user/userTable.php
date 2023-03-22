@@ -305,10 +305,8 @@ class userTable extends anyTable
   /////////////////////////////// Update //////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function dbUpdateItem()
+  protected function dbUpdateAssociation()
   {
-    if (!anyTable::dbUpdateItem())
-      return false;
     // Update event_user table
     if (isset($this->mTableFieldsLeftJoin["user"])) {
       $stmt_par = null;
@@ -322,7 +320,7 @@ class userTable extends anyTable
         $stmt .= $stmt_par;
         $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
         $stmt.= "WHERE user_id='".$this->mId."' ";
-        //error_log("userTable dbUpdateItem:".$stmt);
+        //error_log("userTable dbUpdateAssociation:".$stmt);
         if (!$this->query($stmt))
           return false;
         if ($this->pw_change) {
@@ -332,7 +330,7 @@ class userTable extends anyTable
       }
     }
     return true;
-  } // dbUpdateItem
+  } // dbUpdateAssociation
 
   protected function dbPrepareUpdateStmtKeyVal($key,$val)
   {

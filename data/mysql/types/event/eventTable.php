@@ -241,16 +241,10 @@ class eventTable extends anyTable
   /////////////////////////////// Update //////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 /*
-  protected function dbUpdateItem()
-  {
-    if (!anyTable::dbUpdateItem())
-      return false;
-    return $this->dbUpdateAssociation();
-  } // dbUpdateItem
-
   // Update event_user table
   protected function dbUpdateAssociation()
   {
+    // Update event_user table
     if (isset($this->mTableFieldsLeftJoin["user"])) {
       $stmt_par = null;
       for ($t=0; $t<count($this->mTableFieldsLeftJoin["user"]); $t++) {
