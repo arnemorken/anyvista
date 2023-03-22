@@ -1988,7 +1988,7 @@ class anyTable extends dbTable
     if (!$upd_what) {
       // Update normal table
       $stmt = $this->dbPrepareUpdateStmt();
-      //elog("dbUpdateItem:".$stmt);
+      //elog("dbUpdate:".$stmt);
       if ($stmt) { // May be null if we only update meta fields
         if (!$this->query($stmt))
           return null;
@@ -2058,7 +2058,6 @@ class anyTable extends dbTable
       return null;
     $to_set[strlen($to_set)-1] = " "; // Replace last "," with " "
     $stmt.= $to_set." WHERE ".$this->mIdKeyTable."='".$this->mId."' ";
-    //elog("dbPrepareUpdateStmt,stmt:".$stmt);
     if ($n == 0) {
       $this->setMessage($this->mUpdateNothingToDo);
       return null;
