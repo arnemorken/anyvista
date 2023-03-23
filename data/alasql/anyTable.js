@@ -98,7 +98,7 @@ anyTable.prototype.findDefaultItemListHeader = function(linkType)
 anyTable.prototype.findLinkTableName = function(linkType)
 {
   if (!linkType)
-    return "";
+    return null;
   if (linkType == this.type)
     return this.tableName;
   let ltn = [linkType,this.type].sort();
@@ -330,43 +330,40 @@ anyTable.prototype.dbExecListStmt = function(type,linkType,linkId)
 // Build the query
 anyTable.prototype.dbPrepareSearchListStmt = function(type,linkType,linkId)
 {
-  let stmt = this.findListSelect(type,linkType)+
-             this.findListLeftJoin(type,linkType)+
-             this.findListWhere(type,linkType,linkId)+
+  let link_table_name = this.findLinkTableName(type);
+  let stmt = this.findListSelect(link_table_name,type,linkType)+
+             this.findListLeftJoin(link_table_name,type,linkType)+
+             this.findListWhere(link_table_name,type,linkType,linkId)+
              this.findListOrderBy();
   return stmt;
 }; // dbPrepareSearchListStmt
 
-anyTable.prototype.findListSelect = function(type,linkType)
+anyTable.prototype.findListSelect = function(linkTableName,type,linkType)
 {
   // Select from own table
   let sl = "SELECT DISTINCT "+this.tableName+".* ";
-  if (linkType) {
-    let link_table_name = this.findLinkTableName(type);
-    sl += ", " + link_table_name + ".* ";
+  if (linkType && linkTableName) {
+    sl += ", " + linkTableName + ".* ";
   }
   sl += "FROM "+this.tableName+" ";
   return sl;
 }; // findListSelect
 
-anyTable.prototype.findListLeftJoin = function(type,linkType)
+anyTable.prototype.findListLeftJoin = function(linkTableName,type,linkType)
 {
   let lj = "";
-  if (linkType) {
-    let link_table_name = this.findLinkTableName(type);
-    lj += "LEFT JOIN " + link_table_name + " " +
-          "ON " + link_table_name + "." + this.idKey + "=" + this.tableName + "." + this.idKey + " ";
+  if (linkType && linkTableName) {
+    lj += "LEFT JOIN " + linkTableName + " " +
+          "ON " + linkTableName + "." + this.idKey + "=" + this.tableName + "." + this.idKey + " ";
   }
   return lj;
 }; // findListLeftJoin
 
-anyTable.prototype.findListWhere = function(type,linkType,linkId)
+anyTable.prototype.findListWhere = function(linkTableName,type,linkType,linkId)
 {
   let where = "";
-  if (linkType && linkId) {
-    let link_table_name = this.findLinkTableName(type);
-    where = link_table_name + "." + type+"_id" + "=" + linkId +" ";
-    where = "WHERE " + where;
+  if (linkType && linkId && linkTableName) {
+    where = "WHERE " + linkTableName + "." + type+"_id" + "=" + linkId +" ";
   }
   return where;
 }; // findListWhere
