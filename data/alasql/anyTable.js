@@ -789,8 +789,46 @@ anyTable.prototype.dbItemExists = async function(id)
 /////////////////////////// Insert or update link ///////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-anyTable.prototype.dbUpdateLink = function(options)
+anyTable.prototype.dbUpdateLink = async function(options)
 {
+  let link_type = options.link_type;
+  if (!link_type) {
+    this.error = "No link type. ";
+    return false;
+  }
+  let id_key      = this.idKey;
+  let id_key_link = link_type + "_id"; // TODO! Not general enough
+  let id          = options.id;
+  let updlist     = options.updlist;
+  let dellist     = options.dellist;
+  let link_table  = this.findLinkTableName(link_type);
+  if (link_table && link_type != this.type) {
+    if (dellist) {
+      for (let i=0; i<dellist.length; i++) {
+        let delval = dellist[i];
+        if (delval) {
+          let stmt = "DELETE FROM "+link_table+" WHERE "+id_key_link+"="+delval+" AND "+id_key+"="+id+"";
+          console.log("dbUpdateLink(1):"+stmt);
+          await alasql.promise(stmt);
+        }
+      }
+    }
+    if (updlist) {
+      for (let i=0; i<updlist.length; i++) {
+        let insval = updlist[i];
+        if (insval) {
+          let stmt = "DELETE FROM "+link_table+" WHERE "+id_key_link+"="+insval+" AND "+id_key+"="+id+"";
+          console.log("dbUpdateLink(2):"+stmt);
+          await alasql.promise(stmt);
+          stmt = "INSERT INTO "+link_table+" ("+id_key_link+","+id_key+") VALUES ("+insval+","+id+")";
+          console.log("dbUpdateLink(3):"+stmt);
+          await alasql.promise(stmt);
+        }
+      }
+    }
+  }
+  else {
+  }
 }; // dbUpdateLink
 
 /////////////////////////////////////////////////////////////////////////////

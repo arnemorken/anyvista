@@ -126,7 +126,14 @@ async function connectSuccess(options)
                          });
   })
   .then( () => {
-    return ustab.dbSearch({id:99})
+    return evtab.dbUpdateLink({ id:        11,
+                                link_type: "user",
+                                dellist:   [99],
+                                updlist:   [98],
+                             });
+  })
+  .then( () => {
+    return ustab.dbSearch()
     .then( function(data) {
       d1 = ustab.data.data;
     });
@@ -134,7 +141,7 @@ async function connectSuccess(options)
   .then( () => {
     evtab.parameters.header = "Upcoming events";
     evtab.id = null;
-    return evtab.dbSearch()
+    return evtab.dbSearch({id:11})
     .then( function(data) {
       d2 = evtab.data.data;
     });
