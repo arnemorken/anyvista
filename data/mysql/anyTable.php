@@ -2167,20 +2167,19 @@ class anyTable extends dbTable
       $this->setError("No link type. ");
       return false;
     }
+    $id_key      = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
+    $id_key_link = $link_type."_id";
+    $id          = Parameters::get($id_key);
+    $link_table  = $this->findLinkTableName($link_type);
+    $updlist     = explode(",",Parameters::get("add"));
+    $dellist     = explode(",",Parameters::get("del"));
     $this->mNumRowsChanged = 0;
-    $id_key       = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
-    $id_key_link  = $link_type."_id";
-    $id           = Parameters::get($id_key);
-    $id_link      = Parameters::get($id_key_link);
-    $list_table   = $this->findLinkTableName($link_type);
-    $updlist      = explode(",",Parameters::get("add"));
-    $dellist      = explode(",",Parameters::get("del"));
 
-    if ($list_table !== null && $list_table !== "" && $link_type != $this->mType) {
+    if ($link_table !== null && $link_table !== "" && $link_type != $this->mType) {
       if ($dellist !== null) {
         foreach ($dellist as $delval) {
           if ($delval) {
-            $stmt = "DELETE FROM ".$list_table." WHERE ".$id_key_link."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
+            $stmt = "DELETE FROM ".$link_table." WHERE ".$id_key_link."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
             //elog("dbUpdateLink(1):".$stmt);
             if (!$this->query($stmt))
               return false;
@@ -2191,11 +2190,11 @@ class anyTable extends dbTable
         foreach ($updlist as $insval) {
           if ($insval) {
             // Delete old list so as to avoid error message when inserting (insert-or-update)
-            $stmt = "DELETE FROM ".$list_table." WHERE ".$id_key_link."='".intval($insval)."' AND ".$id_key."='".intval($id)."'";
+            $stmt = "DELETE FROM ".$link_table." WHERE ".$id_key_link."='".intval($insval)."' AND ".$id_key."='".intval($id)."'";
             //elog("dbUpdateLink(2):".$stmt);
             if (!$this->query($stmt))
               return false;
-            $stmt = "INSERT INTO ".$list_table." (".$id_key_link.",".$id_key.") VALUES (".intval($insval).",".intval($id).")";
+            $stmt = "INSERT INTO ".$link_table." (".$id_key_link.",".$id_key.") VALUES (".intval($insval).",".intval($id).")";
             //elog("dbUpdateLink(3):".$stmt);
             if (!$this->query($stmt))
               return false;
