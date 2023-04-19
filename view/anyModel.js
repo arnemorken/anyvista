@@ -273,7 +273,7 @@ var anyModel = function (options)
   /**
   * @property {Integer} db_timeout_sec
   * @default 10
-  * @description Number of seconds to wait for database reply nefore timing out.
+  * @description Number of seconds to wait for database reply before timing out.
   */
   this.db_timeout_sec = 10;
 

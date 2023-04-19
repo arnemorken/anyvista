@@ -47,40 +47,6 @@ function testAnyDbase()
 
 async function connectSuccess(options)
 {
-  let sqlInsertGroup = [
-    "INSERT INTO any_group (group_id,group_name,group_description) VALUES (\
-      33,\
-      'a grp',\
-      'blah'\
-     );",
-  ];
-  let sqlInsertEvent = [
-    "INSERT INTO any_event (event_id,event_name,event_description,parent_id) VALUES (\
-      11,\
-      'Parent event no. 1',\
-      'I am a parent',\
-      null\
-     );",
-    "INSERT INTO any_event (event_id,event_name,event_description,parent_id) VALUES (\
-      21,\
-      'Child event no 1',\
-      'I am a child',\
-      '11'\
-     );",
-  ];
-  let sqlInsertUser = [
-    "INSERT INTO any_user (user_id,user_name,user_description) VALUES (\
-      98,\
-      'Mrs. Woman',\
-      'I am she'\
-     );",
-    "INSERT INTO any_user (user_id,user_name,user_description) VALUES (\
-      99,\
-      'Mr. Man',\
-      'I am he'\
-     );",
-  ];
-
   //console.log("connectSuccess");
   let factory = new anyTableFactory(gDbase);
 
@@ -103,12 +69,45 @@ async function connectSuccess(options)
     return evtab.createLinkTables();
   })
   .then( async () => {
+    let sqlInsertGroup = [
+      "INSERT INTO any_group (group_id,group_name,group_description) VALUES (\
+        33,\
+        'a grp',\
+        'blah'\
+       );",
+    ];
     return grtab.query(sqlInsertGroup,true,true)
   })
   .then( () => {
+    let sqlInsertUser = [
+      "INSERT INTO any_user (user_id,user_name,user_description) VALUES (\
+        98,\
+        'Mrs. Woman',\
+        'I am she'\
+       );",
+      "INSERT INTO any_user (user_id,user_name,user_description) VALUES (\
+        99,\
+        'Mr. Man',\
+        'I am he'\
+       );",
+    ];
     return ustab.query(sqlInsertUser,true,true);
   })
   .then( () => {
+    let sqlInsertEvent = [
+      "INSERT INTO any_event (event_id,event_name,event_description,parent_id) VALUES (\
+        11,\
+        'Parent event no. 1',\
+        'I am a parent',\
+        null\
+       );",
+      "INSERT INTO any_event (event_id,event_name,event_description,parent_id) VALUES (\
+        21,\
+        'Child event no 1',\
+        'I am a child',\
+        '11'\
+       );",
+    ];
     return evtab.query(sqlInsertEvent,true,true);
   })
   .then( () => {
@@ -116,13 +115,13 @@ async function connectSuccess(options)
   })
   .then( () => {
     return evtab.dbInsert({ keys:   ["event_id","event_name"],
-                            values: [4242,"Something was happening, mrs. Jones"],
+                            values: [4245,"Something was happening, mrs. Jones"],
                          });
   })
   .then( () => {
     return evtab.dbUpdate({ keys:   ["event_name"],
                             values: ["Something did happen, mr. Jones"],
-                            id: 4242,
+                            id: 4245,
                          });
   })
   .then( () => {
