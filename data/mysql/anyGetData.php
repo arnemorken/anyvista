@@ -60,7 +60,7 @@ Parameters::set("fields",array (
   $data  = null;
 
   if ($cmd != "perm" && $type != null && $type != "") {
-    $table = anyTableFactory::create($type,null);
+    $table = anyTableFactory::createClass($type,null);
     if ($table != null) {
       //$start = microtime(true);
       switch ($cmd) {

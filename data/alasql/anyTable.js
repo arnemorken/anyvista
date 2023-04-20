@@ -268,7 +268,7 @@ anyTable.prototype.dbSearchItemLists = async function(id,linking)
     let link_classname = link_object[1];
     //console.log(self.type+";"+link_type+":"+link_tablename+","+link_classname);
     if (self.tableExists(link_tablename)) {
-      let tab = await factory.create(link_classname,true,true); // TODO!
+      let tab = await factory.createClass(link_classname,true,true); // TODO!
       //console.log("created "+link_classname);
       await tab.dbSearchList(self.type,tab.type,id)
       .then( function(data) {
@@ -291,6 +291,8 @@ anyTable.prototype.dbSearchItemLists = async function(id,linking)
   }
   return Promise.resolve(this.data);
 }; // dbSearchItemLists
+
+//////////////////////////////// List search ////////////////////////////////
 
 anyTable.prototype.dbSearchList = function(type,linkType,linkId)
 {
@@ -421,6 +423,9 @@ anyTable.prototype.getRowData = function(rows,data,type,kind)
   return data;
 }; // getRowData
 
+//
+// Build the data group tree for all groups for a list search.
+//
 anyTable.prototype.buildGroupTreeAndAttach = function(data,linkId)
 {
   if (!data)

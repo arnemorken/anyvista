@@ -415,6 +415,26 @@ class anyTable extends dbTable
   {
   } // initFilters
 
+  private function initFiltersFromParam()
+  {
+    $fields = Parameters::get("fields");
+    if ($fields) {
+      $this->mFilters = array();
+      foreach ($fields as $name => $val) {
+        $this->mFilters["list"][$val] = "1";
+        $this->mFilters["item"][$val] = "1";
+      }
+    }
+  } // initFiltersFromParam
+
+  private function initFieldsFromParam()
+  {
+    $fields = Parameters::get("fields");
+    if ($fields) {
+      $this->mTableFields = $fields;
+    }
+  } // initFieldsFromParam
+
   /////////////////////////
   //////// getters ////////
   /////////////////////////
@@ -600,18 +620,6 @@ class anyTable extends dbTable
     return null;
   } // dbCreate
 
-  private function initFiltersFromParam()
-  {
-    $fields = Parameters::get("fields");
-    if ($fields) {
-      $this->mFilters = array();
-      foreach ($fields as $name => $val) {
-        $this->mFilters["list"][$val] = "1";
-        $this->mFilters["item"][$val] = "1";
-      }
-    }
-  } // initFiltersFromParam
-
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Searches ////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
@@ -670,6 +678,8 @@ class anyTable extends dbTable
       $err .= "Type missing. ";
     return $err;
   } // dbValidateSearch
+
+  ////////////////////////////// Misc. searches //////////////////////////////
 
   //
   // Find max id for a table. Will only work for tables with AUTO_INCREMENT rows.
@@ -861,13 +871,13 @@ class anyTable extends dbTable
     }
     // Get group data to a "flat" list
     $group_id    = Parameters::get("group_id");
-    $group_table = anyTableFactory::create("group",$this);
+    $group_table = anyTableFactory::createClass("group",$this);
     $group_table->mGrouping = false;
 
     // Search through all registered link types/tables
     $idx = "+".$this->mId;
     foreach ($this->mLinking as $i => $link_type) {
-      $table = anyTableFactory::create($link_type,$this);
+      $table = anyTableFactory::createClass($link_type,$this);
       if ($table) {
         $link_table = $this->findLinkTableName($link_type);
         if ($table->mType != $this->mType || $this->hasParentId()) {
@@ -918,7 +928,7 @@ class anyTable extends dbTable
     if ($this->mType != "group") {
       // Get group data to a "flat" list
       $my_grouping = $this->mGrouping;
-      $group_table = anyTableFactory::create("group",$this);
+      $group_table = anyTableFactory::createClass("group",$this);
       $group_table->mGrouping = false;
       $group_data  = $group_table->dbSearchGroupInfo($this->mType,$group_id);
       //vlog("dbSearchList,group_data($this->mType,$group_id):",$group_data);
@@ -1839,14 +1849,6 @@ class anyTable extends dbTable
     return null;
   } // prepareSetting
 
-  private function initFieldsFromParam()
-  {
-    $fields = Parameters::get("fields");
-    if ($fields) {
-      $this->mTableFields = $fields;
-    }
-  } // initFieldsFromParam
-
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Insert //////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
@@ -2392,7 +2394,7 @@ class anyTable extends dbTable
       // Delete from associated tables
       if (isset($this->mLinking)) {
         foreach ($this->mLinking as $idx => $link_type) {
-          $table = anyTableFactory::create($link_type,$this);
+          $table = anyTableFactory::createClass($link_type,$this);
           if ($this->mType !== $link_type) {
             $this->dbDeleteAssoc($table);
           }

@@ -51,16 +51,16 @@ async function connectSuccess(options)
   let factory = new anyTableFactory(gDbase);
 
   // Create table classes
-  let grtab = factory.create("groupTable",{header:true});
-  let ustab = factory.create("userTable", {header:true});
-  let evtab = factory.create("eventTable",{header:true});
+  let grtab = factory.createClass("groupTable",{header:true});
+  let ustab = factory.createClass("userTable", {header:true});
+  let evtab = factory.createClass("eventTable",{header:true});
 
   let d1 = null;
   let d2 = null;
   // Create tables
   grtab.createTable()
   .then( () => {
-    return ustab.createTable()
+    return ustab.createTable();
   })
   .then( () => {
     return evtab.createTable();
@@ -76,7 +76,7 @@ async function connectSuccess(options)
         'blah'\
        );",
     ];
-    return grtab.query(sqlInsertGroup,true,true)
+    return grtab.query(sqlInsertGroup,true,true);
   })
   .then( () => {
     let sqlInsertUser = [

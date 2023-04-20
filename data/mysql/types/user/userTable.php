@@ -355,7 +355,7 @@ class userTable extends anyTable
   {
     $upd_what = Parameters::get("upd");
     if ($upd_what == "att") {
-      $ev_tab = anyTableFactory::create("event",$this);
+      $ev_tab = anyTableFactory::createClass("event",$this);
       if ($ev_tab != null)
         return $ev_tab->dbSetAttended(Parameters::get("event_id"),Parameters::get("user_id"));
       return false;

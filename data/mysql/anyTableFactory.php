@@ -25,7 +25,8 @@ class anyTableFactory
   public static function getTables() { return self::$mTables; }
 
   /**
-   * Creates an anyVista table of type `type`, or returns it if it already exists.
+   * Creates a table class of type `type`, or returns it if it already exists.
+   * Does not create the actual database table.
    *
    * @param String type      The table type.
    * @param Object hostTable An optional "host table".
@@ -33,9 +34,9 @@ class anyTableFactory
    * @return Object|null Data object, or null on error or no data
    *
    * #### Example
-   *    $myTable = anyTableFactory::create("user")
+   *    $myTable = anyTableFactory::createClass("user")
    */
-  public static function create($type,$hostTable=null)
+  public static function createClass($type,$hostTable=null)
   {
     self::$mError = "";
     if ($type == null || $type == "") {
@@ -82,7 +83,7 @@ class anyTableFactory
       }
     }
     return self::$mTables[$type];
-  } // create
+  } // createClass
 
 } // class anyTableFactory
 ?>

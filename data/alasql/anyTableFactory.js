@@ -8,9 +8,11 @@ var anyTableFactory = function (connection)
 }; // constructor
 
 //
-// Create a new table class, optionally also create the associated database table
+// Creates a table class of type `type`.
+// Does not create the actual database table.
+// TODO! What if class already exists (script is loaded)?
 //
-anyTableFactory.prototype.create = function(className,parameters)
+anyTableFactory.prototype.createClass = function(className,parameters)
 {
   if (!className) {
     this.error = "Class name missing. ";
@@ -35,7 +37,7 @@ anyTableFactory.prototype.create = function(className,parameters)
     console.error(this.error);
     return false;
   }
-}; // create
+}; // createClass
 
 function isScriptLoaded(src)
 {
