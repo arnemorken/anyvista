@@ -64,7 +64,8 @@ Parameters::set("fields",array (
     if ($table != null) {
       //$start = microtime(true);
       switch ($cmd) {
-        case "cre": $data = $table->dbCreate();     break;
+        case "cre": $table->dbCreate($type,Parameters::get("table"),Parameters::get("unique"));
+                    break;
         case "ins": $data = $table->dbInsert();     break;
         case "upd": $data = $table->dbUpdate();     break;
         case "add": $data = $table->dbAddLink();    break;

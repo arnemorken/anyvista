@@ -39,17 +39,16 @@ class dbTable
     $this->mHostTable    = $this;
   } // constructor
 
-  /////////////////////////
-  // Abstract methods
-  /////////////////////////
+  /////////////////////////////////////////////////////////////////
+  // Abstract methods, implement (override) these in deriving class
+  /////////////////////////////////////////////////////////////////
 
-  public function    dbInsert()     {} // Abstract
-  public function    dbUpdate()     {} // Abstract
-  public function    dbAddLink()    {} // Abstract
-  public function    dbRemoveLink() {} // Abstract
-  public function    dbDelete()     {} // Abstract
-  public function    dbSearch()     {} // Abstract
+  public    function dbSearch()            {} // Abstract
   protected function prepareData(&$inData) {} // Abstract
+  public    function dbInsert()            {} // Abstract
+  public    function dbUpdate()            {} // Abstract
+  public    function dbUpdateLink()        {} // Abstract
+  public    function dbDelete()            {} // Abstract
 
   /////////////////////////
   // Getters
@@ -128,6 +127,46 @@ class dbTable
   } // setMessage
 
   public function setHostTable($tab) { $this->mHostTable = $tab; }
+
+  /**
+   * @method dbCreate
+   * @description Creates a database table.
+   * @return false on error, true on success
+   */
+  public function dbCreate($type,$tableFields,$unique)
+  {
+    if (!$type)
+      return false;
+    $tableName = "any_".$type;
+    $key_field = $type."_id"; // Default PRIMARY KEY field
+    $sql = "CREATE TABLE $tableName (";
+    if (!$tableFields) {
+      // Use default fields
+      $sql .= $type."_id bigint(20),";
+      $sql .= $type."_name varchar(50),";
+      $sql .= "PRIMARY KEY (`".$key_field."`)";
+    }
+    else {
+      // Use user-supplied fields
+      if (!in_array($key_field,$tableFields)) {
+        // Default PRIMARY KEY field does not exist, so use first value in array for this
+        $key_field = array_key_first($tableFields);
+      }
+      foreach ($tableFields as $name => $val)
+        $sql .= $name." ".$val.",";
+      $sql .= "PRIMARY KEY (`".$key_field."`)";
+    }
+    if (isset($unique))
+      $sql .= ",UNIQUE KEY(".$unique.")";
+    $sql .= ")";
+    //error_log("dbCreate,sql:$sql");
+    if ($this->query($sql)) {
+      error_log("Table $tableName created successfully");
+      return true;
+    }
+    error_log("Error creating table $tableName:".$this->getError());
+    return false;
+  } // dbCreate
 
   /**
    * @method query
