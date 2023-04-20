@@ -111,7 +111,12 @@ async function connectSuccess(options)
     return evtab.query(sqlInsertEvent,true,true);
   })
   .then( () => {
-    return evtab.insertLinkTables();
+    let sqlInsertEventUser = "\
+      INSERT INTO any_event_user (event_id,user_id) VALUES (\
+        11,\
+        99);\
+      ";
+    return evtab.query(sqlInsertEventUser,true,true);
   })
   .then( () => {
     return evtab.dbInsert({ keys:   ["event_id","event_name"],

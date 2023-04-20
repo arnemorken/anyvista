@@ -27,11 +27,6 @@ var eventTable = function (connection,parameters)
       user_id           INT PRIMARY KEY AUTOINCREMENT,\
       UNIQUE (event_id,user_id));\
     ";
-  this.sqlInsertEventUser = "\
-    INSERT INTO any_event_user (event_id,user_id) VALUES (\
-      11,\
-      99);\
-    ";
 }; // constructor
 
 eventTable.prototype = new anyTable(null);
@@ -41,8 +36,3 @@ eventTable.prototype.createLinkTables = function()
 {
   return this.query(this.sqlCreateLinks,true,true);
 }; // createLinkTables
-
-eventTable.prototype.insertLinkTables = function()
-{
-  return this.query(this.sqlInsertEventUser,true,true);
-}; // insertLinkTables
