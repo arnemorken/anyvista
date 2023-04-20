@@ -198,6 +198,8 @@ anyTable.prototype._dbSearch = function(type,id)
   } // else
 }; // _dbSearch
 
+////////////////////////////// Misc. searches //////////////////////////////
+
 //
 // Find max id for a table.
 //
@@ -209,13 +211,13 @@ anyTable.prototype.dbSearchMaxId = function()
   .then (function(data) {
     if (data && data[0])
       self.maxId = data[0];
-    //console.log("max:");
-    //console.log(self.maxId["MAX("+self.idKey+")"]);
+    //console.log("max:"); console.log(self.maxId["MAX("+self.idKey+")"]);
   });
 }; // dbSearchMaxId
 
 anyTable.prototype.dbSearchParents = function()
 {
+  // Not implemented yet
 }; // dbSearchParents
 
 //////////////////////////////// Item search ////////////////////////////////
@@ -229,14 +231,12 @@ anyTable.prototype.dbSearchItem = function(id)
     return Promise.resolve(false);
   let stmt = this.dbPrepareSearchItemStmt(this.idKey,id);
   let self = this;
-  //console.log(stmt);
+  //console.log("dbSearchItem:"+stmt);
   return alasql.promise(stmt)
   .then (function(rows) {
-    //console.log("raw item data:");
-    //console.log(rows);
+    //console.log("dbSearchItem, raw item data:"); console.log(rows);
     self.data = self.getRowData(rows,self.data,self.type,"item");
-    //console.log("item data:");
-    //console.log(self.data);
+    //console.log("dbSearchItem, grouped item data:"); console.log(self.data);
     if (!self.data || Object.keys(self.data).length === 0)
       return Promise.resolve(null);
     return self.dbSearchItemLists(id,self.linking);
@@ -305,9 +305,8 @@ anyTable.prototype.dbSearchList = function(type,linkType,linkId)
   let self = this;
   return this.dbExecListStmt(type,linkType,linkId)
   .then( function(data) {
-    //console.log("list data:");
-    //console.log(data);
     self.data = self.buildGroupTreeAndAttach(data,linkId);
+    //console.log("dbSearchList, tree list data:"); console.log(self.data);
     return Promise.resolve(self.data);
   });
 }; // dbSearchList
@@ -320,9 +319,9 @@ anyTable.prototype.dbExecListStmt = function(type,linkType,linkId)
   //console.log("dbExecListStmt:"+stmt);
   return alasql.promise(stmt)
   .then( function(rows) {
-    //console.log("raw list data:");
-    //console.log(rows);
+    //console.log("dbExecListStmt, raw list data:"); console.log(rows);
     let data = self.getRowData(rows,self.data,self.type,"list");
+    //console.log("dbExecListStmt, raw list data:"); console.log(data);
     return Promise.resolve(data);
   });
 }; // dbExecListStmt
@@ -597,18 +596,18 @@ anyTable.prototype.dbInsert = async function(options)
 
   // Insert in normal table
   let stmt = await this.dbPrepareInsertStmt(options.keys,options.values);
-  //console.log("dbInsert stmt:"+stmt);
   if (!stmt) {
     console.log(this.error);
     return null;
   }
   stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
   let self = this;
+  //console.log("dbInsert:"+stmt);
   return await alasql.promise(stmt)
   .then( async function(res) {
     // numRowsChanged == 1 if the insert succeeded
     self.numRowsChanged = res;
-    console.log("ins res:"+res);
+    //console.log("ins res:"+res);
     if (self.numRowsChanged == 0) {
       self.message = self.insertNothingToDo;
       return null;
@@ -696,18 +695,18 @@ anyTable.prototype.dbUpdate = async function(options)
 
   // Update normal table
   let stmt = await this.dbPrepareUpdateStmt(options.keys,options.values);
-  console.log("dbUpdate stmt:"+stmt);
   if (!stmt) {
     console.log(this.error);
     return null;
   }
   stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
   let self = this;
+  //console.log("dbUpdate:"+stmt);
   return await alasql.promise(stmt)
   .then( async function(res) {
     // numRowsChanged >= 1 if the update succeeded
     self.numRowsChanged = res;
-    console.log("upd res:"+res);
+    //console.log("upd res:"+res);
     if (self.numRowsChanged == 0) {
       self.message = self.updateNothingToDo;
       return null;
@@ -772,7 +771,7 @@ anyTable.prototype.dbPrepareUpdateStmtKeyVal = function(key,val)
 anyTable.prototype.dbItemExists = async function(id)
 {
   let stmt = "SELECT * FROM " + this.tableName + " WHERE " + this.idKey + "=" + id;
-  console.log("dbItemExists,stmt:"+stmt);
+  //console.log("dbItemExists:"+stmt);
   return await alasql.promise(stmt)
   .then( function(res) {
     if (res.length)
@@ -803,12 +802,13 @@ anyTable.prototype.dbUpdateLink = async function(options)
   let dellist     = options.dellist;
   let link_table  = this.findLinkTableName(link_type);
   if (link_table && link_type != this.type) {
+    // Link with different type
     if (dellist) {
       for (let i=0; i<dellist.length; i++) {
         let delval = dellist[i];
         if (delval) {
           let stmt = "DELETE FROM "+link_table+" WHERE "+id_key_link+"="+delval+" AND "+id_key+"="+id+"";
-          console.log("dbUpdateLink(1):"+stmt);
+          //console.log("dbUpdateLink(1):"+stmt);
           await alasql.promise(stmt);
         }
       }
@@ -818,16 +818,37 @@ anyTable.prototype.dbUpdateLink = async function(options)
         let insval = updlist[i];
         if (insval) {
           let stmt = "DELETE FROM "+link_table+" WHERE "+id_key_link+"="+insval+" AND "+id_key+"="+id+"";
-          console.log("dbUpdateLink(2):"+stmt);
+          //console.log("dbUpdateLink(2):"+stmt);
           await alasql.promise(stmt);
           stmt = "INSERT INTO "+link_table+" ("+id_key_link+","+id_key+") VALUES ("+insval+","+id+")";
-          console.log("dbUpdateLink(3):"+stmt);
+          //console.log("dbUpdateLink(3):"+stmt);
           await alasql.promise(stmt);
         }
       }
     }
   }
   else {
+    // Link with same type (sub-type with parent id)
+    if (dellist) {
+      for (let i=0; i<dellist.length; i++) {
+        let delval = dellist[i];
+        if (delval) {
+          let stmt = "UPDATE "+this.tableName+" SET parent_id=null WHERE "+id_key+"="+delval+"";
+          //console.log("dbUpdateLink(4):"+stmt);
+          await alasql.promise(stmt);
+        }
+      }
+    }
+    if (updlist) {
+      for (let i=0; i<updlist.length; i++) {
+        let updval = updlist[i];
+        if (updval && updval != id) {
+          let stmt = "UPDATE "+this.tableName+" SET parent_id="+id+" WHERE "+id_key+"="+updval+"";
+          //console.log("dbUpdateLink(5):"+stmt);
+          await alasql.promise(stmt);
+        }
+      }
+    }
   }
 }; // dbUpdateLink
 
