@@ -58,12 +58,12 @@ async function connectSuccess(options)
   let d1 = null;
   let d2 = null;
   // Create tables
-  grtab.createTable()
+  grtab.dbCreate()
   .then( () => {
-    return ustab.createTable();
+    return ustab.dbCreate();
   })
   .then( () => {
-    return evtab.createTable();
+    return evtab.dbCreate();
   })
   .then( () => {
     return evtab.createLinkTables();

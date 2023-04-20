@@ -29,15 +29,26 @@ var dbTable = function (connection)
   this.message    = null;
 }; // constructor
 
+/////////////////////////////////////////////////////////////////
+// Abstract methods, implement (override) these in deriving class
+/////////////////////////////////////////////////////////////////
+
+dbTable.prototype.dbSearch     = function() {};
+dbTable.prototype.prepareData  = function() {};
+dbTable.prototype.dbInsert     = function() {};
+dbTable.prototype.dbUpdate     = function() {};
+dbTable.prototype.dbUpdateLink = function() {};
+dbTable.prototype.dbDelete     = function() {};
+
 //
 // Create the database table associated with the class
 //
-dbTable.prototype.createTable = async function(mergeArray)
+dbTable.prototype.dbCreate = async function(mergeArray)
 {
   if (!this.sqlCreate)
     return Promise.resolve(false);
   return await this.query(this.sqlCreate,mergeArray,true); // Create tables
-}; // createTable
+}; // dbCreate
 
 //
 // Perform a single query if SQL is a string or multiple queries if SQL is an array.
