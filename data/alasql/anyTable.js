@@ -798,7 +798,7 @@ anyTable.prototype.dbUpdateLink = async function(options)
   let link_type = options.link_type;
   if (!link_type) {
     this.error = "No link type. ";
-    return false;
+    return null;
   }
   let id_key      = this.idKey;
   let id_key_link = link_type + "_id"; // TODO! Not general enough
