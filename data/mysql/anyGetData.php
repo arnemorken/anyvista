@@ -68,6 +68,7 @@ Parameters::set("fields",array (
                     break;
         case "ins": $data = $table->dbInsert();     break;
         case "upd": $data = $table->dbUpdate();     break;
+        case "lnk": $data = $table->dbUpdateLink(); break;
         case "add": $data = $table->dbAddLink();    break;
         case "rem": $data = $table->dbRemoveLink(); break;
         case "del": $data = $table->dbDelete();     break;

@@ -1931,20 +1931,19 @@ class anyTable extends dbTable
    */
   public function dbUpdate()
   {
-    if (!$this->dbValidateUpdate())
-      return null;
-
-    $this->mData           = null;
-    $this->mNumRowsChanged = 0;
-
-    $this->initFieldsFromParam();
-
     if (!isset($this->mId) || $this->mId == "")
       return $this->dbInsert(); // No id, assume it is a new item
 
     // We have an id, so we are updating an existing item or a link to one.
     $upd_what = Parameters::get("upd");
     if (!$upd_what) {
+      if (!$this->dbValidateUpdate())
+        return null;
+      // Initialize
+      $this->mData           = null;
+      $this->mNumRowsChanged = 0;
+      $this->initFieldsFromParam();
+
       // Update normal table
       $stmt = $this->dbPrepareUpdateStmt();
       //elog("dbUpdate:".$stmt);
@@ -1967,9 +1966,7 @@ class anyTable extends dbTable
     }
     else
     if ($upd_what == "link") {
-      if (!$this->dbUpdateLink())
-        return null;
-      return $this->dbSearch(); // Return the complete data set to client
+      return $this->dbUpdateLink();
     }
     else {
       $this->setError("Illegal parameter value: $upd_what. ");
@@ -2119,12 +2116,19 @@ class anyTable extends dbTable
   /////////////////////////// Insert or update link ///////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function dbUpdateLink()
+  public function dbUpdateLink()
   {
+    if (!$this->dbValidateUpdate())
+      return null;
+    // Initialize
+    $this->mData           = null;
+    $this->mNumRowsChanged = 0;
+    $this->initFieldsFromParam();
+
     $link_type = Parameters::get("link_type");
     if (!$link_type) {
       $this->setError("No link type. ");
-      return false;
+      return null;
     }
     $id_key      = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
     $id_key_link = $link_type."_id";
@@ -2141,7 +2145,7 @@ class anyTable extends dbTable
             $stmt = "DELETE FROM ".$link_table." WHERE ".$id_key_link."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
             //elog("dbUpdateLink(1):".$stmt);
             if (!$this->query($stmt))
-              return false;
+              return null;
           }
         }
       }
@@ -2152,11 +2156,11 @@ class anyTable extends dbTable
             $stmt = "DELETE FROM ".$link_table." WHERE ".$id_key_link."='".intval($insval)."' AND ".$id_key."='".intval($id)."'";
             //elog("dbUpdateLink(2):".$stmt);
             if (!$this->query($stmt))
-              return false;
+              return null;
             $stmt = "INSERT INTO ".$link_table." (".$id_key_link.",".$id_key.") VALUES (".intval($insval).",".intval($id).")";
             //elog("dbUpdateLink(3):".$stmt);
             if (!$this->query($stmt))
-              return false;
+              return null;
           }
         }
       }
@@ -2169,7 +2173,7 @@ class anyTable extends dbTable
               $stmt = "UPDATE ".$this->mTableName." SET parent_id=null WHERE ".$id_key."='".intval($delval)."'";
               //elog("dbUpdateLink(4):".$stmt);
               if (!$this->query($stmt))
-                return false;
+                return null;
             }
           }
         }
@@ -2179,14 +2183,14 @@ class anyTable extends dbTable
               $stmt = "UPDATE ".$this->mTableName." SET parent_id='".intval($id)."' WHERE ".$id_key."='".intval($updval)."'";
               //elog("dbUpdateLink(5):".$stmt);
               if (!$this->query($stmt))
-                return false;
+                return null;
             }
           }
         }
       }
     }
     $this->setMessage($this->mUpdateSuccessMsg);
-    return true;
+    return $this->dbSearch(); // Return the complete data set to client
   } // dbUpdateLink
 
   // TODO! Neccessary? Can we use dbUpdateLink instead?
