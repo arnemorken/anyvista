@@ -2357,7 +2357,7 @@ class anyTable extends dbTable
         foreach ($this->mLinking as $idx => $link_type) {
           $table = anyTableFactory::createClass($link_type,$this);
           if ($this->mType !== $link_type) {
-            $this->dbDeleteAssoc($table);
+            $this->dbDeleteLink($table);
           }
         }
       }
@@ -2376,7 +2376,8 @@ class anyTable extends dbTable
     return $err;
   } // dbValidateDelete
 
-  public function dbDeleteAssoc($table)
+  // TODO! Neccessary? Can we use dbUpdateLink instead?
+  public function dbDeleteLink($table)
   {
     if (!$table) {
       $this->mError = "System error: No table. ";
@@ -2389,12 +2390,12 @@ class anyTable extends dbTable
     $type = $table->getType();
     $table_name = $this->findLinkTableName($type);
     $stmt = "DELETE FROM ".$table_name." WHERE ".$this->getIdKey()."='".$this->mId."'";
-    //elog("dbDeleteAssoc:".$stmt);
+    //elog("dbDeleteLink:".$stmt);
     if (!$this->query($stmt))
       return false;
 
     return true;
-  } // dbDeleteAssoc
+  } // dbDeleteLink
 
 } // class anyTable
 ?>
