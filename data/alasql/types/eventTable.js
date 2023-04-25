@@ -36,3 +36,8 @@ eventTable.prototype.createLinkTables = function()
 {
   return this.query(this.sqlCreateLinks,true,true);
 }; // createLinkTables
+
+eventTable.prototype.hasParentId = function()
+{
+  return true;
+} // hasParentId

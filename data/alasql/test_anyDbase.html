@@ -129,6 +129,15 @@ async function connectSuccess(options)
                             id: 4245,
                          });
   })
+/*
+  .then( () => {
+    return evtab.dbUpdateLink({ id:        21,
+                                link_type: "event",
+                                dellist:   [21],
+                                updlist:   [11],
+                             });
+  })
+*/
   .then( () => {
     return evtab.dbUpdateLink({ id:        11,
                                 link_type: "user",
@@ -142,10 +151,18 @@ async function connectSuccess(options)
       d1 = ustab.data.data;
     });
   })
+/*
+  .then( () => {
+    return evtab.dbDelete({id:11})
+    .then( function(data) {
+      d1 = ustab.data.data;
+    });
+  })
+*/
   .then( () => {
     evtab.parameters.header = "Upcoming events";
     evtab.id = null;
-    return evtab.dbSearch({id:11})
+    return evtab.dbSearch()
     .then( function(data) {
       d2 = evtab.data.data;
     });

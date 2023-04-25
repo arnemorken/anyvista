@@ -58,6 +58,14 @@ var anyTable = function (connection,parameters,tableName,type,id,idKey,nameKey,o
 anyTable.prototype = new dbTable();
 anyTable.prototype.constructor = anyTable;
 
+/**
+ * Override and return true in table classes which have parent_id.
+ */
+anyTable.prototype.hasParentId = function()
+{
+  return false;
+} // hasParentId
+
 /////////////////////////
 //////// finders ////////
 /////////////////////////
@@ -861,6 +869,89 @@ anyTable.prototype.dbUpdateLink = async function(options)
 /////////////////////////////// Delete //////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-anyTable.prototype.dbDelete = function(options)
+anyTable.prototype.dbDelete = async function(options)
 {
+  if (!options || !this.dbValidateDelete(options))
+    return Promise.resolve(null);
+
+  // Delete item(s) from table or file from disk
+  if (options.del == "ulf") {
+    // Delete file from disk
+    return Promise.resolve(true);
+  }
+  // Delete item(s) from table
+  let tableName = options.tableName ? options.tableName : this.tableName;
+  let id        = options.id        ? options.id        : this.id;
+  let idKey     = options.idKey     ? options.idKey     : this.idKey;
+  let stmt = this.dbPrepareDeleteStmt({ tableName: tableName,
+                                        id:        id,
+                                        idKey:     idKey,
+                                     });
+  if (!stmt) {
+    console.log(this.error);
+    return null;
+  }
+  stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
+  let self = this;
+  console.log("dbDelete(1):"+stmt);
+  return await alasql.promise(stmt)
+  .then( async function(res) {
+    // numRowsChanged >= 1 if the delete succeeded
+    self.numRowsChanged = res;
+    console.log("del res:"+res);
+    if (self.numRowsChanged == 0) {
+      self.message = self.deleteNothingToDo;
+      return null;
+    }
+
+    // Update parent_id of children
+    if (self.hasParentId()) {
+      stmt = "UPDATE "+tableName+" SET parent_id=NULL WHERE parent_id="+id;
+      console.log("dbDelete(2):"+stmt);
+      if (!self.query(stmt)) // TODO! alasql.promise...
+        return null;
+    }
+    // Delete from associated tables
+    if (self.mLinking) {
+      for (let link_type in self.linking) {
+        let table = await factory.createClass(link_type,true,true);
+        if (self.type !== link_type) {
+          self.dbDeleteLink({ tableName: tableName,
+                              id:        id,
+                              idKey:     idKey,
+                           });
+        }
+      }
+    }
+    self.id = null;
+
+    // Set result message
+    self.message = self.deleteSuccessMsg;
+
+    // Call success handler
+    if (options.successHandler && options.context)
+      options.successHandler.call(options.context,res);
+
+    return res;
+  })
+  .catch(error => {
+     console.error("Delete error: "+error);
+     return null;
+  });
 }; // dbDelete
+
+anyTable.prototype.dbValidateDelete = function(options)
+{
+  this.error = "";
+  // Validate here, set this.error
+  if (this.error != "")
+    return false;
+  return true;
+}; // dbValidateDelete
+
+anyTable.prototype.dbPrepareDeleteStmt = function(options)
+{
+  let stmt = "DELETE FROM "+options.tableName+" WHERE "+options.idKey+"="+options.id;
+  return stmt;
+}; // dbPrepareDeleteStmt
+
