@@ -815,8 +815,9 @@ anyTable.prototype.dbUpdateLink = async function(options)
   let dellist     = options.dellist;
   let link_table  = this.findLinkTableName(link_type);
   if (link_table && link_type != this.type) {
-    // Link with different type
+    // Link with different type (sublist of item)
     if (dellist) {
+      // Remove elements from the item's list
       for (let i=0; i<dellist.length; i++) {
         let delval = dellist[i];
         if (delval) {
@@ -827,6 +828,7 @@ anyTable.prototype.dbUpdateLink = async function(options)
       }
     }
     if (updlist) {
+      // Add elements to the item's list (delete, then insert to avoid error if element already exists in list)
       for (let i=0; i<updlist.length; i++) {
         let insval = updlist[i];
         if (insval) {
@@ -841,18 +843,20 @@ anyTable.prototype.dbUpdateLink = async function(options)
     }
   }
   else {
-    // Link with same type (sub-type with parent id)
+    // Link with same type (sub-element with parent id)
     if (dellist) {
+      // Remove parent for elements in dellist
       for (let i=0; i<dellist.length; i++) {
         let delval = dellist[i];
         if (delval) {
-          let stmt = "UPDATE "+this.tableName+" SET parent_id=null WHERE "+id_key+"="+delval+"";
+          let stmt = "UPDATE "+this.tableName+" SET parent_id=NULL WHERE "+id_key+"="+delval+"";
           //console.log("dbUpdateLink(4):"+stmt);
           await alasql.promise(stmt);
         }
       }
     }
     if (updlist) {
+      // Set parent for elements in updlist
       for (let i=0; i<updlist.length; i++) {
         let updval = updlist[i];
         if (updval && updval != id) {
@@ -893,33 +897,32 @@ anyTable.prototype.dbDelete = async function(options)
   }
   stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
   let self = this;
-  console.log("dbDelete(1):"+stmt);
+  //console.log("dbDelete(1):"+stmt);
   return await alasql.promise(stmt)
   .then( async function(res) {
     // numRowsChanged >= 1 if the delete succeeded
     self.numRowsChanged = res;
-    console.log("del res:"+res);
+    //console.log("del res:"+res);
     if (self.numRowsChanged == 0) {
       self.message = self.deleteNothingToDo;
       return null;
     }
-
     // Update parent_id of children
     if (self.hasParentId()) {
       stmt = "UPDATE "+tableName+" SET parent_id=NULL WHERE parent_id="+id;
-      console.log("dbDelete(2):"+stmt);
+      //console.log("dbDelete(2):"+stmt);
       if (!self.query(stmt)) // TODO! alasql.promise...
         return null;
     }
-    // Delete from associated tables
-    if (self.mLinking) {
+    // Delete all links for an item with given id from associated tables (to avoid orphaned links)
+    if (self.linking) {
       for (let link_type in self.linking) {
-        let table = await factory.createClass(link_type,true,true);
-        if (self.type !== link_type) {
-          self.dbDeleteLink({ tableName: tableName,
-                              id:        id,
-                              idKey:     idKey,
-                           });
+        if (self.type !== link_type && (id || id === 0)) {
+          let link_table = self.findLinkTableName(link_type);
+          let stmt = "DELETE FROM "+link_table+" WHERE "+self.idKey+"="+id;
+          //console.log("dbDelete(3):"+stmt);
+          if (!self.query(stmt))
+            return false;
         }
       }
     }
@@ -954,4 +957,3 @@ anyTable.prototype.dbPrepareDeleteStmt = function(options)
   let stmt = "DELETE FROM "+options.tableName+" WHERE "+options.idKey+"="+options.id;
   return stmt;
 }; // dbPrepareDeleteStmt
-
