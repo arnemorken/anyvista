@@ -55,8 +55,8 @@ async function connectSuccess(options)
   let ustab = factory.createClass("userTable", {header:true});
   let evtab = factory.createClass("eventTable",{header:true});
 
-  let d1 = null;
-  let d2 = null;
+  let du = null;
+  let de = null;
   // Create tables
   grtab.dbCreate()
   .then( () => {
@@ -98,26 +98,37 @@ async function connectSuccess(options)
       "INSERT INTO any_event (event_id,event_name,event_description,parent_id) VALUES (\
         11,\
         'Parent event no. 1',\
-        'I am a parent',\
+        'I am a parent event',\
         null\
        );",
       "INSERT INTO any_event (event_id,event_name,event_description,parent_id) VALUES (\
-        21,\
+        12,\
         'Child event no 1',\
-        'I am a child',\
+        'I am a child event',\
         '11'\
+       );",
+      "INSERT INTO any_event (event_id,event_name,event_description,parent_id) VALUES (\
+        13,\
+        'Child event no 2',\
+        'I am also a child event',\
+        '12'\
        );",
     ];
     return evtab.query(sqlInsertEvent,true,true);
   })
   .then( () => {
     let sqlInsertEventUser = "\
-      INSERT INTO any_event_user (event_id,user_id) VALUES (\
-        11,\
-        99);\
+      INSERT INTO any_event_user (event_id,user_id) VALUES (11,99);\
       ";
     return evtab.query(sqlInsertEventUser,true,true);
   })
+  .then( () => {
+    let sqlInsertEventUser = "\
+      INSERT INTO any_event_user (event_id,user_id) VALUES (777,99);\
+      ";
+    return evtab.query(sqlInsertEventUser,true,true);
+  })
+/*
   .then( () => {
     return evtab.dbInsert({ keys:   ["event_id","event_name"],
                             values: [4245,"Something was happening, mrs. Jones"],
@@ -129,52 +140,53 @@ async function connectSuccess(options)
                             id: 4245,
                          });
   })
-/*
-  .then( () => {
-    return evtab.dbUpdateLink({ id:        21,
-                                link_type: "event",
-                                dellist:   [21],
-                                updlist:   [11],
-                             });
-  })
 */
+/*
   .then( () => {
     return evtab.dbUpdateLink({ id:        11,
                                 link_type: "user",
-                                dellist:   [99],
+                                //dellist:   [12],
                                 updlist:   [98],
                              });
   })
-  .then( () => {
-    return ustab.dbSearch()
-    .then( function(data) {
-      d1 = ustab.data.data;
-    });
-  })
+*/
 /*
   .then( () => {
     return evtab.dbDelete({id:11})
     .then( function(data) {
-      d1 = ustab.data.data;
+      if (ustab.data)
+        d1 = ustab.data.data;
     });
   })
 */
   .then( () => {
-    evtab.parameters.header = "Upcoming events";
-    evtab.id = null;
-    return evtab.dbSearch()
+    return ustab.dbSearch()
     .then( function(data) {
-      d2 = evtab.data.data;
+      du = ustab.data.data;
     });
   })
   .then( () => {
-    var my_model1 = new anyModel({data: d1, type: "user"});
+    return evtab.dbSearch({id:11})
+    .then( function(data) {
+      de = evtab.data.data;
+    });
+  })
+  .then( () => {
+    evtab.parameters.header = "Upcoming events";
+    evtab.id = null;
+    return evtab.dbSearch({id:11})
+    .then( function(data) {
+      let de2 = evtab.data.data;
+    });
+  })
+  .then( () => {
+    var my_model1 = new anyModel({data: du, type: "user"});
     var my_view1  = new anyViewTabs({
       model:   my_model1,
       id:      "view1",
     });
     my_view1.refresh();
-    var my_model2 = new anyModel({data: d2, type: "event"});
+    var my_model2 = new anyModel({data: de, type: "event"});
     var my_view2  = new anyViewTabs({
       model:   my_model2,
       id:      "view2",
