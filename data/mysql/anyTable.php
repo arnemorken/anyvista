@@ -2130,8 +2130,8 @@ class anyTable extends dbTable
       $this->setError("No link type. ");
       return null;
     }
-    $id_key      = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
-    $id_key_link = $link_type."_id";
+    $id_key      = $this->mIdKey;    // TODO! Use $this->mIdKeyTable?
+    $id_key_link = $link_type."_id"; // TODO! Not general enough
     $id          = Parameters::get($id_key);
     $link_table  = $this->findLinkTableName($link_type);
     $updlist     = explode(",",Parameters::get("add"));
@@ -2139,7 +2139,9 @@ class anyTable extends dbTable
     $this->mNumRowsChanged = 0;
 
     if ($link_table !== null && $link_table !== "" && $link_type != $this->mType) {
+      // Link with different type (sublist of item)
       if ($dellist !== null) {
+        // Remove elements from the item's list
         foreach ($dellist as $delval) {
           if ($delval) {
             $stmt = "DELETE FROM ".$link_table." WHERE ".$id_key_link."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
@@ -2150,6 +2152,7 @@ class anyTable extends dbTable
         }
       }
       if ($updlist !== null) {
+        // Add elements to the item's list (delete, then insert to avoid error if element already exists in list)
         foreach ($updlist as $insval) {
           if ($insval) {
             // Delete old list so as to avoid error message when inserting (insert-or-update)
@@ -2165,12 +2168,14 @@ class anyTable extends dbTable
         }
       }
     }
-    else { // Subitem with parent of same type
+    else {
+      // Link with same type (sub-element with parent id)
       if ($this->hasParentId()) {
         if ($dellist !== null) {
+          // Remove parent for elements in dellist
           foreach ($dellist as $delval) {
             if ($delval) {
-              $stmt = "UPDATE ".$this->mTableName." SET parent_id=null WHERE ".$id_key."='".intval($delval)."'";
+              $stmt = "UPDATE ".$this->mTableName." SET parent_id=NULL WHERE ".$id_key."='".intval($delval)."'";
               //elog("dbUpdateLink(4):".$stmt);
               if (!$this->query($stmt))
                 return null;
@@ -2178,6 +2183,7 @@ class anyTable extends dbTable
           }
         }
         if ($updlist !== null) {
+          // Set parent for elements in updlist
           foreach ($updlist as $updval) {
             if ($updval && intval($id) != intval($updval)) {
               $stmt = "UPDATE ".$this->mTableName." SET parent_id='".intval($id)."' WHERE ".$id_key."='".intval($updval)."'";
@@ -2328,7 +2334,7 @@ class anyTable extends dbTable
         return null;
       }
       $stmt = "DELETE FROM ".$this->mTableName." WHERE ".$this->mIdKeyTable."='".$this->mId."'";
-      //elog("dbDelete:".$stmt);
+      //elog("dbDelete(1):".$stmt);
       if (!$this->query($stmt))
         return null;
       if ($this->getNumRowsChanged() > 0)
@@ -2344,20 +2350,23 @@ class anyTable extends dbTable
         if (!$this->query($stmt))
           return null;
       }
-
       // Update parent_id of children
       if ($this->hasParentId()) {
         $stmt = "UPDATE ".$this->mTableName." SET parent_id=NULL WHERE parent_id='".$this->mId."'";
-        //elog("dbDelete:".$stmt);
+        //elog("dbDelete(2):".$stmt);
         if (!$this->query($stmt))
           return null;
       }
-      // Delete from associated tables
+      // Delete all links for an item with given id from associated tables (to avoid orphaned links)
       if (isset($this->mLinking)) {
         foreach ($this->mLinking as $idx => $link_type) {
-          $table = anyTableFactory::createClass($link_type,$this);
-          if ($this->mType !== $link_type) {
-            $this->dbDeleteLink($table);
+          if ($this->mType !== $link_type &&
+              isset($this->mId) && $this->mId !== "" && !is_numeric($this->mId)) {
+            $link_table = $this->findLinkTableName($link_type);
+            $stmt = "DELETE FROM ".$link_table." WHERE ".$this->getIdKey()."='".$this->mId."'";
+            //elog("dbDelete(3):".$stmt);
+            if (!$this->query($stmt))
+              return false;
           }
         }
       }
@@ -2375,27 +2384,6 @@ class anyTable extends dbTable
       $err .= $this->dbValidateDeletePermission();
     return $err;
   } // dbValidateDelete
-
-  // TODO! Neccessary? Can we use dbUpdateLink instead?
-  public function dbDeleteLink($table)
-  {
-    if (!$table) {
-      $this->mError = "System error: No table. ";
-      return false;
-    }
-    if (!isset($this->mId) || $this->mId == "" || !is_numeric($this->mId)) {
-      $this->mError = $this->mType." id missing. ";
-      return false;
-    }
-    $type = $table->getType();
-    $table_name = $this->findLinkTableName($type);
-    $stmt = "DELETE FROM ".$table_name." WHERE ".$this->getIdKey()."='".$this->mId."'";
-    //elog("dbDeleteLink:".$stmt);
-    if (!$this->query($stmt))
-      return false;
-
-    return true;
-  } // dbDeleteLink
 
 } // class anyTable
 ?>
