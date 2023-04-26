@@ -17,7 +17,7 @@ anyTableFactory.prototype.createClass = function(className,parameters)
   if (!className) {
     this.error = "Class name missing. ";
     console.error(this.error);
-    return false;
+    return null;
   }
   var head = document.getElementsByTagName('head')[0];
   var js   = document.createElement("script");
@@ -35,7 +35,7 @@ anyTableFactory.prototype.createClass = function(className,parameters)
   catch (err) {
     this.error = "Could not initialise "+className+":"+err;
     console.error(this.error);
-    return false;
+    return null;
   }
 }; // createClass
 
