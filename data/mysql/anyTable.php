@@ -2133,19 +2133,31 @@ class anyTable extends dbTable
     }
     $id_key      = $this->mIdKey;    // TODO! Use $this->mIdKeyTable?
     $id_key_link = $link_type."_id"; // TODO! Not general enough
-    $id          = Parameters::get($id_key);
-    $link_table  = $this->findLinkTableName($link_type);
-    $updlist     = explode(",",Parameters::get("add"));
-    $dellist     = explode(",",Parameters::get("rem"));
-    $this->mNumRowsChanged = 0;
+    $id          = Parameters::get($id_key); // TODO! Use $this->mId?
+    if (!isset($id) || $id == "") {
+      $this->setError($this->mType." id missing. "); // TODO! i18n
+      return null;
+    }
+    $updlist = explode(",",Parameters::get("add"));
+    $dellist = explode(",",Parameters::get("rem"));
 
-    if ($link_table !== null && $link_table !== "" && $link_type != $this->mType) {
+    if ($link_type != $this->mType) {
+      $link_table = $this->findLinkTableName($link_type);
+      if (!$link_table) {
+        $this->setMessage("Link table not found. ",true); // TODO! i18n
+        return null;
+      }
       // Link with different type (sublist of item)
       if ($dellist !== null) {
         // Remove elements from the item's list
         foreach ($dellist as $delval) {
           if ($delval) {
-            $stmt = "DELETE FROM ".$link_table." WHERE ".$id_key_link."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
+            if (!$this->dbTableHasLink($link_table,$id_key_link,$delval,$id_key,$id)) {
+              $this->setMessage("Link not found. ",true); // TODO! i18n
+              return array();
+            }
+            $stmt = "DELETE FROM ".$link_table." ".
+                    "WHERE ".$id_key_link."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
             //elog("dbAddRemoveLink(1):".$stmt);
             if (!$this->query($stmt))
               return null;
@@ -2156,12 +2168,21 @@ class anyTable extends dbTable
         // Add elements to the item's list (delete, then insert to avoid error if element already exists in list)
         foreach ($updlist as $insval) {
           if ($insval) {
+            if ($this->dbTableHasLink($link_table,$id_key_link,$insval,$id_key,$id)) {
+              $this->setMessage("Link already exists. ",true); // TODO! i18n
+              return array();
+            }
             // Delete old list so as to avoid error message when inserting (insert-or-update)
-            $stmt = "DELETE FROM ".$link_table." WHERE ".$id_key_link."='".intval($insval)."' AND ".$id_key."='".intval($id)."'";
+            $stmt = "DELETE FROM ".$link_table." ".
+                    "WHERE ".$id_key_link."='".intval($insval)."' AND ".$id_key."='".intval($id)."'";
             //elog("dbAddRemoveLink(2):".$stmt);
             if (!$this->query($stmt))
               return null;
-            $stmt = "INSERT INTO ".$link_table." (".$id_key_link.",".$id_key.") VALUES (".intval($insval).",".intval($id).")";
+            $stmt = "INSERT INTO ".$link_table." (".
+                    $id_key_link.",".$id_key.
+                    ") VALUES (".
+                    intval($insval).",".intval($id).
+                    ")";
             //elog("dbAddRemoveLink(3):".$stmt);
             if (!$this->query($stmt))
               return null;
@@ -2176,7 +2197,9 @@ class anyTable extends dbTable
           // Remove parent for elements in dellist
           foreach ($dellist as $delval) {
             if ($delval) {
-              $stmt = "UPDATE ".$this->mTableName." SET parent_id=NULL WHERE ".$id_key."='".intval($delval)."'";
+              $stmt = "UPDATE ".$this->mTableName." ".
+                      "SET parent_id=NULL ".
+                      "WHERE ".$id_key."='".intval($delval)."'";
               //elog("dbAddRemoveLink(4):".$stmt);
               if (!$this->query($stmt))
                 return null;
@@ -2187,7 +2210,9 @@ class anyTable extends dbTable
           // Set parent for elements in updlist
           foreach ($updlist as $updval) {
             if ($updval && intval($id) != intval($updval)) {
-              $stmt = "UPDATE ".$this->mTableName." SET parent_id='".intval($id)."' WHERE ".$id_key."='".intval($updval)."'";
+              $stmt = "UPDATE ".$this->mTableName." ".
+                      "SET parent_id='".intval($id)."' ".
+                      "WHERE ".$id_key."='".intval($updval)."'";
               //elog("dbAddRemoveLink(5):".$stmt);
               if (!$this->query($stmt))
                 return null;
