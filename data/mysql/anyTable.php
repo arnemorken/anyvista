@@ -2136,7 +2136,7 @@ class anyTable extends dbTable
     $id          = Parameters::get($id_key);
     $link_table  = $this->findLinkTableName($link_type);
     $updlist     = explode(",",Parameters::get("add"));
-    $dellist     = explode(",",Parameters::get("del"));
+    $dellist     = explode(",",Parameters::get("rem"));
     $this->mNumRowsChanged = 0;
 
     if ($link_table !== null && $link_table !== "" && $link_type != $this->mType) {

@@ -1900,7 +1900,7 @@ anyModel.prototype.dbAddRemoveLinkGetURL = function (options)
   if (options.link_type)
     param_str += "&link_type="+options.link_type;
   if (options.link_id)
-    param_str += "&del="+options.link_id;
+    param_str += "&rem="+options.link_id;
   param_str += "&sea=y";
   param_str += options.header   ? "&header="  +options.header : "";
   param_str += options.grouping ? "&grouping="+options.grouping : "";
@@ -1912,7 +1912,7 @@ anyModel.prototype.dbAddRemoveLinkGetURL = function (options)
   }
   if (options.unselect && !options.link_id) {
     let uns = [...options.unselect];
-    param_str += "&del="+uns;
+    param_str += "&rem="+unsel;
     has_add_or_del = true;
   }
   if (!has_add_or_del && !options.link_id) {
