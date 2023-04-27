@@ -1901,24 +1901,26 @@ anyModel.prototype.dbAddRemoveLinkGetURL = function (options)
     param_str += "&link_type="+options.link_type;
   if (options.link_id)
     param_str += "&rem="+options.link_id;
+  else {
+    let has_add_or_del = false;
+    if (options.select) {
+      let sel = [...options.select];
+      param_str += "&add="+sel;
+      has_add_or_del = true;
+    }
+    if (options.unselect) {
+      let unsel = [...options.unselect];
+      param_str += "&rem="+unsel;
+      has_add_or_del = true;
+    }
+    if (!has_add_or_del) {
+      console.error("anyModel.dbAddRemoveLinkGetURL: "+"No items selected. "); // TODO! i18n
+      return null;
+    }
+  }
   param_str += "&sea=y";
   param_str += options.header   ? "&header="  +options.header : "";
   param_str += options.grouping ? "&grouping="+options.grouping : "";
-  let has_add_or_del = false;
-  if (options.select && !options.link_id) {
-    let sel = [...options.select];
-    param_str += "&add="+sel;
-    has_add_or_del = true;
-  }
-  if (options.unselect && !options.link_id) {
-    let uns = [...options.unselect];
-    param_str += "&rem="+unsel;
-    has_add_or_del = true;
-  }
-  if (!has_add_or_del && !options.link_id) {
-    console.error("anyModel.dbAddRemoveLinkGetURL: "+"No items selected. "); // TODO! i18n
-    return null;
-  }
   return this._getDataSourceName() + param_str;
 }; // dbAddRemoveLinkGetURL
 
