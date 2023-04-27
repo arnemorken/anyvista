@@ -359,7 +359,7 @@ class anyTable extends dbTable
       $this->mDeleteSuccessMsg = ucfirst($this->mType)." deleted. ";
 
     if (!isset($this->mId) || $this->mId == "")
-      $this->mId   = ltrim(Parameters::get($this->mIdKey));
+      $this->mId = ltrim(Parameters::get($this->mIdKey));
 
     // Make sure some vital fields exist
     if (!in_array($this->mOrderBy,$this->mTableFields))
@@ -1860,7 +1860,7 @@ class anyTable extends dbTable
           return null;
       }
     }
-    // Insert in association table, if association id is given
+    // Insert in link table, if link id is given
     // TODO! Not implemented yet
 
     // Set result message
@@ -1966,7 +1966,7 @@ class anyTable extends dbTable
     }
     else
     if ($upd_what == "link") {
-      return $this->dbUpdateLink();
+      return $this->dbAddRemoveLink();
     }
     else {
       $this->setError("Illegal parameter value: $upd_what. ");
@@ -2060,6 +2060,7 @@ class anyTable extends dbTable
         }
       }
     }
+    // TODO! Move to "user" type class
     // Insert WP Parameters
     if (defined("WP_PLUGIN") && $this->mType == "user") {
       $first_name  = Parameters::get("first_name");
@@ -2116,7 +2117,7 @@ class anyTable extends dbTable
   /////////////////////////// Insert or update link ///////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  public function dbUpdateLink()
+  public function dbAddRemoveLink()
   {
     if (!$this->dbValidateUpdate())
       return null;
@@ -2127,7 +2128,7 @@ class anyTable extends dbTable
 
     $link_type = Parameters::get("link_type");
     if (!$link_type) {
-      $this->setError("No link type. ");
+      $this->setError("Link type missing. "); // TODO! i18n
       return null;
     }
     $id_key      = $this->mIdKey;    // TODO! Use $this->mIdKeyTable?
@@ -2145,7 +2146,7 @@ class anyTable extends dbTable
         foreach ($dellist as $delval) {
           if ($delval) {
             $stmt = "DELETE FROM ".$link_table." WHERE ".$id_key_link."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
-            //elog("dbUpdateLink(1):".$stmt);
+            //elog("dbAddRemoveLink(1):".$stmt);
             if (!$this->query($stmt))
               return null;
           }
@@ -2157,11 +2158,11 @@ class anyTable extends dbTable
           if ($insval) {
             // Delete old list so as to avoid error message when inserting (insert-or-update)
             $stmt = "DELETE FROM ".$link_table." WHERE ".$id_key_link."='".intval($insval)."' AND ".$id_key."='".intval($id)."'";
-            //elog("dbUpdateLink(2):".$stmt);
+            //elog("dbAddRemoveLink(2):".$stmt);
             if (!$this->query($stmt))
               return null;
             $stmt = "INSERT INTO ".$link_table." (".$id_key_link.",".$id_key.") VALUES (".intval($insval).",".intval($id).")";
-            //elog("dbUpdateLink(3):".$stmt);
+            //elog("dbAddRemoveLink(3):".$stmt);
             if (!$this->query($stmt))
               return null;
           }
@@ -2176,7 +2177,7 @@ class anyTable extends dbTable
           foreach ($dellist as $delval) {
             if ($delval) {
               $stmt = "UPDATE ".$this->mTableName." SET parent_id=NULL WHERE ".$id_key."='".intval($delval)."'";
-              //elog("dbUpdateLink(4):".$stmt);
+              //elog("dbAddRemoveLink(4):".$stmt);
               if (!$this->query($stmt))
                 return null;
             }
@@ -2187,7 +2188,7 @@ class anyTable extends dbTable
           foreach ($updlist as $updval) {
             if ($updval && intval($id) != intval($updval)) {
               $stmt = "UPDATE ".$this->mTableName." SET parent_id='".intval($id)."' WHERE ".$id_key."='".intval($updval)."'";
-              //elog("dbUpdateLink(5):".$stmt);
+              //elog("dbAddRemoveLink(5):".$stmt);
               if (!$this->query($stmt))
                 return null;
             }
@@ -2197,7 +2198,7 @@ class anyTable extends dbTable
     }
     $this->setMessage($this->mUpdateSuccessMsg);
     return $this->dbSearch(); // Return the complete data set to client
-  } // dbUpdateLink
+  } // dbAddRemoveLink
 
   // TODO! Neccessary? Can we use dbUpdateLink instead?
   public function dbAddLink()

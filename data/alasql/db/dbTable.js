@@ -33,12 +33,12 @@ var dbTable = function (connection)
 // Abstract methods, implement (override) these in deriving class
 /////////////////////////////////////////////////////////////////
 
-dbTable.prototype.dbSearch     = function() {};
-dbTable.prototype.prepareData  = function() {};
-dbTable.prototype.dbInsert     = function() {};
-dbTable.prototype.dbUpdate     = function() {};
-dbTable.prototype.dbUpdateLink = function() {};
-dbTable.prototype.dbDelete     = function() {};
+dbTable.prototype.dbSearch        = function() {};
+dbTable.prototype.prepareData     = function() {};
+dbTable.prototype.dbInsert        = function() {};
+dbTable.prototype.dbUpdate        = function() {};
+dbTable.prototype.dbAddRemoveLink = function() {};
+dbTable.prototype.dbDelete        = function() {};
 
 //
 // Create the database table associated with the class

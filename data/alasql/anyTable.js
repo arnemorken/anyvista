@@ -801,7 +801,7 @@ anyTable.prototype.dbItemExists = async function(id)
 /////////////////////////// Insert or update link ///////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-anyTable.prototype.dbUpdateLink = async function(options)
+anyTable.prototype.dbAddRemoveLink = async function(options)
 {
   let link_type = options.link_type;
   if (!link_type) {
@@ -822,7 +822,7 @@ anyTable.prototype.dbUpdateLink = async function(options)
         let delval = dellist[i];
         if (delval) {
           let stmt = "DELETE FROM "+link_table+" WHERE "+id_key_link+"="+delval+" AND "+id_key+"="+id+"";
-          //console.log("dbUpdateLink(1):"+stmt);
+          //console.log("dbAddRemoveLink(1):"+stmt);
           await alasql.promise(stmt);
         }
       }
@@ -833,10 +833,10 @@ anyTable.prototype.dbUpdateLink = async function(options)
         let insval = updlist[i];
         if (insval) {
           let stmt = "DELETE FROM "+link_table+" WHERE "+id_key_link+"="+insval+" AND "+id_key+"="+id+"";
-          //console.log("dbUpdateLink(2):"+stmt);
+          //console.log("dbAddRemoveLink(2):"+stmt);
           await alasql.promise(stmt);
           stmt = "INSERT INTO "+link_table+" ("+id_key_link+","+id_key+") VALUES ("+insval+","+id+")";
-          //console.log("dbUpdateLink(3):"+stmt);
+          //console.log("dbAddRemoveLink(3):"+stmt);
           await alasql.promise(stmt);
         }
       }
@@ -850,7 +850,7 @@ anyTable.prototype.dbUpdateLink = async function(options)
         let delval = dellist[i];
         if (delval) {
           let stmt = "UPDATE "+this.tableName+" SET parent_id=NULL WHERE "+id_key+"="+delval+"";
-          //console.log("dbUpdateLink(4):"+stmt);
+          //console.log("dbAddRemoveLink(4):"+stmt);
           await alasql.promise(stmt);
         }
       }
@@ -861,13 +861,13 @@ anyTable.prototype.dbUpdateLink = async function(options)
         let updval = updlist[i];
         if (updval && updval != id) {
           let stmt = "UPDATE "+this.tableName+" SET parent_id="+id+" WHERE "+id_key+"="+updval+"";
-          //console.log("dbUpdateLink(5):"+stmt);
+          //console.log("dbAddRemoveLink(5):"+stmt);
           await alasql.promise(stmt);
         }
       }
     }
   }
-}; // dbUpdateLink
+}; // dbAddRemoveLink
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Delete //////////////////////////////////////
