@@ -64,15 +64,11 @@ Parameters::set("fields",array (
     if ($table != null) {
       //$start = microtime(true);
       switch ($cmd) {
-        case "cre": $table->dbCreate($type,Parameters::get("table"),Parameters::get("unique"));
-                    break;
-        case "ins": $data = $table->dbInsert();     break;
-        case "upd": $data = $table->dbUpdate();     break;
-        case "lnk": $data = $table->dbUpdateLink(); break;
-        case "add": $data = $table->dbAddLink();    break;
-        case "rem": $data = $table->dbRemoveLink(); break;
-        case "del": $data = $table->dbDelete();     break;
-        default:    $data = $table->dbSearch();     break;
+        case "cre": $table->dbCreate($type,Parameters::get("table"),Parameters::get("unique")); break;
+        case "ins": $data = $table->dbInsert(); break;
+        case "upd": $data = $table->dbUpdate(); break;
+        case "del": $data = $table->dbDelete(); break;
+        default:    $data = $table->dbSearch(); break;
       }
       //$time_elapsed_secs = microtime(true) - $start;
       //error_log("anyGetData: time_elapsed_secs: $time_elapsed_secs");

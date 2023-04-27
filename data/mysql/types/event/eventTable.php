@@ -271,14 +271,9 @@ class eventTable extends anyTable
     if ($upd_what == "att")
       return $this->dbSetAttended(Parameters::get("event_id"),Parameters::get("user_id"));
     //error_log("Unknown value for 'upd':".$upd_what);
+    $this->dbUpdateResult();
     return false;
   } // dbUpdateExtra
-
-  public function dbAddLink()
-  {
-    $this->dbUpdateResult();
-    anyTable::dbAddLink();
-  } // dbAddLink
 
   protected function dbUpdateResult()
   // Set the user_result field of any_event_user
