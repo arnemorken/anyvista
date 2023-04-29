@@ -239,7 +239,7 @@ class anyTable extends dbTable
         $type = $defsOrType["type"];
       else
         $type = Parameters::get("type");
-      if (!$type)
+      if (!$type || $type == "")
         if ($fields && $fields[0])
           $type = $fields[0];
         else
@@ -288,7 +288,7 @@ class anyTable extends dbTable
         $type = $defsOrType;
       else
         $type = Parameters::get("type");
-      if (!$type)
+      if (!$type || $type == "")
         if ($fields && $fields[0])
           $type = $fields[0];
         else
@@ -593,12 +593,10 @@ class anyTable extends dbTable
    */
   public function dbSearch()
   {
-    $err = $this->dbValidateSearch();
-    if ($err != "") {
-      $this->setError($err);
-      return null;
-    }
     $this->mError = "";
+    if (!$this->dbValidateSearch())
+      return null;
+
     $this->mData = null;
 
     $this->initFieldsFromParam();
@@ -630,10 +628,12 @@ class anyTable extends dbTable
 
   protected function dbValidateSearch()
   {
-    $err = "";
-    if (!$this->mType)
-      $err .= "Type missing. ";
-    return $err;
+    $this->mError = "";
+    if (!$this->mType || $this->mType == "")
+      $this->mError .= "Type missing. ";
+    if ($this->mError != "")
+      return false;
+    return true;
   } // dbValidateSearch
 
   ////////////////////////////// Misc. searches //////////////////////////////
@@ -738,7 +738,7 @@ class anyTable extends dbTable
     // Build and execute the query
     $stmt = $this->dbPrepareSearchItemStmt($key,$val,$includeUser);
     //elog("dbSearchItem:".$stmt);
-    if (!$stmt || !$this->query($stmt))
+    if (!$stmt || $stmt == "" || !$this->query($stmt))
       return false; // An error occured
 
     // Get the data
@@ -960,7 +960,7 @@ class anyTable extends dbTable
     $partial_stmt = $this->dbPrepareSearchListStmt($gid);
     $stmt = $partial_stmt.$limit;
     //elog("dbExecListStmt1:".$stmt);
-    if (!$stmt || !$this->query($stmt) || $this->isError())
+    if (!$stmt || $stmt == "" || !$this->query($stmt) || $this->isError())
       return false; // Something went wrong
 
     // Get the data
@@ -977,7 +977,7 @@ class anyTable extends dbTable
         return false; // An error occured
       $row = $this->getNext(true);
       if ($row && isset($row["num_results"]) && $row["num_results"] != "0") {
-        if (!$gid) {
+        if (!$gid || $gid == "") {
           if (!$this->mGrouping || $this->mSimpleList)
             $gr_idx = $this->mType;
           else
@@ -1202,7 +1202,7 @@ class anyTable extends dbTable
   protected function findLimit()
   {
     $num = Parameters::get("num");
-    if (!$num)
+    if (!$num || $num == "")
       return "";
     $lim = "LIMIT ".$num." ";
     $from = Parameters::get("from");
@@ -1442,7 +1442,7 @@ class anyTable extends dbTable
       if (!$this->mIdKeyMetaTable || !isset($nextrow[$this->mIdKeyMetaTable]))
         continue;
       $idx = $nextrow[$this->mIdKeyMetaTable];
-      if (!$idx)
+      if (!$idx || $idx == "")
         continue;
       // Force idx to be a string in order to keep ordering when sending JSON data to an application/json client
       if ($this->mType != "group")
@@ -1544,11 +1544,11 @@ class anyTable extends dbTable
                    ? $group_data["group"][$ngidx]["group_name"]
                    : ucfirst($data_tree[$ngidx]["group_type"])." groups";
           if ($this->mType != "group") {
-            if (!$gname)
+            if (!$gname || $gname == "")
               $gname = $this->findDefaultHeader($this->mType);
           }
           else {
-            if (!$gname)
+            if (!$gname || $gname == "")
               if ($gidx != "group")
                 $gname = ucfirst($data_tree[$ngidx]["group_type"])." groups"; // TODO i18n
               else
@@ -1818,6 +1818,7 @@ class anyTable extends dbTable
    */
   public function dbInsert()
   {
+    $this->mError = "";
     if (!$this->dbValidateInsert())
       return null;
 
@@ -1830,7 +1831,7 @@ class anyTable extends dbTable
     // Insert in normal table
     $stmt = $this->dbPrepareInsertStmt();
     //elog("dbInsert stmt:".$stmt);
-    if (!$stmt || !$this->query($stmt))
+    if (!$stmt || $stmt == "" || !$this->query($stmt))
       return null;
 
     // mNumRowsChanged == 1 if the insert succeeded
@@ -1936,7 +1937,8 @@ class anyTable extends dbTable
 
     // We have an id, so we are updating an existing item or a link to one.
     $upd_what = Parameters::get("upd");
-    if (!$upd_what) {
+    if (!$upd_what || $upd_what == "") {
+      $this->mError = "";
       if (!$this->dbValidateUpdate())
         return null;
       // Initialize
@@ -2119,15 +2121,16 @@ class anyTable extends dbTable
 
   public function dbAddRemoveLink()
   {
+    $this->mError = "";
     if (!$this->dbValidateUpdate())
       return null;
     // Initialize
     $this->mData           = null;
     $this->mNumRowsChanged = 0;
-    $this->initFieldsFromParam();
+    $this->initFieldsFromParam(); // TODO! Neccessary?
 
     $link_type = Parameters::get("link_type");
-    if (!$link_type) {
+    if (!$link_type || $link_type == "") {
       $this->setError("Link type missing. "); // TODO! i18n
       return null;
     }
@@ -2143,7 +2146,7 @@ class anyTable extends dbTable
 
     if ($link_type != $this->mType) {
       $link_table = $this->findLinkTableName($link_type);
-      if (!$link_table) {
+      if (!$link_table || $link_table == "") {
         $this->setMessage("Link table not found. ",true); // TODO! i18n
         return null;
       }
@@ -2154,7 +2157,7 @@ class anyTable extends dbTable
           if ($delval) {
             if (!$this->dbTableHasLink($link_table,$id_key_link,$delval,$id_key,$id)) {
               $this->setMessage("Link not found. ",true); // TODO! i18n
-              return array();
+              return null;
             }
             $stmt = "DELETE FROM ".$link_table." ".
                     "WHERE ".$id_key_link."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
@@ -2170,7 +2173,7 @@ class anyTable extends dbTable
           if ($insval) {
             if ($this->dbTableHasLink($link_table,$id_key_link,$insval,$id_key,$id)) {
               $this->setMessage("Link already exists. ",true); // TODO! i18n
-              return array();
+              return null;
             }
             // Delete old list so as to avoid error message when inserting (insert-or-update)
             $stmt = "DELETE FROM ".$link_table." ".
@@ -2263,11 +2266,10 @@ class anyTable extends dbTable
       }
     }
     else { // Delete from dbase
-      $err = $this->dbValidateDelete();
-      if ($err != "") {
-        $this->setError($err);
+      $this->mError = "";
+      if (!$this->dbValidateDelete())
         return null;
-      }
+
       $stmt = "DELETE FROM ".$this->mTableName." WHERE ".$this->mIdKeyTable."='".$this->mId."'";
       //elog("dbDelete(1):".$stmt);
       if (!$this->query($stmt))
@@ -2312,12 +2314,14 @@ class anyTable extends dbTable
 
   protected function dbValidateDelete()
   {
-    $err = "";
+    $this->mError = "";
     if (!isset($this->mId) || $this->mId == "" || !is_numeric($this->mId))
-      $err .= $this->mType." id missing. ";
+      $this->mError .= $this->mType." id missing. ";
     if (method_exists($this,"dbValidateDeletePermission"))
-      $err .= $this->dbValidateDeletePermission();
-    return $err;
+      $this->mError .= $this->dbValidateDeletePermission();
+    if ($this->mError != "")
+      return false;
+    return true;
   } // dbValidateDelete
 
 } // class anyTable

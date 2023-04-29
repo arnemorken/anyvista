@@ -205,41 +205,40 @@ class userTable extends anyTable
 
   protected function dbValidateInsert($validatePassword=true)
   {
-    $err = "";
+    $this->mError = "";
     $has_perm = is_object($this->mPermission) && $this->mPermission;
     if ($has_perm && $this->mPermission->is_logged_in && !$this->mPermission->is_admin)
-      $err .= "You do not have permission to create users. ";
-    $err .= $this->dbValidateInsertUpdate($validatePassword);
-    if ($err != "")
-      $this->setError($err);
-    return $err;
+      $this->mError .= "You do not have permission to create users. ";
+    $this->dbValidateInsertUpdate($validatePassword);
+    if ($this->mError != "")
+      return false;
+    return true;
   } // dbValidateInsert
 
   protected function dbValidateUpdate($validatePassword=true)
   {
-    $err = "";
+    $this->mError = "";
     $has_perm = is_object($this->mPermission) && $this->mPermission;
     if ($has_perm && $this->mPermission->is_logged_in && !$this->mPermission->is_admin)
       if ($this->mPermission->current_user_id != Parameters::get($this->mIdKey))
-        $err .= "You do not have permission to edit this user. ";
-    $err .= $this->dbValidateInsertUpdate($validatePassword);
-    if ($err != "")
-      $this->setError($err);
-    return $err;
+        $this->mError .= "You do not have permission to edit this user. ";
+    $this->dbValidateInsertUpdate($validatePassword);
+    if ($this->mError != "")
+      return false;
+    return true;
   } // dbValidateUpdate
 
-  protected function dbValidateInsertUpdate($validatePassword=true)
+  private function dbValidateInsertUpdate($validatePassword=true)
   {
-    $err       = "";
     $cmd       = ltrim(Parameters::get("cmd"));
     $login_val = Parameters::get(ANY_DB_USER_LOGIN);
     $email_val = Parameters::get("user_email");
     if ($this->emailAsLogin) { // Email must be present, and user login field is illegal
       if ($login_val)
-        $err .= "Email should be used for login. ";
+        $this->mError .= "Email should be used for login. ";
       if ($cmd == "ins" && !$email_val)
-        $err .= "Email address missing. ";
-      if ($err === "") {
+        $this->mError .= "Email address missing. ";
+      if ($this->mError === "") {
         $login_val = $email_val;
         Parameters::set(ANY_DB_USER_LOGIN,$email_val);
       }
@@ -247,15 +246,15 @@ class userTable extends anyTable
     else { // user login field must be present for new users
       if ($cmd == "ins") {
         if (!$login_val)
-          $err .= "Login name missing. ";
+          $this->mError .= "Login name missing. ";
         else
         if (strtolower($login_val) == "adm" ||
             strtolower($login_val) == "admin" ||
             strtolower($login_val) == "administrator")
-          $err .= $login_val." is a reserved name. ";
+          $this->mError .= $login_val." is a reserved name. ";
         if (!$this->emailOptional) // user login field required
           if (!$email_val)
-            $err .= "Email address missing. ";
+            $this->mError .= "Email address missing. ";
       }
       else { // upd
         if ($login_val && !$this->can_change_user_login)
@@ -264,30 +263,34 @@ class userTable extends anyTable
     }
     if ($cmd == "ins" && $validatePassword && $login_val) {
       if (!$this->dbSearchUserByLogin($login_val))
-        $err .= "Login name '".$login_val."' is already in use. ";
+        $this->mError .= "Login name '".$login_val."' is already in use. ";
       $password = Parameters::get("user_pass");
       if (!$password)
-        $err .= "Password missing. ";
+        $this->mError .= "Password missing. ";
       else {
         $pass_again = Parameters::get("user_pass_again");
         if (!$pass_again)
-          $err .= "Confirm password. ";
+          $this->mError .= "Confirm password. ";
         else
         if ($password != $pass_again)
-          $err .= "Passwords do not match. ";
+          $this->mError .= "Passwords do not match. ";
       }
     }
-    return $err;
+    if ($this->mError != "")
+      return false;
+    return true;
   } // dbValidateInsertUpdate
 
   protected function dbValidateDeletePermission()
   {
-    $err = "";
+    $this->mError = "";
     // Check if trying to delete admin user
     $name = Parameters::get($this->mNameKey);
     if ($name == "adm" || $name == "admin" || $name == "administrator")
-      $err = "Cannot delete administrator user $name. ";
-    return $err;
+      $this->mError = "Cannot delete administrator user $name. ";
+    if ($this->mError != "")
+      return false;
+    return true;
   } // dbValidateDeletePermission
 
   /////////////////////////////////////////////////////////////////////////////

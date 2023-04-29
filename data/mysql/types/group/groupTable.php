@@ -139,24 +139,24 @@ class groupTable extends anyTable
 
   protected function dbValidateInsert()
   {
-    $err = "";
+    $this->mError = "";
     $name = Parameters::get($this->mNameKey);
     if (!$name)
-      $err .= "Group name missing. ";
+      $this->mError .= "Group name missing. ";
     $groupType = Parameters::get("group_type");
     if (!$groupType)
-      $err .= "Group type missing. ";
+      $this->mError .= "Group type missing. ";
     if (strtolower($name) == "admin" || strtolower($name) == "administrator")
-      $err .= $name."' is a reserved name. ";
+      $this->mError .= $name."' is a reserved name. ";
     else {
       if (!$this->dbSearchItem($this->mData,$this->mNameKey,$name)) // TODO! Allow for several groups with same name?
-        return $err;
+        return false;
       if ($this->mData != null)
-        $err .= "Group '".$name."' already exists. ";
+        $this->mError .= "Group '".$name."' already exists. ";
     }
-    if ($err != "")
-      $this->setError($err);
-    return $err;
+    if ($this->mError != "")
+      return false;
+    return true;
   } // dbValidateInsert
 
   /////////////////////////////////////////////////////////////////////////////
