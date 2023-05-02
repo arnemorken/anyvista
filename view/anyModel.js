@@ -1721,6 +1721,11 @@ anyModel.prototype.dbUpdateGetURL = function (options)
                ? "&cmd=ins"
                : "&cmd=upd";
 
+  // Link elements?
+  param_str += options.item_id && options.item_type
+               ? "&link_type="+options.item_type+"&link_id="+options.item_id
+               : "";
+
   return this._getDataSourceName() + param_str;
 }; // dbUpdateGetURL
 
