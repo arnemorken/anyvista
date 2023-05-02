@@ -1491,7 +1491,7 @@ class anyTable extends dbTable
   //
   protected function buildGroupTreeAndAttach(&$data,$group_data)
   {
-    if (!$data)
+    if (!$data || empty($data))
       return;
     $this->mRecDepth = 0;
 
@@ -1949,7 +1949,7 @@ class anyTable extends dbTable
       // Update normal table
       $stmt = $this->dbPrepareUpdateStmt();
       //elog("dbUpdate:".$stmt);
-      if ($stmt) { // May be null if we only update meta fields
+      if ($stmt) { // May be null if we only update meta fields (or link fields for item lists)
         if (!$this->query($stmt))
           return null;
       }
@@ -1960,6 +1960,10 @@ class anyTable extends dbTable
       // Update meta table
       $this->dbMetaInsertOrUpdate($this->mId);
 
+      // Update link table(s) if any of the link fields (left join fields) are changed
+      if (Parameters::get("link_type") && Parameters::get("link_id"))
+        $this->dbChangeLink();
+
       // Set result message
       if ($this->mNumRowsChanged > 0)
         $this->setMessage($this->mUpdateSuccessMsg);
@@ -1968,7 +1972,7 @@ class anyTable extends dbTable
     }
     else
     if ($upd_what == "link") {
-      return $this->dbAddRemoveLink();
+      return $this->dbUpdateLink();
     }
     else {
       $this->setError("Illegal parameter value: $upd_what. ");
@@ -1980,6 +1984,15 @@ class anyTable extends dbTable
 
     return $this->mData;
   } // dbUpdate
+
+  private function dbUpdateLink()
+  {
+    if (Parameters::get("add") || Parameters::get("rem"))
+      $this->dbAddRemoveLink();
+    else
+    if (Parameters::get("cha")) // TODO! Not tested
+      $this->dbChangeLink();
+  } // dbUpdateLink
 
   protected function dbValidateUpdate()
   {
@@ -2227,6 +2240,60 @@ class anyTable extends dbTable
     $this->setMessage($this->mUpdateSuccessMsg);
     return $this->dbSearch(); // Return the complete data set to client
   } // dbAddRemoveLink
+
+  // Update the fields of a link. The link must exist in the link table.
+  public function dbChangeLink()
+  {
+    $link_type = Parameters::get("link_type");
+    if (!$link_type || $link_type == "") {
+      $this->setError("Link type missing. "); // TODO! i18n
+      return null;
+    }
+    $id_key = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
+    $id     = Parameters::get($id_key); // TODO! Use $this->mId?
+    if (!isset($id) || $id == "") {
+      $this->setError($this->mType." id missing. "); // TODO! i18n
+      return null;
+    }
+    $link_id = Parameters::get("link_id");
+    if (!$link_id || $link_id == "") {
+      $this->setError($link." id missing. ");
+      return null;
+    }
+    // Check if exists
+    $link_table = $this->findLinkTableName($link_type);
+    if ($link_table === null) {
+      $this->setError("Link table not found");
+      return null;
+    }
+
+    $id_key_link = $link_type."_id"; // TODO! Not general enough
+    if (!$this->dbTableHasLink($link_table,$id_key_link,$link_id,$this->mIdKey,$this->mId)) {
+      $this->setMessage("Link not found",true); // TODO! i18n
+      return null;
+    }
+    // Link found, we can update it
+    if (isset($this->mTableFieldsLeftJoin[$link_type])) {
+      $par_found = false;
+      $stmt = "UPDATE ".$link_table." SET ";
+      for ($t=0; $t<count($this->mTableFieldsLeftJoin[$link_type]); $t++) {
+        $str = $this->mTableFieldsLeftJoin[$link_type][$t];
+        $par = Parameters::get($str);
+        if (($par || $par=="0") && $par != "") {
+          $stmt .=  $str."='".$par."',";
+          $par_found = true;
+        }
+      }
+      if (!$par_found)
+        return null;
+      $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
+      $stmt .= "WHERE ".$id_key."=".$id;
+      elog("dbChangeLink:".$stmt);
+      if (!$this->query($stmt))
+        return null;
+    }
+    return $this->mData;
+  } // dbChangeLink
 
   // Check if a link exists in a link table
   protected function dbTableHasLink($tableName,$idName1,$id1,$idName2,$id2)

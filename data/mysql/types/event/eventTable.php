@@ -79,13 +79,13 @@ class eventTable extends anyTable
       ],
       "user" => [
         "user_id",
-        "user_attended",
         //"user_discount",
-        //""user_paid",
-        //""user_paid_date",
-        //""user_joined_date",
-        "user_feedback",
+        //"user_paid",
+        //"user_paid_date",
+        //"user_joined_date",
         "user_result",
+        "user_feedback",
+        "user_attended",
       ],
       "document" => [
         "document_id",
