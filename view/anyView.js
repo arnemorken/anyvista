@@ -2776,7 +2776,7 @@ $.any.anyView.prototype.getImageStr = function (type,kind,id,val,edit,filter_key
   if (!image_src && filter_key.FUNCTION && typeof window[filter_key.FUNCTION] == "function")
     return this.getFunctionStr(type,kind,id,val,edit,filter_key);
   return "<div class='itemUnedit'>"+
-         "<img class='imageRef pointer' src='"+image_src+"' title='"+val+"'style='box-shadow:none;'>"+
+         "<img class='imageRef pointer' src='"+image_src+"' title='"+val+"' style='box-shadow:none;'>"+
          "</div>";
 }; // getImageStr
 
@@ -2865,7 +2865,7 @@ $.any.anyView.prototype.getCheckStr = function (type,kind,id,val,edit,filter_key
   else {
     let the_id      = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
     let id_str      = ""+the_id;
-    let it_id       = this.id_base+"_"+filter_key+"_"+id_str;
+    let it_id       = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+"_check";
     let check_class = (val == "1") ? "far fa-check-square" : "far fa-square";
     let title   = "Check if attended"; // TODO! Move to event class
     str = "<div class='itemUnedit inlineDiv pointer' "+
