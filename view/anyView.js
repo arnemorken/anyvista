@@ -4137,9 +4137,9 @@ $.any.anyView.prototype.dbUpdate = function (event)
      id:     id,
      indata: data_values,
   });
-  if (data_values["parent_name"])
-    delete data_values["parent_name"]; // TODO! Why?
-  if (this.options.top_view && this.options.top_view.model) {
+  //if (data_values["parent_name"])
+  //  delete data_values["parent_name"]; // TODO! Why?
+  if (kind == "item" && this.options.top_view && this.options.top_view.model) {
     // If a top_view exists, insert/update the data there too
     if (event.data.is_new) {
       // Insert new
