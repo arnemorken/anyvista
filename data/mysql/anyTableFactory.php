@@ -28,10 +28,10 @@ class anyTableFactory
    * Creates a table class of type `type`, or returns it if it already exists.
    * Does not create the actual database table.
    *
-   * @param String type      The table type.
-   * @param Object hostTable An optional "host table".
+   * @param string   type      The table type.
+   * @param anyTable hostTable An optional "host table".
    *
-   * @return Object|null Data object, or null on error or no data
+   * @return object|null Data object, or null on error or no data
    *
    * #### Example
    *    $myTable = anyTableFactory::createClass("user")

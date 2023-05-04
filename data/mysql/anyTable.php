@@ -158,8 +158,8 @@ class anyTable extends dbTable
 /**
   * Constructor
   *
-  * @param Array $connection Info about the database connection. See `db/dbConnection`.
-  * @param Array $defsOrType An array containing the following entries:
+  * @param dbConnection $connection Info about the database connection. See `db/dbConnection`.
+  * @param array|string $defsOrType An array containing the following entries:
   *                          - tableName:          Name of the main table, e.g. "any_event".
   *                          - tableNameMeta:      Name of the meta table, e.g. "any_eventmeta".
   *                          - tableNameGroupLink: Name of the group link table for this table type, e.g. "any_event_group".
@@ -1709,7 +1709,7 @@ class anyTable extends dbTable
    * This method is normally not called by derived classes, but may be overridden by classes that want
    * to return data in a non-standard format.
    *
-   * @param inData
+   * @param object inData
    *
    * @return array|null Data array, or null on error or no data
    *
@@ -1814,7 +1814,7 @@ class anyTable extends dbTable
    * Insert data in table.
    * Also sets mId and mData["id"] if a the new id was auto-created by the database.
    *
-   * @return Boolean true on success, false on error
+   * @return array|null Data object on success, null on error
    */
   public function dbInsert()
   {
@@ -2257,7 +2257,7 @@ class anyTable extends dbTable
     }
     $link_id = Parameters::get("link_id");
     if (!$link_id || $link_id == "") {
-      $this->setError($link." id missing. ");
+      $this->setError($link_type." id missing. "); // TODO! i18n
       return null;
     }
     // Check if exists
@@ -2266,7 +2266,6 @@ class anyTable extends dbTable
       $this->setError("Link table not found");
       return null;
     }
-
     $id_key_link = $link_type."_id"; // TODO! Not general enough
     if (!$this->dbTableHasLink($link_table,$id_key_link,$link_id,$this->mIdKey,$this->mId)) {
       $this->setMessage("Link not found",true); // TODO! i18n
@@ -2370,7 +2369,7 @@ class anyTable extends dbTable
             $stmt = "DELETE FROM ".$link_table." WHERE ".$this->getIdKey()."='".$this->mId."'";
             //elog("dbDelete(3):".$stmt);
             if (!$this->query($stmt))
-              return false;
+              return null;
           }
         }
       }
