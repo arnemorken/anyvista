@@ -808,7 +808,7 @@ class anyTable extends dbTable
 
   protected function findItemWhere($key,$val)
   {
-    $where = "WHERE ".$this->mTableName.".".$key."='".utf8_encode($val)."' ";
+    $where = "WHERE ".$this->mTableName.".".$key."='".utf8_encode($val)."' "; // TODO! utf8_encode is deprecated
     return $where;
   } // findItemWhere
 
@@ -1579,7 +1579,7 @@ class anyTable extends dbTable
         !isset($this->mLinkId)) {
       $this->dbAttachToGroups($group_data["group"],$data_tree);
       $group_data["group"]["grouping"] = true;
-      //vlog("buildGroupTreeAndAttach,tdata:",$group_data);
+      //vlog("buildGroupTreeAndAttach,group_data:",$group_data);
       $data = $group_data["group"];
     }
     else {
@@ -1615,7 +1615,7 @@ class anyTable extends dbTable
       $data_tree["group"]["nogroup"]["head"]       = "group";
     }
     //vlog("dbSearchGroupInfo,data_tree:",$data_tree);
-    $this->tdata = $data_tree;
+    //$this->tdata = $data_tree; // TODO! Why?
     return $data_tree;
   } // dbSearchGroupInfo
 
@@ -2311,80 +2311,81 @@ class anyTable extends dbTable
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Deletes an item of given type with given id from a database table. TODO! Delete a list of items.
+   * Deletes an item of given type with given id from a database table or a file from disk.
+   * TODO! Delete a list of items.
    *
    * @return array|null Data array, or null on error or no data
    */
   public function dbDelete()
   {
-    $this->mError = "";
-    $this->mData  = null;
-
     // Delete item(s) from table or file from disk
-    $del_what = Parameters::get("del");
-    if ($del_what == "ulf") { // Delete file from upload folder
+    if (Parameters::get("del") == "ulf") {
+      // Delete file from disk (upload folder)
       $fname = Parameters::get("ulf");
-      if ($fname)
-        unlink(gUploadPath.$fname);
-      else {
+      if (!$fname) {
         $this->setError("Filename missing for delete. ");
         return null;
       }
+      unlink(gUploadPath.$fname);
+      return $this->mData;
     }
-    else { // Delete from dbase
-      $this->mError = "";
-      if (!$this->dbValidateDelete())
-        return null;
+    // Delete item(s) from table
+    if (!$this->dbValidateDelete())
+      return null;
+    $this->mData = null; // TODO! Why?
+    $stmt = "DELETE FROM ".$this->mTableName." WHERE ".$this->mIdKeyTable."='".$this->mId."'";
+    //elog("dbDelete(1):".$stmt);
+    if (!$this->query($stmt))
+      return null;
+    if ($this->getNumRowsChanged() > 0)
+      $this->setMessage($this->mDeleteSuccessMsg); // numRowsChanged >= 1 if the delete succeeded
+    else
+      $this->setMessage($this->mDeleteNothingToDo);
 
-      $stmt = "DELETE FROM ".$this->mTableName." WHERE ".$this->mIdKeyTable."='".$this->mId."'";
-      //elog("dbDelete(1):".$stmt);
+    // Delete from meta table
+    if ($this->mIdKeyMetaTable &&
+        $this->tableExists($this->mTableNameMeta)) {
+      $stmt = "DELETE FROM ".$this->mTableNameMeta." WHERE ".$this->mIdKeyMetaTable."='".$this->mId."'";
+      //elog("dbDelete:".$stmt);
       if (!$this->query($stmt))
         return null;
-      if ($this->getNumRowsChanged() > 0)
-        $this->setMessage($this->mDeleteSuccessMsg);
-      else
-        $this->setMessage($this->mDeleteNothingToDo);
-
-      // Delete from meta table
-      if ($this->mIdKeyMetaTable &&
-          $this->tableExists($this->mTableNameMeta)) {
-        $stmt = "DELETE FROM ".$this->mTableNameMeta." WHERE ".$this->mIdKeyMetaTable."='".$this->mId."'";
-        //elog("dbDelete:".$stmt);
-        if (!$this->query($stmt))
-          return null;
-      }
-      // Update parent_id of children
-      if ($this->hasParentId()) {
-        $stmt = "UPDATE ".$this->mTableName." SET parent_id=NULL WHERE parent_id='".$this->mId."'";
-        //elog("dbDelete(2):".$stmt);
-        if (!$this->query($stmt))
-          return null;
-      }
-      // Delete all links for an item with given id from associated tables (to avoid orphaned links)
-      if (isset($this->mLinking)) {
-        foreach ($this->mLinking as $idx => $link_type) {
-          if ($this->mType !== $link_type &&
-              isset($this->mId) && $this->mId !== "" && !is_numeric($this->mId)) {
-            $link_table = $this->findLinkTableName($link_type);
-            $stmt = "DELETE FROM ".$link_table." WHERE ".$this->getIdKey()."='".$this->mId."'";
-            //elog("dbDelete(3):".$stmt);
-            if (!$this->query($stmt))
-              return null;
-          }
+    }
+    // Update parent_id of children
+    if ($this->hasParentId()) {
+      $stmt = "UPDATE ".$this->mTableName." SET parent_id=NULL WHERE parent_id='".$this->mId."'";
+      //elog("dbDelete(2):".$stmt);
+      if (!$this->query($stmt))
+        return null;
+    }
+    // Delete all links for an item with given id from associated tables (to avoid orphaned links)
+    if (isset($this->mLinking)) {
+      foreach ($this->mLinking as $idx => $link_type) {
+        if ($this->mType !== $link_type) {
+          $link_table = $this->findLinkTableName($link_type);
+          $stmt = "DELETE FROM ".$link_table." WHERE ".$this->getIdKey()."='".$this->mId."'";
+          //elog("dbDelete(3):".$stmt);
+          if (!$this->query($stmt))
+            return null;
         }
       }
-      $this->mId = null;
     }
+    $this->mId = null;
     return $this->mData;
   } // dbDelete
 
   protected function dbValidateDelete()
   {
     $this->mError = "";
+    if (!isset($this->mTableName))
+      $this->mError .= "Table name missing. "; // TODO! i18n
+    if (!isset($this->mIdKeyTable))
+      $this->mError .= "Id key missing. "; // TODO! i18n
     if (!isset($this->mId) || $this->mId == "" || !is_numeric($this->mId))
-      $this->mError .= $this->mType." id missing. ";
+      $this->mError .= $this->mType." id missing or not an integer. "; // TODO! i18n
+
     if (method_exists($this,"dbValidateDeletePermission"))
       $this->mError .= $this->dbValidateDeletePermission();
+
     if ($this->mError != "")
       return false;
     return true;

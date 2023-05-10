@@ -969,87 +969,91 @@ anyTable.prototype.dbChangeLink = async function(options)
 /////////////////////////////// Delete //////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Deletes an item of given type with given id from a database table or a file from disk.
+ * TODO! Delete a list of items.
+ *
+ * @return array|null Data array, or null on error or no data
+ */
 anyTable.prototype.dbDelete = async function(options)
 {
-  if (!options || !this.dbValidateDelete(options))
-    return Promise.resolve(null);
-
   // Delete item(s) from table or file from disk
   if (options.del == "ulf") {
-    // Delete file from disk
+    // Delete file from disk (upload folder)
+    if (!options.fname) {
+      this.error = "Filename missing for delete. "; // TODO! i18n
+      return Promise.resolve(false);
+    }
+    //unlink(gUploadPath+options.fname); // TODO! Delete from disk
     return Promise.resolve(true);
   }
   // Delete item(s) from table
+  if (!this.dbValidateDelete(options))
+    return Promise.resolve(null);
   let tableName = options.tableName ? options.tableName : this.tableName;
-  let id        = options.id        ? options.id        : this.id;
   let idKey     = options.idKey     ? options.idKey     : this.idKey;
-  let stmt = this.dbPrepareDeleteStmt({ tableName: tableName,
-                                        id:        id,
-                                        idKey:     idKey,
-                                     });
-  if (!stmt) {
-    console.log(this.error);
-    return null;
-  }
-  stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
+  let id        = options.id        ? options.id        : this.id;
+  let stmt      = "DELETE FROM "+tableName+" WHERE "+idKey+"="+id;
   let self = this;
   //console.log("dbDelete(1):"+stmt);
   return await alasql.promise(stmt)
   .then( async function(res) {
-    // numRowsChanged >= 1 if the delete succeeded
-    self.numRowsChanged = res;
     //console.log("del res:"+res);
-    if (self.numRowsChanged == 0) {
+    self.numRowsChanged = res; // numRowsChanged >= 1 if the delete succeeded
+    if (self.numRowsChanged > 0)
+      self.message = self.deleteSuccessMsg;
+    else
       self.message = self.deleteNothingToDo;
-      return null;
-    }
+
     // Update parent_id of children
     if (self.hasParentId()) {
       stmt = "UPDATE "+tableName+" SET parent_id=NULL WHERE parent_id="+id;
       //console.log("dbDelete(2):"+stmt);
       if (!self.query(stmt,false,true)) // TODO! alasql.promise...
-        return null;
+        return Promise.resolve(false);
     }
     // Delete all links for an item with given id from associated tables (to avoid orphaned links)
     if (self.linking) {
       for (let link_type in self.linking) {
-        if (self.type !== link_type && (id || id === 0)) {
+        if (self.type !== link_type) {
           let link_table = self.findLinkTableName(link_type);
           let stmt = "DELETE FROM "+link_table+" WHERE "+self.idKey+"="+id;
           //console.log("dbDelete(3):"+stmt);
           if (!self.query(stmt))
-            return false;
+            return Promise.resolve(false);
         }
       }
     }
     self.id = null;
-
-    // Set result message
-    self.message = self.deleteSuccessMsg;
-
     // Call success handler
     if (options.successHandler && options.context)
       options.successHandler.call(options.context,res);
-
-    return res;
+    return Promise.resolve(true);
   })
   .catch(error => {
      console.error("Delete error: "+error);
-     return null;
+     return Promise.resolve(false);
   });
 }; // dbDelete
 
 anyTable.prototype.dbValidateDelete = function(options)
 {
   this.error = "";
-  // Validate here, set this.error
+  if (!options) {
+    this.error = "Options missing. "; // TODO! i18n
+    return false;
+  }
+  let tableName = options.tableName ? options.tableName : this.tableName;
+  let idKey     = options.idKey     ? options.idKey     : this.idKey;
+  let id        = options.id        ? options.id        : this.id;
+  if (!tableName)
+    this.error += "Table name missing. "; // TODO! i18n
+  if (!idKey)
+    this.error += "Id key missing. "; // TODO! i18n
+  if ((!id && id !== 0) || id == "" || !Number.isInteger(id))
+    this.error += this.type+" id missing or not an integer. "; // TODO! i18n
+
   if (this.error != "")
     return false;
   return true;
 }; // dbValidateDelete
-
-anyTable.prototype.dbPrepareDeleteStmt = function(options)
-{
-  let stmt = "DELETE FROM "+options.tableName+" WHERE "+options.idKey+"="+options.id;
-  return stmt;
-}; // dbPrepareDeleteStmt
