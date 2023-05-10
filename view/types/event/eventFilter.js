@@ -44,7 +44,7 @@ var eventFilter = function (options)
         event_date_pay:      { HEADER:"Payment date",       DISPLAY:1,       TYPE:"date" },
         event_price:         { HEADER:"Price",              DISPLAY:1,       TYPE:"number" },
         other_expenses:      { HEADER:"Other&nbsp;expenses",DISPLAY:1,       TYPE:"number" },
-        user_attended:       { HEADER:"Attended",           DISPLAY:1,       TYPE:"check" },
+        user_attended:       { HEADER:"Attended",           DISPLAY:1,       TYPE:"check", FUNCTION: "dbSetAttended" },
         document_status:     { HEADER:"Doc&nbsp;status",    DISPLAY:1,       TYPE:"label" },
       },
       list: {
@@ -67,7 +67,7 @@ var eventFilter = function (options)
         user_result:         { HEADER:"Resultat",           DISPLAY:disp_result, TYPE:"function", FUNCTION: "displayUserResult" },
       //parent_id:           { HEADER:"Parent event",       DISPLAY:1,       TYPE:"select",   SELECT: "dbSearchParents" },
       //other_expenses:      { HEADER:"Other&nbsp;expenses",DISPLAY:1,       TYPE:"number" },
-        user_attended:       { HEADER:"Att.",               DISPLAY:1,       TYPE:"check" },
+        user_attended:       { HEADER:"Att.",               DISPLAY:1,       TYPE:"check", FUNCTION: "dbSetAttended" },
         document_status:     { HEADER:"Doc&nbsp;status",    DISPLAY:1,       TYPE:"label" },
       },
       head: {

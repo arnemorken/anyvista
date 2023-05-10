@@ -118,13 +118,13 @@ async function connectSuccess(options)
   })
   .then( () => {
     let sqlInsertEventUser = "\
-      INSERT INTO any_event_user (event_id,user_id) VALUES (11,99);\
+      INSERT INTO any_event_user (event_id,user_id,user_attended) VALUES (11,99,1);\
       ";
     return evtab.query(sqlInsertEventUser,true,true);
   })
   .then( () => {
     let sqlInsertEventUser = "\
-      INSERT INTO any_event_user (event_id,user_id) VALUES (777,99);\
+      INSERT INTO any_event_user (event_id,user_id,user_attended) VALUES (777,99,1);\
       ";
     return evtab.query(sqlInsertEventUser,true,true);
   })
@@ -141,6 +141,14 @@ async function connectSuccess(options)
                          });
   })
 */
+
+  .then( () => {
+    return evtab.dbChangeLink({ id:            777,
+                                link_type:     "user",
+                                user_id:       99,
+                                user_attended: 0,
+                             });
+  })
 /*
   .then( () => {
     return evtab.dbAddRemoveLink({ id:        11,

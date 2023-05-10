@@ -706,38 +706,55 @@ anyTable.prototype.dbUpdate = async function(options)
     return this.dbInsert(options); // No id, assume it is a new item to be inserted
   this.id = options.id;
 
-  // Update normal table
-  let stmt = await this.dbPrepareUpdateStmt(options.keys,options.values);
-  if (!stmt) {
-    console.log(this.error);
-    return null;
-  }
-  stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
-  let self = this;
-  //console.log("dbUpdate:"+stmt);
-  return await alasql.promise(stmt)
-  .then( async function(res) {
-    // numRowsChanged >= 1 if the update succeeded
-    self.numRowsChanged = res;
-    //console.log("upd res:"+res);
-    if (self.numRowsChanged == 0) {
-      self.message = self.updateNothingToDo;
+  // We have an id, so we are updating an existing item or a link to one.
+  let upd_what = options.upd;
+  if (!upd_what || upd_what == "") {
+    // Update normal table
+    let stmt = await this.dbPrepareUpdateStmt(options.keys,options.values);
+    if (!stmt) {
+      console.log(this.error);
       return null;
     }
-    // Set result message
-    self.message = self.updateSuccessMsg;
+    stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
+    let self = this;
+    //console.log("dbUpdate:"+stmt);
+    return await alasql.promise(stmt)
+    .then( async function(res) {
+      // numRowsChanged >= 1 if the update succeeded
+      self.numRowsChanged = res;
+      //console.log("upd res:"+res);
+      if (self.numRowsChanged == 0) {
+        self.message = self.updateNothingToDo;
+        return null;
+      }
+      // Set result message
+      self.message = self.updateSuccessMsg;
 
-    // Call success handler
-    if (options.successHandler && options.context)
-      options.successHandler.call(options.context,res);
+      // Call success handler
+      if (options.successHandler && options.context)
+        options.successHandler.call(options.context,res);
 
-    return res;
-  })
-  .catch(error => {
-     console.error("Update error: "+error);
-     return null;
-  });
+      return res;
+    })
+    .catch(error => {
+       console.error("Update error: "+error);
+       return null;
+    });
+  } // if
+  else
+  if (upd_what == "link") {
+    return this.dbUpdateLink();
+  }
 }; // dbUpdate
+
+anyTable.prototype.dbUpdateLink = function(options)
+  {
+    if (options.add || options.rem)
+      this.dbAddRemoveLink();
+    else
+    if (options.cha) // TODO! Not tested
+      this.dbChangeLink();
+  } // dbUpdateLink
 
 anyTable.prototype.dbValidateUpdate = function(options)
 {
@@ -892,6 +909,61 @@ anyTable.prototype.dbAddRemoveLink = async function(options)
     }
   }
 }; // dbAddRemoveLink
+
+// Update the fields of a link. The link must exist in the link table.
+anyTable.prototype.dbChangeLink = async function(options)
+{
+  let link_type = options.link_type;
+  if (!link_type || link_type == "") {
+    this.error = "Link type missing. "; // TODO! i18n
+    return null;
+  }
+  let idKey = options.idKey ? options.idKey : this.idKey;
+  let id    = options.id    ? options.id    : this.id;
+  if ((!id && id !== 0) || id == "") {
+    this.error = this.type+" id missing. "; // TODO! i18n
+    return null;
+  }
+  let link_id = options+"link_id";
+  if ((!link_id && link_id !== 0) || link_id == "") {
+    this.error = link+" id missing. "; // TODO! i18n
+    return null;
+  }
+  // Check if exists
+  let link_table = this.findLinkTableName(link_type);
+  if (link_table === null) {
+    this.error = "Link table not found";
+    return null;
+  }
+  let id_key_link = link_type+"_id"; // TODO! Not general enough
+  /*
+  if (!this.dbTableHasLink(link_table,id_key_link,link_id,this.idKey,this.id)) {
+    this.message = "Link not found"; // TODO! i18n
+    return null;
+  }
+  */
+  // Link found, we can update it
+  if (this.tableFieldsLeftJoin[link_type]) {
+    let par_found = false;
+    let stmt = "UPDATE "+link_table+" SET ";
+    for (let t=0; t<this.tableFieldsLeftJoin[link_type].length; t++) {
+      let str = this.tableFieldsLeftJoin[link_type][t];
+      let par = options[str];
+      if (par || par===0) {
+        stmt +=  str+"='"+par+"',";
+        par_found = true;
+      }
+    }
+    if (!par_found)
+      return null;
+    stmt = stmt.substring(0,stmt.length-1)+' '; // Replace last char (',') with ' *
+    stmt += "WHERE "+idKey+"="+id;
+    //console.log("dbChangeLink:"+stmt);
+    if (!this.query(stmt,false,true))
+      return null;
+  }
+  return this.data;
+}; // dbChangeLink
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Delete //////////////////////////////////////

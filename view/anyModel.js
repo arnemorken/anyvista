@@ -1963,6 +1963,127 @@ anyModel.prototype.dbAddRemoveLinkSuccess = function (context,serverdata,options
 }; // dbAddRemoveLinkSuccess
 
 /**
+ * @method dbChangeLink
+ * @description Change individual value(s) for an item.
+ * @param {Object} options An object which may contain these elements:
+ *
+ *        {String} type:     The type of items in the list.
+ *                           Optional. Default: `this.type`.
+ *        {String} link_id:  The id of the item to which the list "belongs" (is linked to).
+ *                           Mandatory.
+ *        {Object} select:
+ *        {Object} unselect:
+ *        {integer} timeoutSec: Number of seconds before timing out.
+ *                              Optional. Default: 10.
+ *
+ * @return true if the database call was made, false on error.
+ */
+anyModel.prototype.dbChangeLink = function (options)
+{
+  console.log(options);
+  if (!options || typeof options != "object")
+    options = {};
+
+  let the_type = options.type ? options.type : this.type;
+  if (!the_type) {
+    console.error("anyModel.dbChangeLink: "+i18n.error.TYPE_MISSING);
+    return false;
+  }
+  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
+               ? parseInt(options.id)
+               : options.id
+                 ? options.id
+                 : null;
+  if (!the_id && typeof options.id !== "string") {
+    console.error("anyModel.dbChangeLink: "+i18n.error.ID_ILLEGAL);
+    return false;
+  }
+  let db_timeout_sec = options.timeoutSec
+                       ? options.timeoutSec
+                       : this.db_timeout_sec;
+  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
+  this.success = options.success ? options.success : this.dbChangeLinkSuccess;
+  this.fail    = options.fail    ? options.fail    : this._dbFail;
+  this.context = options.context ? options.context : this;
+  this.message      = "";
+  this.error        = "";
+  this.error_server = "";
+  let self = this;
+  if (this.mode == "remote") { // Remote server call
+    let url = this.dbChangeLinkGetURL(options);
+    if (!url)
+      return false;
+    $.getJSON(url) // Call server
+    .done(function(serverdata,textStatus,jqXHR) {
+      return self.success ? self.success(self.context,serverdata,options) : false;
+    })
+    .fail(function(jqXHR,textStatus,error) {
+      return self.fail    ? self.fail   (self,jqXHR) : false;
+    });
+  }
+  else {
+    if (!self.success) {
+      this.message = i18n.error.SUCCCESS_CB_MISSING;
+      console.warn("anyModel.dbChangeLink: "+this.message);
+      return false;
+    }
+    return self.success(this,this,options);
+  }
+  return true;
+}; // dbChangeLink
+
+/**
+ * @method dbChangeLinkGetURL
+ * @description Builds a POST string for dbChangeLinkGetURL to be sent to server.
+ * @param {Object} options An object which may contain these elements:
+ *
+ * @return The complete URL for dbChangeLink or null on error.
+ */
+anyModel.prototype.dbChangeLinkGetURL = function (options)
+{
+  let the_type = options.type ? options.type : this.type;
+  if (!the_type) {
+    console.error("anyModel.dbChangeLinkGetURL: "+i18n.error.TYPE_MISSING);
+    return null;
+  }
+  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
+               ? parseInt(options.id)
+               : options.id
+                 ? options.id
+                 : null;
+  if (!the_id && typeof options.id !== "string") {
+    console.error("anyModel.dbChangeLinkGetURL: "+i18n.error.ID_ILLEGAL);
+    return null;
+  }
+  if (!options.change_values) {
+    console.error("anyModel.dbChangeLinkGetURL: No values to change. "); // TODO! i18n
+    return null;
+  }
+  let param_str = "?echo=y"+
+                  "&cmd=upd"+
+                  "&upd=link"+
+                  "&type="+the_type+
+                  "&"+the_type+"_id"+"="+the_id;
+  if (options.link_type)
+    param_str += "&link_type="+options.link_type;
+  param_str += "&link_id="+options.link_id;
+  let nam = [...options.change_names];
+  let val = [...options.change_values];
+  param_str += "&cha="+sel;
+  has_add_or_del = true;
+  param_str += "&sea=y";
+  param_str += options.header   ? "&header="  +options.header : "";
+  param_str += options.grouping ? "&grouping="+options.grouping : "";
+  return this._getDataSourceName() + param_str;
+}; // dbChangeLinkGetURL
+
+// Default success callback method for dbChangeLink
+anyModel.prototype.dbChangeLinkSuccess = function (context,serverdata,options)
+{
+  console.log(options);
+}; // dbChangeLinkSuccess
+
+/**
  * @method dbDelete
  * @description Deletes an item from a database table.
  *              TODO! Check that the server also deletes any links the item may have in other tables.

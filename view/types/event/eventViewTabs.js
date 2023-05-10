@@ -129,8 +129,8 @@ $.any.eventViewTabs.prototype.getInstructors = function (type,kind,id,val,edit)
 
 $.any.eventViewTabs.prototype.dbSetAttended = function (event)
 {
-  return this.model.dbSetAttended(event.data);
-};
+  return this.model.dbChangeLink(event.data);
+}; // dbSetAttended
 
 // Upload directly after selecting file
 $.any.eventViewTabs.prototype._uploadClicked = function (event)

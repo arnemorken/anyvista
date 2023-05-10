@@ -21,10 +21,16 @@ var userTable = function (connection,parameters)
       parent_id        INT,\
       UNIQUE (user_id));\
     CREATE TABLE IF NOT EXISTS any_event_user (\
-      event_id          INT PRIMARY KEY,\
-      user_id           INT PRIMARY KEY,\
+      event_id         INT PRIMARY KEY,\
+      user_id          INT PRIMARY KEY,\
+      user_result      INT,\
+      user_attended    INT,\
       UNIQUE (event_id,user_id));\
     ";
+  this.tableFieldsLeftJoin = {
+    group: ["group_id","user_joined_date","user_role"],
+    event: ["user_result","user_feedback","user_attended"],
+  };
 }; // constructor
 
 userTable.prototype = new anyTable(null);

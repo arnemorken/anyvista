@@ -25,8 +25,14 @@ var eventTable = function (connection,parameters)
     CREATE TABLE IF NOT EXISTS any_event_user (\
       event_id          INT PRIMARY KEY AUTOINCREMENT,\
       user_id           INT PRIMARY KEY AUTOINCREMENT,\
+      user_result       INT,\
+      user_attended     INT,\
       UNIQUE (event_id,user_id));\
     ";
+  this.tableFieldsLeftJoin = {
+    group: ["group_id"],
+    user:  ["user_result","user_feedback","user_attended"],
+  };
 }; // constructor
 
 eventTable.prototype = new anyTable(null);
