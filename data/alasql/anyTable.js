@@ -935,7 +935,7 @@ anyTable.prototype.dbDelete = async function(options)
     if (self.hasParentId()) {
       stmt = "UPDATE "+tableName+" SET parent_id=NULL WHERE parent_id="+id;
       //console.log("dbDelete(2):"+stmt);
-      if (!self.query(stmt)) // TODO! alasql.promise...
+      if (!self.query(stmt,false,true)) // TODO! alasql.promise...
         return null;
     }
     // Delete all links for an item with given id from associated tables (to avoid orphaned links)
