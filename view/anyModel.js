@@ -1081,17 +1081,21 @@ anyModel.prototype.dataDelete = function (options)
     return null;
   let kind = it_ptr[it_idx].list ? "list" : it_ptr[it_idx].item ? "item" : it_ptr[it_idx].head ? "head" : null;
   delete it_ptr[it_idx];
-  if (item.data && Object.size(item.data) == 0)  // No more data, clean up TODO! Is this neccessary?
+  if (item.data && Object.size(item.data) == 0) // No more data, clean up TODO! Is this neccessary?
     delete item.data;
 
   // The deleted item may have been the only one containing a kind:type entry, we can't have that
   for (var key in item)
-    if (kind && item.hasOwnProperty(key) && !key.startsWith("grouping"))
-      item[key][kind] = type;
+    if (item.hasOwnProperty(key) && !key.startsWith("grouping"))
+      if (key == "id")
+        delete item[key];
+      else
+      if (kind)
+        item[key][kind] = type;
 
   if (this.auto_callback)
     this.cbExecute();
-  return item; // Should be null/undefined
+  return item; // Should be empty
 }; // dataDelete
 
 /////////////////////////////////////////////////
