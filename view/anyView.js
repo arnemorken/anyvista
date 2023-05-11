@@ -4530,7 +4530,7 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
   let kind   = event.data.kind;
   let data   = event.data.data;
   let id     = event.data.id;
-  let id_str = event.data.id_str;
+  let id_str = event.data.row_id_str;
 
   let item = this.model.dataSearch({
                 type: type,
