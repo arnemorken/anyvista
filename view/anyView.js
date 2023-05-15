@@ -1197,6 +1197,8 @@ $.any.anyView.prototype.refreshThead = function (params)
       kind:       kind,
       data:       data,
       id:         "new", // Find a new id
+      pdata:      params.pdata,
+      pid:        params.pid,
       par_id_str: par_id_str,
       filter:     filter,
       edit:       true,
@@ -3558,6 +3560,7 @@ $.any.anyView.prototype._addListEntry = function (opt)
       if (filter_id == id_key)
         indata[filter_id] = new_id;
       else
+      if (filter_id != "group_id")
         indata[filter_id] = "";
     }
     indata.is_new = true;
@@ -4234,8 +4237,11 @@ $.any.anyView.prototype.dbUpdate = function (event)
   }
 
   // Update database
-  if (this.model.mode == "remote")
+  if (this.model.mode == "remote") {
+    if (pid && pdata[pid] && (pdata[pid].head == "group" || pdata[pid].item == "group" || pdata[pid].list == "group"))
+      event.data.group_id = pid;
     return this.model.dbUpdate(event.data);
+  }
 
   if (item && item[id]) {
     delete item[id].is_new;
