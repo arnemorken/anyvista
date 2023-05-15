@@ -20,13 +20,14 @@ Early versions of the library are already being used in both commercial and non-
 
 jsFiddle examples coming soon.
 
-Find the library at Github: https://github.com/arnemorken/anyvista/.
-
 # Download
 
-The library is currently in the last stages of development. As we this project does not have any funding, work is somewhat sporadic.
-To speed up development, contributions may be made here:
+The library is currently in the last stages of development, but as this project does not have any funding, work is somewhat sporadic.
+To speed up development, conmsider making a contribution:
+
 [![Donate](https://www.paypalobjects.com/en_US/GB/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=EZGCG4XQER5KQ)
+
+Find the library at Github: https://github.com/arnemorken/anyvista/.
 
 # Usage
 
