@@ -23,7 +23,7 @@ jsFiddle examples coming soon.
 # Download
 
 The library is currently in the last stages of development, but as this project does not have any funding, work is somewhat sporadic.
-To speed up development, conmsider making a contribution:
+To speed up development, consider making a contribution:
 
 [![Donate](https://www.paypalobjects.com/en_US/GB/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=EZGCG4XQER5KQ)
 
@@ -128,7 +128,7 @@ Get licences here: https://anyvista.balanse.info/license/ (coming soon).
 
 # Donations
 
-Donations are very welcome :)
+Donations are very welcome!
 
 [![Donate](https://www.paypalobjects.com/en_US/GB/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=EZGCG4XQER5KQ)
 
