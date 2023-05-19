@@ -15,7 +15,7 @@ require_once "anyTableFactory.php";
  * Class for interacting with an anyVista MySql database table.
  *
  * Inherits from `dbTable`, which manages the database connection.
- * Contains methods for doing search, insert, update and delete on a database table.
+ * Contains methods for doing search, insert, update and delete on a MySQL database table.
  * Supports user defined table format, as well as data in (Wordpress) meta tables.
  * The table format must be described in a table class that inherits from `anyTable` -
  * see `types/user/userTable.php` and `types/group/groupTable.php` for examples.
@@ -2384,7 +2384,7 @@ class anyTable extends dbTable
       $this->mError .= $this->mType." id missing or not an integer. "; // TODO! i18n
 
     if (method_exists($this,"dbValidateDeletePermission"))
-      $this->mError .= $this->dbValidateDeletePermission();
+      $this->dbValidateDeletePermission(); // Sets mError
 
     if ($this->mError != "")
       return false;
