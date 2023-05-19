@@ -283,7 +283,6 @@ class userTable extends anyTable
 
   protected function dbValidateDeletePermission()
   {
-    $this->mError = "";
     // Check if trying to delete admin user
     $name = Parameters::get($this->mNameKey);
     if ($name == "adm" || $name == "admin" || $name == "administrator")
