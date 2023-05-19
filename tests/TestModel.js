@@ -755,7 +755,7 @@ function testModel()
 
   ///////////////////// end dataUpdateLinkList tests /////////////////////
 
-  ///////////////////// dbSearch tests /////////////////////
+  ///////////////////// remote dbSearch tests /////////////////////
 
   asyncTest('dbSearch normal case - item, with header', 4, function() {
     let dm = new anyModel({type:"user",search:false,mode:"remote"});
@@ -880,9 +880,9 @@ function testModel()
     }, millisec);
   });
 
-  ///////////////////// end dbSearch tests /////////////////////
+  ///////////////////// end remote dbSearch tests /////////////////////
 
-  ///////////////////// dbUpdate tests /////////////////////
+  ///////////////////// remote dbUpdate tests /////////////////////
 
   asyncTest('dbUpdate - item: normal case (user 2 must exist in database)', 3, function() {
     let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
@@ -953,8 +953,8 @@ function testModel()
       let dm2 = new anyModel({type:"event",search:false,mode:"remote",data:null});
       dm2.dbSearch({type:"event",id:555});
       setTimeout(function() {
-        deepEqual(dm2.data === null,
-                  true, "dbUpdate({type:'event',id:555}) returns null from database");
+        deepEqual(dm2.data["+0"].data.length === 0,
+                  true, "dbUpdate({type:'event',id:555}) returns empty array from database");
         start();
       }, millisec);
     }, millisec);
@@ -1036,7 +1036,7 @@ function testModel()
     }, millisec);
   });
 
-  asyncTest('dbUpdate insert (user) data that is in memory', 3, function() {
+  asyncTest('dbUpdate insert (user) data that is in memory. User id 79 must not exist in user table.', 3, function() {
     let usrname = "user"+Math.floor(Math.random()*100000);
     let data7779 = {77:{list:"user",user_name:"us77"},
                     79:{list:"user",user_name:"us79",user_login:usrname,user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
@@ -1071,12 +1071,12 @@ function testModel()
     }, millisec);
   });
 
-  ///////////////////// end dbUpdate tests /////////////////////
+  ///////////////////// end remote dbUpdate tests /////////////////////
 
   ///////////////////// dbAddRemoveLink
   // TODO
 
-  ///////////////////// dbDelete
+  ///////////////////// remote dbDelete tests /////////////////////
 
   asyncTest('dbDelete: normal case (user with id 55 must exist in db user table)', 3, function() {
     let dm = new anyModel({type:"user",search:false,mode:"remote",data:null});
@@ -1175,7 +1175,7 @@ function testModel()
   });
 
   // insert, update, search and delete tests
-  asyncTest('dbUpdate and dbDelete: Insert, update, search, view and delete user', 15, function() {
+  asyncTest('dbUpdate and dbDelete: Insert, update, search, view and delete user. User id 34 must not exist in user table.. ', 15, function() {
     let data33 = {33:{list:"user",user_name:"us33",user_login:"us33",user_pass:"qqq",user_pass_again:"qqq"}};
     let dm = new anyModel({type:"user",search:false,mode:"remote",data:data33});
     // insert
@@ -1227,7 +1227,7 @@ function testModel()
     }, millisec);
   });
 
-  ///////////////////// end dbDelete tests /////////////////////
+  ///////////////////// end remote dbDelete tests /////////////////////
 
 } // testModel
 //@ sourceURL=TestModel.js
