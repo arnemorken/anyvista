@@ -1810,16 +1810,29 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
 
 /**
  * @method dbAddRemoveLink
- * @description Add and/or remove items to/from a link (association) list by updating the link
- *              table in the database. This can be used to (un)link an item from another item.
- * @param {Object} options An object which may contain these elements:
+ * @description Add and/or remove items to/from a link (association) list by updating the link table
+ *              in the database. This can be used to link/unlink an item to/from another item.
+ * @param {Object}  options An object which may contain these elements:
  *
- *        {String} type:     The type of items in the list.
- *                           Optional. Default: `this.type`.
- *        {String} link_id:  The id of the item to which the list "belongs" (is linked to).
- *                           Mandatory.
- *        {Object} select:
- *        {Object} unselect:
+ *        {String}  type:       The type of items in the list.
+ *                              Optional. Default: `this.type`.
+ *        {integer} id:         The id of the item to which the list "belongs" (is linked to), for
+ *                              example a user id, where the user may be associated with several
+ *                              event ids.
+ *                              Optional.
+ *        {String}  link_type:  The type of an item with id `link_id`, or the type of the items in
+ *                              the `select` and the `unselect` arrays.
+ *                              Mandatory.
+ *        {String}  link_id:    The id of an item to be removed. If given, the specified link will
+ *                              be removed and no other action will be taken. If not given, links
+ *                              will be added and/or removed as per the `select` and `unselect` arrays.
+ *                              Optional.
+ *        {Object}  unselect:   A list of ids to remove (if link_id is not given).
+ *                              These ids will be removed *before* the ids in `select` has been added.
+ *                              Optional.
+ *        {Object}  select:     A list of ids to add (if link_id is not given).
+ *                              These ids will be added *after* the ids in `unselect` has been removed.
+ *                              Optional.
  *        {integer} timeoutSec: Number of seconds before timing out.
  *                              Optional. Default: 10.
  *
@@ -1830,20 +1843,6 @@ anyModel.prototype.dbAddRemoveLink = function (options)
   if (!options || typeof options != "object")
     options = {};
 
-  let the_type = options.type ? options.type : this.type;
-  if (!the_type) {
-    console.error("anyModel.dbAddRemoveLink: "+i18n.error.TYPE_MISSING);
-    return false;
-  }
-  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
-               ? parseInt(options.id)
-               : options.id
-                 ? options.id
-                 : null;
-  if (!the_id && typeof options.id !== "string") {
-    console.error("anyModel.dbAddRemoveLink: "+i18n.error.ID_ILLEGAL);
-    return false;
-  }
   let db_timeout_sec = options.timeoutSec
                        ? options.timeoutSec
                        : this.db_timeout_sec;
@@ -1881,13 +1880,15 @@ anyModel.prototype.dbAddRemoveLink = function (options)
 /**
  * @method dbAddRemoveLinkGetURL
  * @description Builds a POST string for dbAddRemoveLinkGetURL to be sent to server.
- * @param {Object} options An object which may contain these elements:
+ * @param {Object} options See dbAddRemoveLink().
  *
  * @return The complete URL for dbAddRemoveLink or null on error.
  */
 anyModel.prototype.dbAddRemoveLinkGetURL = function (options)
 {
-  let the_type = options.type ? options.type : this.type;
+  let the_type = options.type
+                 ? options.type
+                 : this.type;
   if (!the_type) {
     console.error("anyModel.dbAddRemoveLinkGetURL: "+i18n.error.TYPE_MISSING);
     return null;
@@ -1896,18 +1897,21 @@ anyModel.prototype.dbAddRemoveLinkGetURL = function (options)
                ? parseInt(options.id)
                : options.id
                  ? options.id
-                 : null;
-  if (!the_id && typeof options.id !== "string") {
+                 : this.id;
+  if (typeof options.id !== "string" && !the_id && the_id !== 0) {
     console.error("anyModel.dbAddRemoveLinkGetURL: "+i18n.error.ID_ILLEGAL);
+    return null;
+  }
+  if (!options.link_type) {
+    console.error("anyModel.dbAddRemoveLinkGetURL: "+i18n.error.LINK_TYPE_MISSING);
     return null;
   }
   let param_str = "?echo=y"+
                   "&cmd=upd"+
                   "&upd=link"+
                   "&type="+the_type+
-                  "&"+the_type+"_id"+"="+the_id;
-  if (options.link_type)
-    param_str += "&link_type="+options.link_type;
+                  "&"+the_type+"_id"+"="+the_id+
+                  "&link_type="+options.link_type;
   if (options.link_id)
     param_str += "&rem="+options.link_id;
   else {
@@ -1923,7 +1927,7 @@ anyModel.prototype.dbAddRemoveLinkGetURL = function (options)
       has_add_or_del = true;
     }
     if (!has_add_or_del) {
-      console.error("anyModel.dbAddRemoveLinkGetURL: "+"No items selected. "); // TODO! i18n
+      console.error("anyModel.dbAddRemoveLinkGetURL: "+i18n.error.LINK_ITEMS_MISSING);
       return null;
     }
   }
@@ -1942,7 +1946,7 @@ anyModel.prototype.dbAddRemoveLinkSuccess = function (context,serverdata,options
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
     if (Object.size(serverdata.data) == 0)
-      serverdata.data = options.data ? options.data : self.model.data;
+      serverdata.data = options.data ? options.data : self.data;
     self.message = serverdata.message;
     if (serverdata.error) {
       self.error_server = serverdata.error;
@@ -1952,14 +1956,15 @@ anyModel.prototype.dbAddRemoveLinkSuccess = function (context,serverdata,options
       console.log("anyModel.dbAddRemoveLinkSuccess: "+self.message);
     if (self.error_server)
       console.error("anyModel.dbAddRemoveLinkSuccess: "+self.error_server);
-    self.dataUpdateLinkList({ data:      serverdata.data,
-                              type:      options.link_type,
-                              unselect:  options.unselect,
-                              select:    options.select,
-                              name_key:  options.name_key,
-                              link_id:   options.id,
-                              link_type: options.type,
-                           });
+    if (serverdata.data && serverdata.error == "")
+      self.dataUpdateLinkList({ data:      serverdata.data,
+                                type:      options.link_type,
+                                unselect:  options.unselect,
+                                select:    options.select,
+                                name_key:  options.name_key,
+                                link_id:   options.id,
+                                link_type: options.type,
+                             });
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
     self.cbExecute();
