@@ -2168,10 +2168,8 @@ class anyTable extends dbTable
         // Remove elements from the item's list
         foreach ($dellist as $delval) {
           if ($delval) {
-            if (!$this->dbTableHasLink($link_table,$id_key_link,$delval,$id_key,$id)) {
+            if (!$this->dbTableHasLink($link_table,$id_key_link,$delval,$id_key,$id))
               $this->setMessage("Link not found. ",true); // TODO! i18n
-              return null;
-            }
             $stmt = "DELETE FROM ".$link_table." ".
                     "WHERE ".$id_key_link."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
             //elog("dbAddRemoveLink(1):".$stmt);
