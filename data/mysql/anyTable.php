@@ -1513,7 +1513,7 @@ class anyTable extends dbTable
                 $grp2[$idx] = $item;  // Copy child to other group
               if (!isset($grp[$pid]) && !isset($grp["+".$pid])) {
                 $name = $item[$this->mNameKey];
-                $err = "Warning: Item $idx ($name) does not have parent in same group. ";
+                $err = "Warning: Item $idx ($name) does not have parent in same group. "; // TODO i18n
                 $this->setMessage($err);
                 error_log($err);
               }
@@ -1542,7 +1542,7 @@ class anyTable extends dbTable
           $data_tree[$ngidx]["group_id"]   = $ngidx;
           $gname = isset($group_data) && isset($group_data["group"][$ngidx])
                    ? $group_data["group"][$ngidx]["group_name"]
-                   : ucfirst($data_tree[$ngidx]["group_type"])." groups";
+                   : ucfirst($data_tree[$ngidx]["group_type"])." groups"; // TODO i18n
           if ($this->mType != "group") {
             if (!$gname || $gname == "")
               $gname = $this->findDefaultHeader($this->mType);
@@ -2158,12 +2158,12 @@ class anyTable extends dbTable
     $dellist = explode(",",Parameters::get("rem"));
 
     if ($link_type != $this->mType) {
+      // Link with different type (sublist of item)
       $link_table = $this->findLinkTableName($link_type);
       if (!$link_table || $link_table == "") {
         $this->setMessage("Link table not found. ",true); // TODO! i18n
         return null;
       }
-      // Link with different type (sublist of item)
       if ($dellist !== null) {
         // Remove elements from the item's list
         foreach ($dellist as $delval) {
@@ -2261,12 +2261,12 @@ class anyTable extends dbTable
     // Check if exists
     $link_table = $this->findLinkTableName($link_type);
     if ($link_table === null) {
-      $this->setError("Link table not found");
+      $this->setError("Link table $link_table not found");
       return null;
     }
     $id_key_link = $link_type."_id"; // TODO! Not general enough
     if (!$this->dbTableHasLink($link_table,$id_key_link,$link_id,$this->mIdKey,$this->mId)) {
-      $this->setMessage("Link not found",true); // TODO! i18n
+      $this->setMessage("Link not found in $link_table",true); // TODO! i18n
       return null;
     }
     // Link found, we can update it

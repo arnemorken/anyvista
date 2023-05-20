@@ -14,7 +14,7 @@
  * Class for interacting with an anyVista Alasql database table.
  *
  * Inherits from `dbTable`, which manages the database connection.
- * Contains methods for doing search, insert, update and delete on a database table.
+ * Contains methods for doing search, insert, update and delete on an AlaSQL database table.
  * Supports user defined table format.
  * The table format must be described in a table class that inherits from `anyTable` -
  * see `types/userTable.js` and `types/groupTable.js` for examples.
