@@ -1073,8 +1073,26 @@ function testModel()
 
   ///////////////////// end remote dbUpdate tests /////////////////////
 
-  ///////////////////// dbAddRemoveLink
+  ///////////////////// remote dbAddRemoveLink /////////////////////
   // TODO
+
+  asyncTest('dbAddRemoveLink add a user-event link (event-user link 20900-23 must exist in event_user table)', 2, function() {
+    let dm = new anyModel({type:"user",id:23,search:false,mode:"remote",data:null});
+    let res = dm.dbAddRemoveLink({link_type:"event",select:[98,99,10894],unselect:[20900]}); // insert data
+    deepEqual(res,
+              true, "dbAddRemoveLink() returns true");
+    setTimeout(function() {
+      let dm2 = new anyModel({type:"user",search:false,mode:"remote",data:null});
+      dm2.dbSearch({type:"user",id:23});
+      setTimeout(function() {
+        deepEqual(dm2.data!== null,
+                  true, "dbAddRemoveLink ok1");
+        start();
+      }, millisec);
+    }, millisec);
+  });
+
+  ///////////////////// end remote dbAddRemoveLink /////////////////////
 
   ///////////////////// remote dbDelete tests /////////////////////
 
