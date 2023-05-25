@@ -44,6 +44,7 @@ var i18n = {
     LINK_TYPE_MISSING:   "Mangler lenke type. ",
     TYPEKIND_MISSING:    "Mangler type eller kind for data med id ",
     ID_KEY_MISSING:      "Mangler id key. ",
+    NAME_KEY_MISSING:    "Mangler name key. ",
     ID_MISSING:          "Mangler id. ",
     ID_ILLEGAL:          "Id må være et positivt heltall eller en streng. ",
     UPDATE_DATA_MISSING: "Mangler data for oppdatering. ",
