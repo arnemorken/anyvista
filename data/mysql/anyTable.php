@@ -145,9 +145,9 @@ class anyTable extends dbTable
             $mUpdateSuccessMsg  = "",
             $mDeleteSuccessMsg  = "",
             $mItemUnexists      = " not found. ",
-            $mInsertNothingToDo = "Nothing to insert",
-            $mUpdateNothingToDo = "Nothing to update",
-            $mDeleteNothingToDo = "Nothing to delete";
+            $mInsertNothingToDo = "Nothing to insert. ",
+            $mUpdateNothingToDo = "Nothing to update. ",
+            $mDeleteNothingToDo = "Nothing to delete. ";
 
   private   $mNumRowsChanged    = 0,
             $mLastNumRows       = 0,   // Used to break (theoretical) infinite recursion

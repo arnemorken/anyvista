@@ -161,7 +161,7 @@ class userTable extends anyTable
           $emailOptional         = true,
           $can_change_user_login = true;
 
-  private $mUpdatePasswordChanged = "Password changed";
+  private $mUpdatePasswordChanged = "Password changed. ";
 
   // Constructor
   public function __construct($connection)
