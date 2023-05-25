@@ -761,42 +761,41 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
  * @method dataInsert
  * @description Inserts `new_data` into the data structure at a place specified by `type`, `id`
  *              and optionally `new_id`. If the type/id combination exists several places in
- *              the data structure, only the first place found is used.
+ *              the data structure, only the first place found is used. Data that may already
+ *              exist in at the insertion point will be overwritten.
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  new_data: The values to insert into the data structure.
+ *        {Object}  new_data: The data item to insert into the data structure.
  *                            Must be on a format that can be recognized by the model.
  *                            See <a href="../modules/anyVista.html">`anyVista`</a> for more information.
  *                            Mandatory.
- *        {integer} new_id:   If specified, indicates a new id that will be used when inserting the item:
- *                            - If `new_id` is specified and >= 0, it is used as the id for the
- *                              inserted data item. Data that may already exist at the position specified
- *                              by new_id is overwritten. In this case `new_data` will be inserted like this:
- *                              `item[id].data[new_id] = new_data[new_id]`.
- *                            - If `new_id` is < 0, a new id is created by `dataSearchNextId` and the new
- *                              data will be inserted like this:
- *                              `item[id].data[new_id] = new_data`.
- *                              Note! In this case the new data must *not* be indexed (i.e. use {type:"foo"}
- *                              rather than {38:{type:"foo"}}.
- *                            - If `new_id` is not specified, the new data will be inserted like this:
- *                             `item[id].data = new_data`.
- *                            Optional. Default: null.
+ *        {integer} new_id:   Indicates a new id that will be used when inserting the new data.
+ *                            1) If `new_id` is not specified:
+ *                               - If `id` is not specified: `data          = new_data`.
+ *                               - If `id` is specified:     `data[id].data = new_data`.
+ *                            2) If `new_id` is specified and >= 0:
+ *                               - If `id` is not specified: `data[new_id].data     = new_data`.
+ *                               - If `id` is specified:     `data[id].data[new_id] = new_data`.
+ *                            3) If `new_id` is < 0, it will be created by `dataSearchNextId` and the
+ *                               data will be inserted as in case 2) above.
+ *                            Optional. Default: undefined.
  *        {Object}  data:     The data structure to insert into.
  *                            Optional. Default: The model's data (`this.data`).
  *        {integer} id:       The id of the item in `data` where `new_data` should be inserted.
- *                            If id is specified but not found in the data structure, it is an error.
- *                            If id is null or undefined, the data will be inserted like this:
- *                            - If `new_id` is not specified:
- *                              `data = new_data`
- *                            - If `new_id` is specified:
- *                              `data[new_id] = new_data[new_id]`
+ *                            The data will be inserted like this:
+ *                            1) If id is not specified:
+ *                               - If `new_id` is not specified: `data              = new_data`
+ *                               - If `new_id` is specified:     `data[new_id].data = new_data`
+ *                            2) If id is specified and found in the data structure:
+ *                               - If `new_id` is not specified: `data[id].data              = new_data`
+ *                               - If `new_id` is specified:     `data[id].data[new_id].data = new_data`
+ *                            3) If id is specified but not found in the data structure, it is an error.
  *                            Optional. Default: undefined.
  *        {String}  type:     The type of the item where the new data should be inserted (i.e. the type of
  *                            the item with id `id`.)
  *                            Optional. Default: The model's type (`this.type`).
  *
- * @return A pointer to the place where the new data item was inserted on success, or null if the place
- *         was not found or on error.
+ * @return A pointer to the place where the new data item was inserted on success, or null on error.
  *
  * @example
  *      mymodel.dataInsert({type:"user",id:"38",new_data:{user_name:"Foo Bar"}});
@@ -815,12 +814,8 @@ anyModel.prototype.dataInsert = function (options)
   let the_type  = options.type ? options.type : this.type;
 
   if (!new_data) {
-    console.error("anyModel.dataInsert: "+"Nothing to insert. "); // TODO! i18n
-    return null; // Nothing to insert
-  }
-  if (!the_data) {
-    this.data = {};
-    the_data = this.data;
+    console.error("anyModel.dataInsert: "+i18n.error.NOTHING_TO_INSERT);
+    return null;
   }
   if (!the_type) {
     console.error("anyModel.dataInsert: "+i18n.error.TYPE_MISSING);
@@ -832,11 +827,20 @@ anyModel.prototype.dataInsert = function (options)
     console.error("anyModel.dataInsert: "+i18n.error.ID_ILLEGAL);
     return null;
   }
+  if (!the_data) {
+    this.data = {};
+    the_data = this.data;
+  }
   let item = the_id || the_id === 0
              ? this.dataSearch({data:the_data,id:the_id,type:the_type})
              : the_data;
-  if (!item || ((the_id || the_id === 0) && !item[the_id] && !item["+"+the_id]))
-    return null; // Didnt find insertion point in the_data
+  if (!item || ((the_id || the_id === 0) && !item[the_id] && !item["+"+the_id])) {
+    if (this.data && this.data.length == 0)
+      this.data = null;
+    console.error("anyModel.dataInsert: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_id));
+    return null;
+  }
+
   if (the_id || the_id === 0) {
     // An id was specified and found in the_data
     if (!item[the_id])
@@ -846,7 +850,7 @@ anyModel.prototype.dataInsert = function (options)
       if (new_id < 0)
         new_id = this.dataSearchNextId(the_type); // Auto-generate new id
       if (new_id < 0) {
-        console.error("anyModel.dataInsert: "+"New id not found for "+the_type+". "); // TODO! i18n
+        console.error("anyModel.dataInsert: "+i18n.error.NEW_ID_NOT_FOUND.replace("%%",""+the_type));
         return null;
       }
       if (!item[the_id].data)
@@ -861,7 +865,9 @@ anyModel.prototype.dataInsert = function (options)
     else
     if (!new_id && new_id != 0) {
       // No new id was specified and none should be generated
-      item = item[the_id];
+      if (!item[the_id].data)
+        item[the_id].data = {};
+      item = item[the_id].data;
       for (let filter_id in new_data)
         if (new_data.hasOwnProperty(filter_id))
           item[filter_id] = new_data[filter_id];
