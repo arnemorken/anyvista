@@ -55,5 +55,6 @@ var i18n = {
     FILTER_NOT_FOUND:    "Filter for %% finnes ikke. ",
     TOO_MUCH_RECURSION:  "For mye rekursjon. ",
     NOTHING_TO_UPDATE:   "Ingenting å oppdatere. ",
+    NOTHING_TO_INSERT:   "Ingenting å sette inn. ",
   },
 };

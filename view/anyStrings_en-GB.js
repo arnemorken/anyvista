@@ -55,5 +55,6 @@ var i18n = {
     FILTER_NOT_FOUND:    "Filter for %% not found. ",
     TOO_MUCH_RECURSION:  "Too much recursion. ",
     NOTHING_TO_UPDATE:   "Nothing to update. ",
+    NOTHING_TO_INSERT:   "Nothing to insert. ",
   },
 };
