@@ -83,9 +83,11 @@
  *                                   Default: null.
  *      {Object}   permission:       Permissions (normally obtained from server). The object may contain:
  *                                     {integer} current_user_id:  The user id the current user is logged in with.
+ *                                                                 Default: null.
  *                                     {boolean} is_logged_in:     True if the user is logged in.
+ *                                                                 Default: true.
  *                                     {boolean} is_admin:         True if the user has admin privileges.
- *                                   Default: null.
+ *                                                                 Default: false.
  *      {String}   message:          Messages.
  *                                   Default: "".
  *      {String}   error:            Errors.
@@ -228,6 +230,21 @@ var anyModel = function (options)
   this.auto_refresh = true;
 
   /**
+  * @property {Object} page_links
+  * @default null
+  * @description Page links when displaying a list. Optional.
+  *              Not used yet.
+  */
+  this.page_links = null;
+
+  /**
+  * @property {Integer} db_timeout_sec
+  * @default 10
+  * @description Number of seconds to wait for database reply before timing out.
+  */
+  this.db_timeout_sec = 10;
+
+  /**
   * @property {Object} permission
   * @default An object with the following properties:
   *      `current_user_id:  null,`
@@ -262,32 +279,17 @@ var anyModel = function (options)
   */
   this.error_server = "";
 
-  /**
-  * @property {Object} page_links
-  * @default null
-  * @description Page links when displaying a list. Optional.
-  *              Not used yet.
-  */
-  this.page_links = null;
-
-  /**
-  * @property {Integer} db_timeout_sec
-  * @default 10
-  * @description Number of seconds to wait for database reply before timing out.
-  */
-  this.db_timeout_sec = 10;
-
   // Initialise
   this._dataInitDefault();
   this.dataInit(options);
 
   // Warnings and errors
   if (options && !this.type)
-    this.message += "type missing. ";
+    this.message += i18n.error.TYPE_MISSING;
   if (options && !this.id_key)
-    this.message += "id_key missing. ";
+    this.message += i18n.error.ID_KEY_MISSING;
   if (options && !this.name_key)
-    this.message += "name_key missing. ";
+    this.message += i18n.error.NAME_KEY_MISSING;
   if (this.message !== "")
     console.log("anyModel constructor: "+this.message);
   if (this.error !== "")
@@ -309,17 +311,18 @@ anyModel.prototype._dataInitDefault = function ()
   this.data             = null;
   this.id               = null;
   this.types            = null;
+  this._dataInitSelect();
   this.mode             = "local";
   this.search           = false;
   this.search_term      = "";
   this.last_term        = "";
   this.auto_search_init = true;
   this.auto_callback    = false;
+  this.page_links       = null;
+  this.db_timeout_sec   = 10;
   this.message          = "";
   this.error            = "";
   this.error_server     = "";
-  this._dataInitSelect();
-  this.page_links       = null;
   // "Private" variables:
   this._listeners       = [];
   this.max              = -1;
@@ -341,12 +344,12 @@ anyModel.prototype._dataInitSelect = function ()
  *                         from `options`. If `options == null`, default values will be set.
  *                         The object may contain these elements:
  *
+ *        {Object}   data:         Data. Will only be initialised if `dataInit` is called after a search
+ *                                 (indicated by `this.last_db_command == "sea"`). Optional.
  *        {String}   type:         Type, e.g. "user". Optional.
  *        {String}   id:           Item id, if the top level data represents an item, e.g. "42". Optional.
  *        {String}   id_key:       Id key, e.g. "user_id". Optional. Default: "[type]_id".
  *        {String}   name_key:     Name key, e.g. "user_name". Optional. Default: "[type]_name".
- *        {Object}   data:         Data. Will only be initialised if `dataInit` is called after a search
- *                                 (indicated by `this.last_db_command == "sea"`). Optional.
  *        {String}   mode:         "local" or "remote". Optional.
  *        {boolean}  search:       Whether to call the search method. Optional.
  *        {String}   search_term:  The string to search for. Optional.
@@ -395,6 +398,8 @@ anyModel.prototype.dataInit = function (options)
     if (options.fields)                                { this.fields           = options.fields; }
     if (options.auto_search_init)                      { this.auto_search_init = options.auto_search_init; }
     if (options.auto_callback)                         { this.auto_callback    = options.auto_callback; }
+    if (options.page_links)                            { this.page_links       = options.page_links; }
+    if (options.db_timeout_sec)                        { this.db_timeout_sec   = options.db_timeout_sec; }
     if (options.permission)                            { this.permission       = options.permission; }
     if (options.message)                               { this.message          = options.message; }
     if (options.error)                                 { this.error            = options.error; }
@@ -412,7 +417,6 @@ anyModel.prototype.dataInit = function (options)
       this.error_server = options.error_server;
       this.error        = i18n.error.SERVER_ERROR;
     }
-    if (options.page_links)                            { this.page_links       = options.page_links; }
 
     if (this.fields && this.id_key && !this.fields.includes(this.id_key))
       this.id_key = this.fields[0];
@@ -515,18 +519,18 @@ anyModel.prototype._getDataSourceName = function ()
 
 /**
  * @method dataSearch
- * @description Search for item of type `type` and id `id` in `data`.
- *              If a type/id combination exists several places in the tree,
- *              only the first occurence found is returned.
+ * @description Search for item of type `type` and id `id` in `data`.  If a type/id combination exists
+ *              several places in the data tree, only the first occurence found is returned.
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data: The data structure to search in.
- *                        Optional. Default: The model's data (`this.data`).
- *        {integer} id:   The id to search for.
- *                        Optional. Default: null.
- *        {String}  type: The type of the data to search for.
- *                        Optional. Default: The model's type (`this.type`).
+ *        {Object}  data:   The data structure to search in.
+ *                          Optional. Default: The model's data (`this.data`).
+ *        {integer} id:     The id to search for.
+ *                          Optional. Default: null.
+ *        {String}  type:   The type of the data to search for.
+ *                          Optional. Default: The model's type (`this.type`).
  *        {boolean} parent: If true, search for parent of the item with the specified id.
+ *                          Optional. Default: false.
  *
  * @return If id is specified and parent is false: A pointer to the item found, or null if not found or on error.
  *         If id is specified and parent is true: A pointer to the parent of the item found, or null if not found or on error.
@@ -563,8 +567,20 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
                      ? this.name_key
                      : type+"_name" )
                  : type+"_name";
-  let data_ptr = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
-  let dp_type  = data_ptr ? data_ptr.list ? data_ptr.list : data_ptr.item ? data_ptr.item : data_ptr.head ? data_ptr.head : prev_type: prev_type;
+  let data_ptr = data[id]
+                 ? data[id]
+                 : data["+"+id]
+                   ? data["+"+id]
+                   : null;
+  let dp_type  = data_ptr
+                 ? data_ptr.list
+                   ? data_ptr.list
+                   : data_ptr.item
+                     ? data_ptr.item
+                     : data_ptr.head
+                       ? data_ptr.head
+                       : prev_type
+                 : prev_type;
   if ((id || id === 0) && data_ptr && (dp_type == type || (!dp_type && (data_ptr[name_key] || data_ptr[name_key] === "")))) {
     if (parent_data && parent_data[parent_id]) {
       parent_data[parent_id].id = parent_id; // Hack
@@ -576,7 +592,13 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
   for (let idx in data) {
     if (data.hasOwnProperty(idx) && data[idx] && !idx.startsWith("grouping") &&  !["head","item","list"].includes(idx)) {
       let item = null;
-      let dtype = data[idx].list ? data[idx].list : data[idx].item ? data[idx].item : data[idx].head ? data[idx].head : prev_type;
+      let dtype = data[idx].list
+                  ? data[idx].list
+                  : data[idx].item
+                    ? data[idx].item
+                    : data[idx].head
+                      ? data[idx].head
+                      : prev_type;
       if (dtype == type || (!dtype && data[idx][name_key])) {
         if (id || id === 0) {
           // id search
@@ -678,7 +700,13 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
   if (!isNaN(max)) {
     let dmax  = data[max] ? max : data["+"+max] ? "+"+max : null;
     let dtype = dmax && data[dmax]
-                ? data[dmax].list ? data[dmax].list : data[dmax].item ? data[dmax].item : data[dmax].head ? data[dmax].head : null
+                ? data[dmax].list
+                  ? data[dmax].list
+                  : data[dmax].item
+                    ? data[dmax].item
+                    : data[dmax].head
+                      ? data[dmax].head
+                      : null
                 : null;
     if (!dtype)
       dtype = this.type;
@@ -689,12 +717,20 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
   }
   // Should also be bigger than biggest id of specified type
   let name_key = type == this.type
-                 ? (this.name_key ? this.name_key : type+"_name")
+                 ? (this.name_key
+                   ? this.name_key
+                   : type+"_name")
                  : type+"_name";
   for (let idx in data) { // TODO! Should we search entire this.data in case of duplicate ids?
     if (data.hasOwnProperty(idx) && data[idx]) {
       if (isInt(idx)) {
-        let dtype = data[idx].list ? data[idx].list : data[idx].item ? data[idx].item : data[idx].head ? data[idx].head : null;
+        let dtype = data[idx].list
+                    ? data[idx].list
+                    : data[idx].item
+                      ? data[idx].item
+                      : data[idx].head
+                        ? data[idx].head
+                        : null;
         if (data[idx][name_key] || data[idx][name_key]=="" || dtype == type) {
           let the_id = Number.isInteger(parseInt(idx)) ? parseInt(idx) : idx;
           let tmpmax = Math.max(this.max,the_id);
