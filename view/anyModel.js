@@ -759,47 +759,47 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
 
 /**
  * @method dataInsert
- * @description Inserts `indata` into the data structure at a place specified by `type`, `id`
- *              and optionally ´new_id´. If the type/id combination exists several places in
+ * @description Inserts `new_data` into the data structure at a place specified by `type`, `id`
+ *              and optionally `new_id`. If the type/id combination exists several places in
  *              the data structure, only the first place found is used.
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  indata: The values to insert into the data structure.
- *                          Must be on a format that can be recognized by the model.
- *                          See <a href="../modules/anyVista.html">`anyVista`</a>.
- *                          Mandatory.
- *        {Object}  data:   The data structure to insert into.
- *                          Optional. Default: The model's data (`this.data`).
- *        {String}  type:   The type of the item where the new data should be inserted (i.e. the type of
- *                          the item with id `id`.)
- *                          Optional. Default: The model's type (`this.type`).
- *        {integer} id:     The id of the item in `data` where `indata` should be inserted.
- *                          If id is specified but not found in the data structure, it is an error.
- *                          If id is null or undefined, the data will be inserted like this:
- *                          - If `new_id` is not specified:
- *                            `data = indata`
- *                          - If `new_id` is specified:
- *                            `data[new_id] = indata[new_id]`
- *                          Optional. Default: undefined.
- *        {integer} new_id: If specified, indicates a new id that will be used when inserting the item:
- *                          - If `new_id` is specified and >= 0, it is used as the id for the
- *                            inserted data item. Data that may already exist at the position specified
- *                            by new_id is overwritten. In this case `indata` will be inserted like this:
- *                            `item[id].data[new_id] = indata[new_id]`.
- *                          - If `new_id` is < 0, a new id is created by `dataSearchNextId` and the indata
- *                            will be inserted like this:
- *                            `item[id].data[new_id] = indata`.
- *                            Note! In this case the indata must *not* be indexed (i.e. use {type:"foo"}
- *                            rather than {38:{type:"foo"}}.
- *                          - If `new_id` is not specified, the indata will be inserted like this:
- *                           `item[id].data = indata`.
- *                          Optional. Default: null.
+ *        {Object}  new_data: The values to insert into the data structure.
+ *                            Must be on a format that can be recognized by the model.
+ *                            See <a href="../modules/anyVista.html">`anyVista`</a> for more information.
+ *                            Mandatory.
+ *        {integer} new_id:   If specified, indicates a new id that will be used when inserting the item:
+ *                            - If `new_id` is specified and >= 0, it is used as the id for the
+ *                              inserted data item. Data that may already exist at the position specified
+ *                              by new_id is overwritten. In this case `new_data` will be inserted like this:
+ *                              `item[id].data[new_id] = new_data[new_id]`.
+ *                            - If `new_id` is < 0, a new id is created by `dataSearchNextId` and the new
+ *                              data will be inserted like this:
+ *                              `item[id].data[new_id] = new_data`.
+ *                              Note! In this case the new data must *not* be indexed (i.e. use {type:"foo"}
+ *                              rather than {38:{type:"foo"}}.
+ *                            - If `new_id` is not specified, the new data will be inserted like this:
+ *                             `item[id].data = new_data`.
+ *                            Optional. Default: null.
+ *        {Object}  data:     The data structure to insert into.
+ *                            Optional. Default: The model's data (`this.data`).
+ *        {integer} id:       The id of the item in `data` where `new_data` should be inserted.
+ *                            If id is specified but not found in the data structure, it is an error.
+ *                            If id is null or undefined, the data will be inserted like this:
+ *                            - If `new_id` is not specified:
+ *                              `data = new_data`
+ *                            - If `new_id` is specified:
+ *                              `data[new_id] = new_data[new_id]`
+ *                            Optional. Default: undefined.
+ *        {String}  type:     The type of the item where the new data should be inserted (i.e. the type of
+ *                            the item with id `id`.)
+ *                            Optional. Default: The model's type (`this.type`).
  *
- * @return A pointer to the place where the indata item was inserted on success, or null if the place
+ * @return A pointer to the place where the new data item was inserted on success, or null if the place
  *         was not found or on error.
  *
  * @example
- *      mymodel.dataInsert({type:"user",id:"38",indata:{user_name:"Foo Bar"}});
+ *      mymodel.dataInsert({type:"user",id:"38",new_data:{user_name:"Foo Bar"}});
  */
 // TODO! Not tested with non-numerical indexes
 anyModel.prototype.dataInsert = function (options)
@@ -808,13 +808,13 @@ anyModel.prototype.dataInsert = function (options)
     console.error("anyModel.dataInsert: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
-  let indata   = options.indata;
-  let the_data = options.data ? options.data : this.data;
-  let the_type = options.type ? options.type : this.type;
-  let the_id   = options.id;
-  let new_id   = options.new_id;
+  let new_data  = options.new_data;
+  let new_id    = options.new_id;
+  let the_data  = options.data ? options.data : this.data;
+  let the_id    = options.id;
+  let the_type  = options.type ? options.type : this.type;
 
-  if (!indata) {
+  if (!new_data) {
     console.error("anyModel.dataInsert: "+"Nothing to insert. "); // TODO! i18n
     return null; // Nothing to insert
   }
@@ -854,17 +854,17 @@ anyModel.prototype.dataInsert = function (options)
       if (!item[the_id].data[new_id])
         item[the_id].data[new_id] = {};
       item = item[the_id].data[new_id];
-      for (let filter_id in indata)
-        if (indata.hasOwnProperty(filter_id))
-          item[filter_id] = indata[filter_id];
+      for (let filter_id in new_data)
+        if (new_data.hasOwnProperty(filter_id))
+          item[filter_id] = new_data[filter_id];
     }
     else
     if (!new_id && new_id != 0) {
       // No new id was specified and none should be generated
       item = item[the_id];
-      for (let filter_id in indata)
-        if (indata.hasOwnProperty(filter_id))
-          item[filter_id] = indata[filter_id];
+      for (let filter_id in new_data)
+        if (new_data.hasOwnProperty(filter_id))
+          item[filter_id] = new_data[filter_id];
     }
   }
   else {
@@ -874,9 +874,9 @@ anyModel.prototype.dataInsert = function (options)
          item[new_id] = {};
     if (new_id)
       item = item[new_id];
-    for (let filter_id in indata)
-      if (indata.hasOwnProperty(filter_id))
-        item[filter_id] = indata[filter_id];
+    for (let filter_id in new_data)
+      if (new_data.hasOwnProperty(filter_id))
+        item[filter_id] = new_data[filter_id];
   }
   if (this.auto_callback)
     this.cbExecute();
@@ -892,48 +892,48 @@ anyModel.prototype.dataInsertHeader = function (type,headerStr)
       data:           {},
     },
   };
-  this.dataInsert({ indata: top_data });
+  this.dataInsert({ new_data: top_data });
 }; // dataInsertHeader
 
 /**
  * @method dataUpdate
- * @description Updates data structure at a place specified by `type` and `id` with data in `indata`.
+ * @description Updates data structure at a place specified by `type` and `id` with data in `new_data`.
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data:   The data structure to update.
- *                          Optional. Default: The model's data (`this.data`).
- *        {integer} id:     The id of the item in `data` to update with values from `indata`.
- *                          Mandatory.
- *        {String}  type:   The type of the item in `data` with id `id`.
- *                          Optional. Default: The model's type (`this.type`).
- *        {Object}  indata: The values to update the data structure with.
- *                          Should be on the format: `indata[filter_id]` where `filter_id` are the
- *                          values containing new values. For example:
- *                          indata = { user_name:        "Johhny B. Goode",
- *                                     user_description: "Musician",
- *                                   }
- *                          If an item with the specified `id` is found in the structure `data`, it will
- *                          be updated with the values for `user_name` and `user_description`.
- *                          Mandatory.
+ *        {Object}  data:     The data structure to update.
+ *                            Optional. Default: The model's data (`this.data`).
+ *        {integer} id:       The id of the item in `data` to update with values from `new_data`.
+ *                            Mandatory.
+ *        {String}  type:     The type of the item in `data` with id `id`.
+ *                            Optional. Default: The model's type (`this.type`).
+ *        {Object}  new_data: The values to update the data structure with.
+ *                            Should be on the format: `new_data[filter_id]` where `filter_id` are the
+ *                            values containing new values. For example:
+ *                            new_data = { user_name:        "Johhny B. Goode",
+ *                                         user_description: "Musician",
+ *                                       }
+ *                            If an item with the specified `id` is found in the structure `data`, it will
+ *                            be updated with the values for `user_name` and `user_description`.
+ *                            Mandatory.
  *
  * @return A pointer to the place where the data was updated on success,
  *         or null if the place was not found or on error.
  *
  * @example
- *      mymodel.dataUpdate({type:"user",id:"38",indata:{user_name:"Foz Baz"}});
+ *      mymodel.dataUpdate({type:"user",id:"38",new_data:{user_name:"Foz Baz"}});
  */
 // TODO! Not tested with non-numerical indexes
-// TODO! What if type/id combination exists several places in data structure?
+// TODO! If type/id combination exists several places in data structure, all places should be updated
 anyModel.prototype.dataUpdate = function (options)
 {
   if (!options || typeof options != "object") {
     console.error("anyModel.dataUpdate: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
-  let data   = options.data ? options.data : this.data;
-  let id     = options.id;
-  let type   = options.type ? options.type : this.type;
-  let indata = options.indata;
+  let data     = options.data ? options.data : this.data;
+  let id       = options.id;
+  let type     = options.type ? options.type : this.type;
+  let new_data = options.new_data;
   if (!type) {
     console.error("anyModel.dataUpdate: "+i18n.error.TYPE_MISSING);
     return null;
@@ -944,7 +944,7 @@ anyModel.prototype.dataUpdate = function (options)
     console.error("anyModel.dataUpdate: "+i18n.error.ID_ILLEGAL);
     return null;
   }
-  if (!indata) {
+  if (!new_data) {
     console.error("anyModel.dataUpdate: "+i18n.error.UPDATE_DATA_MISSING);
     return null;
   }
@@ -958,10 +958,10 @@ anyModel.prototype.dataUpdate = function (options)
   }
   if (!item[id].dirty)
     item[id].dirty = {};
-  for (let filter_id in indata) {
-    if (indata.hasOwnProperty(filter_id)) {
-      if (item[id][filter_id] != indata[filter_id]) {
-        item[id][filter_id] = indata[filter_id];
+  for (let filter_id in new_data) {
+    if (new_data.hasOwnProperty(filter_id)) {
+      if (item[id][filter_id] != new_data[filter_id]) {
+        item[id][filter_id] = new_data[filter_id];
         if (filter_id != "parent_name")
           item[id].dirty[filter_id] = item[id][filter_id]; // Only send data that have changed to server
       }
@@ -985,7 +985,7 @@ anyModel.prototype.dataUpdate = function (options)
  *        {Object}  unselect:  Contains the unselected items to be removed. Optional. Default: null.
  *        {Object}  select:    Contains the selected items to be inserted. Optional. Default: null.
  *        {integer} insert_id: The id of the item where the selected items should be inserted.
- *                             Mandatory if `indata` is specified.
+ *                             Mandatory if `new_data` is specified.
  *        {String}  name_key:
  *        {integer} link_id:
  *        {String}  link_type:
@@ -1058,15 +1058,15 @@ anyModel.prototype.dataUpdateLinkList = function (options)
             indata[ins_id].head = type;
             indata[ins_id][options.name_key] = type+"s";
             indata.grouping = this.grouping;
-            this.dataInsert({ data:   this.data,
-                              id:     ins_id,
-                              type:   options.type,
-                              indata: item[id] ? item[id] : item["+"+id],
-                              new_id: id,
+            this.dataInsert({ data:     this.data,
+                              id:       ins_id,
+                              type:     options.type,
+                              new_data: item[id] ? item[id] : item["+"+id],
+                              new_id:   id,
                            });
           }
           else
-            console.warn("Couldn't add item for "+type+" "+id+" (not found in indata). "); // TODO! i18n
+            console.warn("Couldn't add item for "+type+" "+id+" (not found in data). "); // TODO! i18n
         } // if
       } // if
     } // for
@@ -1261,25 +1261,26 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                               Optional. Default: null.
  *        {string}   type:       Item's type.
  *                               Optional. Default: `this.type`.
- *        {integer}  group_id:   Group id.
+ *        {integer}  group_id:   If specified, search only in group with this id.
  *                               Optional. Default: undefined.
- *        {boolean}  simple:
- *
+ *        {boolean}  simple:     If true, only values for _id and _name (e.g. "user_id" and "user_name")
+ *                               will be returned from the server.
+ *                               Optional. Default: undefined.
  *        {Object}   fields:     An array of strings to be sent to the server, indicating which columns
  *                               of the table should be used in the search. These fields are only
  *                               applied if the server fails to find a filter corresponding to `type`.
- *                               Optional. Default: `undefined`.
+ *                               Optional. Default: undefined.
  *        [boolean}  header:     A parameter sent to the server to indicate whether a header should be
  *                               auto-generated.
- *                               Optional. Default: `undefined`.
+ *                               Optional. Default: undefined.
  *        [boolean}  grouping:   If specified, tells the server to group the data before returning.
  *                               If false, 0, null or undefined, data will not be grouped. Any other
  *                               value will specify grouping.
- *                               Optional. Default: `undefined`.
+ *                               Optional. Default: undefined.
  *        (string)   order:      Tell the server how to order the results.
  *                               Optional. Default: undefined (server decides).
  *        (string)   term:       A string to search for.
- *                               Optional. Default: `undefined`.
+ *                               Optional. Default: undefined.
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
  *        {Function} success:    Method to call on success.
@@ -1597,8 +1598,8 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
  *                               Mandatory if updating, null or undefined if inserting.
  *        {integer}  type:       Item's type.
  *                               Optional. Default: `this.type`.
- *        {Object}   indata:     The data structure from which comes the data to insert/update.
- *                               An item matching id/type, must exist in `indata`. If no such item
+ *        {Object}   new_data:   The data structure from which comes the data to insert/update.
+ *                               An item matching id/type, must exist in `new_data`. If no such item
  *                               can be found, it is an error.
  *                               Optional. Default: `this.data`.
  *        {boolean}  is_new:     true if the item is new (does not exist in database) and should be inserted
@@ -1608,7 +1609,7 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
  *        {Object}   fields:     An array of strings to be sent to the server, indicating which columns
  *                               of the table should be used in the update/insert. These fields are only
  *                               applied if the server fails to find a filter corresponding to `type`.
- *                               Optional. Default: `undefined`.
+ *                               Optional. Default: undefined.
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
  *        {Function} success:    Method to call on success.
@@ -1640,9 +1641,9 @@ anyModel.prototype.dbUpdate = function (options)
     return false;
   }
   // Check that we have new or dirty data
-  let the_data = options.indata
-                 ? options.indata // Update with data from the given indata
-                 : this.data;     // Update with data from the model
+  let the_data = options.new_data
+                 ? options.new_data // Update with data from the given new_data
+                 : this.data;       // Update with data from the model
   let item = this.dataSearch({ type: the_type,
                                id:   the_id,
                                data: the_data,

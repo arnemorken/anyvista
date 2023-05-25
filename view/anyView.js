@@ -1764,9 +1764,9 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
       this.refreshEditButton(first_opt);
     }
     if (this.options.isEditable && this.options.showButtonUpdate==1 && edit) {
-      first_opt.is_new = data && data[id] ? data[id].is_new : false;
-      first_opt.indata = data;
-      first_opt.data    = null;
+      first_opt.is_new   = data && data[id] ? data[id].is_new : false;
+      first_opt.new_data = data;
+      first_opt.data     = null;
       this.refreshUpdateButton(first_opt);
     }
     if (this.options.isEditable || edit ||
@@ -2328,6 +2328,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,pa
     return;
 
   let init_opt = {
+    element_id: td_id,
     type:       type,
     kind:       kind,
     data:       data,
@@ -3008,10 +3009,10 @@ $.any.anyView.prototype._uploadClicked = function (event)
 
     // Update the model
     let filter_id = event.data.filter_id;
-    this.model.dataUpdate({ type:   event.data.type,
-                            data:   event.data.data,
-                            id:     event.data.id,
-                            indata: { [filter_id]: fname },
+    this.model.dataUpdate({ type:     event.data.type,
+                            data:     event.data.data,
+                            id:       event.data.id,
+                            new_data: { [filter_id]: fname },
                          });
     // Update the field to be sent to server
     $("#"+elem_id+" .itemText").val(fname);
@@ -3375,8 +3376,8 @@ $.any.anyView.prototype._processKeyup = function (event)
       let data   = event.data.data;
       let id     = event.data.id;
       let is_new = event.data.is_new ? event.data.is_new : data && data[id] ? data[id].is_new : false;
-      event.data.is_new = is_new;
-      event.data.indata = event.data.data;
+      event.data.is_new   = is_new;
+      event.data.new_data = event.data.data;
       if (this.options.onEnterCallDatabase)
         this.dbUpdate(event);
       let kind = event.data.kind;
@@ -3568,18 +3569,18 @@ $.any.anyView.prototype._addListEntry = function (opt)
   let the_data = opt.data ? opt.data : this.model.data;
   if (new_id || new_id===0)
     this.model.dataInsert({
-       type:   opt.type,
-       data:   the_data,
-       id:     null,
-       indata: indata,
-       new_id: new_id,
+       type:     opt.type,
+       data:     the_data,
+       id:       null,
+       new_data: indata,
+       new_id:   new_id,
     });
   else
     this.model.dataUpdate({
-       type:   opt.type,
-       data:   the_data,
-       id:     opt.id,
-       indata: indata,
+       type:     opt.type,
+       data:     the_data,
+       id:       opt.id,
+       new_data: indata,
     });
   opt.new_id = null; // Important! To make addListEntry work with id == 0
 
@@ -4093,7 +4094,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
   }
   let type       = event.data.type;
   let kind       = event.data.kind;
-  let indata     = event.data.indata;
+  let new_data   = event.data.new_data;
   let id         = event.data.id;
   let pdata      = event.data.pdata;
   let pid        = event.data.pid;
@@ -4103,7 +4104,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
   this.model.error = "";
   if (!id && id !== 0) // Should never happen
     this.model.error += i18n.error.ID_MISSING;
-  if (!indata || !indata[id]) // Should never happen
+  if (!new_data || !new_data[id]) // Should never happen
     this.model.error += i18n.error.DATA_MISSING;
   if (this.model.error) {
     console.error("System error: "+this.model.error);
@@ -4136,9 +4137,9 @@ $.any.anyView.prototype.dbUpdate = function (event)
     }
   }
   this.model.dataUpdate({
-     type:   type,
-     id:     id,
-     indata: data_values,
+     type:     type,
+     id:       id,
+     new_data: data_values,
   });
   //if (data_values["parent_name"])
   //  delete data_values["parent_name"]; // TODO! Why?
@@ -4146,23 +4147,23 @@ $.any.anyView.prototype.dbUpdate = function (event)
     // If a top_view exists, insert/update the data there too
     if (event.data.is_new) {
       // Insert new
-      let new_indata = {};
-      $.extend(true, new_indata, indata[id]);
-      delete new_indata.dirty;
-      delete new_indata.item;
-      new_indata.head = indata[id].item; // TODO! Is this a good solution in every case?
+      let indata = {};
+      $.extend(true, indata, new_data[id]);
+      delete indata.dirty;
+      delete indata.item;
+      indata.head = new_data[id].item; // TODO! Is this a good solution in every case?
       this.options.top_view.model.dataInsert({
-        type:   type,
-        new_id: id,
-        indata: new_indata,
+        type:     type,
+        new_id:   id,
+        new_data: indata,
       });
     }
     else {
       // Update existing
       this.options.top_view.model.dataUpdate({
-        type:   type,
-        id:     id,
-        indata: data_values,
+        type:     type,
+        id:       id,
+        new_data: data_values,
       });
     }
   }
@@ -4185,18 +4186,18 @@ $.any.anyView.prototype.dbUpdate = function (event)
     if (this.options.view && this.options.view != this) { // TODO! no view here
       if (!event.data.is_new)
         this.options.view.model.dataUpdate({
-           type:   type,
-           id:     id,
-           indata: data_values,
+           type:     type,
+           id:       id,
+           new_data: data_values,
         });
       else {
         let dv = {};
         dv[id] = data_values;
         this.options.view.model.dataInsert({
-           type:   type,
-           id:     pid,
-           indata: dv,
-           new_id: id,
+           type:     type,
+           id:       pid,
+           new_data: dv,
+           new_id:   id,
         });
         }
     }
@@ -4219,7 +4220,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
       parent:     tr.parent(),
       type:       type,
       kind:       kind,
-      data:       indata,
+      data:       new_data,
       id:         id,
       item_id:    event.data.item_id,
       item_type:  event.data.item_type,

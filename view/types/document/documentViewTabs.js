@@ -59,12 +59,12 @@ $.any.documentViewTabs.prototype._uploadClicked = function (event)
   let fname = $.any.anyView.prototype._uploadClicked.call(this,event);
   if (fname) {
     // Update the document_name and document_filename entries in model data
-    this.model.dataUpdate({ id:     event.data.id,
-                            data:   event.data.data,
-                            type:   event.data.type,
-                            indata: { document_name:     fname,
-                                      document_filename: "", // Filename not yet determined
-                                    },
+    this.model.dataUpdate({ id:       event.data.id,
+                            data:     event.data.data,
+                            type:     event.data.type,
+                            new_data: { document_name:     fname,
+                                        document_filename: "", // Filename not yet determined
+                                      },
                          });
 
     // Empty and disable the view button / input field until the file is actually uploaded
@@ -119,12 +119,12 @@ $.any.documentViewTabs.prototype.dbUpdate = function (event)
   }
   let e = this.model.error;
   let m = this.model.message;
-  this.model.dataUpdate({ id:     event.data.id,
-                          data:   event.data.data,
-                          type:   event.data.type,
-                          indata: { document_upload:   local_fname,
-                                    document_filename: local_fname,
-                                  },
+  this.model.dataUpdate({ id:       event.data.id,
+                          data:     event.data.data,
+                          type:     event.data.type,
+                          new_data: { document_upload:   local_fname,
+                                      document_filename: local_fname,
+                                    },
                        });
   let res = $.any.anyView.prototype.dbUpdate.call(this,event);
   if (!res) {

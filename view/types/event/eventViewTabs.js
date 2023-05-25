@@ -139,7 +139,7 @@ $.any.eventViewTabs.prototype._uploadClicked = function (event)
   if (fname) {
     let e = this.model.error;
     let m = this.model.message;
-    event.data.indata = event.data.data;
+    event.data.new_data = event.data.data;
     let res = $.any.anyView.prototype.dbUpdate.call(this,event);
     if (!res) {
       this.model.error   = e + this.model.error;
