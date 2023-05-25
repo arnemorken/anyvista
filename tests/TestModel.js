@@ -16,7 +16,7 @@ let millisec = 3500;
 function doTest(thing)
 {
   switch (thing) {
-    case "Model":    testModel(); break;
+    case "Model": testModel(); break;
   }
 }
 
@@ -36,15 +36,26 @@ function testModel()
   // - cbExecute
   ///////////////////////
 
+  // Delete user with id 79, to satisify dbUpdate insert test (see below)
+  let tempdm = new anyModel({type:"user",search:false,mode:"remote",data:null});
+  tempdm.dbDelete({sync:true,id:79});
+  // Insert user with id 55, to satisfy dbDelete test (see below)
+  tempdm.dbUpdate({sync:true,
+                   is_new:true,
+                   id:55,
+                   indata:{55:{list:"user",user_login:"thelogin",user_pass:"xxxx",user_pass_again:"xxxx",user_name:"thetester"}},
+                   });
+
   ///////////////////// constructor and dataInit tests /////////////////////
 
   test('constructor and dataInit', function() {
 
     let dm1 = new anyModel();
-    deepEqual(dm1.type                       === "" &&
+    deepEqual(dm1.data                       === null &&
+              dm1.type                       === "" &&
+              dm1.id                         === null &&
               dm1.id_key                     === "" &&
               dm1.name_key                   === "" &&
-              dm1.data                       === null &&
               dm1.types                      === null &&
               dm1.select   && dm1.select.size   === 0 &&
               dm1.unselect && dm1.unselect.size === 0 &&
@@ -53,12 +64,15 @@ function testModel()
               dm1.search_term                === "" &&
               dm1.auto_search_init           === true &&
               dm1.auto_callback              === false &&
+              dm1.page_links                 === null &&
+              dm1.permission                 !== undefined &&
               dm1.permission.current_user_id === null &&
               dm1.permission.is_logged_in    === true &&
               dm1.permission.is_admin        === false &&
               dm1.message                    === "" &&
               dm1.error                      === "" &&
-              dm1.page_links                 === null,
+              dm1.error_server               === "" &&
+              dm1.db_timeout_sec             === 10,
               true, "Constructor sets correct defaults with no options.");
 
     dm1 = new anyModel({ type: "foo" });
@@ -66,37 +80,40 @@ function testModel()
               dm1.id_key           === "foo_id" &&
               dm1.name_key         === "foo_name",
               true, "Constructor sets correct defaults for id_key and name_key when type is given in options.");
+
     dm1 = new anyModel({
+                data:             { val: "dataobj" },
                 type:             "fooobj",
                 id_key:           "fooobj_id",
                 name_key:         "fooobj_name",
-                data:             { val: "dataobj" },
                 mode:             "local",
                 search:           false,
                 search_term:      "something",
                 auto_search_init: true,
                 auto_callback:    false,
-                message:          "",
-                error:            "",
+                message:          "msg",
+                error:            "err",
+                db_timeout_sec:   8,
               });
-    deepEqual(dm1.type             === "fooobj" &&
+    deepEqual(dm1.data.val         === "dataobj" &&
+              dm1.type             === "fooobj" &&
               dm1.id_key           === "fooobj_id" &&
               dm1.name_key         === "fooobj_name" &&
-              dm1.data.val         === "dataobj" &&
               dm1.mode             === "local" &&
               dm1.search           === false &&
               dm1.search_term      === "something" &&
               dm1.auto_search_init === true &&
               dm1.auto_callback    === false &&
-              dm1.message          === "" &&
-              dm1.error            === "",
-              true, "Constructor sets correct defaults when options is given.");
+              dm1.message          === "msg" &&
+              dm1.error            === "err" &&
+              dm1.db_timeout_sec   === 8,
+              true, "Constructor sets correct values when options is given.");
 
     let dm2 = new anyModel(null);
-    let opt = { type:             "barobj",
+    let opt = { data:             { val: "dataobj" },
+                type:             "barobj",
                 id_key:           "barobj_id",
                 name_key:         "barobj_name",
-                data:             { val: "dataobj" },
                 mode:             "local",
                 search:           false,
                 search_term:      "Some thing",
@@ -108,10 +125,10 @@ function testModel()
     deepEqual(dm2.dataInit(opt),
               opt, "dataInit #1: return input options");
     let errmsg = dm2.mode == "remote" ? i18n.error.SERVER_ERROR : "The error";
-    deepEqual(dm2.type             === "barobj" &&
+    deepEqual(dm2.data.val         === "dataobj" &&
+              dm2.type             === "barobj" &&
               dm2.id_key           === "barobj_id" &&
               dm2.name_key         === "barobj_name" &&
-              dm2.data.val         === "dataobj" &&
               dm2.mode             === "local" &&
               dm2.search           === false &&
               dm2.search_term      === "Some thing" &&
@@ -120,11 +137,11 @@ function testModel()
               dm2.message          === "The message" &&
               dm2.error            === errmsg,
               true, "dataInit #2: init ok");
-    let data = { data: "more data",
-               };
+    let mdstr = "more data";
+    let data = { data: mdstr };
     deepEqual(dm2.dataInit(data),
               data, "dataInit #3 return input data ok");
-    deepEqual(dm2.data === "more data",
+    deepEqual(dm2.data === mdstr,
               true,"dataInit #4 data init ok");
   });
 
@@ -140,6 +157,149 @@ function testModel()
   });
 
   ///////////////////// end _getDataSourceName test /////////////////////
+
+  ///////////////////// dataSearch tests /////////////////////
+
+  test('Model.dataSearch on model created with missing mandatory input', 1, function() {
+
+    let dm = new anyModel();
+    deepEqual(dm.dataSearch()                               === null &&
+              dm.dataSearch({})                             === null &&
+              dm.dataSearch({type:"bar",id:null,data:null}) === null &&
+              dm.dataSearch({type:"bar",id:null,data:{}})   === null &&
+              dm.dataSearch({type:null, id:"99",data:null}) === null &&
+              dm.dataSearch({type:null, id:null,data:{}})   === null &&
+              dm.dataSearch({type:"bar",id:"99",data:{}})   === null,
+              true, "dataSearch with missing mandatory input return null");
+  });
+
+  test('Model.dataSearch on model created with conflicting types, id and data with wrong type', 1, function() {
+
+    let dm = new anyModel({type:"foo",data:{99:{list:"bar"}}});
+    deepEqual(dm.dataSearch()                   === null &&
+              dm.dataSearch({           id:99}) === null &&
+              dm.dataSearch({type:null, id:99}) === null &&
+              dm.dataSearch({type:"fox",id:99}) === null &&
+              dm.dataSearch({type:"foo",id:99}) === null,
+              true, "dataSearch on model created with conflicting types return null");
+  });
+
+  test('Model.dataSearch for nonexisting id', 1, function() {
+
+    let dm = new anyModel({type:"foo",data:{99:{list:"bar"}}});
+    deepEqual(dm.dataSearch({type:"bar",id:100}) === null &&
+              dm.dataSearch({type:"foo",id:100}) === null,
+              true, "dataSearch for nonexisting id return null");
+  });
+
+  test('Model.dataSearch on model created with type, id and data with correct type', 3, function() {
+
+    let dm = new anyModel({type:"foo",data:{99:{list:"foo"}}});
+    let res = dm.dataSearch({type:"bar",id:"99"});
+    deepEqual(res === null,
+              true, "dm.dataSearch('bar','99')) return null");
+    res = dm.dataSearch({type:"foo",id:"90"});
+    deepEqual(res === null,
+              true, "dm.dataSearch('foo','90')) return null");
+    res = dm.dataSearch({type:"foo",id:"99"});
+    deepEqual(res          !== null &&
+              res[99].list === "foo",
+              true, "dm.dataSearch('foo','99')) return correct data");
+  });
+
+  test('Model.dataSearch on model created with type, id and deep data', 3, function() {
+
+    let dm = new anyModel({type:"foo",data:{99:{list:"bar",data:{11:{myname:"bar11"},
+                                                                 12:{myname:"bar12"}}}}});
+    let res = dm.dataSearch({id:"11"});
+    deepEqual(res === null,
+              true, "dm.dataSearch('11')) return null");
+    res = dm.dataSearch({type:"foo",id:"99"});
+    deepEqual(res === null,
+              true, "dm.dataSearch('foo','99')) return null");
+    res = dm.dataSearch({type:"bar",id:"11"});
+    deepEqual(res          !== null &&
+              res[11].myname === "bar11",
+              true, "dm.dataSearch('bar','11')) return correct data");
+  });
+
+  test('Model.dataSearch on model created with type, id and deep data with deviant name_key', 5, function() {
+
+    let data = {99:{list:"bar",data:{11:{list:"foo",name_key:"foz_name"},
+                                     12:{list:"faz",name_key:"foo_name"},
+                                     13:{list:"faz",name_key:"faz_name"}}}};
+    let dm = new anyModel({type:"foo",data:data});
+    let res = dm.dataSearch({id:"11"});
+    deepEqual(res          !== null &&
+              res[11].list === "foo",
+              true, "dm.dataSearch('11')) return data");
+    res = dm.dataSearch({id:"12"});
+    deepEqual(res === null,
+              true, "dm.dataSearch('12')) return null");
+    res = dm.dataSearch({type:"foz",id:"11"});
+    deepEqual(res === null,
+              true, "dm.dataSearch('foz','11')) return null");
+    res = dm.dataSearch({type:"faz",id:"12"});
+    deepEqual(res          !== null &&
+              res[12].list === "faz",
+              true, "dm.dataSearch('faz','12')) return data");
+    res = dm.dataSearch({id:"11"});
+    deepEqual(res          !== null &&
+              res[11].list === "foo",
+              true, "dm.dataSearch('11')) return data");
+  });
+
+  test('Model.dataSearch on model created with type, id and deep data with deviant id_key', 5, function() {
+
+    let data = {99:{list:"bar",data:{11:{list:"foo",id_key:"foz_id"},
+                                     12:{list:"faz",id_key:"foo_id"},
+                                     13:{list:"faz",id_key:"faz_id"}}}};
+    let dm = new anyModel({type:"foo",data:data});
+    let res = dm.dataSearch({id:"11"});
+    deepEqual(res          !== null &&
+              res[11].list === "foo",
+              true, "dm.dataSearch('11')) return data");
+    res = dm.dataSearch({id:"12"});
+    deepEqual(res === null,
+              true, "dm.dataSearch('12')) return null");
+    res = dm.dataSearch({type:"foz",id:"11"});
+    deepEqual(res === null,
+              true, "dm.dataSearch('foz','11')) return null");
+    res = dm.dataSearch({type:"faz",id:"12"});
+    deepEqual(res          !== null &&
+              res[12].list === "faz",
+              true, "dm.dataSearch('faz','12')) return data");
+    res = dm.dataSearch({id:"11"});
+    deepEqual(res          !== null &&
+              res[11].list === "foo",
+              true, "dm.dataSearch('11')) return data");
+  });
+
+  test('Model.dataSearch for type only', 1, function() {
+
+    let dm = new anyModel({type:"foo",data:{99:{list:"bar",data:{11:{myname:"bar11"},
+                                                                 12:{myname:"bar12"}}}}});
+    let res = dm.dataSearch({type:"bar"});
+    deepEqual(res            !== null &&
+              res[0]         !== null &&
+              res[0].data    !== null &&
+              res[0].data[11].myname === "bar11" && res[0].data[12].myname === "bar12",
+              true, "dm.dataSearch('bar')) return correct type list data");
+  });
+
+  test('Model.dataSearch with parent == true', 1, function() {
+
+    let data = {99:{type:"bar",data:{11:{type:"foo",foo_name:"The foo"}}}};
+    let dm = new anyModel({data:data});
+    let res = dm.dataSearch({type:"foo",id:"11",parent:true});
+    deepEqual(res              !== null &&
+              res[11].foo_name === "The foo",
+              true, "dm.dataSearch('foo','11', true)) return parent data");
+  });
+
+  // TODO: dataSearch tests with non-numerical indexes
+
+  ///////////////////// end dataSearch tests /////////////////////
 
   ///////////////////// dataSearchNextId / dataSearchMaxId tests /////////////////////
 
@@ -203,122 +363,6 @@ function testModel()
   });
 
   ///////////////////// end dataSearchNextId / dataSearchMaxId tests /////////////////////
-
-  ///////////////////// dataSearch tests /////////////////////
-
-  test('Model.dataSearch on model created with missing type, id and data', 1, function() {
-
-    let dm = new anyModel();
-    deepEqual(dm.dataSearch()                === null &&
-              dm.dataSearch(null)            === null &&
-              dm.dataSearch({})              === null &&
-              dm.dataSearch({type:"bar",id:null,data:null}) === null &&
-              dm.dataSearch({type:null,id:"99",data:null})  === null &&
-              dm.dataSearch({type:null,id:null,data:{}})    === null &&
-              dm.dataSearch({type:"bar",id:"99",data:{}})   === null,
-              true, "dataSearch(), "+
-                    "dm.dataSearch(null,null,null), "+
-                    "dm.dataSearch('bar',null,null), "+
-                    "dm.dataSearch(null,'99',null), "+
-                    "dm.dataSearch(null,null,{}), "+
-                    "dm.dataSearch('bar','99',{}) "+
-                    "all return null");
-  });
-
-  test('Model.dataSearch on model created with type, id and data with conflicting type', 1, function() {
-
-    let dm = new anyModel({type:"foo",data:{99:{list:"bar"}}});
-    deepEqual(dm.dataSearch()                === null &&
-              dm.dataSearch({type:null,id:null,data:null})  === null &&
-              dm.dataSearch({type:"foo",id:null,data:null}) === null &&
-              dm.dataSearch({type:null,id:"99",data:null})  === null &&
-              dm.dataSearch({type:null,id:null,data:{}})    === null,
-              true, "dataSearch(), "+
-                    "dm.dataSearch(null,null,null), "+
-                    "dm.dataSearch('bar',null,null), "+
-                    "dm.dataSearch(null,'99',null), "+
-                    "dm.dataSearch(null,null,{}), "+
-                    "dm.dataSearch('bar','99',{}) "+
-                    "all return null");
-  });
-
-  test('Model.dataSearch on model created with type, id and data with correct type', 3, function() {
-
-    let dm = new anyModel({type:"foo",data:{99:{list:"foo"}}});
-    let res = dm.dataSearch({type:"bar",id:"99"});
-    deepEqual(res === null,
-              true, "dm.dataSearch('bar','99')) return null");
-    res = dm.dataSearch({type:"foo",id:"90"});
-    deepEqual(res === null,
-              true, "dm.dataSearch('foo','90')) return null");
-    res = dm.dataSearch({type:"foo",id:"99"});
-    deepEqual(res     !== null &&
-              res[99] != undefined,
-              true, "dm.dataSearch('foo','99')) return data");
-  });
-
-  test('Model.dataSearch on model created with type, id and deep data', 3, function() {
-
-    let dm = new anyModel({type:"foo",data:{99:{list:"bar",data:{11:{list:"foo"}}}}});
-    let res = dm.dataSearch({type:"bar",id:"11"});
-    deepEqual(res === null,
-              true, "dm.dataSearch('bar','11')) return null");
-    res = dm.dataSearch({type:"foo",id:"99"});
-    deepEqual(res === null,
-              true, "dm.dataSearch('foo','99')) return null");
-    res = dm.dataSearch({type:"foo",id:"11"});
-    deepEqual(res !== null,
-              true, "dm.dataSearch('foo','11')) return data");
-  });
-
-  test('Model.dataSearch on model created with type, id and deep data with deviant name_key', 8, function() {
-
-    let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
-                                     12:{list:"faz",foo_name:"The faz foo"},
-                                     13:{list:"faz",faz_name:"The faz faz"}}}};
-    let dm = new anyModel({type:"foo",data:data});
-    let res = dm.dataSearch({type:null,id:"11"});
-    deepEqual(res     !== null &&
-              res[11] !== undefined,
-              true, "dm.dataSearch(null,'11')) return data");
-    res = dm.dataSearch({type:null,id:"12"});
-    deepEqual(res     === null,
-              true, "dm.dataSearch(null,'12')) return null");
-    res = dm.dataSearch({type:"foo",id:"11"});
-    deepEqual(res     !== null &&
-              res[11] !== undefined,
-              true, "dm.dataSearch('foo','11')) return data");
-    res = dm.dataSearch({type:"foo",id:"12"});
-    deepEqual(res     === null,
-              true, "dm.dataSearch('foo','12')) return null");
-    res = dm.dataSearch({type:"foz",id:"11"});
-    deepEqual(res     === null,
-              true, "dm.dataSearch('foz','11')) return null");
-    res = dm.dataSearch({type:"baz",id:"11"});
-    deepEqual(res === null,
-              true, "dm.dataSearch('baz','11')) return null");
-    res = dm.dataSearch({type:"faz",id:"12"});
-    deepEqual(res     !== null &&
-              res[12] !== undefined,
-              true, "dm.dataSearch('faz','12')) return data");
-    res = dm.dataSearch({type:null,id:"13"});
-    deepEqual(res === null,
-              true, "dm.dataSearch(null,'13')) return null");
-
-    // TODO: Tests for non-numerical indexes
-  });
-
-  test('Model.dataSearch with parent == true', 1, function() {
-    let data = {99:{type:"bar",data:{11:{type:"foo",foo_name:"The foo foz"},
-                                    }}};
-    let dm = new anyModel({type:"foo",data:data});
-    let res = dm.dataSearch({type:"foo",id:"11",parent:true});
-    deepEqual(res     !== null &&
-              res[11] !== undefined,
-              true, "dm.dataSearch('foo','11', true)) return parent data");
-  });
-
-  ///////////////////// end dataSearch tests /////////////////////
 
   ///////////////////// dataInsert tests /////////////////////
 
@@ -1104,8 +1148,8 @@ function testModel()
     setTimeout(function() {
       deepEqual(dm.data === null,
                 true, "dbDelete() returns no data from db:"+dm.data);
-      deepEqual(dm.error === "" || dm.error === "Nothing to delete",
-                true, "no error or nothing to delete:"+dm.error);
+      deepEqual(dm.error === "" && dm.message === "User deleted. ",
+                true, "no error and message is 'User deleted. ':"+dm.message);
       start();
     }, millisec);
   });
@@ -1118,8 +1162,8 @@ function testModel()
     setTimeout(function() {
       deepEqual(dm.data === null,
                 true, "dbDelete() returns no data from db:"+dm.data);
-      deepEqual(dm.message !== "",
-                true, "message is not blank:"+dm.message);
+      deepEqual(dm.error === "" && dm.message === "Nothing to delete. ",
+                true, "no error and message is 'Nothing to delete. ':"+dm.message);
       start();
     }, millisec);
   });
@@ -1186,8 +1230,8 @@ function testModel()
     setTimeout(function() {
       deepEqual(dm.data[99].data[67] !== undefined,
                 true, "dbDelete() does not delete local data when deleting data in database");
-      deepEqual(dm.error === "" || dm.error === "Nothing to delete",
-                true, "no error or nothing to delete:"+dm.error);
+      deepEqual(dm.error === "" || dm.error === "Nothing to delete. ",
+                true, "no error or message is 'Nothing to delete. ':"+dm.error);
       start();
     }, millisec);
   });
