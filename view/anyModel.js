@@ -555,7 +555,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     console.error("anyModel.dataSearch: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  if (id !== null && ((!id && id !== 0) || (Number.isInteger(parseInt(id)) && id < 0))) {
+  if (((!id && id !== 0) || (Number.isInteger(parseInt(id)) && id < 0)) && !type) {
     console.error("anyModel.dataSearch: "+i18n.error.ID_MISSING+" ("+id+") ");
     return null;
   }
