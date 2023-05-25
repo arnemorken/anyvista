@@ -546,10 +546,10 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     console.error("anyModel.dataSearch: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
-  let data      = options.data                    ? options.data      : this.data;
-  let id        = options.id || options.id === 0  ? options.id        : null;
-  let type      = options.type                    ? options.type      : this.type;
-  let prev_type = options.prev_type               ? options.prev_type : this.type;
+  let data      = options.data                   ? options.data      : this.data;
+  let id        = options.id || options.id === 0 ? options.id        : null;
+  let type      = options.type                   ? options.type      : this.type;
+  let prev_type = options.prev_type              ? options.prev_type : type; // TODO! Is this used/neccessary?
 
   if (!type) {
     console.error("anyModel.dataSearch: "+i18n.error.TYPE_MISSING);
@@ -621,8 +621,20 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
       if (!item && data[idx].data) { // subdata
         let p_data = options.parent ? data : null;
         let p_idx  = options.parent ? idx  : null;
-        let data_ptr  = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
-        let prev_type = data_ptr ? data_ptr.list ? data_ptr.list : data_ptr.item ? data_ptr.item : data_ptr.head ? data_ptr.head : this.type: this.type;
+        let data_ptr  = data[id]
+                       ? data[id]
+                       : data["+"+id]
+                         ? data["+"+id]
+                         : null;
+        let prev_type = data_ptr
+                        ? data_ptr.list
+                          ? data_ptr.list
+                          : data_ptr.item
+                            ? data_ptr.item
+                            : data_ptr.head
+                              ? data_ptr.head
+                              : dtype
+                        : dtype;
         item = this.dataSearch({data:data[idx].data,id:id,type:type,prev_type:prev_type},p_data,p_idx);
         if (item && item.data)
           item = item.data;
@@ -1291,6 +1303,8 @@ anyModel.prototype.dbSearch = function (options)
                        ? options.timeoutSec
                        : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
+  if (options.sync)
+    $.ajaxSetup({ async: false });
   this.success = options.success ? options.success : this.dbSearchSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
@@ -1471,6 +1485,8 @@ anyModel.prototype.dbSearchNextId = function (options)
                        ? options.timeoutSec
                        : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
+  if (options.sync)
+    $.ajaxSetup({ async: false });
   this.success = options.success ? options.success : this.dbSearchNextIdSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
@@ -1883,6 +1899,8 @@ anyModel.prototype.dbAddRemoveLink = function (options)
                        ? options.timeoutSec
                        : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
+  if (options.sync)
+    $.ajaxSetup({ async: false });
   this.success = options.success ? options.success : this.dbAddRemoveLinkSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
@@ -2047,6 +2065,8 @@ anyModel.prototype.dbChangeLink = function (options)
                        ? options.timeoutSec
                        : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
+  if (options.sync)
+    $.ajaxSetup({ async: false });
   this.success = options.success ? options.success : this.dbChangeLinkSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
@@ -2176,6 +2196,8 @@ anyModel.prototype.dbDelete = function (options)
                        ? options.timeoutSec
                        : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
+  if (options.sync)
+    $.ajaxSetup({ async: false });
   this.success = options.success ? options.success : this.dbDeleteSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
