@@ -47,7 +47,6 @@ var i18n = {
     NAME_KEY_MISSING:    "Mangler name key. ",
     ID_MISSING:          "Mangler id. ",
     ID_ILLEGAL:          "Id må være et positivt heltall eller en streng. ",
-    UPDATE_DATA_MISSING: "Mangler data for oppdatering. ",
     LINK_ITEMS_MISSING:  "Mangler elementer å legge til eller fjerne. ",
     NEW_ID_NOT_FOUND:    "Fant ikke ny id for type %%. ",
     ITEM_NOT_FOUND:      "Fant ikke element med id %%. ",

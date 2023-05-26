@@ -47,7 +47,6 @@ var i18n = {
     NAME_KEY_MISSING:    "Name key missing. ",
     ID_MISSING:          "Id missing. ",
     ID_ILLEGAL:          "Id must be a positive integer or a string. ",
-    UPDATE_DATA_MISSING: "No data for update. ",
     LINK_ITEMS_MISSING:  "No items to add or remove. ",
     NEW_ID_NOT_FOUND:    "Could not find new id for type %%. ",
     ITEM_NOT_FOUND:      "Could not find item with id %%. ",
