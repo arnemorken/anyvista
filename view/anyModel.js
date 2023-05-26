@@ -992,10 +992,14 @@ anyModel.prototype.dataUpdate = function (options)
  *              data item to another (for example, remove a user from an event).
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data:      The data structure to update. Optional. Default: `this.data`. TODO!
- *        {String}  type:      The type of the data to update. Mandatory.
- *        {Object}  unselect:  Contains the unselected items to be removed. Optional. Default: null.
- *        {Object}  select:    Contains the selected items to be inserted. Optional. Default: null.
+ *        {Object}  unselect:  Contains the items to be removed.
+ *                             Optional. Default: null.
+ *        {Object}  select:    Contains the items to be inserted.
+ *                             Optional. Default: null.
+ *        {Object}  data:      The data structure to update.
+ *                             Optional. Default: The model's data (`this.data`). TODO!
+ *        {String}  type:      The type of the data to update.
+ *                             Mandatory.
  *        {integer} insert_id: The id of the item where the selected items should be inserted.
  *                             Mandatory if `new_data` is specified.
  *        {String}  name_key:
@@ -1012,17 +1016,18 @@ anyModel.prototype.dataUpdateLinkList = function (options)
     console.error("anyModel.dataUpdateLinkList: "+i18n.error.OPTIONS_MISSING);
     return false;
   }
-  let type = options.type;
-  if (!type) {
+  let the_data = options.data ? options.data : this.data;
+  let the_type = options.type;
+
+  if (!the_type) {
     console.error("anyModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
     return false;
   }
-  if (!options.data) {
-    console.error("anyModel.dataUpdateLinkList: "+i18n.error.DATA_MISSING);
+  if (!the_data)
     return false;
-  }
+
   if (parseInt(this.id) == parseInt(options.link_id))
-    this.data = options.data;
+    this.data = the_data;
   else {
     // Delete items
     if (options.unselect) {
@@ -1030,9 +1035,8 @@ anyModel.prototype.dataUpdateLinkList = function (options)
         if (parseInt(id) != parseInt(options.link_id)) {
           this.dataDelete({ data: this.data,
                             id:   id,
-                            type: type,
+                            type: the_type,
                          });
-          // TODO! When deleting the last entry in a list, the tab is not removed
           //if (this.data[this.id] && !this.data[this.id].data)
           //  delete this.data[this.id];
         }
@@ -1053,22 +1057,22 @@ anyModel.prototype.dataUpdateLinkList = function (options)
         // Insert item only if its not already in model
         if (!this.dataSearch({ data: this.data,
                                id:   id,
-                               type: type,
+                               type: the_type,
                             })) {
           // See if we got the new data
-          let item = this.dataSearch({ data: options.data,
+          let item = this.dataSearch({ data: the_data,
                                        id:   id,
-                                       type: type,
+                                       type: the_type,
                                     });
           if (item) {
             let ins_id = options.insert_id;
             if (!ins_id)
-              ins_id = "link-"+type; // TODO! Not general enough
+              ins_id = "link-"+the_type; // TODO! Not general enough
             let indata = {};
             indata[ins_id] = {};
             indata[ins_id].data = item;
-            indata[ins_id].head = type;
-            indata[ins_id][options.name_key] = type+"s";
+            indata[ins_id].head = the_type;
+            indata[ins_id][options.name_key] = the_type+"s";
             indata.grouping = this.grouping;
             this.dataInsert({ data:     this.data,
                               id:       ins_id,
@@ -1078,7 +1082,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                            });
           }
           else
-            console.warn("Couldn't add item for "+type+" "+id+" (not found in data). "); // TODO! i18n
+            console.warn("Couldn't add item for "+the_type+" "+id+" (not found in data). "); // TODO! i18n
         } // if
       } // if
     } // for
