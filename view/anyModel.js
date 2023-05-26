@@ -761,8 +761,8 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
  * @method dataInsert
  * @description Inserts `new_data` into the data structure at a place specified by `type`, `id`
  *              and optionally `new_id`. If the type/id combination exists several places in
- *              the data structure, only the first place found is used. Data that may already
- *              exist in at the insertion point will be overwritten.
+ *              the data structure, only the first place found is used. Data that exist at the
+ *              insertion point will be overwritten.
  * @param {Object} options An object which may contain these elements:
  *
  *        {Object}  new_data: The data item to insert into the data structure.
@@ -798,9 +798,10 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
  * @return A pointer to the place where the new data item was inserted on success, or null on error.
  *
  * @example
- *      mymodel.dataInsert({type:"user",id:"38",new_data:{user_name:"Foo Bar"}});
+ *      mymodel.dataInsert({new_data:{user_name:"Foo Bar"},id:"38",type:"user"});
  */
 // TODO! Not tested with non-numerical indexes
+// TODO! If type/id combination exists several places in data structure, all places should be inserted into (optionally)
 anyModel.prototype.dataInsert = function (options)
 {
   if (!options || typeof options != "object") {
@@ -904,77 +905,82 @@ anyModel.prototype.dataInsertHeader = function (type,headerStr)
 /**
  * @method dataUpdate
  * @description Updates data structure at a place specified by `type` and `id` with data in `new_data`.
+ *              If the type/id combination exists several places in the data structure, only the first
+ *              place found is used. Data that exist at the insertion point will be overwritten.
  * @param {Object} options An object which may contain these elements:
  *
+ *        {Object}  new_data: The data item to update the data structure with.
+ *                            Must be on the format `new_data[filter_id]` where `filter_id` are the
+ *                            values containing new values.
+ *                            For example:
+ *                              `new_data = { user_name:        "Johhny B. Goode",
+ *                                           user_description: "Musician",
+ *                                         }`
+ *                              If an item with the specified `id` is found in the structure `data`, it
+ *                              will be updated with the values for `user_name` and `user_description`.
+ *                            Mandatory.
  *        {Object}  data:     The data structure to update.
  *                            Optional. Default: The model's data (`this.data`).
  *        {integer} id:       The id of the item in `data` to update with values from `new_data`.
+ *                            If id is not found in the data structure, it is an error.
  *                            Mandatory.
  *        {String}  type:     The type of the item in `data` with id `id`.
  *                            Optional. Default: The model's type (`this.type`).
- *        {Object}  new_data: The values to update the data structure with.
- *                            Should be on the format: `new_data[filter_id]` where `filter_id` are the
- *                            values containing new values. For example:
- *                            new_data = { user_name:        "Johhny B. Goode",
- *                                         user_description: "Musician",
- *                                       }
- *                            If an item with the specified `id` is found in the structure `data`, it will
- *                            be updated with the values for `user_name` and `user_description`.
- *                            Mandatory.
  *
- * @return A pointer to the place where the data was updated on success,
- *         or null if the place was not found or on error.
+ * @return A pointer to the place where the data was updated on success, or null on error.
  *
  * @example
- *      mymodel.dataUpdate({type:"user",id:"38",new_data:{user_name:"Foz Baz"}});
+ *      mymodel.dataUpdate({new_data:{user_name:"Foz Baz"},id:"38",type:"user"});
  */
 // TODO! Not tested with non-numerical indexes
-// TODO! If type/id combination exists several places in data structure, all places should be updated
+// TODO! If type/id combination exists several places in data structure, all places should be updated (optionally)
 anyModel.prototype.dataUpdate = function (options)
 {
   if (!options || typeof options != "object") {
     console.error("anyModel.dataUpdate: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
-  let data     = options.data ? options.data : this.data;
-  let id       = options.id;
-  let type     = options.type ? options.type : this.type;
   let new_data = options.new_data;
-  if (!type) {
+  let the_data = options.data ? options.data : this.data;
+  let the_id   = options.id;
+  let the_type = options.type ? options.type : this.type;
+
+  if (!new_data) {
+    console.error("anyModel.dataUpdate: "+i18n.error.NOTHING_TO_UPDATE);
+    return null;
+  }
+  if (!the_type) {
     console.error("anyModel.dataUpdate: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  if ((!id && id !== 0) ||
-      (Number.isInteger(parseInt(id)) && id < 0) ||
-      (!Number.isInteger(parseInt(id)) && typeof id != "string")) {
+  if ((!the_id && the_id !== 0) ||
+      (Number.isInteger(parseInt(the_id)) && the_id < 0) ||
+      (!Number.isInteger(parseInt(the_id)) && typeof the_id != "string")) {
     console.error("anyModel.dataUpdate: "+i18n.error.ID_ILLEGAL);
     return null;
   }
-  if (!new_data) {
-    console.error("anyModel.dataUpdate: "+i18n.error.UPDATE_DATA_MISSING);
+  if (!the_data)
+    return null;
+  let item = this.dataSearch({data:the_data,id:the_id,type:the_type});
+  if (!item || (!item[the_id] && !item["+"+the_id])) {
+    console.error("anyModel.dataUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_id));
     return null;
   }
-  if (!data)
-    return null; // Nowhere to update TODO! Should create data structure and insert at top
 
-  let item = this.dataSearch({data:data,id:id,type:type});
-  if (!item || !item[id]) {
-    console.error("anyModel.dataUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+id));
-    return null;
-  }
-  if (!item[id].dirty)
-    item[id].dirty = {};
+  if (!item[the_id].dirty)
+    item[the_id].dirty = {};
   for (let filter_id in new_data) {
     if (new_data.hasOwnProperty(filter_id)) {
-      if (item[id][filter_id] != new_data[filter_id]) {
-        item[id][filter_id] = new_data[filter_id];
+      // Only send data that have changed to server
+      if (item[the_id][filter_id] != new_data[filter_id]) {
+        item[the_id][filter_id] = new_data[filter_id];
         if (filter_id != "parent_name")
-          item[id].dirty[filter_id] = item[id][filter_id]; // Only send data that have changed to server
+          item[the_id].dirty[filter_id] = item[the_id][filter_id];
       }
     }
   }
-  if (!Object.size(item[id].dirty))
-    delete item[id].dirty;
+  if (!Object.size(item[the_id].dirty))
+    delete item[the_id].dirty;
   if (this.auto_callback)
     this.cbExecute();
   return item;
