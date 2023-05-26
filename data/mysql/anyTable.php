@@ -981,7 +981,7 @@ class anyTable extends dbTable
           if (!$this->mGrouping || $this->mSimpleList)
             $gr_idx = $this->mType;
           else
-          $gr_idx = "nogroup";
+            $gr_idx = "nogroup";
         }
         else
         if (isInteger($gid))
