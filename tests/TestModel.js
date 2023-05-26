@@ -558,8 +558,10 @@ function testModel()
     // Normal case
     let mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                       12:{list:"faz",faz_name:"The faz"}}}};
-    let dm = new anyModel({type:"foo",data:mdata});
-    let res = dm.dataUpdate({type:"foo",id:"11",new_data:{foo_name:"Foz Baz"}});
+    let dm    = new anyModel({type:"foo",data:mdata});
+    let res   = dm.dataUpdate({new_data: {foo_name:"Foz Baz"},
+                               id:       "11",
+                               type:     "foo"});
     deepEqual(res !== null &&
               dm.data[99].data[11].foo_name === "Foz Baz" &&
               dm.data[99].data[11].dirty !== undefined,
@@ -568,28 +570,32 @@ function testModel()
     // Unexisting type
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
-    res = dm.dataUpdate({type:"fiz",id:"11",new_data:{foo_name:"Foz Baz"}});
+    dm    = new anyModel({type:"foo",data:mdata});
+    res   = dm.dataUpdate({new_data: {foo_name:"Foz Baz"},
+                           id:       "11",
+                           type:     "fiz"});
     deepEqual(res === null &&
               dm.data[99].data[11].foo_name === "The foo" &&
               dm.data[99].data[11].dirty === undefined,
               true, "dataUpdate with illegal type, but legal id and new_data returns null and data is not changed");
 
-    // Missing / unmatching type
+    // Missing type
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"biz",data:mdata});
-    res = dm.dataUpdate({id:"11",new_data:{foo_name:"Foz Baz"}});
+    dm    = new anyModel({type:"biz",data:mdata});
+    res   = dm.dataUpdate({new_data: {foo_name:"Foz Baz"},
+                           id:       "11"});
     deepEqual(res === null &&
               dm.data[99].data[11].foo_name === "The foo" &&
               dm.data[99].data[11].dirty === undefined,
-              true, "dataUpdate with missing/unmatching type, but legal id and new_data returns null and data is not changed");
+              true, "dataUpdate with missing type, but legal id and new_data returns null and data is not changed");
 
     // Missing id
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"biz",data:mdata});
-    res = dm.dataUpdate({type:"foo",new_data:{foo_name:"Foz Baz"}});
+    dm    = new anyModel({type:"biz",data:mdata});
+    res   = dm.dataUpdate({new_data: {foo_name:"Foz Baz"},
+                           type:     "foo"});
     deepEqual(res === null &&
               dm.data[99].data[11].foo_name === "The foo" &&
               dm.data[99].data[11].dirty === undefined,
@@ -598,8 +604,10 @@ function testModel()
     // Negative id
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"biz",data:mdata});
-    res = dm.dataUpdate({type:"foo",id:-1,new_data:{foo_name:"Foz Baz"}});
+    dm    = new anyModel({type:"biz",data:mdata});
+    res   = dm.dataUpdate({new_data: {foo_name:"Foz Baz"},
+                           id:       -1,
+                           type:     "foo"});
     deepEqual(res === null &&
               dm.data[99].data[11].foo_name === "The foo" &&
               dm.data[99].data[11].dirty === undefined,
@@ -608,8 +616,9 @@ function testModel()
     // Missing new_data
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"biz",data:mdata});
-    res = dm.dataUpdate({type:"foo",id:"11"});
+    dm    = new anyModel({type:"biz",data:mdata});
+    res   = dm.dataUpdate({id:   "11",
+                           type: "foo"});
     deepEqual(res === null &&
               dm.data[99].data[11].foo_name === "The foo" &&
               dm.data[99].data[11].dirty === undefined,
@@ -619,93 +628,6 @@ function testModel()
   });
 
   ///////////////////// end dataUpdate tests /////////////////////
-
-  ///////////////////// dataDelete tests /////////////////////
-
-  test('Model.dataDelete', 8, function() {
-    // Normal case
-    let mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
-                                      12:{list:"faz",faz_name:"The faz"}}}};
-    let dm = new anyModel({type:"foo",data:mdata});
-    let res = dm.dataDelete({type:"foo",id:"11"});
-    deepEqual(res !== null &&
-              dm.data[99].data[11] === undefined &&
-              dm.data[99].data[12] !== undefined,
-              true, "dataDelete with type and id correctly deletes data");
-
-    // Subdata is deleted
-    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
-                                  12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
-    res = dm.dataDelete({type:"bar",id:"99"});
-    deepEqual(res !== null &&
-              dm.data[99] === undefined,
-              true, "dataDelete with type and id correctly deletes data and subdata");
-
-    // Non-existing type
-    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
-                                  12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
-    res = dm.dataDelete({type:"biz",id:"99"});
-    deepEqual(res === null &&
-              dm.data[99].data[11] !== undefined &&
-              dm.data[99].data[12] !== undefined,
-              true, "dataDelete with nonexisting type returns null and data is not deleted, 1 of 2");
-
-    // Missing type
-    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
-                                  12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
-    res = dm.dataDelete({id:"99"});
-    deepEqual(res === null &&
-              dm.data[99].data[11] !== undefined &&
-              dm.data[99].data[12] !== undefined,
-              true, "dataDelete with missing type returns null and data is not deleted, 1 of 2");
-
-    // Non-existing id
-    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
-                                  12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
-    res = dm.dataDelete({type:"bar",id:"999"});
-    deepEqual(res === null &&
-              dm.data[99].data[11] !== undefined &&
-              dm.data[99].data[12] !== undefined,
-              true, "dataDelete with nonexisting id returns null and data is not deleted, 1 of 2");
-
-    // Missing id
-    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
-                                  12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
-    res = dm.dataDelete({type:"bar"});
-    deepEqual(res === null &&
-              dm.data[99].data[11] !== undefined &&
-              dm.data[99].data[12] !== undefined,
-              true, "dataDelete with missing id returns null and data is not deleted, 1 of 2");
-
-    // Type and id does not match, 1 of 2
-    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
-                                  12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
-    res = dm.dataDelete({type:"faz",id:"11"});
-    deepEqual(res === null &&
-              dm.data[99].data[11] !== undefined &&
-              dm.data[99].data[12] !== undefined,
-              true, "dataDelete with type and id does not match returns null and data is not deleted, 1 of 2");
-
-    // Type and id does not match, 2 of 2
-    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
-                                  12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
-    res = dm.dataDelete({type:"foo",id:"12"});
-    deepEqual(res === null &&
-              dm.data[99].data[11] !== undefined &&
-              dm.data[99].data[12] !== undefined,
-              true, "dataDelete with type and id does not match returns null and data is not deleted, 2 of 2");
-
-    // TODO: Tests for non-numerical indexes
-  });
-
-  ///////////////////// end dataDelete tests /////////////////////
 
   ///////////////////// start dataUpdateLinkList tests /////////////////////
 
@@ -842,6 +764,93 @@ function testModel()
   });
 
   ///////////////////// end dataUpdateLinkList tests /////////////////////
+
+  ///////////////////// dataDelete tests /////////////////////
+
+  test('Model.dataDelete', 8, function() {
+    // Normal case
+    let mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                      12:{list:"faz",faz_name:"The faz"}}}};
+    let dm = new anyModel({type:"foo",data:mdata});
+    let res = dm.dataDelete({type:"foo",id:"11"});
+    deepEqual(res !== null &&
+              dm.data[99].data[11] === undefined &&
+              dm.data[99].data[12] !== undefined,
+              true, "dataDelete with type and id correctly deletes data");
+
+    // Subdata is deleted
+    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                  12:{list:"faz",faz_name:"The faz"}}}};
+    dm = new anyModel({type:"foo",data:mdata});
+    res = dm.dataDelete({type:"bar",id:"99"});
+    deepEqual(res !== null &&
+              dm.data[99] === undefined,
+              true, "dataDelete with type and id correctly deletes data and subdata");
+
+    // Non-existing type
+    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                  12:{list:"faz",faz_name:"The faz"}}}};
+    dm = new anyModel({type:"foo",data:mdata});
+    res = dm.dataDelete({type:"biz",id:"99"});
+    deepEqual(res === null &&
+              dm.data[99].data[11] !== undefined &&
+              dm.data[99].data[12] !== undefined,
+              true, "dataDelete with nonexisting type returns null and data is not deleted, 1 of 2");
+
+    // Missing type
+    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                  12:{list:"faz",faz_name:"The faz"}}}};
+    dm = new anyModel({type:"foo",data:mdata});
+    res = dm.dataDelete({id:"99"});
+    deepEqual(res === null &&
+              dm.data[99].data[11] !== undefined &&
+              dm.data[99].data[12] !== undefined,
+              true, "dataDelete with missing type returns null and data is not deleted, 1 of 2");
+
+    // Non-existing id
+    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                  12:{list:"faz",faz_name:"The faz"}}}};
+    dm = new anyModel({type:"foo",data:mdata});
+    res = dm.dataDelete({type:"bar",id:"999"});
+    deepEqual(res === null &&
+              dm.data[99].data[11] !== undefined &&
+              dm.data[99].data[12] !== undefined,
+              true, "dataDelete with nonexisting id returns null and data is not deleted, 1 of 2");
+
+    // Missing id
+    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                  12:{list:"faz",faz_name:"The faz"}}}};
+    dm = new anyModel({type:"foo",data:mdata});
+    res = dm.dataDelete({type:"bar"});
+    deepEqual(res === null &&
+              dm.data[99].data[11] !== undefined &&
+              dm.data[99].data[12] !== undefined,
+              true, "dataDelete with missing id returns null and data is not deleted, 1 of 2");
+
+    // Type and id does not match, 1 of 2
+    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                  12:{list:"faz",faz_name:"The faz"}}}};
+    dm = new anyModel({type:"foo",data:mdata});
+    res = dm.dataDelete({type:"faz",id:"11"});
+    deepEqual(res === null &&
+              dm.data[99].data[11] !== undefined &&
+              dm.data[99].data[12] !== undefined,
+              true, "dataDelete with type and id does not match returns null and data is not deleted, 1 of 2");
+
+    // Type and id does not match, 2 of 2
+    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                  12:{list:"faz",faz_name:"The faz"}}}};
+    dm = new anyModel({type:"foo",data:mdata});
+    res = dm.dataDelete({type:"foo",id:"12"});
+    deepEqual(res === null &&
+              dm.data[99].data[11] !== undefined &&
+              dm.data[99].data[12] !== undefined,
+              true, "dataDelete with type and id does not match returns null and data is not deleted, 2 of 2");
+
+    // TODO: Tests for non-numerical indexes
+  });
+
+  ///////////////////// end dataDelete tests /////////////////////
 
   ///////////////////// remote dbSearch tests /////////////////////
 
