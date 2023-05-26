@@ -4287,6 +4287,7 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
 
 // Create a list of selectable items and display in a modal dialog.
 // Note: The 'this' context is here the calling model! Use options.parent_view for view methods!
+// TODO! When deleting the last entry in a list, the tab is not removed (if anyViewTabs is used)
 $.any.anyView.prototype.dbAddRemoveLinkDialog = function (context,serverdata,options)
 {
   let self = context ? context : this;
