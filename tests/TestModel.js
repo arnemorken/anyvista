@@ -366,7 +366,7 @@ function testModel()
 
   ///////////////////// dataInsert tests /////////////////////
 
-  test('Model.dataInsert', 13, function() {
+  test('Model.dataInsert', 16, function() {
 
     let mdata = null;
     let dm    = new anyModel({type:"foo",data:mdata});
@@ -375,7 +375,7 @@ function testModel()
                                type:     "bar"});
     deepEqual(dm.data[14].barbar_name == "The barbar" &&
               res[14].barbar_name == "The barbar",
-              true, "dataInsert with new_id and id both not specified: ok");
+              true, "dataInsert with new_id and id both not specified");
 
     mdata = null;
     dm    = new anyModel({type:"foo",data:mdata});
@@ -385,7 +385,7 @@ function testModel()
                            type:     "bar"});
     deepEqual(dm.data[77].barbar_name == "The barbar" &&
               res.barbar_name == "The barbar",
-              true, "dataInsert with new_id specified and id not specified: ok");
+              true, "dataInsert with new_id specified and id not specified");
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
@@ -396,7 +396,7 @@ function testModel()
                            type:     "bar"});
     deepEqual(dm.data[99].data[14].barbar_name == "The barbar" &&
               res[14].barbar_name == "The barbar",
-              true, "dataInsert with new_id not specified and id specified: ok");
+              true, "dataInsert with new_id not specified and id specified");
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
@@ -408,7 +408,7 @@ function testModel()
                            type:     "bar"});
     deepEqual(dm.data[99].data[13].barbar_name == "The barbar" &&
               res.barbar_name == "The barbar",
-              true, "dataInsert with new_id and id both specified: ok");
+              true, "dataInsert with new_id and id both specified");
 
     let mdata2 = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                        12:{list:"faz",faz_name:"The faz"}}}};
@@ -422,7 +422,7 @@ function testModel()
                            type:     null});
     deepEqual(res === null &&
               JSON.stringify(dm.data) === JSON.stringify(mdata2),
-              true, "dataInsert with type == null and incorrect in-type: ok (does not insert)");
+              true, "dataInsert with type == null and incorrect in-type (does not insert)");
 
     mdata = {99:{list:"foo",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
@@ -434,80 +434,116 @@ function testModel()
                            type:     null});
     deepEqual(res.foo_name === "The foo" &&
               JSON.stringify(dm.data) !== JSON.stringify(mdata2),
-              true, "dataInsert with type == null and correct in-type: ok (does insert)");
+              true, "dataInsert with type == null and correct in-type (does insert)");
 
-
-    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+    mdata2 = {99:{list:"bar",data:{11:{list:"fii",foo_name:"The foo"},
+                                   12:{list:"faz",faz_name:"The faz"}}}};
+    mdata = {99:{list:"bar",data:{11:{list:"fii",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
+    dm    = new anyModel({type:"bar",data:mdata});
     idata = {list:"barbar",barbar_name:"The barbar"};
-    res = dm.dataInsert({type:"baz",id:99,new_data:idata,new_id:13});
-    deepEqual(dm.data[99].data[11] !== undefined &&
-              dm.data[99].data[12] !== undefined &&
-              dm.data[99].data[13] === undefined,
-              true, "dm.data[99].data[11] !== undefined and "+
-                    "dm.data[99].data[12] !== undefined and "+
-                    "dm.data[99].data[13] === undefined "+
-                    "after dataInsert with type == baz");
+    res   = dm.dataInsert({new_data: idata,
+                           new_id:   13,
+                           id:       99,
+                           type:     "bar"});
+    deepEqual(res.barbar_name === "The barbar" &&
+              JSON.stringify(dm.data) !== JSON.stringify(mdata2),
+              true, "dataInsert with type given and non-matching in-type (does insert)");
 
+    mdata2 = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                   12:{list:"faz",faz_name:"The faz"}}}};
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
-    idata = {list:"bar",bar_name:"The bar"};
-    res = dm.dataInsert({type:"bar",id:99,new_data:idata,new_id:-1});
-    deepEqual(dm.data[99].data[11]  !== undefined &&
-              dm.data[99].data[12]  !== undefined &&
-              dm.data[99].data[100] !== undefined,
-              true, "dm.data[99].data[11] !== undefined and "+
-                    "dm.data[99].data[12] !== undefined and "+
-                    "dm.data[99].data[100] !== undefined "+
-                    "after dataInsert with type == bar and new_id == -1");
-
-    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
-                                  12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
+    dm    = new anyModel({type:"bar",data:mdata});
     idata = {list:"foo",foo_name:"The foo"};
-    res = dm.dataInsert({type:"foo",id:null,new_data:idata,new_id:null});
-    deepEqual(dm.data[99] !== undefined &&
-              dm.data.list === 'foo',
-              true, "dm.data[99] !== undefined and "+
-                    "dm.data.list === 'foo' "+
-                    "after dataInsert with type == foo, id == null and new_id == null");
+    res   = dm.dataInsert({new_data: idata,
+                           new_id:   13,
+                           id:       99,
+                           type:     "bar"});
+    deepEqual(res.foo_name === "The foo" &&
+              JSON.stringify(dm.data) !== JSON.stringify(mdata2),
+              true, "dataInsert with type given and matching in-type (does insert)");
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
-    idata = {list:"bar",bar_name:"The bar"};
-    res = dm.dataInsert({type:"bar",id:null,new_data:idata,new_id:61});
-    deepEqual(dm.data[99] !== undefined &&
-              dm.data[61] !== undefined,
-              true, "dm.data[99] !== undefined and "+
-                    "dm.data[61] !== undefined "+
-                    "after dataInsert with type == bar, id == null and new_id == 61");
+    dm    = new anyModel({type:"bar",data:mdata});
+    idata = {list:"barbar",barbar_name:"The barbar"};
+    res   = dm.dataInsert({new_data: idata,
+                           new_id:   13,
+                           id:       99,
+                           type:     "baz"});
+    deepEqual(res === null &&
+              JSON.stringify(dm.data) === JSON.stringify(mdata2),
+              true, "dataInsert with nonexisting type given");
 
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
+    dm    = new anyModel({type:"bar",data:mdata});
     idata = {list:"bar",bar_name:"The bar"};
-    res = dm.dataInsert({type:"bar",id:99,new_data:idata,new_id:-1});
-    deepEqual(dm.data[99].data[11]  !== undefined &&
-              dm.data[99].data[12]  !== undefined &&
-              dm.data[99].data[100] !== undefined,
-              true, "dm.data[99].data[11] !== undefined and "+
-                    "dm.data[99].data[12] !== undefined and "+
-                    "dm.data[99].data[100] !== undefined "+
-                    "after dataInsert with type == bar");
+    res   = dm.dataInsert({new_data: idata,
+                           new_id:   -1,
+                           id:       99,
+                           type:     "bar"});
+    deepEqual(res.bar_name === "The bar" &&
+              JSON.stringify(dm.data) !== JSON.stringify(mdata2),
+              true, "dataInsert with correct new_data/id/type and new_id == -1");
 
-    // Test id
     mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                   12:{list:"faz",faz_name:"The faz"}}}};
-    dm = new anyModel({type:"foo",data:mdata});
+    dm    = new anyModel({type:"bar",data:mdata});
+    idata = {14:{list:"foo",foo_name:"The foo"}};
+    res   = dm.dataInsert({new_data: idata,
+                           type:     "foo"});
+    deepEqual(dm.data[14].list === 'foo',
+              true, "dataInsert into existing data with new_id and id both not specified");
+
+    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                  12:{list:"faz",faz_name:"The faz"}}}};
+    dm    = new anyModel({type:"bar",data:mdata});
+    idata = {14:{list:"foo",foo_name:"The foo"}};
+    res   = dm.dataInsert({new_data: idata,
+                           id:       99,
+                           type:     "bar"});
+    deepEqual(dm.data[99].data[14].list === 'foo',
+              true, "dataInsert into existing data with new_id not specified and id specified");
+
+    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                  12:{list:"faz",faz_name:"The faz"}}}};
+    dm    = new anyModel({type:"bar",data:mdata});
+    idata = {list:"foo",foo_name:"The foo"};
+    res   = dm.dataInsert({new_data: idata,
+                           new_id:   17,
+                           type:     "bar"});
+    deepEqual(dm.data[17].list === 'foo',
+              true, "dataInsert into existing data with new_id specified and id not specified");
+
+    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                  12:{list:"faz",faz_name:"The faz"}}}};
+    dm    = new anyModel({type:"bar",data:mdata});
     idata = {list:"bar",bar_name:"The bar"};
-    res = dm.dataInsert({type:"bar",id:-1,new_data:idata});
+    res   = dm.dataInsert({new_data: idata,
+                           new_id:   -1,
+                           id:       99});
+    deepEqual(dm.data[99].data[100].list === 'bar',
+              true, "dataInsert into existing data with id specified and new_id==-1");
+
+    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                  12:{list:"faz",faz_name:"The faz"}}}};
+    dm    = new anyModel({type:"foo",data:mdata});
+    idata = {list:"bar",bar_name:"The bar"};
+    res   = dm.dataInsert({new_data: idata,
+                           id:       -1,
+                           type:     "bar"});
     deepEqual(res === null,
-              true, "dataInsert with id == -1 returns null");
+              true, "dataInsert with id negative integer id returns null");
+
+    mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
+                                  12:{list:"faz",faz_name:"The faz"}}}};
+    dm    = new anyModel({type:"foo",data:mdata});
     idata = {list:"bar",bar_name:"The bar"};
-    res = dm.dataInsert({type:"bar",id:66,new_data:idata});
+    res   = dm.dataInsert({new_data: idata,
+                           id:       66,
+                           type:     "bar"});
     deepEqual(res === null,
               true, "dataInsert with nonexisting id returns null");
 
