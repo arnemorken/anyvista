@@ -2171,11 +2171,17 @@ class anyTable extends dbTable
           if ($delval) {
             if (!$this->dbTableHasLink($link_table,$id_key_link,$delval,$id_key,$id))
               $this->setMessage("Link not found. ",true); // TODO! i18n
-            $stmt = "DELETE FROM ".$link_table." ".
-                    "WHERE ".$id_key_link."='".intval($delval)."' AND ".$id_key."='".intval($id)."'";
-            //elog("dbAddRemoveLink(1):".$stmt);
-            if (!$this->query($stmt))
-              return null;
+            else {
+              // Link exists, we can delete it
+              $stmt = "DELETE FROM ".$link_table." ".
+                      "WHERE ".
+                      $id_key_link."='".intval($delval)."' ".
+                      "AND ".
+                      $id_key.     "='".intval($id)."'";
+              //elog("dbAddRemoveLink(1):".$stmt);
+              if (!$this->query($stmt))
+                return null; // TODO! Give warning and continue instead?
+            }
           }
         }
       }
@@ -2183,24 +2189,19 @@ class anyTable extends dbTable
         // Add elements to the item's list (delete, then insert to avoid error if element already exists in list)
         foreach ($updlist as $insval) {
           if ($insval) {
-            if ($this->dbTableHasLink($link_table,$id_key_link,$insval,$id_key,$id)) {
+            if ($this->dbTableHasLink($link_table,$id_key_link,$insval,$id_key,$id))
               $this->setMessage("Link already exists. ",true); // TODO! i18n
-              return null;
+            else {
+              // Link does not exist, we can insert it
+              $stmt = "INSERT INTO ".$link_table." (".
+                      $id_key_link.",".$id_key.
+                      ") VALUES (".
+                      intval($insval).",".intval($id).
+                      ")";
+              //elog("dbAddRemoveLink(3):".$stmt);
+              if (!$this->query($stmt))
+                return null; // TODO! Give warning and continue instead?
             }
-            // Delete old list so as to avoid error message when inserting (insert-or-update)
-            $stmt = "DELETE FROM ".$link_table." ".
-                    "WHERE ".$id_key_link."='".intval($insval)."' AND ".$id_key."='".intval($id)."'";
-            //elog("dbAddRemoveLink(2):".$stmt);
-            if (!$this->query($stmt))
-              return null;
-            $stmt = "INSERT INTO ".$link_table." (".
-                    $id_key_link.",".$id_key.
-                    ") VALUES (".
-                    intval($insval).",".intval($id).
-                    ")";
-            //elog("dbAddRemoveLink(3):".$stmt);
-            if (!$this->query($stmt))
-              return null;
           }
         }
       }
