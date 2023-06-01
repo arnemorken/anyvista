@@ -914,10 +914,11 @@ anyModel.prototype.dataInsertHeader = function (type,headerStr)
  *                            values containing new values.
  *                            For example:
  *                              `new_data = { user_name:        "Johhny B. Goode",
- *                                           user_description: "Musician",
- *                                         }`
- *                              If an item with the specified `id` is found in the structure `data`, it
- *                              will be updated with the values for `user_name` and `user_description`.
+ *                                            user_description: "Musician",
+ *                                          }`
+ *                            If an item with the specified `id` is found in the structure `data`, it
+ *                            will be updated with the values for `user_name` and `user_description`.
+ *                            If an item is not found it is an error.
  *                            Mandatory.
  *        {Object}  data:     The data structure to update.
  *                            Optional. Default: The model's data (`this.data`).
@@ -997,7 +998,7 @@ anyModel.prototype.dataUpdate = function (options)
  *        {Object}  select:    Contains the items to be inserted.
  *                             Optional. Default: null.
  *        {Object}  data:      The data structure to update.
- *                             Optional. Default: The model's data (`this.data`). TODO!
+ *                             Optional. Default: The model's data (`this.data`).
  *        {String}  type:      The type of the data to update.
  *                             Mandatory.
  *        {integer} insert_id: The id of the item where the selected items should be inserted.
@@ -1017,7 +1018,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
     return false;
   }
   let the_data = options.data ? options.data : this.data;
-  let the_type = options.type;
+  let the_type = options.type ? options.type : this.type;
 
   if (!the_type) {
     console.error("anyModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
@@ -1162,9 +1163,9 @@ anyModel.prototype.dataDelete = function (options)
   return item; // Should be empty
 }; // dataDelete
 
-/////////////////////////////////////////////////
-//////// Methods that work with database ////////
-/////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+//////// Methods that work with database                                 ////////
+/////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @method dbCreate
@@ -2028,10 +2029,10 @@ anyModel.prototype.dbAddRemoveLinkSuccess = function (context,serverdata,options
     if (self.error_server)
       console.error("anyModel.dbAddRemoveLinkSuccess: "+self.error_server);
     if (serverdata.data && serverdata.error == "")
-      self.dataUpdateLinkList({ data:      serverdata.data,
-                                type:      options.link_type,
-                                unselect:  options.unselect,
+      self.dataUpdateLinkList({ unselect:  options.unselect,
                                 select:    options.select,
+                                data:      serverdata.data,
+                                type:      options.link_type,
                                 name_key:  options.name_key,
                                 link_id:   options.id,
                                 link_type: options.type,
