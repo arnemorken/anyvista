@@ -704,57 +704,46 @@ anyTable.prototype.dbUpdate = async function(options)
 
   if (!options.id || options.id == "")
     return this.dbInsert(options); // No id, assume it is a new item to be inserted
-  this.id = options.id;
+  this.id = options.id; // TODO! Why?
 
-  // We have an id, so we are updating an existing item or a link to one.
-  let upd_what = options.upd;
-  if (!upd_what || upd_what == "") {
-    // Update normal table
-    let stmt = await this.dbPrepareUpdateStmt(options.keys,options.values);
-    if (!stmt) {
-      console.log(this.error);
+  if (options.add || options.rem)
+    return this.dbUpdateLinkList();
+
+  if (options.cha) // TODO! Not tested
+    return this.dbUpdateLink();
+
+  // Update normal table
+  let stmt = await this.dbPrepareUpdateStmt(options.keys,options.values);
+  if (!stmt) {
+    console.log(this.error);
+    return null;
+  }
+  stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
+  let self = this;
+  //console.log("dbUpdate:"+stmt);
+  return await alasql.promise(stmt)
+  .then( async function(res) {
+    // numRowsChanged >= 1 if the update succeeded
+    self.numRowsChanged = res;
+    //console.log("upd res:"+res);
+    if (self.numRowsChanged == 0) {
+      self.message = self.updateNothingToDo;
       return null;
     }
-    stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
-    let self = this;
-    //console.log("dbUpdate:"+stmt);
-    return await alasql.promise(stmt)
-    .then( async function(res) {
-      // numRowsChanged >= 1 if the update succeeded
-      self.numRowsChanged = res;
-      //console.log("upd res:"+res);
-      if (self.numRowsChanged == 0) {
-        self.message = self.updateNothingToDo;
-        return null;
-      }
-      // Set result message
-      self.message = self.updateSuccessMsg;
+    // Set result message
+    self.message = self.updateSuccessMsg;
 
-      // Call success handler
-      if (options.successHandler && options.context)
-        options.successHandler.call(options.context,res);
+    // Call success handler
+    if (options.successHandler && options.context)
+      options.successHandler.call(options.context,res);
 
-      return res;
-    })
-    .catch(error => {
-       console.error("Update error: "+error);
-       return null;
-    });
-  } // if
-  else
-  if (upd_what == "link") {
-    return this.dbUpdateLink();
-  }
+    return res;
+  })
+  .catch(error => {
+     console.error("Update error: "+error);
+     return null;
+  });
 }; // dbUpdate
-
-anyTable.prototype.dbUpdateLink = function(options)
-  {
-    if (options.add || options.rem)
-      this.dbUpdateLinkList();
-    else
-    if (options.cha) // TODO! Not tested
-      this.dbChangeLink();
-  } // dbUpdateLink
 
 anyTable.prototype.dbValidateUpdate = function(options)
 {
@@ -911,7 +900,7 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
 }; // dbUpdateLinkList
 
 // Update the fields of a link. The link must exist in the link table.
-anyTable.prototype.dbChangeLink = async function(options)
+anyTable.prototype.dbUpdateLink = async function(options)
 {
   let link_type = options.link_type;
   if (!link_type || link_type == "") {
@@ -958,12 +947,12 @@ anyTable.prototype.dbChangeLink = async function(options)
       return null;
     stmt = stmt.substring(0,stmt.length-1)+' '; // Replace last char (',') with ' *
     stmt += "WHERE "+idKey+"="+id;
-    //console.log("dbChangeLink:"+stmt);
+    //console.log("dbUpdateLink:"+stmt);
     if (!this.query(stmt,false,true))
       return null;
   }
   return this.data;
-}; // dbChangeLink
+}; // dbUpdateLink
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Delete //////////////////////////////////////

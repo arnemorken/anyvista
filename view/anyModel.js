@@ -77,7 +77,7 @@
  *                                   and dataDelete.
  *                                   Default: false.
  *      {boolean}  auto_refresh:     If true, cbExecute will be called after calling dbSearch, dbUpdate,
- *                                   dbUpdateLinkList, dbChangeLink and dbDelete.
+ *                                   dbUpdateLinkList, dbUpdateLink and dbDelete.
  *                                   Default: true.
  *      {Array}    page_links:       Pagination links. Not used yet.
  *                                   Default: null.
@@ -1884,6 +1884,12 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *              in the database. This can be used to link/unlink an item to/from another item.
  * @param {Object}  options An object which may contain these elements:
  *
+ *        {Object}  unselect:   A list of ids to remove (if link_id is not given).
+ *                              These ids will be removed *before* the ids in `select` has been added.
+ *                              Optional.
+ *        {Object}  select:     A list of ids to add (if link_id is not given).
+ *                              These ids will be added *after* the ids in `unselect` has been removed.
+ *                              Optional.
  *        {String}  type:       The type of items in the list.
  *                              Optional. Default: `this.type`.
  *        {integer} id:         The id of the item to which the list "belongs" (is linked to), for
@@ -1896,12 +1902,6 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *        {String}  link_id:    The id of an item to be removed. If given, the specified link will
  *                              be removed and no other action will be taken. If not given, links
  *                              will be added and/or removed as per the `select` and `unselect` arrays.
- *                              Optional.
- *        {Object}  unselect:   A list of ids to remove (if link_id is not given).
- *                              These ids will be removed *before* the ids in `select` has been added.
- *                              Optional.
- *        {Object}  select:     A list of ids to add (if link_id is not given).
- *                              These ids will be added *after* the ids in `unselect` has been removed.
  *                              Optional.
  *        {integer} timeoutSec: Number of seconds before timing out.
  *                              Optional. Default: 10.
@@ -2043,7 +2043,7 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
 }; // dbUpdateLinkListSuccess
 
 /**
- * @method dbChangeLink
+ * @method dbUpdateLink
  * @description Change individual value(s) for an item.
  * @param {Object} options An object which may contain these elements:
  *
@@ -2060,7 +2060,7 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
  *
  * @return true if the database call was made, false on error.
  */
-anyModel.prototype.dbChangeLink = function (options)
+anyModel.prototype.dbUpdateLink = function (options)
 {
   console.log(options);
   if (!options || typeof options != "object")
@@ -2068,7 +2068,7 @@ anyModel.prototype.dbChangeLink = function (options)
 
   let the_type = options.type ? options.type : this.type;
   if (!the_type) {
-    console.error("anyModel.dbChangeLink: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dbUpdateLink: "+i18n.error.TYPE_MISSING);
     return false;
   }
   let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
@@ -2077,7 +2077,7 @@ anyModel.prototype.dbChangeLink = function (options)
                  ? options.id
                  : null;
   if (!the_id && typeof options.id !== "string") {
-    console.error("anyModel.dbChangeLink: "+i18n.error.ID_ILLEGAL);
+    console.error("anyModel.dbUpdateLink: "+i18n.error.ID_ILLEGAL);
     return false;
   }
   let db_timeout_sec = options.timeoutSec
@@ -2086,7 +2086,7 @@ anyModel.prototype.dbChangeLink = function (options)
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   if (options.sync)
     $.ajaxSetup({ async: false });
-  this.success = options.success ? options.success : this.dbChangeLinkSuccess;
+  this.success = options.success ? options.success : this.dbUpdateLinkSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
   this.message      = "";
@@ -2094,7 +2094,7 @@ anyModel.prototype.dbChangeLink = function (options)
   this.error_server = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
-    let url = this.dbChangeLinkGetURL(options);
+    let url = this.dbUpdateLinkGetURL(options);
     if (!url)
       return false;
     $.getJSON(url) // Call server
@@ -2108,26 +2108,26 @@ anyModel.prototype.dbChangeLink = function (options)
   else {
     if (!self.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyModel.dbChangeLink: "+this.message);
+      console.warn("anyModel.dbUpdateLink: "+this.message);
       return false;
     }
     return self.success(this,this,options);
   }
   return true;
-}; // dbChangeLink
+}; // dbUpdateLink
 
 /**
- * @method dbChangeLinkGetURL
- * @description Builds a POST string for dbChangeLinkGetURL to be sent to server.
+ * @method dbUpdateLinkGetURL
+ * @description Builds a POST string for dbUpdateLinkGetURL to be sent to server.
  * @param {Object} options An object which may contain these elements:
  *
- * @return The complete URL for dbChangeLink or null on error.
+ * @return The complete URL for dbUpdateLink or null on error.
  */
-anyModel.prototype.dbChangeLinkGetURL = function (options)
+anyModel.prototype.dbUpdateLinkGetURL = function (options)
 {
   let the_type = options.type ? options.type : this.type;
   if (!the_type) {
-    console.error("anyModel.dbChangeLinkGetURL: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dbUpdateLinkGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
   let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
@@ -2136,11 +2136,11 @@ anyModel.prototype.dbChangeLinkGetURL = function (options)
                  ? options.id
                  : null;
   if (!the_id && typeof options.id !== "string") {
-    console.error("anyModel.dbChangeLinkGetURL: "+i18n.error.ID_ILLEGAL);
+    console.error("anyModel.dbUpdateLinkGetURL: "+i18n.error.ID_ILLEGAL);
     return null;
   }
   if (!options.change_values) {
-    console.error("anyModel.dbChangeLinkGetURL: No values to change. "); // TODO! i18n
+    console.error("anyModel.dbUpdateLinkGetURL: No values to change. "); // TODO! i18n
     return null;
   }
   let param_str = "?echo=y"+
@@ -2157,13 +2157,13 @@ anyModel.prototype.dbChangeLinkGetURL = function (options)
   param_str += options.header   ? "&header="  +options.header : "";
   param_str += options.grouping ? "&grouping="+options.grouping : "";
   return this._getDataSourceName() + param_str;
-}; // dbChangeLinkGetURL
+}; // dbUpdateLinkGetURL
 
-// Default success callback method for dbChangeLink
-anyModel.prototype.dbChangeLinkSuccess = function (context,serverdata,options)
+// Default success callback method for dbUpdateLink
+anyModel.prototype.dbUpdateLinkSuccess = function (context,serverdata,options)
 {
   console.log(options);
-}; // dbChangeLinkSuccess
+}; // dbUpdateLinkSuccess
 
 /**
  * @method dbDelete

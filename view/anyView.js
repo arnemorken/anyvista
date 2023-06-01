@@ -4417,8 +4417,8 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
              });
   this.removeFromView(opt);
   if (!this.model.dbUpdateLinkList({
-         view:      opt.view, // Refresh only this view
-         data:      opt.data,
+         view:      opt.view, // Refresh only this view. TODO! Is this used?
+         data:      opt.data, // TODO! Is this used?
          type:      the_type,
          id:        the_id,
          link_type: link_type,
@@ -4426,8 +4426,8 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
          select:    opt.select,
          unselect:  opt.unselect,
          name_key:  opt.name_key,
-         header:    true,
-         grouping:  this.options.grouping,
+         header:    true,                  // TODO! Is this used?
+         grouping:  this.options.grouping, // TODO! Is this used?
        }))
     return false;
 

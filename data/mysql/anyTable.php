@@ -1939,7 +1939,7 @@ class anyTable extends dbTable
       return $this->dbUpdateLinkList();
 
     if (Parameters::get("cha")) // TODO! Not tested
-      return $this->dbChangeLink();
+      return $this->dbUpdateLink();
 
     if (!$this->dbValidateUpdate())
       return null;
@@ -1964,7 +1964,7 @@ class anyTable extends dbTable
 
     // Update link table(s) if any of the link fields (left join fields) are changed
     if (Parameters::get("link_type") && Parameters::get("link_id"))
-      $this->dbChangeLink();
+      $this->dbUpdateLink();
 
     // Set result message
     if ($this->mNumRowsChanged > 0)
@@ -2140,7 +2140,7 @@ class anyTable extends dbTable
       $this->setError($this->mType." id missing. "); // TODO! i18n
       return null;
     }
-    $updlist = explode(",",Parameters::get("add"));
+    $inslist = explode(",",Parameters::get("add"));
     $dellist = explode(",",Parameters::get("rem"));
 
     if ($link_type != $this->mType) {
@@ -2168,11 +2168,11 @@ class anyTable extends dbTable
                 return null; // TODO! Give warning and continue instead?
             }
           }
-        }
+        } // foreach
       }
-      if ($updlist !== null) {
+      if ($inslist !== null) {
         // Add elements to the item's list (delete, then insert to avoid error if element already exists in list)
-        foreach ($updlist as $insval) {
+        foreach ($inslist as $insval) {
           if ($insval) {
             if ($this->dbTableHasLink($link_table,$id_key_link,$insval,$id_key,$id))
               $this->setMessage("Link already exists. ",true); // TODO! i18n
@@ -2188,7 +2188,7 @@ class anyTable extends dbTable
                 return null; // TODO! Give warning and continue instead?
             }
           }
-        }
+        } // foreach
       }
     }
     else {
@@ -2205,11 +2205,11 @@ class anyTable extends dbTable
               if (!$this->query($stmt))
                 return null;
             }
-          }
+          } // foreach
         }
-        if ($updlist !== null) {
-          // Set parent for elements in updlist
-          foreach ($updlist as $updval) {
+        if ($inslist !== null) {
+          // Set parent for elements in inslist
+          foreach ($inslist as $updval) {
             if ($updval && intval($id) != intval($updval)) {
               $stmt = "UPDATE ".$this->mTableName." ".
                       "SET parent_id='".intval($id)."' ".
@@ -2218,7 +2218,7 @@ class anyTable extends dbTable
               if (!$this->query($stmt))
                 return null;
             }
-          }
+          } // foreach
         }
       }
     }
@@ -2227,7 +2227,7 @@ class anyTable extends dbTable
   } // dbUpdateLinkList
 
   // Update the fields of a link. The link must exist in the link table.
-  public function dbChangeLink()
+  public function dbUpdateLink()
   {
     $link_type = Parameters::get("link_type");
     if (!$link_type || $link_type == "") {
@@ -2258,26 +2258,26 @@ class anyTable extends dbTable
     }
     // Link found, we can update it
     if (isset($this->mTableFieldsLeftJoin[$link_type])) {
-      $par_found = false;
+      $val_found = false;
       $stmt = "UPDATE ".$link_table." SET ";
       for ($t=0; $t<count($this->mTableFieldsLeftJoin[$link_type]); $t++) {
         $str = $this->mTableFieldsLeftJoin[$link_type][$t];
-        $par = Parameters::get($str);
-        if (($par || $par=="0") && $par != "") {
-          $stmt .=  $str."='".$par."',";
-          $par_found = true;
+        $val = Parameters::get($str);
+        if (($val || $val=="0") && $val != "") {
+          $stmt .=  $str."='".$val."',";
+          $val_found = true;
         }
       }
-      if (!$par_found)
+      if (!$val_found)
         return null;
       $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
       $stmt .= "WHERE ".$id_key."=".$id;
-      elog("dbChangeLink:".$stmt);
+      elog("dbUpdateLink:".$stmt);
       if (!$this->query($stmt))
         return null;
     }
     return $this->mData;
-  } // dbChangeLink
+  } // dbUpdateLink
 
   // Check if a link exists in a link table
   protected function dbTableHasLink($tableName,$idName1,$id1,$idName2,$id2)
