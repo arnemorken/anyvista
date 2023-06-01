@@ -807,61 +807,65 @@ anyTable.prototype.dbItemExists = async function(id)
 /////////////////////////// Insert or update link ///////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
+// Add or remove a link
 anyTable.prototype.dbUpdateLinkList = async function(options)
 {
   let link_type = options.link_type;
   if (!link_type) {
-    this.error = "No link type. ";
+    this.error = "Link type missing. "; // TODO! i18n
     return null;
   }
   let id_key      = this.idKey;
   let id_key_link = link_type + "_id"; // TODO! Not general enough
   let id          = options.id;
   if (!id || id == "") {
-    this.error = this.type+" id missing. ";
+    this.error = this.type+" id missing. "; // TODO! i18n
     return null;
   }
-  let updlist     = options.updlist;
-  let dellist     = options.dellist;
+  let inslist = options.add;
+  let dellist = options.rem;
 
   if (link_type != this.type) {
+    // Link with different type (sublist of item)
     let link_table = this.findLinkTableName(link_type);
-    if (link_table) {
-      if (!link_table) {
-        this.error = "Link table not found. ";
-        return null;
-      }
-      // Link with different type (sublist of item)
-      if (dellist) {
-        // Remove elements from the item's list
-        for (let i=0; i<dellist.length; i++) {
-          let delval = dellist[i];
-          if (delval) {
-            let stmt = "DELETE FROM "+link_table+" "+
-                       "WHERE "+id_key_link+"="+delval+" AND "+id_key+"="+id+"";
-            //console.log("dbUpdateLinkList(1):"+stmt);
-            await alasql.promise(stmt);
-          }
+    if (!link_table) {
+      this.error = "Link table not found. "; // TODO! i18n
+      return null;
+    }
+    if (dellist) {
+      // Remove elements from the item's list
+      for (let i=0; i<dellist.length; i++) {
+        let delval = dellist[i];
+        if (delval) {
+          let stmt = "DELETE FROM "+link_table+" "+
+                     "WHERE "+
+                     id_key_link+"="+delval+" "+
+                     "AND "+
+                     id_key+     "="+id+"";
+          //console.log("dbUpdateLinkList(1):"+stmt);
+          await alasql.promise(stmt);
         }
       }
-      if (updlist) {
-        // Add elements to the item's list (delete, then insert to avoid error if element already exists in list)
-        for (let i=0; i<updlist.length; i++) {
-          let insval = updlist[i];
-          if (insval) {
-            // Delete old list so as to avoid error message when inserting (insert-or-update)
-            let stmt = "DELETE FROM "+link_table+" "+
-                       "WHERE "+id_key_link+"="+insval+" AND "+id_key+"="+id+"";
-            //console.log("dbUpdateLinkList(2):"+stmt);
-            await alasql.promise(stmt);
-            stmt = "INSERT INTO "+link_table+" ("+
-                   id_key_link+","+id_key+
-                   ") VALUES ("+
-                   insval+","+id+
-                   ")";
-            //console.log("dbUpdateLinkList(3):"+stmt);
-            await alasql.promise(stmt);
-          }
+    }
+    if (inslist) {
+      // Add elements to the item's list (delete, then insert to avoid error if element already exists in list)
+      for (let i=0; i<inslist.length; i++) {
+        let insval = inslist[i];
+        if (insval) {
+          let stmt = "DELETE FROM "+link_table+" "+
+                     "WHERE "+
+                     id_key_link+"="+insval+" "+
+                     "AND "+
+                     id_key+     "="+id+"";
+          //console.log("dbUpdateLinkList(2):"+stmt);
+          await alasql.promise(stmt);
+          stmt = "INSERT INTO "+link_table+" ("+
+                 id_key_link+","+id_key+
+                 ") VALUES ("+
+                 insval+","+id+
+                 ")";
+          //console.log("dbUpdateLinkList(3):"+stmt);
+          await alasql.promise(stmt);
         }
       }
     }
@@ -882,10 +886,10 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
           }
         }
       }
-      if (updlist) {
-        // Set parent for elements in updlist
-        for (let i=0; i<updlist.length; i++) {
-          let updval = updlist[i];
+      if (inslist) {
+        // Set parent for elements in inslist
+        for (let i=0; i<inslist.length; i++) {
+          let updval = inslist[i];
           if (updval && updval != id) {
             let stmt = "UPDATE "+this.tableName+" "+
                        "SET parent_id="+id+" "+
