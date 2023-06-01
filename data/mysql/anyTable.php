@@ -1988,10 +1988,11 @@ class anyTable extends dbTable
   private function dbUpdateLink()
   {
     if (Parameters::get("add") || Parameters::get("rem"))
-      $this->dbAddRemoveLink();
+      return $this->dbAddRemoveLink();
     else
     if (Parameters::get("cha")) // TODO! Not tested
-      $this->dbChangeLink();
+      return $this->dbChangeLink();
+    return null;
   } // dbUpdateLink
 
   protected function dbValidateUpdate()
