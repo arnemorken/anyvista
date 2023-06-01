@@ -77,7 +77,7 @@
  *                                   and dataDelete.
  *                                   Default: false.
  *      {boolean}  auto_refresh:     If true, cbExecute will be called after calling dbSearch, dbUpdate,
- *                                   dbAddRemoveLink and dbDelete.
+ *                                   dbUpdateLinkList, dbChangeLink and dbDelete.
  *                                   Default: true.
  *      {Array}    page_links:       Pagination links. Not used yet.
  *                                   Default: null.
@@ -1879,7 +1879,7 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
 }; // dbUpdateSuccess
 
 /**
- * @method dbAddRemoveLink
+ * @method dbUpdateLinkList
  * @description Add and/or remove items to/from a link (association) list by updating the link table
  *              in the database. This can be used to link/unlink an item to/from another item.
  * @param {Object}  options An object which may contain these elements:
@@ -1908,7 +1908,7 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *
  * @return true if the database call was made, false on error.
  */
-anyModel.prototype.dbAddRemoveLink = function (options)
+anyModel.prototype.dbUpdateLinkList = function (options)
 {
   if (!options || typeof options != "object")
     options = {};
@@ -1919,7 +1919,7 @@ anyModel.prototype.dbAddRemoveLink = function (options)
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   if (options.sync)
     $.ajaxSetup({ async: false });
-  this.success = options.success ? options.success : this.dbAddRemoveLinkSuccess;
+  this.success = options.success ? options.success : this.dbUpdateLinkListSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
   this.context = options.context ? options.context : this;
   this.message      = "";
@@ -1927,7 +1927,7 @@ anyModel.prototype.dbAddRemoveLink = function (options)
   this.error_server = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
-    let url = this.dbAddRemoveLinkGetURL(options);
+    let url = this.dbUpdateLinkListGetURL(options);
     if (!url)
       return false;
     $.getJSON(url) // Call server
@@ -1941,28 +1941,28 @@ anyModel.prototype.dbAddRemoveLink = function (options)
   else {
     if (!self.success) {
       this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyModel.dbAddRemoveLink: "+this.message);
+      console.warn("anyModel.dbUpdateLinkList: "+this.message);
       return false;
     }
     return self.success(this,this,options);
   }
   return true;
-}; // dbAddRemoveLink
+}; // dbUpdateLinkList
 
 /**
- * @method dbAddRemoveLinkGetURL
- * @description Builds a POST string for dbAddRemoveLinkGetURL to be sent to server.
- * @param {Object} options See dbAddRemoveLink().
+ * @method dbUpdateLinkListGetURL
+ * @description Builds a POST string for dbUpdateLinkListGetURL to be sent to server.
+ * @param {Object} options See dbUpdateLinkList().
  *
- * @return The complete URL for dbAddRemoveLink or null on error.
+ * @return The complete URL for dbUpdateLinkList or null on error.
  */
-anyModel.prototype.dbAddRemoveLinkGetURL = function (options)
+anyModel.prototype.dbUpdateLinkListGetURL = function (options)
 {
   let the_type = options.type
                  ? options.type
                  : this.type;
   if (!the_type) {
-    console.error("anyModel.dbAddRemoveLinkGetURL: "+i18n.error.TYPE_MISSING);
+    console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
   let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
@@ -1971,35 +1971,34 @@ anyModel.prototype.dbAddRemoveLinkGetURL = function (options)
                  ? options.id
                  : this.id;
   if (typeof options.id !== "string" && !the_id && the_id !== 0) {
-    console.error("anyModel.dbAddRemoveLinkGetURL: "+i18n.error.ID_ILLEGAL);
+    console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.ID_ILLEGAL);
     return null;
   }
   if (!options.link_type) {
-    console.error("anyModel.dbAddRemoveLinkGetURL: "+i18n.error.LINK_TYPE_MISSING);
+    console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.LINK_TYPE_MISSING);
     return null;
   }
   let param_str = "?echo=y"+
                   "&cmd=upd"+
-                  "&upd=link"+
                   "&type="+the_type+
                   "&"+the_type+"_id"+"="+the_id+
                   "&link_type="+options.link_type;
   if (options.link_id)
     param_str += "&rem="+options.link_id;
   else {
-    let has_add_or_del = false;
+    let has_add_or_rem = false;
     if (options.select) {
       let sel = [...options.select];
       param_str += "&add="+sel;
-      has_add_or_del = true;
+      has_add_or_rem = true;
     }
     if (options.unselect) {
       let unsel = [...options.unselect];
       param_str += "&rem="+unsel;
-      has_add_or_del = true;
+      has_add_or_rem = true;
     }
-    if (!has_add_or_del) {
-      console.error("anyModel.dbAddRemoveLinkGetURL: "+i18n.error.LINK_ITEMS_MISSING);
+    if (!has_add_or_rem) {
+      console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.LINK_ITEMS_MISSING);
       return null;
     }
   }
@@ -2007,10 +2006,10 @@ anyModel.prototype.dbAddRemoveLinkGetURL = function (options)
   param_str += options.header   ? "&header="  +options.header : "";
   param_str += options.grouping ? "&grouping="+options.grouping : "";
   return this._getDataSourceName() + param_str;
-}; // dbAddRemoveLinkGetURL
+}; // dbUpdateLinkListGetURL
 
-// Default success callback method for dbAddRemoveLink
-anyModel.prototype.dbAddRemoveLinkSuccess = function (context,serverdata,options)
+// Default success callback method for dbUpdateLinkList
+anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
   self.last_db_command = "updlink";
@@ -2025,9 +2024,9 @@ anyModel.prototype.dbAddRemoveLinkSuccess = function (context,serverdata,options
       self.error        = i18n.error.SERVER_ERROR;
     }
     if (self.message)
-      console.log("anyModel.dbAddRemoveLinkSuccess: "+self.message);
+      console.log("anyModel.dbUpdateLinkListSuccess: "+self.message);
     if (self.error_server)
-      console.error("anyModel.dbAddRemoveLinkSuccess: "+self.error_server);
+      console.error("anyModel.dbUpdateLinkListSuccess: "+self.error_server);
     if (serverdata.data && serverdata.error == "")
       self.dataUpdateLinkList({ unselect:  options.unselect,
                                 select:    options.select,
@@ -2041,19 +2040,21 @@ anyModel.prototype.dbAddRemoveLinkSuccess = function (context,serverdata,options
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
     self.cbExecute();
   return context;
-}; // dbAddRemoveLinkSuccess
+}; // dbUpdateLinkListSuccess
 
 /**
  * @method dbChangeLink
  * @description Change individual value(s) for an item.
  * @param {Object} options An object which may contain these elements:
  *
- *        {String} type:     The type of items in the list.
- *                           Optional. Default: `this.type`.
- *        {String} link_id:  The id of the item to which the list "belongs" (is linked to).
- *                           Mandatory.
- *        {Object} select:
- *        {Object} unselect:
+ *        {String} type:        The type of items in the list.
+ *                              Optional. Default: `this.type`.
+ *        {String} id:          The id of the item.
+ *                              Mandatory.
+ *        {Object} link_type:   The type of the item to which the list "belongs" (is linked to).
+ *                              Optional. Default: `this.type`.
+ *        {String} link_id:     The id of the item to which the list "belongs" (is linked to).
+ *                              Mandatory.
  *        {integer} timeoutSec: Number of seconds before timing out.
  *                              Optional. Default: 10.
  *
@@ -2144,7 +2145,7 @@ anyModel.prototype.dbChangeLinkGetURL = function (options)
   }
   let param_str = "?echo=y"+
                   "&cmd=upd"+
-                  "&upd=link"+
+                  "&cha=y"+
                   "&type="+the_type+
                   "&"+the_type+"_id"+"="+the_id;
   if (options.link_type)
@@ -2152,8 +2153,6 @@ anyModel.prototype.dbChangeLinkGetURL = function (options)
   param_str += "&link_id="+options.link_id;
   let nam = [...options.change_names];
   let val = [...options.change_values];
-  param_str += "&cha="+sel;
-  has_add_or_del = true;
   param_str += "&sea=y";
   param_str += options.header   ? "&header="  +options.header : "";
   param_str += options.grouping ? "&grouping="+options.grouping : "";

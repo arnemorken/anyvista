@@ -1926,7 +1926,7 @@ class anyTable extends dbTable
   /////////////////////////////////////////////////////////////////////////////
 
   /**
-   * Update data
+   * Update data, either an existing item or a link to one.
    *
    * @return array|null Data array, or null on error or no data
    */
@@ -1935,65 +1935,49 @@ class anyTable extends dbTable
     if (!isset($this->mId) || $this->mId == "")
       return $this->dbInsert(); // No id, assume it is a new item
 
-    // We have an id, so we are updating an existing item or a link to one.
-    $upd_what = Parameters::get("upd");
-    if (!$upd_what || $upd_what == "") {
-      $this->mError = "";
-      if (!$this->dbValidateUpdate())
-        return null;
-      // Initialize
-      $this->mData           = null;
-      $this->mNumRowsChanged = 0;
-      $this->initFieldsFromParam();
+    if (Parameters::get("add") || Parameters::get("rem"))
+      return $this->dbUpdateLinkList();
 
-      // Update normal table
-      $stmt = $this->dbPrepareUpdateStmt();
-      //elog("dbUpdate:".$stmt);
-      if ($stmt) { // May be null if we only update meta fields (or link fields for item lists)
-        if (!$this->query($stmt))
-          return null;
-      }
-      if ($this->isError())
-        return null;
-      $this->mNumRowsChanged = $this->getNumRowsChanged();
+    if (Parameters::get("cha")) // TODO! Not tested
+      return $this->dbChangeLink();
 
-      // Update meta table
-      $this->dbMetaInsertOrUpdate($this->mId);
-
-      // Update link table(s) if any of the link fields (left join fields) are changed
-      if (Parameters::get("link_type") && Parameters::get("link_id"))
-        $this->dbChangeLink();
-
-      // Set result message
-      if ($this->mNumRowsChanged > 0)
-        $this->setMessage($this->mUpdateSuccessMsg);
-      else
-        $this->setMessage($this->mUpdateNothingToDo);
-    }
-    else
-    if ($upd_what == "link") {
-      return $this->dbUpdateLink();
-    }
-    else {
-      $this->setError("Illegal parameter value: $upd_what. ");
+    if (!$this->dbValidateUpdate())
       return null;
+    // Initialize
+    $this->mData           = null;
+    $this->mNumRowsChanged = 0;
+    $this->initFieldsFromParam();
+
+    // Update normal table
+    $stmt = $this->dbPrepareUpdateStmt();
+    //elog("dbUpdate:".$stmt);
+    if ($stmt) { // May be null if we only update meta fields (or link fields for item lists)
+      if (!$this->query($stmt))
+        return null;
     }
+    if ($this->isError())
+      return null;
+    $this->mNumRowsChanged = $this->getNumRowsChanged();
+
+    // Update meta table
+    $this->dbMetaInsertOrUpdate($this->mId);
+
+    // Update link table(s) if any of the link fields (left join fields) are changed
+    if (Parameters::get("link_type") && Parameters::get("link_id"))
+      $this->dbChangeLink();
+
+    // Set result message
+    if ($this->mNumRowsChanged > 0)
+      $this->setMessage($this->mUpdateSuccessMsg);
+    else
+      $this->setMessage($this->mUpdateNothingToDo);
+
     // Call success handler
     if (method_exists($this,"dbUpdateSuccess"))
       $this->dbUpdateSuccess();
 
     return $this->mData;
   } // dbUpdate
-
-  private function dbUpdateLink()
-  {
-    if (Parameters::get("add") || Parameters::get("rem"))
-      return $this->dbAddRemoveLink();
-    else
-    if (Parameters::get("cha")) // TODO! Not tested
-      return $this->dbChangeLink();
-    return null;
-  } // dbUpdateLink
 
   protected function dbValidateUpdate()
   {
@@ -2105,12 +2089,13 @@ class anyTable extends dbTable
     if (!$this->query($stmt))
       return false;
     $nextrow = $this->getNext(true);
-    if ($nextrow === null)
+    if ($nextrow === null) {
       // Insert
       $stmt = "INSERT INTO ".$this->mTableNameMeta." ".
               "(".$this->mIdKeyMetaTable.",meta_key,meta_value) VALUES (".
               $id.",'".$key."','".$val."'".
               ")";
+    }
     else {
       // Update
       $meta_id = $nextrow[$this->mMetaId];
@@ -2133,7 +2118,7 @@ class anyTable extends dbTable
   /////////////////////////// Insert or update link ///////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  public function dbAddRemoveLink()
+  public function dbUpdateLinkList()
   {
     $this->mError = "";
     if (!$this->dbValidateUpdate())
@@ -2178,7 +2163,7 @@ class anyTable extends dbTable
                       $id_key_link."='".intval($delval)."' ".
                       "AND ".
                       $id_key.     "='".intval($id)."'";
-              //elog("dbAddRemoveLink(1):".$stmt);
+              //elog("dbUpdateLinkList(1):".$stmt);
               if (!$this->query($stmt))
                 return null; // TODO! Give warning and continue instead?
             }
@@ -2198,7 +2183,7 @@ class anyTable extends dbTable
                       ") VALUES (".
                       intval($insval).",".intval($id).
                       ")";
-              //elog("dbAddRemoveLink(3):".$stmt);
+              //elog("dbUpdateLinkList(3):".$stmt);
               if (!$this->query($stmt))
                 return null; // TODO! Give warning and continue instead?
             }
@@ -2216,7 +2201,7 @@ class anyTable extends dbTable
               $stmt = "UPDATE ".$this->mTableName." ".
                       "SET parent_id=NULL ".
                       "WHERE ".$id_key."='".intval($delval)."'";
-              //elog("dbAddRemoveLink(4):".$stmt);
+              //elog("dbUpdateLinkList(4):".$stmt);
               if (!$this->query($stmt))
                 return null;
             }
@@ -2229,7 +2214,7 @@ class anyTable extends dbTable
               $stmt = "UPDATE ".$this->mTableName." ".
                       "SET parent_id='".intval($id)."' ".
                       "WHERE ".$id_key."='".intval($updval)."'";
-              //elog("dbAddRemoveLink(5):".$stmt);
+              //elog("dbUpdateLinkList(5):".$stmt);
               if (!$this->query($stmt))
                 return null;
             }
@@ -2239,7 +2224,7 @@ class anyTable extends dbTable
     }
     $this->setMessage($this->mUpdateSuccessMsg);
     return $this->dbSearch(); // Return the complete data set to client
-  } // dbAddRemoveLink
+  } // dbUpdateLinkList
 
   // Update the fields of a link. The link must exist in the link table.
   public function dbChangeLink()

@@ -750,7 +750,7 @@ anyTable.prototype.dbUpdate = async function(options)
 anyTable.prototype.dbUpdateLink = function(options)
   {
     if (options.add || options.rem)
-      this.dbAddRemoveLink();
+      this.dbUpdateLinkList();
     else
     if (options.cha) // TODO! Not tested
       this.dbChangeLink();
@@ -818,7 +818,7 @@ anyTable.prototype.dbItemExists = async function(id)
 /////////////////////////// Insert or update link ///////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-anyTable.prototype.dbAddRemoveLink = async function(options)
+anyTable.prototype.dbUpdateLinkList = async function(options)
 {
   let link_type = options.link_type;
   if (!link_type) {
@@ -850,7 +850,7 @@ anyTable.prototype.dbAddRemoveLink = async function(options)
           if (delval) {
             let stmt = "DELETE FROM "+link_table+" "+
                        "WHERE "+id_key_link+"="+delval+" AND "+id_key+"="+id+"";
-            //console.log("dbAddRemoveLink(1):"+stmt);
+            //console.log("dbUpdateLinkList(1):"+stmt);
             await alasql.promise(stmt);
           }
         }
@@ -863,14 +863,14 @@ anyTable.prototype.dbAddRemoveLink = async function(options)
             // Delete old list so as to avoid error message when inserting (insert-or-update)
             let stmt = "DELETE FROM "+link_table+" "+
                        "WHERE "+id_key_link+"="+insval+" AND "+id_key+"="+id+"";
-            //console.log("dbAddRemoveLink(2):"+stmt);
+            //console.log("dbUpdateLinkList(2):"+stmt);
             await alasql.promise(stmt);
             stmt = "INSERT INTO "+link_table+" ("+
                    id_key_link+","+id_key+
                    ") VALUES ("+
                    insval+","+id+
                    ")";
-            //console.log("dbAddRemoveLink(3):"+stmt);
+            //console.log("dbUpdateLinkList(3):"+stmt);
             await alasql.promise(stmt);
           }
         }
@@ -888,7 +888,7 @@ anyTable.prototype.dbAddRemoveLink = async function(options)
             let stmt = "UPDATE "+this.tableName+" "+
                        "SET parent_id=NULL "+
                        "WHERE "+id_key+"="+delval+"";
-            //console.log("dbAddRemoveLink(4):"+stmt);
+            //console.log("dbUpdateLinkList(4):"+stmt);
             await alasql.promise(stmt);
           }
         }
@@ -901,14 +901,14 @@ anyTable.prototype.dbAddRemoveLink = async function(options)
             let stmt = "UPDATE "+this.tableName+" "+
                        "SET parent_id="+id+" "+
                        "WHERE "+id_key+"="+updval+"";
-            //console.log("dbAddRemoveLink(5):"+stmt);
+            //console.log("dbUpdateLinkList(5):"+stmt);
             await alasql.promise(stmt);
           }
         }
       }
     }
   }
-}; // dbAddRemoveLink
+}; // dbUpdateLinkList
 
 // Update the fields of a link. The link must exist in the link table.
 anyTable.prototype.dbChangeLink = async function(options)

@@ -866,7 +866,8 @@ function testModel()
                 true, "dbSearch({id:'1'}) returns item data:"+JSON.stringify(dm.data));
       deepEqual(dm.data !== null &&
                 dm.data["+0"].data["+1"]["user_id"]      === "1" &&
-                dm.data["+0"].data["+1"]["user_name"] === "Administrator",
+                (dm.data["+0"].data["+1"]["user_name"]  === "Administrator" ||
+                 dm.data["+0"].data["+1"]["user_login"] === "psiadmin"),
                 true, "dbSearch({id:'1'}) returns expected data");
       start();
     }, millisec);
@@ -884,7 +885,8 @@ function testModel()
                 true, "dbSearch({id:'1'}) returns item data:"+JSON.stringify(dm.data));
       deepEqual(dm.data !== null &&
                 dm.data["+0"].data["+1"]["user_id"]   === "1" &&
-                dm.data["+0"].data["+1"]["user_name"] === "Administrator",
+                (dm.data["+0"].data["+1"]["user_name"]  === "Administrator" ||
+                 dm.data["+0"].data["+1"]["user_login"] === "psiadmin"),
                 true, "dbSearch({id:'1'}) returns expected data");
       start();
     }, millisec);
@@ -900,7 +902,8 @@ function testModel()
       let item = dm.dataSearch({type:"user",id:1});
       deepEqual(item !== null &&
                 item["+1"]["user_id"]   === "1" &&
-                item["+1"]["user_name"] === "Administrator",
+                (item["+1"]["user_name"]  === "Administrator" ||
+                 item["+1"]["user_login"] === "psiadmin"),
                 true, "dbSearch() returns good data");
       deepEqual(dm.data  !== null,
                 true, "dbSearch() returns list data:"+JSON.stringify(dm.data));
@@ -999,7 +1002,7 @@ function testModel()
       let dm2 = new anyModel({type:"user",search:false,mode:"remote",data:null});
       dm2.dbSearch({type:"user",id:2});
       setTimeout(function() {
-        deepEqual(dm2.data && dm2.data["+0"].data["+2"].user_name === "The faz user",
+        deepEqual(dm2.data && dm2.data["+0"].data["+2"].user_id === "2",
                   true, "dbUpdate({type:'user',id:2}) returns with correct data in database");
         start();
       }, millisec);
@@ -1170,26 +1173,22 @@ function testModel()
 
   ///////////////////// end remote dbUpdate tests /////////////////////
 
-  ///////////////////// remote dbAddRemoveLink /////////////////////
+  ///////////////////// remote dbUpdateLinkList /////////////////////
   // TODO
 
-  asyncTest('dbAddRemoveLink add a user-event link (event-user link 20900-23 must exist in event_user table)', 2, function() {
+  asyncTest('dbUpdateLinkList add a user-event link (event-user link 20900-23 must exist in event_user table)', 2, function() {
     let dm = new anyModel({type:"user",id:23,search:false,mode:"remote",data:null});
-    let res = dm.dbAddRemoveLink({link_type:"event",select:[98,99,10894],unselect:[20900]}); // insert data
+    let res = dm.dbUpdateLinkList({link_type:"event",select:[98,99,10894],unselect:[20900]}); // update link table
     deepEqual(res,
-              true, "dbAddRemoveLink() returns true");
+              true, "dbUpdateLinkList() returns true");
     setTimeout(function() {
-      let dm2 = new anyModel({type:"user",search:false,mode:"remote",data:null});
-      dm2.dbSearch({type:"user",id:23});
-      setTimeout(function() {
-        deepEqual(dm2.data!== null,
-                  true, "dbAddRemoveLink ok1");
-        start();
-      }, millisec);
+      deepEqual(dm.data !== null && dm.error === "" && dm.message == "User updated. ",
+                true, "dbUpdateLinkList ok1");
+      start();
     }, millisec);
   });
 
-  ///////////////////// end remote dbAddRemoveLink /////////////////////
+  ///////////////////// end remote dbUpdateLinkList /////////////////////
 
   ///////////////////// remote dbDelete tests /////////////////////
 

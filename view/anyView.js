@@ -4279,7 +4279,7 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
    simple:      true,
    from:        0,
    num:         this.options.itemsPerPage,
-   success:     this.dbAddRemoveLinkDialog, // Call the view success handler
+   success:     this.dbUpdateLinkListDialog, // Call the view success handler
   };
   this.showMessages("",true);
   return this.model.dbSearch(options); // TODO! What if mode == "local"?
@@ -4288,7 +4288,7 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
 // Create a list of selectable items and display in a modal dialog.
 // Note: The 'this' context is here the calling model! Use options.parent_view for view methods!
 // TODO! When deleting the last entry in a list, the tab is not removed (if anyViewTabs is used)
-$.any.anyView.prototype.dbAddRemoveLinkDialog = function (context,serverdata,options)
+$.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
 {
   let self = context ? context : this;
   self.last_db_command = "sea";
@@ -4304,9 +4304,9 @@ $.any.anyView.prototype.dbAddRemoveLinkDialog = function (context,serverdata,opt
       self.error        = i18n.error.SERVER_ERROR;
     }
     if (self.message)
-      console.log("anyView.dbAddRemoveLinkDialog: "+self.message);
+      console.log("anyView.dbUpdateLinkListDialog: "+self.message);
     if (self.error_server)
-      console.error("anyView.dbAddRemoveLinkDialog: "+self.error_server);
+      console.error("anyView.dbUpdateLinkListDialog: "+self.error_server);
 
     if (serverdata.data) {
       let parent_view = options.parent_view ? options.parent_view : this;
@@ -4347,7 +4347,7 @@ $.any.anyView.prototype.dbAddRemoveLinkDialog = function (context,serverdata,opt
             width:      "25em", // TODO! css
             ok:         true,
             cancel:     true,
-            okFunction: parent_view.dbAddRemoveLink,
+            okFunction: parent_view.dbUpdateLinkList,
             context:    parent_view,
             // Sent to okFunction:
             type:       self.type,
@@ -4379,7 +4379,7 @@ $.any.anyView.prototype.dbAddRemoveLinkDialog = function (context,serverdata,opt
     }
   }
   return context;
-}; // dbAddRemoveLinkDialog
+}; // dbUpdateLinkListDialog
 
 $.any.anyView.prototype._addSelections = function (type,id,model,preselected,mod_opt)
 {
@@ -4395,7 +4395,7 @@ $.any.anyView.prototype._addSelections = function (type,id,model,preselected,mod
   }
 }; // _addSelections
 
-$.any.anyView.prototype.dbAddRemoveLink = function (opt)
+$.any.anyView.prototype.dbUpdateLinkList = function (opt)
 {
   // Close dialog
   w3_modaldialog_close(opt);
@@ -4416,7 +4416,7 @@ $.any.anyView.prototype.dbAddRemoveLink = function (opt)
                id:   opt.id,
              });
   this.removeFromView(opt);
-  if (!this.model.dbAddRemoveLink({
+  if (!this.model.dbUpdateLinkList({
          view:      opt.view, // Refresh only this view
          data:      opt.data,
          type:      the_type,
@@ -4432,7 +4432,7 @@ $.any.anyView.prototype.dbAddRemoveLink = function (opt)
     return false;
 
   return true;
-}; // dbAddRemoveLink
+}; // dbUpdateLinkList
 
 $.any.anyView.prototype.dbRemoveDialog = function (event)
 {
@@ -4483,7 +4483,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         width:      "25em",
         ok:         true,
         cancel:     true,
-        okFunction: this.dbAddRemoveLink,
+        okFunction: this.dbUpdateLinkList,
         context:    this,
         // Sent to okFunction:
         type:       type,
@@ -4512,7 +4512,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         select:    new Set(),
         unselect:  new Set().add(id),
     };
-    this.dbAddRemoveLink(opt);
+    this.dbUpdateLinkList(opt);
   }
   return this;
 }; // dbRemoveDialog

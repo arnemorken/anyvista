@@ -47,7 +47,7 @@ class dbTable
   protected function prepareData(&$inData) {} // Abstract
   public    function dbInsert()            {} // Abstract
   public    function dbUpdate()            {} // Abstract
-  public    function dbAddRemoveLink()     {} // Abstract
+  public    function dbUpdateLinkList()    {} // Abstract
   public    function dbDelete()            {} // Abstract
 
   /////////////////////////
