@@ -204,7 +204,7 @@ function csv2table()
                                       success: function() {
                                         doLog("Insertion of "+n_obj+" records complete",true);
                                       },
-                                      fail: function(con,jqXHR) {
+                                      fail:    function(con,jqXHR) {
                                         doLog(jqXHR.responseText,true);
                                       },
                                     });
@@ -244,12 +244,12 @@ function table2display()
     // otherwise the models listener will not have been initialized and results from
     // a database search, for example, will not be automatically displayed.
     //
-    let data_view  = new anyView({ model:      data_model,
-                                   filters:    all_filters,
-                                   id:         "any_result",
-                                   isEditable: false,
+    let data_view  = new anyView({ model:            data_model,
+                                   filters:          all_filters,
+                                   id:               "any_result",
+                                   isEditable:       false,
                                    onEnterInsertNew: false,
-                                   showToolbar: show_header,
+                                   showToolbar:      show_header,
                                 });
     //
     // Get data from table
@@ -308,14 +308,14 @@ function csv2display()
       //
       // Create data view
       //
-      let data_view = new anyView({ model:   data_model,
-                                    filters: all_filters,
-                                    id:      "any_result",
-                                    isEditable: false,
+      let data_view = new anyView({ model:            data_model,
+                                    filters:          all_filters,
+                                    id:               "any_result",
+                                    isEditable:       false,
                                     onEnterInsertNew: false,
-                                    showToolbar: show_header,
-                                    defaultKind: "list",
-                                    defaultType: data_model.type,
+                                    showToolbar:      show_header,
+                                    defaultKind:      "list",
+                                    defaultType:      data_model.type,
                                  });
       //
       // Insert in data model
