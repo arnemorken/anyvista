@@ -1562,8 +1562,7 @@ class anyTable extends dbTable
             $data_tree[$ngidx][$this->mNameKey] = $data[$gidx][$idx][$this->mNameKey];
         }
       } // if mGrouping
-      $num = 0; // Used by page links
-      $data_tree[$ngidx]["data"] = $this->buildDataTree($data[$gidx],null,false,$num);
+      $data_tree[$ngidx]["data"] = $this->buildDataTree($data[$gidx],null);
       // Preserve "grouping_num_results" value
       if (isset($data[$gidx]["grouping_num_results"]))
         $data_tree[$ngidx]["data"]["grouping_num_results"] = $data[$gidx]["grouping_num_results"];
@@ -1601,10 +1600,9 @@ class anyTable extends dbTable
   protected function dbSearchGroupInfo($type=null,$group_id=null)
   {
     // Get group tree and append data to it
-    $num = 0;
     $data_tree = array();
     $data_tree["group"] = array();
-    $data_tree["group"] = $this->buildDataTree($data_tree["group"],null,false,$num);
+    $data_tree["group"] = $this->buildDataTree($data_tree["group"],null);
     //vlog("dbSearchGroupInfo,data_tree:",$data_tree);
 
     // Add the default "nogroup" group
@@ -1619,10 +1617,8 @@ class anyTable extends dbTable
     return $data_tree;
   } // dbSearchGroupInfo
 
-  protected function buildDataTree(&$flatdata,$parentId=null,$getPageLinks=false,&$num=null)
+  protected function buildDataTree(&$flatdata,$parentId=null)
   {
-    if (!$num)
-      $num = 0;
     ++$this->mRecDepth;
     if ($this->mRecDepth > $this->mLastNumRows + $this->mRecMax) {
       error_log("buildDataTree: Too much recursion ($this->mRecDepth)");
@@ -1646,22 +1642,18 @@ class anyTable extends dbTable
           if (!isset($subdata["parent_id"]))
             $subdata["parent_id"] = NULL;
           if ($subdata["parent_id"] == $parentId) {
-            if ($getPageLinks && $subdata["parent_id"] === null)
-              $num++; // "Top-level" item, so we count it
-            if (!$getPageLinks || ($num > $flatdata["page_links"]["from"] && $num <= $flatdata["page_links"]["to"])) {
-              if (isset($subdata[$id_name]) && $subdata[$id_name] != "")
-                $children = $this->buildDataTree($flatdata,$subdata[$id_name],$getPageLinks,$num);
-              else
-                $children = null;
-              if ($this->mRecDepth > $this->mLastNumRows + $this->mRecMax)
-                break; // Break recursion
-              if ($children)
-                $subdata["data"] = $children;
-              if ($parent_not_in_group)
-                $subdata["parent_id"] = $pid;
-              $retval[$idx] = $subdata;
-              unset($subdata);
-            } // if getPageLinks
+            if (isset($subdata[$id_name]) && $subdata[$id_name] != "")
+              $children = $this->buildDataTree($flatdata,$subdata[$id_name]);
+            else
+              $children = null;
+            if ($this->mRecDepth > $this->mLastNumRows + $this->mRecMax)
+              break; // Break recursion
+            if ($children)
+              $subdata["data"] = $children;
+            if ($parent_not_in_group)
+              $subdata["parent_id"] = $pid;
+            $retval[$idx] = $subdata;
+            unset($subdata);
           } // if subdata
           else {
             if ($pid != null)
@@ -2118,6 +2110,7 @@ class anyTable extends dbTable
   /////////////////////////// Insert or update link ///////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
+  // Add or remove a link
   public function dbUpdateLinkList()
   {
     $this->mError = "";
