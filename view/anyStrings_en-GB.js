@@ -34,6 +34,7 @@ var i18n = {
   error: {
     SYSTEM_ERROR:        "System error. ",
     SERVER_ERROR:        "Server error. See console log for details. ",
+    DATASOURCE_MISSING:  "No local data source. ",
     CALLBACK_MISSING:    "Callback function or context missing. ",
     SUCCCESS_CB_MISSING: "Success callback missing for local mode. ",
     VIEW_AREA_MISSING:   "View area missing. ",

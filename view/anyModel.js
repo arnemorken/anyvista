@@ -515,7 +515,7 @@ anyModel.prototype._getDataSourceName = function ()
 {
   if (this.mode == "remote")
     return any_defs.dataScript;
-  this.message = "No local data source. "; // TODO! i18n
+  this.message = i18n.error.DATASOURCE_MISSING;
   console.warn("anyModel._getDataSourceName: "+this.message);
   return "";
 }; // _getDataSourceName
