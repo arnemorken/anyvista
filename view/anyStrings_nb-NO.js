@@ -34,6 +34,7 @@ var i18n = {
   error: {
     SYSTEM_ERROR:        "Systemfeil. ",
     SERVER_ERROR:        "Serverfeil. Se konsoll loggen for detaljer. ",
+    DATASOURCE_MISSING:  "Mangler lokal datakilde. ",
     CALLBACK_MISSING:    "Mangler callback funksjon eller kontekst. ",
     SUCCCESS_CB_MISSING: "Mangler suksess callback for local modus. ",
     VIEW_AREA_MISSING:   "Mangler view område. ",
