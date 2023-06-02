@@ -62,9 +62,8 @@ function testModel()
               dm1.mode                       === "local" &&
               dm1.search                     === false &&
               dm1.search_term                === "" &&
-              dm1.auto_search_init           === true &&
+              dm1.auto_search                === true &&
               dm1.auto_callback              === false &&
-              dm1.page_links                 === null &&
               dm1.permission                 !== undefined &&
               dm1.permission.current_user_id === null &&
               dm1.permission.is_logged_in    === true &&
@@ -89,7 +88,7 @@ function testModel()
                 mode:             "local",
                 search:           false,
                 search_term:      "something",
-                auto_search_init: true,
+                auto_search:      true,
                 auto_callback:    false,
                 message:          "msg",
                 error:            "err",
@@ -102,7 +101,7 @@ function testModel()
               dm1.mode             === "local" &&
               dm1.search           === false &&
               dm1.search_term      === "something" &&
-              dm1.auto_search_init === true &&
+              dm1.auto_search      === true &&
               dm1.auto_callback    === false &&
               dm1.message          === "msg" &&
               dm1.error            === "err" &&
@@ -117,7 +116,7 @@ function testModel()
                 mode:             "local",
                 search:           false,
                 search_term:      "Some thing",
-                auto_search_init: true,
+                auto_search:      true,
                 auto_callback:    false,
                 message:          "The message",
                 error:            "The error",
@@ -132,7 +131,7 @@ function testModel()
               dm2.mode             === "local" &&
               dm2.search           === false &&
               dm2.search_term      === "Some thing" &&
-              dm2.auto_search_init === true &&
+              dm2.auto_search      === true &&
               dm2.auto_callback    === false &&
               dm2.message          === "The message" &&
               dm2.error            === errmsg,

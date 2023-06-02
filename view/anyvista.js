@@ -132,14 +132,6 @@
  *   TODO! Not implemented yet.<br/>
  *   *Example: `skip:["event_organizer","event_start_date"]`.
  *
- * - A `page_links` object, specifying pagination for a list, containing:
- *   - from, the start number in the list,
- *   - to, the end number in the list,
- *   - num, the number of list rows to display.
- *
- *   <br/>TODO! Not implemented yet.<br/>
- *   *Example: `page_links:{from:11,to:20,num:10}`.
- *
  * - A number of key / value pairs, that are the actual data that are to be displayed.<br/>
  *   *Example: `event_name:"Tour de France"`.
  *
@@ -154,11 +146,6 @@
  *            head | item | list: "[type]", // Optional, overrides a head|item|list specification on level above.
  *            edit: true | false,           // Optional. Default: false.
  *            add:  "[type]"                // Optional. Default: undefined
- *            page_links: {                 // Optional
- *              from: [start_item_no],      // Mandatory in `page_links`.
- *              to:   [end_item_no],        // Mandatory in `page_links`.
- *              num:  [number_of_items],    // Mandatory in `page_links`.
- *            },
  *            [type]_name: "[string]",      // Optional, but mandatory if any key / value pairs are given.
  *            [key]: "[value]",             // Optional. One or more key / value pairs.
  *            [key]: "[value]",

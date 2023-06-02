@@ -21,14 +21,14 @@
  * `type` (for example will type "foo" give rise to id_key "foo_id" and name_key "foo_name"). If no type
  * is specified, the model cannot be searched, synchronized with database etc. If the model contains data
  * for an item (which may or may not contain any kind of subdata), the `id` property should be set to the
- * if of the item and either `this.data[id]` or `this.data[hdr_id].data[id]` should exist (where hdr_id
+ * id of the item and either `this.data[id]` or `this.data[hdr_id].data[id]` should exist (where hdr_id
  * is the id of a single `head` entry).
  *
- * If used in connection with a database `mode` should be set to "remote" (see below). `type` will then
+ * If used in connection with a database, `mode` should be set to "remote" (see below). `type` will then
  * correspond to a database table and `id_key` to an id column in that table.
  *
- * See <a href="../modules/anyVista.html">anyVista`</a> for a full description of the format of the data structure
- * that the model works with.
+ * See <a href="../modules/anyVista.html">anyVista</a> for a full description of the format of the data
+ * structure that the model works with.
  *
  * The class contains:
  * - a constructor, which sets the model's variables according to `options`, or to default values,
@@ -42,58 +42,56 @@
  * @param {Object} options An object which may contain the following properties, all of which are optional
  *                         unless stated otherwise:
  *
- *      {Object}   data:             The data with which to initialize the model.
- *                                   Default: null.
- *      {String}   type:             Type, e.g. "user".
- *                                   Default: "".
- *      {String}   id:               Item id, if the top level data represents an item, e.g. "42".
- *                                   Default: null.
- *      {String}   id_key:           Id key, e.g. "user_id".
- *                                   Default: "[type]_id" if type is set, "" otherwise.
- *      {String}   name_key:         Name key, e.g. "user_name".
- *                                   Default: "[type]_name" if type is set, "" otherwise.
- *      {Object}   types:            The types the model might interact with.
- *                                   Default: null.
- *      {Array}    select:           List of ids that are marked as selected.
- *                                   Default: new Set().
- *      {Array}    unselect:         List of ids that are are marked as unselected.
- *                                   Default: new Set().
- *      {String}   mode:             Indicates whether db* operations should be performed by a locally defined
- *                                   method ("local") or call the default database method ("remote").
- *                                   Default: "local".
- *      {boolean}  search:           Whether to call the search method while initializing the class or while
- *                                   searching on the server.
- *                                   Default: false.
- *      {String}   search_term:      The string to search for when `search == true`.
- *                                   Default: "".
- *      {Array}    fields:           An array of strings to be sent to the server, indicating which columns of
- *                                   the table should be used in a search or update/insert. These fields are
- *                                   only applied if the server fails to find a filter corresponding to `type`.
- *                                   Default: null.
- *      {boolean}  auto_search_init: If true, the model will be initiated with the result of a search, and
- *                                   cbExecute will be called.
- *                                   Default: true.
- *      {boolean}  auto_callback:    If true, cbExecute will be called after calling dataInsert, dataUpdate
- *                                   and dataDelete.
- *                                   Default: false.
- *      {boolean}  auto_refresh:     If true, cbExecute will be called after calling dbSearch, dbUpdate,
- *                                   dbUpdateLinkList, dbUpdateLink and dbDelete.
- *                                   Default: true.
- *      {Array}    page_links:       Pagination links. Not used yet.
- *                                   Default: null.
- *      {Object}   permission:       Permissions (normally obtained from server). The object may contain:
- *                                     {integer} current_user_id:  The user id the current user is logged in with.
- *                                                                 Default: null.
- *                                     {boolean} is_logged_in:     True if the user is logged in.
- *                                                                 Default: true.
- *                                     {boolean} is_admin:         True if the user has admin privileges.
- *                                                                 Default: false.
- *      {String}   message:          Messages.
- *                                   Default: "".
- *      {String}   error:            Errors.
- *                                   Default: "".
- *      {String}   error_server:     Errors from server.
- *                                   Default: "".
+ *      {Object}   data:          The data with which to initialize the model.
+ *                                Default: null.
+ *      {String}   type:          Type, e.g. "user".
+ *                                Default: "".
+ *      {String}   id:            Item id, if the top level data represents an item, e.g. "42".
+ *                                Default: null.
+ *      {String}   id_key:        Id key, e.g. "user_id".
+ *                                Default: "[type]_id" if type is set, "" otherwise.
+ *      {String}   name_key:      Name key, e.g. "user_name".
+ *                                Default: "[type]_name" if type is set, "" otherwise.
+ *      {Object}   types:         The types the model might interact with.
+ *                                Default: null.
+ *      {Array}    select:        List of ids that are marked as selected.
+ *                                Default: new Set().
+ *      {Array}    unselect:      List of ids that are are marked as unselected.
+ *                                Default: new Set().
+ *      {String}   mode:          Indicates whether db* operations should be performed by a locally defined
+ *                                method ("local") or call the default database method ("remote").
+ *                                Default: "local".
+ *      {boolean}  search:        Whether to call the search method while initializing the class or while
+ *                                searching on the server.
+ *                                Default: false.
+ *      {String}   search_term:   The string to search for when `search == true`.
+ *                                Default: "".
+ *      {Array}    fields:        An array of strings to be sent to the server, indicating which columns of
+ *                                the table should be used in a search or update/insert. These fields are
+ *                                only applied if the server fails to find a filter corresponding to `type`.
+ *                                Default: null.
+ *      {boolean}  auto_search:   If true, the model will be initiated with the result of a search, and
+ *                                cbExecute will be called.
+ *                                Default: true.
+ *      {boolean}  auto_callback: If true, cbExecute will be called after calling dataInsert, dataUpdate
+ *                                and dataDelete.
+ *                                Default: false.
+ *      {boolean}  auto_refresh:  If true, cbExecute will be called after calling dbSearch, dbUpdate,
+ *                                dbUpdateLinkList, dbUpdateLink and dbDelete.
+ *                                Default: true.
+ *      {Object}   permission:    Permissions (normally obtained from server). The object may contain:
+ *                                  {integer} current_user_id:  The user id the current user is logged in with.
+ *                                                              Default: null.
+ *                                  {boolean} is_logged_in:     True if the user is logged in.
+ *                                                              Default: true.
+ *                                  {boolean} is_admin:         True if the user has admin privileges.
+ *                                                              Default: false.
+ *      {String}   message:       Messages.
+ *                                Default: "".
+ *      {String}   error:         Errors.
+ *                                Default: "".
+ *      {String}   error_server:  Errors from server.
+ *                                Default: "".
  *
  * @example
  *      new anyModel({ type:"user",id_key:"user_id",id:"38",data:{user_name:"Aretha Franklin"} });
@@ -206,12 +204,12 @@ var anyModel = function (options)
   this.fields = null;
 
   /**
-  * @property {Boolean} auto_search_init
+  * @property {Boolean} auto_search
   * @default true
-  * @description If auto_search_init is true, the model will be automatically initialized
+  * @description If auto_search is true, the model will be automatically initialized
   *              with the data returned by dbSearch, and cbExecute will be called.
   */
-  this.auto_search_init = true;
+  this.auto_search = true;
 
   /**
   * @property {Boolean} auto_callback
@@ -228,14 +226,6 @@ var anyModel = function (options)
   *              dataInsert, dataUpdate and dataDelete.
   */
   this.auto_refresh = true;
-
-  /**
-  * @property {Object} page_links
-  * @default null
-  * @description Page links when displaying a list. Optional.
-  *              Not used yet.
-  */
-  this.page_links = null;
 
   /**
   * @property {Integer} db_timeout_sec
@@ -308,25 +298,24 @@ var anyModel = function (options)
 //
 anyModel.prototype._dataInitDefault = function ()
 {
-  this.data             = null;
-  this.id               = null;
-  this.types            = null;
+  this.data            = null;
+  this.id              = null;
+  this.types           = null;
   this._dataInitSelect();
-  this.mode             = "local";
-  this.search           = false;
-  this.search_term      = "";
-  this.last_term        = "";
-  this.auto_search_init = true;
-  this.auto_callback    = false;
-  this.page_links       = null;
-  this.db_timeout_sec   = 10;
-  this.message          = "";
-  this.error            = "";
-  this.error_server     = "";
+  this.mode            = "local";
+  this.search          = false;
+  this.search_term     = "";
+  this.last_term       = "";
+  this.auto_search     = true;
+  this.auto_callback   = false;
+  this.db_timeout_sec  = 10;
+  this.message         = "";
+  this.error           = "";
+  this.error_server    = "";
   // "Private" variables:
-  this._listeners       = [];
-  this.max              = -1;
-  this.last_db_command  = null; // Used by dataInit
+  this._listeners      = [];
+  this.max             = -1;
+  this.last_db_command = null; // Used by dataInit
 }; // _dataInitDefault
 
 anyModel.prototype._dataInitSelect = function ()
@@ -371,9 +360,9 @@ anyModel.prototype.dataInit = function (options)
   else
   if (options) {
     //console.log("anyModel.dataInit options:\n"+JSON.stringify(options,2,2));
-    if (options.data || this.last_db_command == "sea") { this.data             = options.data; }
-    if (options.type)                                  { this.type             = options.type; }
-    if (options.id)                                    { this.id               = options.id; }
+    if (options.data || this.last_db_command == "sea") { this.data           = options.data; }
+    if (options.type)                                  { this.type           = options.type; }
+    if (options.id)                                    { this.id             = options.id; }
     if (this.id && this.data) {
       let hdr_id = Object.keys(this.data)[0];
       let the_id = this.data[this.id] ? this.id : this.data["+"+this.id] ? "+"+this.id : null;
@@ -382,27 +371,26 @@ anyModel.prototype.dataInit = function (options)
         this.id = null;
       }
     }
-    if (options.id_key)                                { this.id_key           = options.id_key; }
+    if (options.id_key)                                { this.id_key         = options.id_key; }
     else
-    if (!this.id_key && this.type)                     { this.id_key           = this.type+"_id"; }
-    if (options.name_key)                              { this.name_key         = options.name_key; }
+    if (!this.id_key && this.type)                     { this.id_key         = this.type+"_id"; }
+    if (options.name_key)                              { this.name_key       = options.name_key; }
     else
-    if (!this.name_key && this.type)                   { this.name_key         = this.type+"_name"; }
-    if (options.types)                                 { this.types            = options.types; }
-    if (options.select)                                { this.select           = options.select; }
-    if (options.unselect)                              { this.unselect         = options.unselect; }
-    if (options.mode)                                  { this.mode             = options.mode; }
-    if (options.search)                                { this.search           = options.search; }
-    if (options.search_term)                           { this.search_term      = options.search_term; }
-    if (options.last_term)                             { this.last_term        = options.last_term; }
-    if (options.fields)                                { this.fields           = options.fields; }
-    if (options.auto_search_init)                      { this.auto_search_init = options.auto_search_init; }
-    if (options.auto_callback)                         { this.auto_callback    = options.auto_callback; }
-    if (options.page_links)                            { this.page_links       = options.page_links; }
-    if (options.db_timeout_sec)                        { this.db_timeout_sec   = options.db_timeout_sec; }
-    if (options.permission)                            { this.permission       = options.permission; }
-    if (options.message)                               { this.message          = options.message; }
-    if (options.error)                                 { this.error            = options.error; }
+    if (!this.name_key && this.type)                   { this.name_key       = this.type+"_name"; }
+    if (options.types)                                 { this.types          = options.types; }
+    if (options.select)                                { this.select         = options.select; }
+    if (options.unselect)                              { this.unselect       = options.unselect; }
+    if (options.mode)                                  { this.mode           = options.mode; }
+    if (options.search)                                { this.search         = options.search; }
+    if (options.search_term)                           { this.search_term    = options.search_term; }
+    if (options.last_term)                             { this.last_term      = options.last_term; }
+    if (options.fields)                                { this.fields         = options.fields; }
+    if (options.auto_search)                           { this.auto_search    = options.auto_search; }
+    if (options.auto_callback)                         { this.auto_callback  = options.auto_callback; }
+    if (options.db_timeout_sec)                        { this.db_timeout_sec = options.db_timeout_sec; }
+    if (options.permission)                            { this.permission     = options.permission; }
+    if (options.message)                               { this.message        = options.message; }
+    if (options.error)                                 { this.error          = options.error; }
     if (options.error) {
       if (this.mode == "remote") {
         this.error_server = options.error;
@@ -501,7 +489,7 @@ anyModel.prototype.cbExecute = function ()
 }; // cbExecute
 
 /////////////////////////////////////////////////////////////////////////////////
-//////// Methods that work with local data structure only (not database) ////////
+// Methods that work with local data structure only (not database)             //
 /////////////////////////////////////////////////////////////////////////////////
 
 //
@@ -1092,6 +1080,11 @@ anyModel.prototype.dataUpdateLinkList = function (options)
   return true;
 }; // dataUpdateLinkList
 
+anyModel.prototype.dataUpdateLink = function (options)
+{
+  console.log("dataUpdateLink: Not implemented");
+}; // dataUpdateLink
+
 /**
  * @method dataDelete
  * @description Deletes an item with a specified id from the data structure.
@@ -1164,7 +1157,7 @@ anyModel.prototype.dataDelete = function (options)
 }; // dataDelete
 
 /////////////////////////////////////////////////////////////////////////////////
-//////// Methods that work with database                                 ////////
+// Methods that work with database                                             //
 /////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -1466,10 +1459,10 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
       console.log("anyModel.dbSearchSuccess: "+self.message);
     if (self.error_server)
       console.error("anyModel.dbSearchSuccess: "+self.error_server);
-    if (self.auto_search_init && self.dataInit)
+    if (self.auto_search && self.dataInit)
       self.dataInit(serverdata);
   }
-  if (self.cbExecute && self.auto_search_init && self.auto_refresh && options.auto_refresh !== false)
+  if (self.cbExecute && self.auto_search && self.auto_refresh && options.auto_refresh !== false)
     self.cbExecute();
   return context;
 }; // dbSearchSuccess
