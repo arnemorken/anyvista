@@ -52,24 +52,24 @@
  *                                Default: "[type]_id" if type is set, "" otherwise.
  *      {String}   name_key:      Name key, e.g. "user_name".
  *                                Default: "[type]_name" if type is set, "" otherwise.
- *      {Object}   types:         The types the model might interact with.
+ *      {Object}   types:         The types the model might interact (link) with.
  *                                Default: null.
  *      {Array}    select:        List of ids that are marked as selected.
  *                                Default: new Set().
- *      {Array}    unselect:      List of ids that are are marked as unselected.
+ *      {Array}    unselect:      List of ids that are marked as unselected.
  *                                Default: new Set().
  *      {String}   mode:          Indicates whether db* operations should be performed by a locally defined
- *                                method ("local") or call the default database method ("remote").
+ *                                method ("local") or call a database method on a remote server ("remote").
  *                                Default: "local".
+ *      {Array}    fields:        An array of strings to be sent to the server, indicating which columns of
+ *                                the table should be used in a search or update/insert. These fields are
+ *                                only applied if the server fails to find a filter corresponding to `type`.
+ *                                Default: null.
  *      {boolean}  search:        Whether to call the search method while initializing the class or while
  *                                searching on the server.
  *                                Default: false.
  *      {String}   search_term:   The string to search for when `search == true`.
  *                                Default: "".
- *      {Array}    fields:        An array of strings to be sent to the server, indicating which columns of
- *                                the table should be used in a search or update/insert. These fields are
- *                                only applied if the server fails to find a filter corresponding to `type`.
- *                                Default: null.
  *      {boolean}  auto_search:   If true, the model will be initiated with the result of a search, and
  *                                cbExecute will be called.
  *                                Default: true.
@@ -80,7 +80,8 @@
  *                                dbUpdateLinkList, dbUpdateLink and dbDelete.
  *                                Default: true.
  *      {Object}   permission:    Permissions (normally obtained from server). The object may contain:
- *                                  {integer} current_user_id:  The user id the current user is logged in with.
+ *                                  {integer} current_user_id:  The user id the current user is logged in
+ *                                                              with (if applicable).
  *                                                              Default: null.
  *                                  {boolean} is_logged_in:     True if the user is logged in.
  *                                                              Default: true.
@@ -101,16 +102,15 @@ var anyModel = function (options)
   /**
   * @property {Object} data
   * @default null
-  * @description The model's data. Optional. Default: null.
+  * @description The model's data.
   */
   this.data = null;
 
   /**
   * @property {String} type
-  * @default null
+  * @default ""
   * @description The model's type, e.g. `"user"`.
-  *              If already set by a derived class, it will not be initialized.
-  *              Optional. Default: "".
+  *              If already set (by a derived class), it will not be initialized.
   */
   if (!this.type)
     this.type = "";
@@ -119,7 +119,6 @@ var anyModel = function (options)
   * @property {String} id
   * @default null
   * @description Item id, if the top level data represents an item, e.g. "42".
-  *              Optional. Default: "".
   */
   if (!this.id)
     this.id = null;
@@ -129,7 +128,8 @@ var anyModel = function (options)
   * @default "[type]_id" if type is set, "" otherwise.
   * @description Name of the model's id key, e.g. `"user_id"`.
   *              If already set (by a derived class), it will not be initialized.
-  *              Optional. If not specified, "[type]_id" is used as the model's id key.
+  *              If not specified, "[type]_id" is used as the model's id key
+  *              if `type` is set, otherwise it defaults to "".
   */
   if (!this.id_key)
     this.id_key = this.type ? this.type+"_id" : "";
@@ -139,7 +139,8 @@ var anyModel = function (options)
   * @default "[type]_name" if type is set, "" otherwise.
   * @description The model's name key, e.g. `"user_name"`.
   *              If already set (by a derived class), it will not be initialized.
-  *              Optional. If not specified, "[type]_name" is used as the model's name key.
+  *              If not specified, "[type]_name" is used as the model's name key
+  *              if `type` is set, otherwise it defaults to "".
   */
   if (!this.name_key)
     this.name_key = this.type ? this.type+"_name" : "";
@@ -147,30 +148,39 @@ var anyModel = function (options)
   /**
   * @property {Object} types
   * @default null
-  * @description The model's types. Optional.
+  * @description The model's types.
   */
   this.types = null;
 
   /**
   * @property {Object} select
   * @default new Set()
-  * @description A list of items that are marked as "selected". Optional.
+  * @description A list of items that are marked as "selected".
   */
   this.select = new Set();
 
   /**
   * @property {Object} unselect
   * @default new Set()
-  * @description A list of items that are marled as "unselected". Optional.
+  * @description A list of items that are marked as "unselected".
   */
   this.unselect = new Set();
 
   /**
   * @property {String} mode
   * @default "local"
-  * @description The model's mode, e.g. `"local"` or `remote"`. Optional.
+  * @description The model's mode, e.g. `"local"` or `remote"`.
   */
   this.mode = "local";
+
+  /**
+  * @property {Boolean} fields
+  * @default null
+  * @description An array of strings to be sent to the server, indicating which columns of
+  *              the table should be used in in a search or update/insert. These fields are
+  *              only applied if the server fails to find a filter corresponding to `type`.
+  */
+  this.fields = null;
 
   /**
   * @property {Boolean} search
@@ -183,25 +193,16 @@ var anyModel = function (options)
   /**
   * @property {String} search_term
   * @default ""
-  * @description The string to search for when this.search == true. Optional.
+  * @description The string to search for when this.search == true.
   */
   this.search_term = "";
 
   /**
   * @property {String} last_term
   * @default ""
-  * @description The last string that was search for. Optional.
+  * @description The last string that was search for.
   */
   this.last_term = "";
-
-  /**
-  * @property {Boolean} fields
-  * @default true
-  * @description An array of strings to be sent to the server, indicating which columns of
- *               the table should be used in in a search or update/insert. These fields are
- *               only applied if the server fails to find a filter corresponding to `type`.
-  */
-  this.fields = null;
 
   /**
   * @property {Boolean} auto_search
@@ -251,21 +252,21 @@ var anyModel = function (options)
   /**
   * @property {String} message
   * @default ""
-  * @description Optional.
+  * @description Messages.
   */
   this.message = "";
 
   /**
   * @property {String} error
   * @default ""
-  * @description Optional.
+  * @description Errors.
   */
   this.error = "";
 
   /**
   * @property {String} error_server
   * @default ""
-  * @description Optional.
+  * @description Errors received from server.
   */
   this.error_server = "";
 
@@ -303,11 +304,13 @@ anyModel.prototype._dataInitDefault = function ()
   this.types           = null;
   this._dataInitSelect();
   this.mode            = "local";
+  this.fields          = null;
   this.search          = false;
   this.search_term     = "";
   this.last_term       = "";
   this.auto_search     = true;
   this.auto_callback   = false;
+  this.auto_refresh    = true;
   this.db_timeout_sec  = 10;
   this.message         = "";
   this.error           = "";
@@ -333,20 +336,31 @@ anyModel.prototype._dataInitSelect = function ()
  *                         from `options`. If `options == null`, default values will be set.
  *                         The object may contain these elements:
  *
- *        {Object}   data:         Data. Will only be initialised if `dataInit` is called after a search
- *                                 (indicated by `this.last_db_command == "sea"`). Optional.
- *        {String}   type:         Type, e.g. "user". Optional.
- *        {String}   id:           Item id, if the top level data represents an item, e.g. "42". Optional.
- *        {String}   id_key:       Id key, e.g. "user_id". Optional. Default: "[type]_id".
- *        {String}   name_key:     Name key, e.g. "user_name". Optional. Default: "[type]_name".
- *        {String}   mode:         "local" or "remote". Optional.
- *        {boolean}  search:       Whether to call the search method. Optional.
- *        {String}   search_term:  The string to search for. Optional.
- *        {String}   last_term:    The string to search for. Optional.
- *        {Object}   permission:   Permissions. Optional.
- *        {String}   message:      Messages. Optional.
- *        {String}   error:        Errors. Optional.
- *        {String}   error_server: Errors from server. Optional.
+ *        {Object}  data:           Data. Will only be initialised if `dataInit` is called after a search
+ *                                  (indicated by `this.last_db_command == "sea"`). Optional.
+ *        {String}  type:           Type, e.g. "user". Optional.
+ *        {String}  id:             Item id, if the top level data represents an item, e.g. "42". Optional.
+ *        {String}  id_key:         Id key, e.g. "user_id". Optional. Default: "[type]_id".
+ *        {String}  name_key:       Name key, e.g. "user_name". Optional. Default: "[type]_name".
+ *        {Object}  types:          The types the model might interact (link) with. Optional.
+ *        {Array}   select:         List of ids that are marked as selected. Optional.
+ *        {Array}   unselect:       List of ids that are marked as unselected. Optional.
+ *        {String}  mode:           "local" or "remote". Optional.
+ *        {Array}   fields:         An array of strings to be sent to the server, indicating which columns
+ *                                  of the table should be used in a search or update/insert. Optional.
+ *        {boolean} search:         Whether to call the search method. Optional.
+ *        {String}  search_term:    The string to search for. Optional.
+ *        {String}  last_term:      The string to search for. Optional.
+ *        {boolean} auto_search:    Whether to initiated model with the result of a search, and call
+ *                                  cbExecute. Optional.
+ *        {boolean}  auto_callback: Whether to call cbExecute after calling dataInsert, dataUpdate and
+ *                                  dataDelete. Optional.
+ *        {boolean}  auto_refresh:  Whether to call cbExecute after calling dbSearch, dbUpdate,
+ *                                  dbUpdateLinkList, dbUpdateLink and dbDelete. Optional.
+ *        {Object}  permission:     Permissions. Optional.
+ *        {String}  message:        Messages. Optional.
+ *        {String}  error:          Errors. Optional.
+ *        {String}  error_server:   Errors from server. Optional.
  *
  * @return options
  */
@@ -381,12 +395,13 @@ anyModel.prototype.dataInit = function (options)
     if (options.select)                                { this.select         = options.select; }
     if (options.unselect)                              { this.unselect       = options.unselect; }
     if (options.mode)                                  { this.mode           = options.mode; }
+    if (options.fields)                                { this.fields         = options.fields; }
     if (options.search)                                { this.search         = options.search; }
     if (options.search_term)                           { this.search_term    = options.search_term; }
     if (options.last_term)                             { this.last_term      = options.last_term; }
-    if (options.fields)                                { this.fields         = options.fields; }
     if (options.auto_search)                           { this.auto_search    = options.auto_search; }
     if (options.auto_callback)                         { this.auto_callback  = options.auto_callback; }
+    if (options.auto_refresh)                          { this.auto_refresh   = options.auto_refresh; }
     if (options.db_timeout_sec)                        { this.db_timeout_sec = options.db_timeout_sec; }
     if (options.permission)                            { this.permission     = options.permission; }
     if (options.message)                               { this.message        = options.message; }
