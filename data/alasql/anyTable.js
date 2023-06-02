@@ -937,17 +937,17 @@ anyTable.prototype.dbUpdateLink = async function(options)
   */
   // Link found, we can update it
   if (this.tableFieldsLeftJoin[link_type]) {
-    let par_found = false;
+    let val_found = false;
     let stmt = "UPDATE "+link_table+" SET ";
     for (let t=0; t<this.tableFieldsLeftJoin[link_type].length; t++) {
       let str = this.tableFieldsLeftJoin[link_type][t];
       let par = options[str];
       if (par || par===0) {
         stmt +=  str+"='"+par+"',";
-        par_found = true;
+        val_found = true;
       }
     }
-    if (!par_found)
+    if (!val_found)
       return null;
     stmt = stmt.substring(0,stmt.length-1)+' '; // Replace last char (',') with ' *
     stmt += "WHERE "+idKey+"="+id;
