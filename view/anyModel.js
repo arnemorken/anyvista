@@ -533,7 +533,7 @@ anyModel.prototype._getDataSourceName = function ()
  *        {String}  type:   The type of the data to search for.
  *                          Optional. Default: The model's type (`this.type`).
  *        {boolean} parent: If true, search for parent of the item with the specified id.
- *                          Optional. Default: false.
+ *                          Optional. Default: Same as `type`.
  *
  * @return If id is specified and parent is false: A pointer to the item found, or null if not found or on error.
  *         If id is specified and parent is true: A pointer to the parent of the item found, or null if not found or on error.
@@ -552,7 +552,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
   let data      = options.data                   ? options.data      : this.data;
   let id        = options.id || options.id === 0 ? options.id        : null;
   let type      = options.type                   ? options.type      : this.type;
-  let prev_type = options.prev_type              ? options.prev_type : type; // TODO! Is this used/neccessary?
+  let prev_type = options.prev_type              ? options.prev_type : type;
 
   if (!type) {
     console.error("anyModel.dataSearch: "+i18n.error.TYPE_MISSING);
@@ -657,7 +657,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
 /**
  * @method dataSearchNextId
  * @description Sets `this.max` to the largest id for the specified type in the in-memory data structure
- *              and returns the next id (i.e. `this.max + 1`). If any if the indexes are non-numerical,
+ *              and returns the next id (i.e. `this.max + 1`). If any of the indexes are non-numerical,
  *              the number of items in the data structure minus 1 will be returned.
  * @param {String} type: The type of the data to search for.
  *                       Optional. Default: The model's type (`this.type`).
@@ -679,7 +679,8 @@ anyModel.prototype.dataSearchNextId = function (type,data)
 /**
  * @method dataSearchMaxId
  * @description Sets `this.max` to the largest id for the specified type in the in-memory data structure
- *              and returns this.max. Will ignore non-numerical indexes.
+ *              and returns this.max. If any of the indexes are non-numerical, the number of items in the
+ *              data structure minus 1 will be returned.
  * @param {String} type: The type of the data to search for.
  *                       Optional. Default: The model's type (`this.type`).
  * @param {Object} data: The data structure to search in.
@@ -736,7 +737,7 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
                    ? this.name_key
                    : type+"_name")
                  : type+"_name";
-  for (let idx in data) { // TODO! Should we search entire this.data in case of duplicate ids?
+  for (let idx in data) {
     if (data.hasOwnProperty(idx) && data[idx]) {
       if (isInt(idx)) {
         let dtype = data[idx].list
@@ -893,16 +894,33 @@ anyModel.prototype.dataInsert = function (options)
   return item;
 }; // dataInsert
 
+/**
+ * @method dataInsertHeader
+ * @description Adds a header at the top of the data structure
+ * @param  type:      The type of the data "below" the header.
+ *         headerStr: The header string.
+ * @return The header that was inserted.
+ *
+ * @example
+ *      mymodel.dataInsertHeader("rider","TdF 2021 riders");
+ */
+// TODO! Not tested
 anyModel.prototype.dataInsertHeader = function (type,headerStr)
 {
+  if (!headerStr && headerStr !== "")
+    return null;
+  if (!type) {
+    console.error("anyModel.dataInsertHeader: "+i18n.error.TYPE_MISSING);
+    return null;
+  }
+  let orig_data = this.data;
+  this.data = null;
   let top_data = {
-    "+0": {
       head:           type,
       [type+"_name"]: headerStr,
-      data:           {},
-    },
+      data:           orig_data,
   };
-  this.dataInsert({ new_data: top_data });
+  return this.dataInsert({ new_data: top_data, new_id: "0" });
 }; // dataInsertHeader
 
 /**
