@@ -2093,20 +2093,6 @@ anyModel.prototype.dbUpdateLink = function (options)
   if (!options || typeof options != "object")
     options = {};
 
-  let the_type = options.type ? options.type : this.type;
-  if (!the_type) {
-    console.error("anyModel.dbUpdateLink: "+i18n.error.TYPE_MISSING);
-    return false;
-  }
-  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
-               ? parseInt(options.id)
-               : options.id
-                 ? options.id
-                 : null;
-  if (!the_id && typeof options.id !== "string") {
-    console.error("anyModel.dbUpdateLink: "+i18n.error.ID_ILLEGAL);
-    return false;
-  }
   let db_timeout_sec = options.timeoutSec
                        ? options.timeoutSec
                        : this.db_timeout_sec;
