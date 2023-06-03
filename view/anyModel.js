@@ -2074,14 +2074,16 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
  * @description Change individual value(s) for an item.
  * @param {Object} options An object which may contain these elements:
  *
- *        {String} type:        The type of items in the list.
+ *        {String}  type:       The type of items in the list.
  *                              Optional. Default: `this.type`.
- *        {String} id:          The id of the item.
+ *        {String}  id:         The id of the item.
  *                              Mandatory.
- *        {Object} link_type:   The type of the item to which the list "belongs" (is linked to).
+ *        {Object}  link_type:  The type of the item to which the list "belongs" (is linked to).
  *                              Optional. Default: `this.type`.
- *        {String} link_id:     The id of the item to which the list "belongs" (is linked to).
+ *        {String}  link_id:    The id of the item to which the list "belongs" (is linked to).
  *                              Mandatory.
+ *        {Array}   names:
+ *        {Array}   values:
  *        {integer} timeoutSec: Number of seconds before timing out.
  *                              Optional. Default: 10.
  *
@@ -2089,7 +2091,6 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
  */
 anyModel.prototype.dbUpdateLink = function (options)
 {
-  console.log(options);
   if (!options || typeof options != "object")
     options = {};
 
@@ -2152,7 +2153,7 @@ anyModel.prototype.dbUpdateLinkGetURL = function (options)
     console.error("anyModel.dbUpdateLinkGetURL: "+i18n.error.ID_ILLEGAL);
     return null;
   }
-  if (!options.change_values) {
+  if (!options.values) {
     console.error("anyModel.dbUpdateLinkGetURL: No values to change. "); // TODO! i18n
     return null;
   }
@@ -2164,10 +2165,10 @@ anyModel.prototype.dbUpdateLinkGetURL = function (options)
   if (options.link_type)
     param_str += "&link_type="+options.link_type;
   param_str += "&link_id="+options.link_id;
-  let nam = [...options.change_names];
-  let val = [...options.change_values];
-  param_str += "&sea=y";
-  param_str += options.header   ? "&header="  +options.header : "";
+  let nam = [...options.names];
+  let val = [...options.values];
+  param_str += options.search   ? "&sea=y"                      : "";
+  param_str += options.header   ? "&header="  +options.header   : "";
   param_str += options.grouping ? "&grouping="+options.grouping : "";
   return this._getDataSourceName() + param_str;
 }; // dbUpdateLinkGetURL
@@ -2175,7 +2176,7 @@ anyModel.prototype.dbUpdateLinkGetURL = function (options)
 // Default success callback method for dbUpdateLink
 anyModel.prototype.dbUpdateLinkSuccess = function (context,serverdata,options)
 {
-  console.log(options);
+  // TODO! Not implemented
 }; // dbUpdateLinkSuccess
 
 /**
