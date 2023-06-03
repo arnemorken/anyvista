@@ -48,6 +48,7 @@ class dbTable
   public    function dbInsert()            {} // Abstract
   public    function dbUpdate()            {} // Abstract
   public    function dbUpdateLinkList()    {} // Abstract
+  public    function dbUpdateLink()        {} // Abstract
   public    function dbDelete()            {} // Abstract
 
   /////////////////////////

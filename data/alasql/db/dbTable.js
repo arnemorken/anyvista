@@ -38,6 +38,7 @@ dbTable.prototype.prepareData      = function() {};
 dbTable.prototype.dbInsert         = function() {};
 dbTable.prototype.dbUpdate         = function() {};
 dbTable.prototype.dbUpdateLinkList = function() {};
+dbTable.prototype.dbUpdateLink     = function() {};
 dbTable.prototype.dbDelete         = function() {};
 
 //
