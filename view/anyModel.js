@@ -528,10 +528,10 @@ anyModel.prototype._getDataSourceName = function ()
  *
  *        {Object}  data:   The data structure to search in.
  *                          Optional. Default: The model's data (`this.data`).
- *        {integer} id:     The id to search for.
- *                          Optional. Default: null.
  *        {String}  type:   The type of the data to search for.
  *                          Optional. Default: The model's type (`this.type`).
+ *        {integer} id:     The id to search for.
+ *                          Optional. Default: null.
  *        {boolean} parent: If true, search for parent of the item with the specified id.
  *                          Optional. Default: Same as `type`.
  *
@@ -550,10 +550,12 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     return null;
   }
   let data      = options.data                   ? options.data      : this.data;
-  let id        = options.id || options.id === 0 ? options.id        : null;
   let type      = options.type                   ? options.type      : this.type;
-  let prev_type = options.prev_type              ? options.prev_type : type;
+  let id        = options.id || options.id === 0 ? options.id        : null;
+  let prev_type = options.prev_type              ? options.prev_type : type; // Only used internally!
 
+  if (!data)
+    return null; // Not found
   if (!type) {
     console.error("anyModel.dataSearch: "+i18n.error.TYPE_MISSING);
     return null;
@@ -562,8 +564,6 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     console.error("anyModel.dataSearch: "+i18n.error.ID_MISSING+" ("+id+") ");
     return null;
   }
-  if (!data)
-    return null; // Not found
 
   let name_key = type == this.type
                  ? ( this.name_key
@@ -769,6 +769,21 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
  *              insertion point will be overwritten.
  * @param {Object} options An object which may contain these elements:
  *
+ *        {Object}  data:     The data structure to insert into.
+ *                            Optional. Default: The model's data (`this.data`).
+ *        {String}  type:     The type of the item where the new data should be inserted (i.e. the type of
+ *                            the item with id `id`.)
+ *                            Optional. Default: The model's type (`this.type`).
+ *        {integer} id:       The id of the item in `data` where `new_data` should be inserted.
+ *                            The data will be inserted like this:
+ *                            1) If id is not specified:
+ *                               - If `new_id` is not specified: `data              = new_data`
+ *                               - If `new_id` is specified:     `data[new_id].data = new_data`
+ *                            2) If id is specified and found in the data structure:
+ *                               - If `new_id` is not specified: `data[id].data              = new_data`
+ *                               - If `new_id` is specified:     `data[id].data[new_id].data = new_data`
+ *                            3) If id is specified but not found in the data structure, it is an error.
+ *                            Optional. Default: undefined.
  *        {Object}  new_data: The data item to insert into the data structure.
  *                            Must be on a format that can be recognized by the model.
  *                            See <a href="../modules/anyVista.html">`anyVista`</a> for more information.
@@ -783,21 +798,6 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
  *                            3) If `new_id` is < 0, it will be created by `dataSearchNextId` and the
  *                               data will be inserted as in case 2) above.
  *                            Optional. Default: undefined.
- *        {Object}  data:     The data structure to insert into.
- *                            Optional. Default: The model's data (`this.data`).
- *        {integer} id:       The id of the item in `data` where `new_data` should be inserted.
- *                            The data will be inserted like this:
- *                            1) If id is not specified:
- *                               - If `new_id` is not specified: `data              = new_data`
- *                               - If `new_id` is specified:     `data[new_id].data = new_data`
- *                            2) If id is specified and found in the data structure:
- *                               - If `new_id` is not specified: `data[id].data              = new_data`
- *                               - If `new_id` is specified:     `data[id].data[new_id].data = new_data`
- *                            3) If id is specified but not found in the data structure, it is an error.
- *                            Optional. Default: undefined.
- *        {String}  type:     The type of the item where the new data should be inserted (i.e. the type of
- *                            the item with id `id`.)
- *                            Optional. Default: The model's type (`this.type`).
  *
  * @return A pointer to the place where the new data item was inserted on success, or null on error.
  *
@@ -812,16 +812,12 @@ anyModel.prototype.dataInsert = function (options)
     console.error("anyModel.dataInsert: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
+  let the_data  = options.data ? options.data : this.data;
+  let the_type  = options.type ? options.type : this.type;
+  let the_id    = options.id;
   let new_data  = options.new_data;
   let new_id    = options.new_id;
-  let the_data  = options.data ? options.data : this.data;
-  let the_id    = options.id;
-  let the_type  = options.type ? options.type : this.type;
 
-  if (!new_data) {
-    console.error("anyModel.dataInsert: "+i18n.error.NOTHING_TO_INSERT);
-    return null;
-  }
   if (!the_type) {
     console.error("anyModel.dataInsert: "+i18n.error.TYPE_MISSING);
     return null;
@@ -830,6 +826,10 @@ anyModel.prototype.dataInsert = function (options)
       ((Number.isInteger(parseInt(the_id)) && the_id < 0) ||
        (!Number.isInteger(parseInt(the_id)) && typeof the_id != "string"))) {
     console.error("anyModel.dataInsert: "+i18n.error.ID_ILLEGAL);
+    return null;
+  }
+  if (!new_data) {
+    console.error("anyModel.dataInsert: "+i18n.error.NOTHING_TO_INSERT);
     return null;
   }
   if (!the_data) {
@@ -930,6 +930,13 @@ anyModel.prototype.dataInsertHeader = function (type,headerStr)
  *              place found is used. Data that exist at the insertion point will be overwritten.
  * @param {Object} options An object which may contain these elements:
  *
+ *        {Object}  data:     The data structure to update.
+ *                            Optional. Default: The model's data (`this.data`).
+ *        {String}  type:     The type of the item in `data` with id `id`.
+ *                            Optional. Default: The model's type (`this.type`).
+ *        {integer} id:       The id of the item in `data` to update with values from `new_data`.
+ *                            If id is not found in the data structure, it is an error.
+ *                            Mandatory.
  *        {Object}  new_data: The data item to update the data structure with.
  *                            Must be on the format `new_data[filter_id]` where `filter_id` are the
  *                            values containing new values.
@@ -941,13 +948,6 @@ anyModel.prototype.dataInsertHeader = function (type,headerStr)
  *                            will be updated with the values for `user_name` and `user_description`.
  *                            If an item is not found it is an error.
  *                            Mandatory.
- *        {Object}  data:     The data structure to update.
- *                            Optional. Default: The model's data (`this.data`).
- *        {integer} id:       The id of the item in `data` to update with values from `new_data`.
- *                            If id is not found in the data structure, it is an error.
- *                            Mandatory.
- *        {String}  type:     The type of the item in `data` with id `id`.
- *                            Optional. Default: The model's type (`this.type`).
  *
  * @return A pointer to the place where the data was updated on success, or null on error.
  *
@@ -962,15 +962,13 @@ anyModel.prototype.dataUpdate = function (options)
     console.error("anyModel.dataUpdate: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
-  let new_data = options.new_data;
   let the_data = options.data ? options.data : this.data;
-  let the_id   = options.id;
   let the_type = options.type ? options.type : this.type;
+  let the_id   = options.id;
+  let new_data = options.new_data;
 
-  if (!new_data) {
-    console.error("anyModel.dataUpdate: "+i18n.error.NOTHING_TO_UPDATE);
+  if (!the_data)
     return null;
-  }
   if (!the_type) {
     console.error("anyModel.dataUpdate: "+i18n.error.TYPE_MISSING);
     return null;
@@ -981,8 +979,10 @@ anyModel.prototype.dataUpdate = function (options)
     console.error("anyModel.dataUpdate: "+i18n.error.ID_ILLEGAL);
     return null;
   }
-  if (!the_data)
+  if (!new_data) {
+    console.error("anyModel.dataUpdate: "+i18n.error.NOTHING_TO_UPDATE);
     return null;
+  }
   let item = this.dataSearch({data:the_data,id:the_id,type:the_type});
   if (!item || (!item[the_id] && !item["+"+the_id])) {
     console.error("anyModel.dataUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_id));
@@ -1010,23 +1010,34 @@ anyModel.prototype.dataUpdate = function (options)
 
 /**
  * @method dataUpdateLinkList
- * @description Add or remove items to/from a list. This can be used to update a link from one
- *              data item to another (for example, remove a user from an event).
+ * @description Add or remove items to/from a link (association) list. This can be used to update
+ *              a link from one data item to another (e.g., add/remove a user to/from an event).
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  unselect:  Contains the items to be removed.
- *                             Optional. Default: null.
- *        {Object}  select:    Contains the items to be inserted.
- *                             Optional. Default: null.
  *        {Object}  data:      The data structure to update.
  *                             Optional. Default: The model's data (`this.data`).
  *        {String}  type:      The type of the data to update.
- *                             Mandatory.
- *        {integer} id:        The id of the item where the items in `select` should be inserted.
+ *                             Optional. Default: The model's type (`this.type`).
+ *        {integer} id:        The id of the item to which the list "belongs" (is linked to), for
+ *                             example a user id, where the user may be associated with several
+ *                             event ids.
  *                             Optional. If not specified, it wil be set to `"link-"+type`.
+ *        {String}  link_type: The type of an item with id `link_id`, or the type of the items in
+ *                             the `select` and the `unselect` arrays.
+ *                             Mandatory if .
+ *        {String}  link_id:   The id of an item to be removed.
+ *                             If given, the specified link will be removed and no other action will
+ *                             be taken (the `select` and `unselect` arrays will be ignored).
+ *                             If not given, links will be added and/or removed as per the `select`
+ *                             and `unselect` arrays.
+ *                             Optional. Default: undefined.
+ *        {Object}  unselect:  A list of ids to remove (if link_id is not given).
+ *                             These ids will be removed *before* the ids in `select` has been added.
+ *                             Optional.
+ *        {Object}  select:    A list of ids to add (if link_id is not given).
+ *                             These ids will be added *after* the ids in `unselect` has been removed.
+ *                             Optional.
  *        {String}  name_key:
- *        {integer} link_id:
- *        {String}  link_type:
  *
  * @return true on success, false on error.
  *
@@ -1042,15 +1053,15 @@ anyModel.prototype.dataUpdateLinkList = function (options)
   let the_type = options.type ? options.type : this.type;
   let the_id   = options.id;
 
+  if (!the_data)
+    return false;
   if (!the_type) {
     console.error("anyModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
     return false;
   }
-  if (!the_data)
-    return false;
 
   if (parseInt(this.id) == parseInt(options.link_id))
-    this.data = the_data;
+    this.data = the_data; // TODO! Why?
   else {
     // Delete items
     if (options.unselect) {
@@ -1116,7 +1127,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
 
 anyModel.prototype.dataUpdateLink = function (options)
 {
-  console.log("dataUpdateLink: Not implemented");
+  // TODO! Not implemented.
 }; // dataUpdateLink
 
 /**
@@ -1126,10 +1137,10 @@ anyModel.prototype.dataUpdateLink = function (options)
  *
  *        {Object}  data:  The data structure to delete from.
  *                         Optional. Default: The model's data structure (`this.data`).
- *        {integer} id:    The id of the item to delete.
- *                         Mandatory.
  *        {String}  type:  The type of the item to delete.
  *                         Optional. Default: The model's type (`this.type`).
+ *        {integer} id:    The id of the item to delete.
+ *                         Mandatory.
  *
  * @return A pointer to the place where the data was deleted on success, or null if the place was not found or on error.
  */
@@ -1141,16 +1152,17 @@ anyModel.prototype.dataDelete = function (options)
     return null;
   }
   let data = options.data ? options.data : this.data;
-  let id   = options.id;
   let type = options.type ? options.type : this.type;
+  let id   = options.id;
+
   if (!data)
-    return null; // Nowhere to insert
-  if ((!id && id !== 0) || (Number.isInteger(parseInt(id)) && id < 0)) {
-    console.error("anyModel.dataDelete: "+i18n.error.ID_MISSING);
-    return null;
-  }
+    return null; // Nowhere to delete from
   if (!type) {
     console.error("anyModel.dataDelete: "+i18n.error.TYPE_MISSING);
+    return null;
+  }
+  if ((!id && id !== 0) || (Number.isInteger(parseInt(id)) && id < 0)) {
+    console.error("anyModel.dataDelete: "+i18n.error.ID_MISSING);
     return null;
   }
   let item = this.dataSearch({data:data,id:id,type:type,parent:true});
@@ -1300,19 +1312,17 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *              or to this.dbSearchSuccess if no success handler is specified.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer}  id:         Item's id. If specified, the database will be searched for this item.
-                                 If not specified, a list of items of the specified type will be searched for.
- *                               Optional. Default: null.
  *        {string}   type:       Item's type.
  *                               Optional. Default: `this.type`.
+ *        {integer}  id:         Item's id. If specified, the database will be searched for this item.
+ *                               If not specified, a list of items of the specified type will be searched for.
+ *                               Optional. Default: null.
  *        {integer}  group_id:   If specified, search only in group with this id.
  *                               Optional. Default: undefined.
+ *        {integer}  link_type:
+ *
  *        {boolean}  simple:     If true, only values for _id and _name (e.g. "user_id" and "user_name")
  *                               will be returned from the server.
- *                               Optional. Default: undefined.
- *        {Object}   fields:     An array of strings to be sent to the server, indicating which columns
- *                               of the table should be used in the search. These fields are only
- *                               applied if the server fails to find a filter corresponding to `type`.
  *                               Optional. Default: undefined.
  *        [boolean}  header:     A parameter sent to the server to indicate whether a header should be
  *                               auto-generated.
@@ -1321,9 +1331,19 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                               If false, 0, null or undefined, data will not be grouped. Any other
  *                               value will specify grouping.
  *                               Optional. Default: undefined.
+ *        {integer}  from:
+ *
+ *        {integer}  num:
+ *
  *        (string)   order:      Tell the server how to order the results.
  *                               Optional. Default: undefined (server decides).
+ *        {string}   direction:  Sort in ascending or descending direction.
+ *                               Optional. Default: undefined (server decides).
  *        (string)   term:       A string to search for.
+ *                               Optional. Default: undefined.
+ *        {Object}   fields:     An array of strings to be sent to the server, indicating which columns
+ *                               of the table should be used in the search. These fields are only
+ *                               applied if the server fails to find a filter corresponding to `type`.
  *                               Optional. Default: undefined.
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
@@ -1396,11 +1416,11 @@ anyModel.prototype.dbSearch = function (options)
  * @description Builds a POST string for dbSearch to be sent to server.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer} id:
  *        {integer} type:
+ *        {integer} id:
  *        {integer} group_id:
- *        {boolean} simple:
  *        {integer} link_type:
+ *        {boolean} simple:
  *        {string}  header:
  *        {string}  grouping:
  *        {integer} from:
@@ -1637,11 +1657,11 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
  * @description Insert or update an item in a database table.
  * @param {Object} options An object which may contain these elements:
  *
+ *        {integer}  type:       Item's type.
+ *                               Optional. Default: `this.type`.
  *        {integer}  id:         Item's id. If given, an existing item in the database will be updated.
  *                               If not given, a new item will be inserted into the database.
  *                               Mandatory if updating, null or undefined if inserting.
- *        {integer}  type:       Item's type.
- *                               Optional. Default: `this.type`.
  *        {Object}   new_data:   The data structure from which comes the data to insert/update.
  *                               An item matching id/type, must exist in `new_data`. If no such item
  *                               can be found, it is an error.
@@ -1911,12 +1931,6 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *              in the database. This can be used to link/unlink an item to/from another item.
  * @param {Object}  options An object which may contain these elements:
  *
- *        {Object}  unselect:   A list of ids to remove (if link_id is not given).
- *                              These ids will be removed *before* the ids in `select` has been added.
- *                              Optional.
- *        {Object}  select:     A list of ids to add (if link_id is not given).
- *                              These ids will be added *after* the ids in `unselect` has been removed.
- *                              Optional.
  *        {String}  type:       The type of items in the list.
  *                              Optional. Default: `this.type`.
  *        {integer} id:         The id of the item to which the list "belongs" (is linked to), for
@@ -1926,9 +1940,17 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *        {String}  link_type:  The type of an item with id `link_id`, or the type of the items in
  *                              the `select` and the `unselect` arrays.
  *                              Mandatory.
- *        {String}  link_id:    The id of an item to be removed. If given, the specified link will
- *                              be removed and no other action will be taken. If not given, links
- *                              will be added and/or removed as per the `select` and `unselect` arrays.
+ *        {String}  link_id:    The id of an item to be removed.
+ *                              If given, the specified link will be removed and no other action will
+ *                              be taken (the `select` and `unselect` arrays will be ignored).
+ *                              If not given, links will be added and/or removed as per the `select`
+ *                              and `unselect` arrays.
+ *                              Optional.
+ *        {Object}  unselect:   A list of ids to remove (if link_id is not given).
+ *                              These ids will be removed *before* the ids in `select` has been added.
+ *                              Optional.
+ *        {Object}  select:     A list of ids to add (if link_id is not given).
+ *                              These ids will be added *after* the ids in `unselect` has been removed.
  *                              Optional.
  *        {integer} timeoutSec: Number of seconds before timing out.
  *                              Optional. Default: 10.
@@ -1985,6 +2007,10 @@ anyModel.prototype.dbUpdateLinkList = function (options)
  */
 anyModel.prototype.dbUpdateLinkListGetURL = function (options)
 {
+  if (!options.link_type) {
+    console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.LINK_TYPE_MISSING);
+    return null;
+  }
   let the_type = options.type
                  ? options.type
                  : this.type;
@@ -1999,10 +2025,6 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
                  : this.id;
   if (typeof options.id !== "string" && !the_id && the_id !== 0) {
     console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.ID_ILLEGAL);
-    return null;
-  }
-  if (!options.link_type) {
-    console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.LINK_TYPE_MISSING);
     return null;
   }
   let param_str = "?echo=y"+
@@ -2029,8 +2051,8 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
       return null;
     }
   }
-  param_str += "&sea=y";
-  param_str += options.header   ? "&header="  +options.header : "";
+  param_str += options.search   ? "&sea=y"                      : "";
+  param_str += options.header   ? "&header="  +options.header   : "";
   param_str += options.grouping ? "&grouping="+options.grouping : "";
   return this._getDataSourceName() + param_str;
 }; // dbUpdateLinkListGetURL
@@ -2054,15 +2076,8 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
       console.log("anyModel.dbUpdateLinkListSuccess: "+self.message);
     if (self.error_server)
       console.error("anyModel.dbUpdateLinkListSuccess: "+self.error_server);
-    if (serverdata.data && serverdata.error == "")
-      self.dataUpdateLinkList({ unselect:  options.unselect,
-                                select:    options.select,
-                                data:      serverdata.data,
-                                type:      options.link_type,
-                                name_key:  options.name_key,
-                                link_id:   options.id,
-                                link_type: options.type,
-                             });
+    if (serverdata.error == "")
+      self.dataUpdateLinkList(options);
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
     self.cbExecute();
@@ -2185,10 +2200,10 @@ anyModel.prototype.dbUpdateLinkSuccess = function (context,serverdata,options)
  *              TODO! Check that the server also deletes any links the item may have in other tables.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer}  id:         The id of the item to delete.
- *                               Mandatory.
  *        {integer}  type:       Item's type.
  *                               Optional. Default: `this.type`.
+ *        {integer}  id:         The id of the item to delete.
+ *                               Mandatory.
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
  *        {Function} success:    Method to call on success.
