@@ -146,6 +146,7 @@ function testModel()
 
   ///////////////////// end constructor and dataInit tests /////////////////////
 
+
   ///////////////////// _getDataSourceName test /////////////////////
 
   test('_getDataSourceName', function() {
@@ -156,6 +157,7 @@ function testModel()
   });
 
   ///////////////////// end _getDataSourceName test /////////////////////
+
 
   ///////////////////// dataSearch tests /////////////////////
 
@@ -300,6 +302,7 @@ function testModel()
 
   ///////////////////// end dataSearch tests /////////////////////
 
+
   ///////////////////// dataSearchNextId / dataSearchMaxId tests /////////////////////
 
   test('dataSearchNextId and dataSearchMaxId', function() {
@@ -362,6 +365,7 @@ function testModel()
   });
 
   ///////////////////// end dataSearchNextId / dataSearchMaxId tests /////////////////////
+
 
   ///////////////////// dataInsert tests /////////////////////
 
@@ -551,6 +555,7 @@ function testModel()
   });
   ///////////////////// end dataInsert tests /////////////////////
 
+
   ///////////////////// dataInsertHeader tests /////////////////////
 
   test('Model.dataInsertHeader', 3, function() {
@@ -574,6 +579,7 @@ function testModel()
               true, "dataInsertHeader in data structure not containing data: ok");
   });
   ///////////////////// end dataInsertHeader tests /////////////////////
+
 
   ///////////////////// dataUpdate tests /////////////////////
 
@@ -651,6 +657,7 @@ function testModel()
   });
 
   ///////////////////// end dataUpdate tests /////////////////////
+
 
   ///////////////////// start dataUpdateLinkList tests /////////////////////
 
@@ -788,6 +795,12 @@ function testModel()
 
   ///////////////////// end dataUpdateLinkList tests /////////////////////
 
+
+  ///////////////////// start dataUpdateLink tests /////////////////////
+  // TODO
+  ///////////////////// end dataUpdateLink tests /////////////////////
+
+
   ///////////////////// dataDelete tests /////////////////////
 
   test('Model.dataDelete', 8, function() {
@@ -874,6 +887,7 @@ function testModel()
   });
 
   ///////////////////// end dataDelete tests /////////////////////
+
 
   ///////////////////// remote dbSearch tests /////////////////////
 
@@ -1004,6 +1018,7 @@ function testModel()
   });
 
   ///////////////////// end remote dbSearch tests /////////////////////
+
 
   ///////////////////// remote dbUpdate tests /////////////////////
 
@@ -1196,7 +1211,8 @@ function testModel()
 
   ///////////////////// end remote dbUpdate tests /////////////////////
 
-  ///////////////////// remote dbUpdateLinkList /////////////////////
+
+  ///////////////////// remote dbUpdateLinkList tests /////////////////////
   // TODO
 
   asyncTest('dbUpdateLinkList add a user-event link (event-user link 20900-23 must exist in event_user table)', 2, function() {
@@ -1205,13 +1221,19 @@ function testModel()
     deepEqual(res,
               true, "dbUpdateLinkList() returns true");
     setTimeout(function() {
-      deepEqual(dm.data !== null && dm.error === "" && dm.message == "User updated. ",
+      deepEqual(dm.data === null && dm.error === "" && dm.message == "User updated. ",
                 true, "dbUpdateLinkList ok1");
       start();
     }, millisec);
   });
 
-  ///////////////////// end remote dbUpdateLinkList /////////////////////
+  ///////////////////// end remote dbUpdateLinkList tests /////////////////////
+
+
+  ///////////////////// remote dbUpdateLink tests /////////////////////
+  // TODO
+  ///////////////////// end remote dbUpdateLink tests /////////////////////
+
 
   ///////////////////// remote dbDelete tests /////////////////////
 
