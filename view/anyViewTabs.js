@@ -76,7 +76,7 @@ $.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kin
 
 $.any.anyViewTabs.prototype.refreshHeader = function (params,skipName)
 {
-  if (!params || !params.data || !this.options.showHeader)
+  if (!params || !params.data || !this.options || !this.options.showHeader)
     return null;
 
   if (this.options.grouping == "tabs" && params.data.grouping) {

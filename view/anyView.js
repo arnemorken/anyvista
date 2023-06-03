@@ -271,7 +271,7 @@ $.any.anyView.prototype.getIdBase = function ()
  */
 $.any.anyView.prototype.getFilter = function (type,kind)
 {
-  if (!this.options.filters)
+  if (!this.options || !this.options.filters)
     return null;
   if (type && this.options.filters[type]) {
     if (kind && this.options.filters[type][kind])
@@ -366,9 +366,8 @@ $.any.anyView.prototype._setPermissions = function ()
     this.options.isEditable = this.options.isEditable || is_admin;
   }
   else
-  if (this.model.permission) {
-    if (this.model.permission.isEditable)
-      this.options.isEditable = this.model.permission.isEditable;
+  if (this.model && this.model.permission && this.model.permission.isEditable) {
+    this.options.isEditable = this.model.permission.isEditable;
   }
 }; // _setPermissions
 
@@ -444,7 +443,7 @@ $.any.anyView.prototype.empty = function (params)
  */
 $.any.anyView.prototype.refresh = function (params)
 {
-  if (!params || !params.dont_reset_rec)
+  if (!params || !params.dont_reset_rec || !this.options)
     this.options.ref_rec = 0; // Reset on every call to refresh, unless specifically told not to do so
 
   let parent    = params && params.parent    ? params.parent    : this.element;
@@ -533,7 +532,7 @@ $.any.anyView.prototype.refresh = function (params)
           if (view) {
             // Refresh a header, a single list row or a single item
             ++row_no;
-            if (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num)) {
+            if (this.options && (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num))) {
               let row_id_str = id_str
                                ? id_str+"_"+idx
                                : idx;
@@ -588,7 +587,7 @@ $.any.anyView.prototype.refresh = function (params)
     parent.children().remove();
 
   // Refresh bottom toolbar
-  if (this.options.showToolbar && this.options.data_level == 0) {
+  if (this.options && this.options.showToolbar && this.options.data_level == 0) {
     if (!this.options.isSelectable && this.model.type && this.data_level==0 && id_str == "" &&
         (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
       this.refreshToolbarBottom({
@@ -655,7 +654,7 @@ $.any.anyView.prototype._addContainerRow = function (parent,prev_type,prev_kind,
 //
 $.any.anyView.prototype.refreshOne = function (params)
 {
-  if (!params)
+  if (!params || !this.options)
     return this;
 
   let parent     = params.parent;
@@ -684,15 +683,15 @@ $.any.anyView.prototype.refreshOne = function (params)
   this.refreshHeader(params);
 
   // Refresh data
-  params.data_div  = this.getOrCreateDataContainer({ parent:     parent,
-                                                     type:       type,
-                                                     kind:       kind,
-                                                     id_str:     the_id_str,
+  params.data_div  = this.getOrCreateDataContainer({ parent: parent,
+                                                     type:   type,
+                                                     kind:   kind,
+                                                     id_str: the_id_str,
                                                   });
-  params.table_div = this.getOrCreateTable({ parent:     params.data_div,
-                                             type:       type,
-                                             kind:       kind,
-                                             id_str:     the_id_str,
+  params.table_div = this.getOrCreateTable({ parent: params.data_div,
+                                             type:   type,
+                                             kind:   kind,
+                                             id_str: the_id_str,
                                           });
   this.refreshData(params);
 
@@ -744,7 +743,7 @@ $.any.anyView.prototype.refreshOne = function (params)
 //
 $.any.anyView.prototype.refreshToolbarBottom = function (params)
 {
-  if (!params)
+  if (!params || !this.options)
     return null;
 
   let parent = params.parent;
@@ -833,7 +832,7 @@ $.any.anyView.prototype.getOrCreateHeaderContainer = function (params)
   let haveData   = params.have_data;
   let doNotEmpty = params.doNotEmpty;
 
-  if (!parent || !type || !this.options.showHeader)
+  if (!parent || !type || !this.options || !this.options.showHeader)
     return null;
 
   let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_header";
@@ -859,7 +858,7 @@ $.any.anyView.prototype.getOrCreateHeaderContainer = function (params)
 //
 $.any.anyView.prototype.refreshHeader = function (params,skipName)
 {
-  if (!params || !this.options.showHeader)
+  if (!params || !this.options || !this.options.showHeader)
     return null;
 
   let parent = params.parent;
@@ -927,7 +926,7 @@ $.any.anyView.prototype.refreshHeaderEntry = function (parent,data,id,filter_id,
 //
 $.any.anyView.prototype.refreshIngress = function (params)
 {
-  if (!params || !this.options.showTableIngress)
+  if (!params || !this.options || !this.options.showTableIngress)
     return null;
 
   let ingress_div = params.ingress_div;
@@ -1051,7 +1050,7 @@ $.any.anyView.prototype.getOrCreateDataContainer = function (params)
   let kind   = params.kind;
   let id_str = params.id_str;
 
-  if (!parent || !type)
+  if (!parent || !type || !this.options)
     return null;
 
   let div_id   = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_data";
@@ -1114,7 +1113,7 @@ $.any.anyView.prototype.getOrCreateTbody = function (table,type,kind,id_str)
 //
 $.any.anyView.prototype.getOrCreateThead = function (table,type,kind,id_str)
 {
-  if (!table || !type || !kind ||
+  if (!table || !type || !kind || !this.options ||
       !this.options.showTableHeader ||
       kind != "list")
     return null;
@@ -1133,7 +1132,7 @@ $.any.anyView.prototype.getOrCreateThead = function (table,type,kind,id_str)
 //
 $.any.anyView.prototype.getOrCreateTfoot = function (table,type,kind,id_str)
 {
-  if (!table || !type || !kind ||
+  if (!table || !type || !kind || !this.options ||
       !this.options.showTableFooter ||
       kind != "list")
     return null;
@@ -1169,7 +1168,7 @@ $.any.anyView.prototype.getOrCreateDataFooter = function (table,type,kind,id_str
 //
 $.any.anyView.prototype.refreshThead = function (params)
 {
-  if (!params || ! params.parent)
+  if (!params || ! params.parent || !this.options)
     return null;
 
   let thead      = params.parent;
@@ -1315,7 +1314,7 @@ $.any.anyView.prototype.refreshTfoot = function (params)
 //
 $.any.anyView.prototype.refreshDataFooter = function (params)
 {
-  if (!params || !params.parent)
+  if (!params || !params.parent || !this.options)
     return null;
   if (!this.options.showPaginator && !this.options.showSearcher)
     return null;
@@ -1399,7 +1398,7 @@ $.any.anyView.prototype.refreshTbodyRow = function (params)
 
 $.any.anyView.prototype.refreshListTableDataRow = function (params)
 {
-  if (!params)
+  if (!params || !this.options)
     return null;
 
   let tbody      = params.parent;
@@ -1535,7 +1534,7 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
 
 $.any.anyView.prototype.refreshItemTableDataRow = function (params)
 {
-  if (!params)
+  if (!params || !this.options)
     return null;
 
   let tbody      = params.parent;
@@ -2192,7 +2191,7 @@ $.any.anyView.prototype.refreshNewItemButton = function (opt)
 // By default calls showLinkMenu
 $.any.anyView.prototype.refreshAddLinkButton = function (opt)
 {
-  if (!opt)
+  if (!opt || !this.options)
     return null;
   if (!this.model.types || !this.options.linkIcons)
     return;
@@ -2569,6 +2568,8 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
 // TODO! options.localRemove etc. must be sent as params when creating new view
 $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,kind,id_str,data_level,indent_level,params)
 {
+  if (!this.options)
+    return {};
   let view_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_data";
   return {
     model:            model,
@@ -2996,7 +2997,7 @@ $.any.anyView.prototype.getUploadStr = function (type,kind,id,val,edit,data_item
 
 $.any.anyView.prototype._uploadClicked = function (event)
 {
-  if (!this.options.uploadDirect && !event.data.edit) {
+  if (!this.options || !this.options.uploadDirect && !event.data.edit) {
     console.log(event.data.filter_id+" not editable. "); // TODO! i18n
     return null;
   }
@@ -3360,6 +3361,8 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
 // Process Esc and Enter keys.
 $.any.anyView.prototype._processKeyup = function (event)
 {
+  if (!this.options)
+    return true;
   if ((event.type == "keyup"   && event.which != 13) ||
       (event.type == "keydown" && event.which != 27)) // For catching the ESC key on Vivaldi
     return true; // Only process ESC and Enter keys
@@ -4417,8 +4420,6 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
              });
   this.removeFromView(opt);
   if (!this.model.dbUpdateLinkList({
-         view:      opt.view, // Refresh only this view. TODO! Is this used?
-         data:      opt.data, // TODO! Is this used?
          type:      the_type,
          id:        the_id,
          link_type: link_type,
@@ -4529,6 +4530,8 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
  */
 $.any.anyView.prototype.dbDeleteDialog = function (event)
 {
+  if (!this.options)
+    return false;
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
   if (!event || !event.data)
