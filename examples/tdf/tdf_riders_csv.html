@@ -327,7 +327,7 @@ function csv2display()
         if (obj.Year == "2021") {
           let indata = getIndata(obj);
           data_model.dataInsert({ new_data: indata,
-                                  id:       show_header ? "+0" : null, // Index of header, if applicable
+                                  id:       show_header ? "0" : null, // Index of header, if applicable
                                   new_id:   obj.Id, // Note: Not a database id, just an entry from the CSV file!
                                });
         }
