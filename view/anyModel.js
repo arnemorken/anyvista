@@ -1022,8 +1022,8 @@ anyModel.prototype.dataUpdate = function (options)
  *                             Optional. Default: The model's data (`this.data`).
  *        {String}  type:      The type of the data to update.
  *                             Mandatory.
- *        {integer} insert_id: The id of the item where the selected items should be inserted.
- *                             Mandatory if `new_data` is specified.
+ *        {integer} id:        The id of the item where the items in `select` should be inserted.
+ *                             Optional. If not specified, it wil be set to `"link-"+type`.
  *        {String}  name_key:
  *        {integer} link_id:
  *        {String}  link_type:
@@ -1040,6 +1040,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
   }
   let the_data = options.data ? options.data : this.data;
   let the_type = options.type ? options.type : this.type;
+  let the_id   = options.id;
 
   if (!the_type) {
     console.error("anyModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
@@ -1087,7 +1088,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                                        type: the_type,
                                     });
           if (item) {
-            let ins_id = options.insert_id;
+            let ins_id = the_id;
             if (!ins_id)
               ins_id = "link-"+the_type; // TODO! Not general enough
             let indata = {};

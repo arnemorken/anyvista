@@ -662,17 +662,17 @@ function testModel()
     let dm = new anyModel({type:"bar",data:mdata});
     let del = new Set(); del.add(11);
     let ins = new Set(); ins.add(14);
-    let res = dm.dataUpdateLinkList({type: "bar",
-                                     unselect:  del,
+    let res = dm.dataUpdateLinkList({unselect:  del,
                                      select:    ins,
                                      data:      {14:{list:"bar",foo_name:"INSERT 14"}},
-                                     insert_id: 99});
+                                     type:      "bar",
+                                     id:        99});
     deepEqual(res &&
               dm.data[99].data[11] === undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[14] !== undefined &&
               dm.data[99].data[14].foo_name == "INSERT 14" ,
-              true, "dataUpdateLinkList with type, del, ins, new_data and insert_id ok. ");
+              true, "dataUpdateLinkList with type, del, ins, new_data and id ok. ");
 
     // Insert point type differs from options type (1)
     mdata = {99:{list:"bar",
@@ -681,16 +681,16 @@ function testModel()
     dm = new anyModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({type: "foo",
-                                 unselect:  del,
+    res = dm.dataUpdateLinkList({unselect:  del,
                                  select:    ins,
                                  data:      {14:{list:"bar",foo_name:"INSERT 14"}},
-                                 insert_id: 99});
+                                 type:      "foo",
+                                 id:        99});
     deepEqual(res !== null &&
               dm.data[99].data[11] !== undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[14] === undefined,
-              true, "dataUpdateLinkList with data type different from insert_id type (1). ");
+              true, "dataUpdateLinkList with data type different from id type (1). ");
 
     // Insert point type differs from options type (2)
     mdata = {99:{list:"foo",
@@ -699,16 +699,16 @@ function testModel()
     dm = new anyModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({type: "bar",
-                                 unselect:  del,
+    res = dm.dataUpdateLinkList({unselect:  del,
                                  select:    ins,
                                  data:      {14:{list:"bar",foo_name:"INSERT 14"}},
-                                 insert_id: 99});
+                                 type:      "bar",
+                                 id:        99});
     deepEqual(res !== null &&
               dm.data[99].data[11] === undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[14] === undefined,
-              true, "dataUpdateLinkList with data type different from insert_id type (2). ");
+              true, "dataUpdateLinkList with data type different from id type (2). ");
 
     // Insert point type differs from options type (3)
     mdata = {99:{list:"bar",
@@ -717,16 +717,16 @@ function testModel()
     dm = new anyModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({type: "bar",
-                                 unselect:  del,
+    res = dm.dataUpdateLinkList({unselect:  del,
                                  select:    ins,
                                  data:      {14:{list:"foo",foo_name:"Fourteen foo"}},
-                                 insert_id: 99});
+                                 type:      "bar",
+                                 id:        99});
     deepEqual(res !== null &&
               dm.data[99].data[11] === undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[14] === undefined,
-              true, "dataUpdateLinkList with data type different from insert_id type (3). ");
+              true, "dataUpdateLinkList with data type different from id type (3). ");
 
     // Insert point type differs from options type (4)
     mdata = {99:{list:"bar",
@@ -735,16 +735,16 @@ function testModel()
     dm = new anyModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({type: "foo",
-                                 unselect:  del,
+    res = dm.dataUpdateLinkList({unselect:  del,
                                  select:    ins,
                                  data:      {14:{list:"foo",foo_name:"Fourteen foo"}},
-                                 insert_id: 99});
+                                 type:      "foo",
+                                 id:        99});
     deepEqual(res !== null &&
               dm.data[99].data[11] !== undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[14] === undefined,
-              true, "dataUpdateLinkList with data type different from insert_id type (4). ");
+              true, "dataUpdateLinkList with data type different from id type (4). ");
 
     // Insert point type differs from options type (5)
     mdata = {99:{list:"foo",
@@ -753,16 +753,16 @@ function testModel()
     dm = new anyModel({type:"bar",data:mdata});
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
-    res = dm.dataUpdateLinkList({type: "bar",
-                                 unselect:  del,
+    res = dm.dataUpdateLinkList({unselect:  del,
                                  select:    ins,
                                  data:      {14:{list:"foo",foo_name:"Fourteen foo"}},
-                                 insert_id: 99});
+                                 type:      "bar",
+                                 id:        99});
     deepEqual(res !== null &&
               dm.data[99].data[11] === undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[14] === undefined,
-              true, "dataUpdateLinkList with data type different from insert_id type (5). ");
+              true, "dataUpdateLinkList with data type different from id type (5). ");
 
     // Insert point type differs from options type (6)
     mdata = {99:{list:"foo",
@@ -772,17 +772,17 @@ function testModel()
     del = new Set(); del.add(11);
     ins = new Set(); ins.add(14);
     console.log(dm.data)
-    res = dm.dataUpdateLinkList({type: "foo",
-                                 unselect:  del,
+    res = dm.dataUpdateLinkList({unselect:  del,
                                  select:    ins,
                                  data:      {14:{list:"foo",foo_name:"Fourteen foo"}},
-                                 insert_id: 99});
+                                 type:      "foo",
+                                 id:        99});
     console.log(dm.data)
     deepEqual(res !== null &&
               dm.data[99].data[11] !== undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[14] !== undefined,
-              true, "dataUpdateLinkList with data type different from insert_id type (6). ");
+              true, "dataUpdateLinkList with data type different from id type (6). ");
 
   });
 
