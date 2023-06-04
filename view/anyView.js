@@ -243,9 +243,11 @@ $.widget("any.anyView", {
   },
 }); // anyView widget constructor
 
-///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+//
 // Getters
-///////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @method getIdBase
@@ -281,9 +283,11 @@ $.any.anyView.prototype.getFilter = function (type,kind)
   return this.options.filters;
 }; // getFilter
 
-///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+//
 // Internal methods
-///////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////
 
 $.any.anyView.prototype._createIdBase = function ()
 {
@@ -371,9 +375,11 @@ $.any.anyView.prototype._setPermissions = function ()
   }
 }; // _setPermissions
 
-///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+//
 // The onModelChange method
-///////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @method onModelChange
@@ -397,9 +403,11 @@ $.any.anyView.prototype.onModelChange = function (model)
   return this;
 }; // onModelChange
 
-///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+//
 // Refreshments
-///////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////
 
 // Calls the empty method of the (jQuery) element
 $.any.anyView.prototype.empty = function (params)
@@ -1864,9 +1872,157 @@ $.any.anyView.prototype._rowHasData = function (data,filter)
   return row_has_data;
 }; // _rowHasData
 
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Table data cell initialization
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
+$.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,par_id_str,row_id_str,filter,filter_id,filter_key,edit,n,pdata,pid)
+{
+  if (!filter_key || !td_id)
+    return;
+
+  let init_opt = {
+    element_id: td_id,
+    type:       type,
+    kind:       kind,
+    data:       data,
+    id:         id,
+    pdata:      pdata,
+    pid:        pid,
+    edit:       edit,
+    par_id_str: par_id_str,
+    row_id_str: row_id_str,
+    filter:     filter,
+    filter_id:  filter_id,
+    types:      this.model.types,
+    options:    this.options,
+  };
+  // Bind a method that is called while clicking on the text link, file view or file name (in non-edit mode)
+  if (["link", "upload", "fileview"].includes(filter_key.TYPE)) {
+    let link_elem = $("#"+td_id);
+    if (link_elem.length) {
+      if (this.options.isSelectable) {
+        let fun = this.options.localSelect
+                  ? this.options.localSelect
+                  : this._toggleChecked;
+        link_elem.off("click").on("click",init_opt, $.proxy(fun,this));
+      }
+      else {
+        if (filter_key.TYPE == "upload") {
+          // File select link in edit mode opens file select dialog
+          let inp_id = td_id+"_upload";
+          let inp_elem = $("#"+inp_id);
+          if (inp_elem.length) {
+            let self = this;
+            let fun = this.options.localUpload
+                      ? this.options.localUpload
+                      : this._uploadClicked;
+            init_opt.elem_id = td_id;
+            inp_elem.off("click").on("click", init_opt,
+              // Only open file dialog if cell is being edited
+              function(e) {
+                if (!self.options.uploadDirect && !e.data.edit) e.preventDefault();
+              }
+            );
+            inp_elem.off("change").on("change", init_opt, $.proxy(fun,this));
+          }
+        }
+        else
+        if (filter_key.TYPE == "fileview") {
+          // File view link opens the file in a new window
+          let inp_id = td_id+"_fileview";
+          let inp_elem = $("#"+inp_id);
+          if (inp_elem.length) {
+            let fun = this.options.localFileview
+                      ? this.options.localFileview
+                      : this._fileViewClicked;
+            init_opt.elem_id = td_id;
+            inp_elem.off("click").on("click", init_opt, $.proxy(fun,this));
+          }
+        }
+        else
+        if (!edit) {
+          // A link click in non-edit mode opens the item view window
+          let fun = this.options.itemLinkClicked
+                    ? this.options.itemLinkClicked
+                    : this.itemLinkClicked;
+          let con = this.option("clickContext")
+                    ? this.option("clickContext")
+                    : this.option("context")
+                      ? this.option("context")
+                      : this;
+          init_opt.showHeader = true; // TODO! Perhaps not the right place to do this
+          link_elem.off("click").on("click", init_opt, $.proxy(fun,con));
+          $("#"+td_id).prop("title", "Open item view"); // TODO i18n
+        }
+      } // else
+    } // if link_elem.length
+  }
+  // Find the element to work with
+  let inp_id = td_id+" .itemEdit";
+  let inp_elem = $("#"+inp_id);
+  if (!inp_elem.length) {
+    inp_id = td_id+" .itemUnedit";
+    inp_elem = $("#"+inp_id);
+    if (!inp_elem.length)
+      return;
+  }
+  // Set numerical filter for number fields
+  if (filter_key.TYPE == "number") {
+    inp_elem.inputFilter(function(value) {
+                           return /^\d*\.?\d*$/.test(value);
+                         }
+                        ); // Allow digits and '.' only
+  }
+  // Bind a function to be called when clicking/pressings the element
+  if (filter_key.FUNCTION) {
+    let func_name = filter_key.FUNCTION;
+    let func = isFunction(this[func_name])
+               ? this[func_name] // Method in view class
+               : isFunction(this.model[func_name])
+                 ? this.model[func_name] // Method in model class
+                 : isFunction(window[func_name])
+                   ? window[func_name] // Normal function
+                   : null; // Function not found
+    let con  = isFunction(this[func_name])
+               ? this // Method in view class
+               : isFunction(this.model[func_name])
+                 ? this.model // Method in model class
+                 : isFunction(window[func_name])
+                   ? window // Normal function
+                   : null; // Function not found
+    if (func && con)
+      inp_elem.on("click", init_opt, $.proxy(func,con));
+    else
+      console.warn("Couldnt bind "+func_name+" on "+filter_key.TYPE+" element. ");
+  }
+  // Bind some keyboard events in edit mode
+  if (edit && ["link","text","number","password","date"].indexOf(filter_key.TYPE) > -1) {
+    this.bindTableDataCellEdit(inp_elem,init_opt);
+  }
+  // Set focus to first editable text field and make sure cursor is at the end of the field
+  if ((this.options.isEditable || this.options.isAddable) && edit && n==1) {
+    inp_elem.trigger("focus");
+    let tmp = inp_elem.val();
+    inp_elem.val("");
+    inp_elem.val(tmp);
+  }
+}; // initTableDataCell
+
+$.any.anyView.prototype.bindTableDataCellEdit = function (elem,params)
+{
+  // Bind enter key
+  elem.off("keyup").on("keyup",     params, $.proxy(this._processKeyup,this));
+  elem.off("keydown").on("keydown", params, $.proxy(this._processKeyup,this)); // For catching the ESC key on Vivaldi
+}; // bindTableDataCellEdit
+
+/////////////////////////////////////////////////////////////////////////////////////////
 //
 // Buttons
 //
+/////////////////////////////////////////////////////////////////////////////////////////
 
 // Create a button for closing item view
 // By default calls closeItem
@@ -2319,153 +2475,12 @@ $.any.anyView.prototype.showLinkMenu = function (event)
   return false;
 }; // showLinkMenu
 
-///////////////////////////////////////////////////////////////////////////////
-
-$.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,par_id_str,row_id_str,filter,filter_id,filter_key,edit,n,pdata,pid)
-{
-  if (!filter_key || !td_id)
-    return;
-
-  let init_opt = {
-    element_id: td_id,
-    type:       type,
-    kind:       kind,
-    data:       data,
-    id:         id,
-    pdata:      pdata,
-    pid:        pid,
-    edit:       edit,
-    par_id_str: par_id_str,
-    row_id_str: row_id_str,
-    filter:     filter,
-    filter_id:  filter_id,
-    types:      this.model.types,
-    options:    this.options,
-  };
-  // Bind a method that is called while clicking on the text link, file view or file name (in non-edit mode)
-  if (["link", "upload", "fileview"].includes(filter_key.TYPE)) {
-    let link_elem = $("#"+td_id);
-    if (link_elem.length) {
-      if (this.options.isSelectable) {
-        let fun = this.options.localSelect
-                  ? this.options.localSelect
-                  : this._toggleChecked;
-        link_elem.off("click").on("click",init_opt, $.proxy(fun,this));
-      }
-      else {
-        if (filter_key.TYPE == "upload") {
-          // File select link in edit mode opens file select dialog
-          let inp_id = td_id+"_upload";
-          let inp_elem = $("#"+inp_id);
-          if (inp_elem.length) {
-            let self = this;
-            let fun = this.options.localUpload
-                      ? this.options.localUpload
-                      : this._uploadClicked;
-            init_opt.elem_id = td_id;
-            inp_elem.off("click").on("click", init_opt,
-              // Only open file dialog if cell is being edited
-              function(e) {
-                if (!self.options.uploadDirect && !e.data.edit) e.preventDefault();
-              }
-            );
-            inp_elem.off("change").on("change", init_opt, $.proxy(fun,this));
-          }
-        }
-        else
-        if (filter_key.TYPE == "fileview") {
-          // File view link opens the file in a new window
-          let inp_id = td_id+"_fileview";
-          let inp_elem = $("#"+inp_id);
-          if (inp_elem.length) {
-            let fun = this.options.localFileview
-                      ? this.options.localFileview
-                      : this._fileViewClicked;
-            init_opt.elem_id = td_id;
-            inp_elem.off("click").on("click", init_opt, $.proxy(fun,this));
-          }
-        }
-        else
-        if (!edit) {
-          // A link click in non-edit mode opens the item view window
-          let fun = this.options.itemLinkClicked
-                    ? this.options.itemLinkClicked
-                    : this.itemLinkClicked;
-          let con = this.option("clickContext")
-                    ? this.option("clickContext")
-                    : this.option("context")
-                      ? this.option("context")
-                      : this;
-          init_opt.showHeader = true; // TODO! Perhaps not the right place to do this
-          link_elem.off("click").on("click", init_opt, $.proxy(fun,con));
-          $("#"+td_id).prop("title", "Open item view"); // TODO i18n
-        }
-      } // else
-    } // if link_elem.length
-  }
-  // Find the element to work with
-  let inp_id = td_id+" .itemEdit";
-  let inp_elem = $("#"+inp_id);
-  if (!inp_elem.length) {
-    inp_id = td_id+" .itemUnedit";
-    inp_elem = $("#"+inp_id);
-    if (!inp_elem.length)
-      return;
-  }
-  // Set numerical filter for number fields
-  if (filter_key.TYPE == "number") {
-    inp_elem.inputFilter(function(value) {
-                           return /^\d*\.?\d*$/.test(value);
-                         }
-                        ); // Allow digits and '.' only
-  }
-  // Bind a function to be called when clicking/pressings the element
-  if (filter_key.FUNCTION) {
-    let func_name = filter_key.FUNCTION;
-    let func = isFunction(this[func_name])
-               ? this[func_name] // Method in view class
-               : isFunction(this.model[func_name])
-                 ? this.model[func_name] // Method in model class
-                 : isFunction(window[func_name])
-                   ? window[func_name] // Normal function
-                   : null; // Function not found
-    let con  = isFunction(this[func_name])
-               ? this // Method in view class
-               : isFunction(this.model[func_name])
-                 ? this.model // Method in model class
-                 : isFunction(window[func_name])
-                   ? window // Normal function
-                   : null; // Function not found
-    if (func && con)
-      inp_elem.on("click", init_opt, $.proxy(func,con));
-    else
-      console.warn("Couldnt bind "+func_name+" on "+filter_key.TYPE+" element. ");
-  }
-  // Bind some keyboard events in edit mode
-  if (edit && ["link","text","number","password","date"].indexOf(filter_key.TYPE) > -1) {
-    this.bindTableDataCellEdit(inp_elem,init_opt);
-  }
-  // Set focus to first editable text field and make sure cursor is at the end of the field
-  if ((this.options.isEditable || this.options.isAddable) && edit && n==1) {
-    inp_elem.trigger("focus");
-    let tmp = inp_elem.val();
-    inp_elem.val("");
-    inp_elem.val(tmp);
-  }
-}; // initTableDataCell
-
-$.any.anyView.prototype.bindTableDataCellEdit = function (elem,params)
-{
-  // Bind enter key
-  elem.off("keyup").on("keyup",     params, $.proxy(this._processKeyup,this));
-  elem.off("keydown").on("keydown", params, $.proxy(this._processKeyup,this)); // For catching the ESC key on Vivaldi
-}; // bindTableDataCellEdit
-
-///////////////////////////////////////////////////////////////////////////////
-
+/////////////////////////////////////////////////////////////////////////////////////////
 //
 // Create a new model in a new view and return the view
 //
+/////////////////////////////////////////////////////////////////////////////////////////
+
 $.any.anyView.prototype.createView = function (params)
 {
   let parent       = params && params.parent       ? params.parent       : null;
@@ -2602,8 +2617,8 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,kind,i
     sortDirection:    this.options.sortDirection,
     link_options:     this.options.link_options,
     cutoff:           this.options.cutoff,
-    // Give same permissions to new view as the current one. This may not always
-    // be the desired behaviour, in that case override this method and correct.
+    // Give same permissions to new view as the current one. This may not
+    // always be the desired behaviour, in that case, override this method.
     isEditable:       this.options.isEditable,
     isRemovable:      this.options.isRemovable || kind == "item", // TODO! Not a good solution
     isDeletable:      this.options.isDeletable,
@@ -2614,9 +2629,11 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,kind,i
   };
 }; // getCreateViewOptions
 
-///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+//
 // Methods that create cell items
-///////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////
 
 $.any.anyView.prototype.getCellEntryStr = function (id,type,kind,id_str,filter_id,filter_key,data_item,data_lists,edit,model_str,view_str,parent)
 {
@@ -2995,6 +3012,58 @@ $.any.anyView.prototype.getUploadStr = function (type,kind,id,val,edit,data_item
   return str;
 }; // getUploadStr
 
+$.any.anyView.prototype.getFileViewStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
+{
+  let elem_id  = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id; // element id
+  let filename = data_item[filter_id] ? data_item[filter_id]          : ""; // local file name on server
+  let fileurl  = filename             ? any_defs.uploadURL + filename : ""; // url of server file
+  let style    = kind == "list" ? "style='text-align:center;'" : "";
+  let str_open = "View file in new tab/window"; // TODO i18n
+  let str = "<div id='"+elem_id+"_fileview' "+style+">"+
+            "<a href='"+fileurl+"' onclick='return false;'>"+
+            "<input class='itemText' value='"+filename+"' type='hidden'></input>"+
+            "<i class='far fa-file' title='"+str_open+"'></i>"+
+            "</a>"+
+            "</div>";
+  return str;
+}; // getFileViewStr
+
+/************ The following get methods are not used yet ************/
+/*
+$.any.anyView.prototype.getHttpStr = function (nameid,val,type,group_id,id)
+{
+  if (edit) {
+    return this.getTextStr(type,kind,id,val,edit);
+  }
+  else {
+    let id_str  = "" + (Number.isInteger(parseInt(id))       ? parseInt(id)       : id);
+    let gid_str = "" + (Number.isInteger(parseInt(group_id)) ? parseInt(group_id) : group_id);
+    val = val.replace("https://","");
+    val = val.replace("http://","");
+    let it_id = this.id_base+"_link_"+filterKey+"_"+gid_str+"_"+id_str;
+    let protocol = filterVal.TYPE;
+    val = "<div id='"+it_id+"' class='pointer underline'><a class='td_list_link' href='"+protocol+"://"+val+"' target='_blank'>"+val+"</a></div>";
+  }
+};
+
+$.any.anyView.prototype.getTokenList = function (nameid,val,type,group_id,id)
+{
+  return "<input id='"+nameid+"' name='"+nameid+"' class='tokenList' type='text' value='"+val+"'/>";
+};
+
+$.any.anyView.prototype.getTextspanStr = function (nameid,val,type,group_id,id)
+{
+  return "<span class='itemInput' value='"+val+"'>"+val+"</span>"+
+         "<input id='"+nameid+"' name='"+nameid+"' type='hidden' value='"+val+"'/>";
+};
+*/
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Callbacks
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
 $.any.anyView.prototype._uploadClicked = function (event)
 {
   if (!this.options || !this.options.uploadDirect && !event.data.edit) {
@@ -3038,22 +3107,6 @@ $.any.anyView.prototype._uploadClicked = function (event)
   return fname;
 }; // _uploadClicked
 
-$.any.anyView.prototype.getFileViewStr = function (type,kind,id,val,edit,data_item,filter_id,id_str)
-{
-  let elem_id  = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id; // element id
-  let filename = data_item[filter_id] ? data_item[filter_id]          : ""; // local file name on server
-  let fileurl  = filename             ? any_defs.uploadURL + filename : ""; // url of server file
-  let style    = kind == "list" ? "style='text-align:center;'" : "";
-  let str_open = "View file in new tab/window"; // TODO i18n
-  let str = "<div id='"+elem_id+"_fileview' "+style+">"+
-            "<a href='"+fileurl+"' onclick='return false;'>"+
-            "<input class='itemText' value='"+filename+"' type='hidden'></input>"+
-            "<i class='far fa-file' title='"+str_open+"'></i>"+
-            "</a>"+
-            "</div>";
-  return str;
-}; // getFileViewStr
-
 $.any.anyView.prototype._fileViewClicked = function (event)
 {
   let type = event.data.type;
@@ -3068,111 +3121,6 @@ $.any.anyView.prototype._fileViewClicked = function (event)
       this.showMessages("File not found. "); // TODO! i18n
   }
 }; // _fileViewClicked
-
-/************ The following get methods are not used yet ************/
-/*
-$.any.anyView.prototype.getHttpStr = function (nameid,val,type,group_id,id)
-{
-  if (edit) {
-    return this.getTextStr(type,kind,id,val,edit);
-  }
-  else {
-    let id_str  = "" + (Number.isInteger(parseInt(id))       ? parseInt(id)       : id);
-    let gid_str = "" + (Number.isInteger(parseInt(group_id)) ? parseInt(group_id) : group_id);
-    val = val.replace("https://","");
-    val = val.replace("http://","");
-    let it_id = this.id_base+"_link_"+filterKey+"_"+gid_str+"_"+id_str;
-    let protocol = filterVal.TYPE;
-    val = "<div id='"+it_id+"' class='pointer underline'><a class='td_list_link' href='"+protocol+"://"+val+"' target='_blank'>"+val+"</a></div>";
-  }
-};
-
-$.any.anyView.prototype.getTokenList = function (nameid,val,type,group_id,id)
-{
-  return "<input id='"+nameid+"' name='"+nameid+"' class='tokenList' type='text' value='"+val+"'/>";
-};
-
-$.any.anyView.prototype.getTextspanStr = function (nameid,val,type,group_id,id)
-{
-  return "<span class='itemInput' value='"+val+"'>"+val+"</span>"+
-         "<input id='"+nameid+"' name='"+nameid+"' type='hidden' value='"+val+"'/>";
-};
-*/
-
-///////////////////////////////////////////////////////////////////////////////
-
-/**
- * @method initComponents
- * @description Initializes various javascript components.
- *              If overridden by derived classes, this method *must* be called.
- * @return      `this`.
- */
-$.any.anyView.prototype.initComponents = function ()
-{
-  // TinyMCE
-  if (typeof tinyMCE != "undefined") {
-    tinymce.init({
-      width:      "100%",
-      mode:       "specific_textareas",
-      selector:   ".tinymce",
-      theme:      "modern",
-      menubar:    false,
-      statusbar:  false,
-      force_br_newlines: false,
-      force_p_newlines:  false,
-      forced_root_block: false, // Or ''?
-      plugins: [
-        "link image media autoresize"
-      ],
-      autoresize_on_init: true,
-      autoresize_min_height: 0,
-      autoresize_max_height: 200,
-      autoresize_bottom_margin: 0,
-      toolbar_items_size: "small",
-      toolbar1: "undo redo | cut copy paste | link unlink anchor image media code | bullist numlist | outdent indent blockquote | alignleft aligncenter alignright alignjustify | hr",
-      toolbar2: "bold italic underline strikethrough subscript superscript | styleselect formatselect fontselect fontsizeselect | searchreplace",
-    });
-  }
-  return this;
-}; // initComponents
-
-/**
- * @method showMessages
- * @description Shows errors and/or messages.
- * @param {Object} modelOrString If a string, the message/error to display.
- *                               If a model, the model from which to display a message/error.
- *                               If null, `this.model` is assumed.
- * @return `this`.
- */
-$.any.anyView.prototype.showMessages = function (modelOrString,spin)
-{
-  let div_id = this.id_base+"_any_message";
-  let msgdiv = $("#"+div_id);
-  if (msgdiv.length) {
-    msgdiv.empty();
-    if (!modelOrString)
-      modelOrString = this.model;
-    let close_icon = "<span id='"+div_id+"_close' style='padding-right:5px;' class='far fa-window-close'></span>";
-    if (typeof modelOrString == "object") {
-      let err = this.options.showServerErrors && modelOrString.error_server ? modelOrString.error_server : modelOrString.error;
-      if (err)
-        msgdiv.append(close_icon+"<span style='color:red;'>"+err+"</span>");
-      if (modelOrString.message) {
-        if (!err)
-          msgdiv.append(close_icon);
-        msgdiv.append(modelOrString.message);
-      }
-    }
-    else
-    if (typeof modelOrString == "string") {
-        msgdiv.append(close_icon+"<span style='color:red;'>"+modelOrString+"</span>");
-    }
-    if (spin)
-      msgdiv.append("<i class='fas fa-spinner fa-spin'></i>");
-    $("#"+div_id+"_close").off("click").on("click",function(event) { let msgdiv = $("#"+div_id); msgdiv.empty(); });
-  }
-  return this;
-}; // showMessages
 
 $.any.anyView.prototype.sortTable = function (event)
 {
@@ -3316,9 +3264,7 @@ $.any.anyView.prototype.searchSuccessOk = function (opt)
   w3_modaldialog_close(opt);
 }; // searchSuccessOk
 
-//
 // Refresh when a paginator is activated
-//
 $.any.anyView.prototype.pageNumClicked = function (pager)
 {
   if (!pager || !pager.options || !pager.options.div_info) {
@@ -3355,8 +3301,6 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     this.refresh({from:from,num:num});
   }
 }; // pageNumClicked
-
-///////////////////////////////////////////////////////////////////////////////
 
 // Process Esc and Enter keys.
 $.any.anyView.prototype._processKeyup = function (event)
@@ -3418,8 +3362,6 @@ $.any.anyView.prototype._processKeyup = function (event)
   }
   return true;
 }; // _processKeyup
-
-///////////////////////////////////////////////////////////////////////////////
 
 $.any.anyView.prototype.addListEntry = function (event)
 {
@@ -3600,8 +3542,6 @@ $.any.anyView.prototype._addListEntry = function (opt)
      row_id_str: row_id_str,
   });
 }; // _addListEntry
-
-///////////////////////////////////////////////////////////////////////////////
 
 // Default action when clicking on a name link.
 $.any.anyView.prototype.itemLinkClicked = function (event)
@@ -3985,9 +3925,57 @@ $.any.anyView.prototype._toggleChecked = function (event)
   }
 }; // _toggleChecked
 
-///////////////////////////////////////////////////////////////////////////////
+// Remove a row (and subrows, if any) from a list, or the main container of an item.
+// Does not  remove from memory (data structure).
+$.any.anyView.prototype.removeFromView = function (opt)
+{
+  let type   = opt.type;
+  let kind   = opt.kind;
+  let data   = opt.data;
+  let id     = opt.id;
+  let id_str = opt.id_str;
+
+  if (kind == "list") {
+    let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str +"_tr";
+    let tr = $("#"+elem_id);
+    if (tr.length)
+      tr.remove();
+    // Remove subrows, if any
+    let item = this.model.dataSearch({
+                 type: type,
+                 data: data,
+                 id:   id,
+               });
+    if (!item || !item[id])
+      return null; // Should never happen
+    if (item[id].data) {
+      // Remove subdata
+      for (let new_id in item[id].data) {
+        if (item[id].data.hasOwnProperty(new_id)) {
+          let the_id = Number.isInteger(parseInt(new_id)) ? parseInt(new_id) : new_id;
+          let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+the_id+"_tr";
+          let tr      = $("#"+elem_id);
+          if (tr.length)
+            tr.remove();
+        }
+      }
+    }
+  }
+  else
+  if (kind == "item") {
+    let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_container";
+    let con = $("#"+elem_id);
+    if (con.length && con.parent().length && con.parent().parent().length)
+      con.parent().parent().remove();
+  }
+  return this;
+}; // removeFromView
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//
 // Methods that call db methods
-///////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @method dbSearchParents
@@ -4633,51 +4621,84 @@ $.any.anyView.prototype.dbDelete = function (opt)
   return true;
 }; // dbDelete
 
-// Remove a row (and subrows, if any) from a list, or the main container of an item.
-// Does not  remove from memory (data structure).
-$.any.anyView.prototype.removeFromView = function (opt)
-{
-  let type   = opt.type;
-  let kind   = opt.kind;
-  let data   = opt.data;
-  let id     = opt.id;
-  let id_str = opt.id_str;
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+// Miscellaneous methods
+//
+/////////////////////////////////////////////////////////////////////////////////////////
 
-  if (kind == "list") {
-    let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str +"_tr";
-    let tr = $("#"+elem_id);
-    if (tr.length)
-      tr.remove();
-    // Remove subrows, if any
-    let item = this.model.dataSearch({
-                 type: type,
-                 data: data,
-                 id:   id,
-               });
-    if (!item || !item[id])
-      return null; // Should never happen
-    if (item[id].data) {
-      // Remove subdata
-      for (let new_id in item[id].data) {
-        if (item[id].data.hasOwnProperty(new_id)) {
-          let the_id = Number.isInteger(parseInt(new_id)) ? parseInt(new_id) : new_id;
-          let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+the_id+"_tr";
-          let tr      = $("#"+elem_id);
-          if (tr.length)
-            tr.remove();
-        }
+/**
+ * @method showMessages
+ * @description Shows errors and/or messages.
+ * @param {Object} modelOrString If a string, the message/error to display.
+ *                               If a model, the model from which to display a message/error.
+ *                               If null, `this.model` is assumed.
+ * @return `this`.
+ */
+$.any.anyView.prototype.showMessages = function (modelOrString,spin)
+{
+  let div_id = this.id_base+"_any_message";
+  let msgdiv = $("#"+div_id);
+  if (msgdiv.length) {
+    msgdiv.empty();
+    if (!modelOrString)
+      modelOrString = this.model;
+    let close_icon = "<span id='"+div_id+"_close' style='padding-right:5px;' class='far fa-window-close'></span>";
+    if (typeof modelOrString == "object") {
+      let err = this.options.showServerErrors && modelOrString.error_server ? modelOrString.error_server : modelOrString.error;
+      if (err)
+        msgdiv.append(close_icon+"<span style='color:red;'>"+err+"</span>");
+      if (modelOrString.message) {
+        if (!err)
+          msgdiv.append(close_icon);
+        msgdiv.append(modelOrString.message);
       }
     }
-  }
-  else
-  if (kind == "item") {
-    let elem_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_container";
-    let con = $("#"+elem_id);
-    if (con.length && con.parent().length && con.parent().parent().length)
-      con.parent().parent().remove();
+    else
+    if (typeof modelOrString == "string") {
+        msgdiv.append(close_icon+"<span style='color:red;'>"+modelOrString+"</span>");
+    }
+    if (spin)
+      msgdiv.append("<i class='fas fa-spinner fa-spin'></i>");
+    $("#"+div_id+"_close").off("click").on("click",function(event) { let msgdiv = $("#"+div_id); msgdiv.empty(); });
   }
   return this;
-}; // removeFromView
+}; // showMessages
+
+/**
+ * @method initComponents
+ * @description Initializes various javascript components.
+ *              If overridden by derived classes, this method *must* be called.
+ * @return      `this`.
+ */
+$.any.anyView.prototype.initComponents = function ()
+{
+  // TinyMCE
+  if (typeof tinyMCE != "undefined") {
+    tinymce.init({
+      width:      "100%",
+      mode:       "specific_textareas",
+      selector:   ".tinymce",
+      theme:      "modern",
+      menubar:    false,
+      statusbar:  false,
+      force_br_newlines: false,
+      force_p_newlines:  false,
+      forced_root_block: false, // Or ''?
+      plugins: [
+        "link image media autoresize"
+      ],
+      autoresize_on_init: true,
+      autoresize_min_height: 0,
+      autoresize_max_height: 200,
+      autoresize_bottom_margin: 0,
+      toolbar_items_size: "small",
+      toolbar1: "undo redo | cut copy paste | link unlink anchor image media code | bullist numlist | outdent indent blockquote | alignleft aligncenter alignright alignjustify | hr",
+      toolbar2: "bold italic underline strikethrough subscript superscript | styleselect formatselect fontselect fontsizeselect | searchreplace",
+    });
+  }
+  return this;
+}; // initComponents
 
 })($);
 
