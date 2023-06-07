@@ -1356,9 +1356,10 @@ $.any.anyView.prototype.refreshDataFooter = function (params)
                    hideGoto:     true,
                    // Set in paginator options that are sent to onClick handler:
                    div_info: {
-                     type:     type,
-                     kind:     kind,
-                     group_id: params.pid,
+                     type:       type,
+                     kind:       kind,
+                     group_id:   params.pid,
+                     par_id_str: par_id_str,
                    },
                 });
         pager.numItems(num_results);
@@ -3298,7 +3299,8 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     this.model.dbSearch(mod_opt);
   }
   else {
-    this.refresh({from:from,num:num});
+    let par_id_str = pager.options.div_info ? pager.options.div_info.par_id_str : "";
+    this.refresh({from:from,num:num,id_str:par_id_str});
   }
 }; // pageNumClicked
 
