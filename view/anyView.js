@@ -530,7 +530,7 @@ $.any.anyView.prototype.refresh = function (params)
                       kind:         curr_kind,
                       data:         data,
                       id:           idc,
-                      id_str:       curr_kind == "item" ? par_id_str : id_str,
+                      id_str:       curr_kind == "list" ? id_str : par_id_str,
                       data_level:   view.data_level,
                       indent_level: view.indent_level,
                       view_class:   view_class,
