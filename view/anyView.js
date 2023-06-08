@@ -987,7 +987,6 @@ $.any.anyView.prototype.refreshData = function (params)
        type:       type,
        kind:       kind,
        data:       data,
-       id:         id, // Not used
        pdata:      pdata,
        pid:        pid,
        edit:       edit,
@@ -1003,7 +1002,6 @@ $.any.anyView.prototype.refreshData = function (params)
          type:       type,
          kind:       kind,
          data:       data,
-         id:         id,
          pdata:      pdata,
          pid:        pid,
          edit:       edit,
