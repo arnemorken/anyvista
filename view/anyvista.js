@@ -952,7 +952,7 @@
                                   isDeletable: true,
                                   edit:        is_new,
                                });
-        view.refresh({parent:null,data:null,id:null,type:"task"});
+        view.refresh({parent:null,data:null,type:"task"});
         </script>
  *
  * 5) Create the file for letting other types interact with the task type (`client.php`):

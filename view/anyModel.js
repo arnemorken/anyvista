@@ -1073,6 +1073,9 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                          });
           //if (this.data[this.id] && !this.data[this.id].data)
           //  delete this.data[this.id];
+          //else
+          //if (this.data["+"+this.id] && !this.data["+"+this.id].data)
+          //  delete this.data["+"+this.id];
         }
       } // for
     } // if
