@@ -592,38 +592,38 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     return data;
   }
   let itemlist = [];
-  for (let idx in data) {
-    if (data.hasOwnProperty(idx) && data[idx] && !idx.startsWith("grouping") &&  !["head","item","list"].includes(idx)) {
+  for (let idc in data) {
+    if (data.hasOwnProperty(idc) && data[idc] && !idc.startsWith("grouping") &&  !["head","item","list"].includes(idc)) {
       let item = null;
-      let dtype = data[idx].list
-                  ? data[idx].list
-                  : data[idx].item
-                    ? data[idx].item
-                    : data[idx].head
-                      ? data[idx].head
+      let dtype = data[idc].list
+                  ? data[idc].list
+                  : data[idc].item
+                    ? data[idc].item
+                    : data[idc].head
+                      ? data[idc].head
                       : prev_type;
-      if (dtype == type || (!dtype && data[idx][name_key])) {
+      if (dtype == type || (!dtype && data[idc][name_key])) {
         if (id || id === 0) {
           // id search
-          let is_int = Number.isInteger(parseInt(idx));
-          if ((is_int && parseInt(idx) == parseInt(id)) || (!is_int && idx == id)) {
+          let is_int = Number.isInteger(parseInt(idc));
+          if ((is_int && parseInt(idc) == parseInt(id)) || (!is_int && idc == id)) {
             item = data;
           }
         }
         else {
           // type search
-          if (!data[idx].head)
+          if (!data[idc].head)
             if (!options.parent)
-              itemlist.push(data[idx]);
+              itemlist.push(data[idc]);
             else {
               itemlist.push(data);
               break;
             }
         }
       }
-      if (!item && data[idx].data) { // subdata
+      if (!item && data[idc].data) { // subdata
         let p_data = options.parent ? data : null;
-        let p_idx  = options.parent ? idx  : null;
+        let p_idc  = options.parent ? idc  : null;
         let data_ptr  = data[id]
                        ? data[id]
                        : data["+"+id]
@@ -638,7 +638,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
                               ? data_ptr.head
                               : dtype
                         : dtype;
-        item = this.dataSearch({data:data[idx].data,id:id,type:type,prev_type:prev_type},p_data,p_idx);
+        item = this.dataSearch({data:data[idc].data,id:id,type:type,prev_type:prev_type},p_data,p_idc);
         if (item && item.data)
           item = item.data;
       }
@@ -737,25 +737,25 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
                    ? this.name_key
                    : type+"_name")
                  : type+"_name";
-  for (let idx in data) {
-    if (data.hasOwnProperty(idx) && data[idx]) {
-      if (isInt(idx)) {
-        let dtype = data[idx].list
-                    ? data[idx].list
-                    : data[idx].item
-                      ? data[idx].item
-                      : data[idx].head
-                        ? data[idx].head
+  for (let idc in data) {
+    if (data.hasOwnProperty(idc) && data[idc]) {
+      if (isInt(idc)) {
+        let dtype = data[idc].list
+                    ? data[idc].list
+                    : data[idc].item
+                      ? data[idc].item
+                      : data[idc].head
+                        ? data[idc].head
                         : null;
-        if (data[idx][name_key] || data[idx][name_key]=="" || dtype == type) {
-          let the_id = Number.isInteger(parseInt(idx)) ? parseInt(idx) : idx;
+        if (data[idc][name_key] || data[idc][name_key]=="" || dtype == type) {
+          let the_id = Number.isInteger(parseInt(idc)) ? parseInt(idc) : idc;
           let tmpmax = Math.max(this.max,the_id);
           if (!isNaN(tmpmax))
             this.max = tmpmax;
         }
       }
-      if (data[idx].data) // subdata
-        this.dataSearchMaxId(type,data[idx].data);
+      if (data[idc].data) // subdata
+        this.dataSearchMaxId(type,data[idc].data);
     }
   }
   return this.max;
@@ -1171,20 +1171,20 @@ anyModel.prototype.dataDelete = function (options)
   // When parent==true, dataSearch may return item indexed with [id]
   // if id is found on top level of data, so guard against that
   let it_ptr = null;
-  let it_idx = null;
+  let it_idc = null;
   if (item.data)
     it_ptr = item.data;
   else
     it_ptr = item;
   if (it_ptr[id])
-    it_idx = id;
+    it_idc = id;
   else
   if (it_ptr["+"+id])
-    it_idx = "+"+id;
-  if ((!it_idx && it_idx !== 0) || !it_ptr || !it_ptr[it_idx])
+    it_idc = "+"+id;
+  if ((!it_idc && it_idc !== 0) || !it_ptr || !it_ptr[it_idc])
     return null;
-  let kind = it_ptr[it_idx].list ? "list" : it_ptr[it_idx].item ? "item" : it_ptr[it_idx].head ? "head" : null;
-  delete it_ptr[it_idx];
+  let kind = it_ptr[it_idc].list ? "list" : it_ptr[it_idc].item ? "item" : it_ptr[it_idc].head ? "head" : null;
+  delete it_ptr[it_idc];
   if (item.data && Object.size(item.data) == 0) // No more data, clean up TODO! Is this neccessary?
     delete item.data;
 
