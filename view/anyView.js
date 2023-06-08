@@ -2528,8 +2528,6 @@ $.any.anyView.prototype.createView = function (params)
     console.error("Model is "+(typeof model)+", not object. ");
     return null;
   }
-  if ((id || id === 0) && kind == "item")
-    model.id = id; // TODO! Why do we do this?
   // Create the view
   let v_str = "";
   let view = null;
