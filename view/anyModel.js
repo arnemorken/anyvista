@@ -2022,7 +2022,9 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
                ? parseInt(options.id)
                : options.id
                  ? options.id
-                 : this.id;
+                 : Number.isInteger(parseInt(this.id))
+                   ? parseInt(this.id)
+                   : this.id;
   if (typeof options.id !== "string" && !the_id && the_id !== 0) {
     console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.ID_ILLEGAL);
     return null;
