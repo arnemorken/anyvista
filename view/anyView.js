@@ -723,7 +723,7 @@ $.any.anyView.prototype.refreshOne = function (params)
                      pdata:      data,
                      pid:        id,
                      edit:       edit,
-                     id_str:     kind=="list" && d.list == type ? par_id_str : row_id_str,
+                     id_str:     the_id_str,
                      dont_reset_rec: true,
                   });
       if ((kind == "list"))
@@ -1546,7 +1546,7 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
   let edit       = params.edit;
   let par_id_str = params.par_id_str;
 
-  if (!tbody || !data || !data[id])
+  if (!tbody || !data || (!data[id] && !data["+"+id]))
     return null;
 
   if (!this.options.filters) {
