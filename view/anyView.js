@@ -705,13 +705,8 @@ $.any.anyView.prototype.refreshOne = function (params)
 
   // If the data contains subdata, make a recursive call
   if (data) {
-   let d = null;
-   if (data[id] && data[id].data)
-     d = data[id].data;
-   else
-   if (data["+"+id] && data["+"+id].data)
-     d = data["+"+id].data;
-    if (d) {
+    let d = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
+    if (d && d.data) {
       ++this.options.ref_rec;
       if (this.options.ref_rec > ANY_MAX_REF_REC) {
         this.options.ref_rec = 0;
@@ -722,20 +717,20 @@ $.any.anyView.prototype.refreshOne = function (params)
       this.refresh({ parent:     params.data_div,
                      type:       type,
                      kind:       kind,
-                     data:       d,
-                     id:         null,
+                     data:       d.data,
                      item_id:    item_id,
                      item_type:  item_type,
                      pdata:      data,
                      pid:        id,
                      edit:       edit,
-                     id_str:     kind=="list" && data[id].list == type ? par_id_str : row_id_str,
+                     id_str:     kind=="list" && d.list == type ? par_id_str : row_id_str,
                      dont_reset_rec: true,
                   });
       if ((kind == "list"))
         --this.options.indent_level;
     } // if d
   } // if data
+
   // Clean up
   if (header_div && !header_div.children().length)
     header_div.remove();
@@ -893,7 +888,7 @@ $.any.anyView.prototype.refreshHeader = function (params,skipName)
   }
   // Create the header entries
   parent.empty();
-  let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null; // TODO! Do this other places in the code too
+  let d = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
   let n = 0;
   for (let filter_id in filter) {
     if (filter.hasOwnProperty(filter_id)) {
@@ -902,7 +897,7 @@ $.any.anyView.prototype.refreshHeader = function (params,skipName)
       if (d && d[filter_id] && !dont_display) {
         let filter_key = filter[filter_id];
         if (filter_key && filter_key.DISPLAY)
-          this.refreshHeaderEntry(parent,data,id,filter_id,n++);
+          this.refreshHeaderEntry(parent,d,filter_id,n++);
       }
     }
   }
@@ -915,22 +910,20 @@ $.any.anyView.prototype.refreshHeader = function (params,skipName)
 //
 // Refresh a single header entry
 //
-$.any.anyView.prototype.refreshHeaderEntry = function (parent,data,id,filter_id,n)
+$.any.anyView.prototype.refreshHeaderEntry = function (parent,data_item,filter_id,n)
 {
-  if (!parent)
+  if (!parent || !data_item)
     return null;
 
-  let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null; // TODO! Do this other places in the code too
-  if (!parent || !d)
-    return null;
   let stylestr = n == 0 ? "style='display:inline-block;'" : "";
-  let div = $("<div class='"+filter_id+"' "+stylestr+">"+d[filter_id]+"</div>");
+  let div = $("<div class='"+filter_id+"' "+stylestr+">"+data_item[filter_id]+"</div>");
   parent.append(div);
   return div;
 }; // refreshHeaderEntry
 
 //
 // Refresh the table description (ingress)
+// TODO! No longer used
 //
 $.any.anyView.prototype.refreshIngress = function (params)
 {
