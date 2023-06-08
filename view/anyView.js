@@ -529,7 +529,7 @@ $.any.anyView.prototype.refresh = function (params)
                       type:         curr_type,
                       kind:         curr_kind,
                       data:         data,
-                      id:           idc,
+                      id:           idx, // Used by model
                       id_str:       curr_kind == "list" ? id_str : par_id_str,
                       data_level:   view.data_level,
                       indent_level: view.indent_level,
@@ -550,7 +550,7 @@ $.any.anyView.prototype.refresh = function (params)
                  kind:       curr_kind,
                  data:       data,
                  id:         idc,
-                 item_id:    curr_kind == "item" ? idc       : item_id,
+                 item_id:    curr_kind == "item" ? idx       : item_id,
                  item_type:  curr_kind == "item" ? curr_type : item_type,
                  pdata:      pdata,
                  pid:        pid,
