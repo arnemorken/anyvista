@@ -1119,9 +1119,8 @@ $.any.anyView.prototype.getOrCreateTbody = function (table,type,kind,id_str)
 //
 $.any.anyView.prototype.getOrCreateThead = function (table,type,kind,id_str)
 {
-  if (!table || !type || !kind || !this.options ||
-      !this.options.showTableHeader ||
-      kind != "list")
+  if (!table || !type || !kind || kind != "list" || !this.options ||
+      !this.options.showTableHeader)
     return null;
 
   let div_id = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_thead";
