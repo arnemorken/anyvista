@@ -531,8 +531,6 @@ $.any.anyView.prototype.refresh = function (params)
                       data:         data,
                       id:           idx, // Used by model
                       id_str:       curr_kind == "list" ? id_str : par_id_str,
-                      data_level:   view.data_level,
-                      indent_level: view.indent_level,
                       view_class:   view_class,
                       model:        mdl, // Let the calling method specify the model explicitely
                    });
@@ -2474,17 +2472,16 @@ $.any.anyView.prototype.showLinkMenu = function (event)
 
 $.any.anyView.prototype.createView = function (params)
 {
-  let parent       = params && params.parent       ? params.parent       : null;
-  let type         = params && params.type         ? params.type         : null;
-  let kind         = params && params.kind         ? params.kind         : null;
-  let data         = params && params.data         ? params.data         : null;
-  let id           = params && params.id           ? params.id           : "";
-  let id_str       = params && params.id_str       ? params.id_str       : "";
-  let data_level   = params && params.data_level   ? params.data_level   : 0;
-  let indent_level = params && params.indent_level ? params.indent_level : 0;
-  let model        = params && (params.model || params.model===null)
-                     ? params.model
-                     : null;
+  let parent       = params && params.parent                                      ? params.parent       : null;
+  let type         = params && params.type                                        ? params.type         : null;
+  let kind         = params && params.kind                                        ? params.kind         : null;
+  let data         = params && params.data                                        ? params.data         : null;
+  let id           = params && (params.id || params.id === 0)                     ? params.id           : "";
+  let id_str       = params && params.id_str                                      ? params.id_str       : "";
+  let data_level   = params && (params.data_level   || params.data_level   === 0) ? params.data_level   : this.data_level   ? this.data_level   : 0;
+  let indent_level = params && (params.indent_level || params.indent_level === 0) ? params.indent_level : this.indent_level ? this.indent_level : 0;
+  let model        = params && (params.model || params.model===null)              ? params.model        : null;
+
   if (!parent)
     parent = this.element;
   if (!parent)
