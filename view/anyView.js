@@ -510,13 +510,13 @@ $.any.anyView.prototype.refresh = function (params)
           let idx = Number.isInteger(parseInt(idc))
                     ? ""+parseInt(idc)
                     : idc;
-          let par_id_str  = curr_kind == "list"
-                            ? id_str
-                            : id_str
-                              ? curr_kind == "item"
-                                ? id_str+"_"+idx
-                                : id_str
-                              : idx;
+          let par_id_str = curr_kind == "list"
+                           ? id_str
+                           : id_str
+                             ? curr_kind == "item"
+                               ? id_str+"_"+idx
+                               : id_str
+                             : idx;
           // Create new view whenever we encounter a new type or a new kind
           if (curr_type != "" && (prev_type != curr_type || (prev_kind != curr_kind && prev_kind != ""))) {
             // If the new type/kind is contained within a list, create a new row to contain a new parent container
