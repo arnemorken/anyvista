@@ -1069,7 +1069,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
         if (parseInt(id) != parseInt(options.link_id)) {
           this.dataDelete({ data: this.data,
                             id:   id,
-                            type: the_type,
+                            type: options.link_type,
                          });
           //if (this.data[this.id] && !this.data[this.id].data)
           //  delete this.data[this.id];
