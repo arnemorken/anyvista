@@ -463,7 +463,7 @@ $.any.anyView.prototype.refresh = function (params)
   let item_id   = params && params.item_id   ? params.item_id   : null;
   let item_type = params && params.item_type ? params.item_type : null;
   let edit      = params && params.edit      ? params.edit      : false;
-  let id_str    = params && params.id_str    ? params.id_str    : ""; // Id string accumulated through recursion
+  let id_str    = params && params.id_str    ? params.id_str    : this.id_str; // Id string accumulated through recursion
   let from      = params && params.from      ? params.from      : 1;
   let num       = params && params.num       ? params.num       : this.options.itemsPerPage;
 
@@ -537,6 +537,10 @@ $.any.anyView.prototype.refresh = function (params)
           }
           if (view) {
             // Refresh a header, a single list row or a single item
+            if (row_no == 0 && this.options.indent_level == 0) {
+              let id = view.element.attr("id");
+              $("#"+id).empty();
+            }
             ++row_no;
             if (this.options && (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num))) {
               let row_id_str = id_str
@@ -2539,6 +2543,7 @@ $.any.anyView.prototype.createView = function (params)
       console.error("Couldn't create view "+v_str+" with id "+view_opt.id);
       view = null;
     }
+    view.id_str = id_str;
   }
   catch (err) {
     let errstr = "Couldn't create view "+v_str+": "+err; // TODO! i18n
