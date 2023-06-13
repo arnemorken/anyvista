@@ -501,7 +501,7 @@ $.any.anyView.prototype.refresh = function (params)
     let the_parent = parent;
     let row_no     = 0;
     for (let idc in data) {
-      if (data.hasOwnProperty(idc)) {
+      if (data.hasOwnProperty(idc) && idc != "id") {
         if (view && !idc.startsWith("grouping")) {
           // Find the type and kind of the current data item
           let curr_type = view._findType(data,idc,prev_type);
