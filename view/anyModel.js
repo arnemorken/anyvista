@@ -2081,8 +2081,10 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
       console.log("anyModel.dbUpdateLinkListSuccess: "+self.message);
     if (self.error_server)
       console.error("anyModel.dbUpdateLinkListSuccess: "+self.error_server);
-    if (serverdata.error == "")
+    if (serverdata.error == "") {
+      options.data = serverdata.data;
       self.dataUpdateLinkList(options);
+    }
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
     self.cbExecute();
