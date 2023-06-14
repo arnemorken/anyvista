@@ -475,13 +475,15 @@ anyModel.prototype.cbUnsubscribe = function (cbFunction)
 }; // cbUnsubscribe
 
 /**
- * @method cbResetListeners
+ * @method cbReset
  * @description Empties the list of methods to be called by cbExecute.
+ * @example
+ *      mymodel.cbReset();
  */
-anyModel.prototype.cbResetListeners = function ()
+anyModel.prototype.cbReset = function ()
 {
   this._listeners = [];
-}; // cbResetListeners
+}; // cbReset
 
 /**
  * @method cbExecute
