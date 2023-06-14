@@ -136,8 +136,8 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
     let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null;
     let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
     let tab_str  = d && (d[name_key] || d[name_key] == "")
-                   ? d[name_key]
-                   : "Other "+type+"s"; // TODO i18n
+                   ? d[name_key].capitalize()
+                   : (type+"s").capitalize(); // TODO i18n
     let tab_btn = $("<button id='"+tab_btn_id+"' class='anyTabButton w3-bar-item w3-button'>"+tab_str+"</button>");
     tab_panel.append(tab_btn);
     // Bind click on tab
