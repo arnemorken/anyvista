@@ -82,6 +82,8 @@
  *        {boolean} refresh:               If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
  *        {boolean} uploadDirect:          If true, the selected file will be uploaded without the user having to press the "edit" and "update" buttons. Default: true.
  *        {object}  linkIcons:             Icons to use in the link popup menu. Default: null.
+ *<li>    {Set}     select:                List of ids that are marked as selected. Default: new Set().
+ *<li>    {Set}     unselect:              List of ids that are marked as unselected. Default: new Set().
  *
  * @example
  *      new anyView({filters:my_filters,id:"my_content"});
@@ -144,6 +146,8 @@ $.widget("any.anyView", {
     refresh:               false,
     uploadDirect:          true,
     linkIcons:             null,
+    select:                new Set(), // List of ids that are marked as selected.
+    unselect:              new Set(), // List of ids that are marked as unselected.
 
     // Local methods
     localSelect:     null,
@@ -1753,7 +1757,7 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
     filter:     filter,
   };
   if (this.options.isSelectable && this.options.showButtonSelect==1 && kind == "list") {
-    let checked = this.model.select.has(parseInt(id));
+    let checked = this.options.select.has(parseInt(id));
     first_opt.checked = checked;
     this.refreshSelectButton(first_opt);
   }
@@ -2564,8 +2568,6 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
     fields:     this.model.fields,
     permission: this.model.permission,
     types:      this.model.types,
-    select:     this.model.select,
-    unselect:   this.model.unselect,
     last_term:  this.model.last_term,
   };
 }; // getCreateModelOptions
@@ -2616,6 +2618,8 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,kind,i
     itemLinkClicked:  this.options.itemLinkClicked,
     clickContext:     this.options.clickContext,
     preselected:      this.options.isSelectable ? this.options.preselected : null,
+    select:           this.options.isSelectable ? this.options.select      : null,
+    unselect:         this.options.isSelectable ? this.options.unselect    : null,
   };
 }; // getCreateViewOptions
 
@@ -3906,13 +3910,17 @@ $.any.anyView.prototype._toggleChecked = function (event)
   if (chk.length)
     chk.html(check_str);
   opt.checked = !opt.checked;
+  if (!this.options.select)
+    this.options.select = new Set();
+  if (!this.options.unselect)
+    this.options.unselect = new Set();
   if (opt.checked) {
-    this.model.select.add(parseInt(opt.id));
-    this.model.unselect.delete(parseInt(opt.id));
+    this.options.select.add(parseInt(opt.id));
+    this.options.unselect.delete(parseInt(opt.id));
   }
   else {
-    this.model.select.delete(parseInt(opt.id));
-    this.model.unselect.add(parseInt(opt.id));
+    this.options.select.delete(parseInt(opt.id));
+    this.options.unselect.add(parseInt(opt.id));
   }
 }; // _toggleChecked
 
@@ -4308,7 +4316,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                                   data_level:   0,
                                   indent_level: 0,
                                });
-        if (select_list_view) {
+        if (select_list_view && select_list_view.options) {
           select_list_view.id_base = new_id_base;
           select_list_view.options.grouping        = null;
           select_list_view.options.showHeader      = false;
@@ -4316,10 +4324,10 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           select_list_view.options.showTableFooter = false;
           select_list_view.options.isSelectable    = true; // Use the select filter, if available
           select_list_view.options.preselected     = parent_view.model.dataSearch({ type:list_type });
-          let mod_opt = { select: new Set() };
-          if (select_list_view.options && select_list_view.options.preselected)
-            parent_view._addSelections(self.type,self.id,select_list_view.model,select_list_view.options.preselected,mod_opt);
-          select_list_view.model.dataInit(mod_opt);
+          select_list_view.options.unselect        = new Set();
+          select_list_view.options.select          = new Set();
+          if (select_list_view.options.preselected)
+            parent_view._addSelections(select_list_view);
           let par_view_id = parent_view.id_base+"_group_head_0_data";
           w3_modaldialog({
             parentId:   par_view_id,
@@ -4337,9 +4345,9 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             id:         self.id,
             link_type:  select_list_view.model.type,
             link_id:    null,
-            select:     select_list_view.model.select,
-            unselect:   select_list_view.model.unselect,
             name_key:   select_list_view.model.name_key,
+            select:     select_list_view.options.select,
+            unselect:   select_list_view.options.unselect,
           });
           select_list_view.refresh();
         }
@@ -4363,16 +4371,19 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
   return context;
 }; // dbUpdateLinkListDialog
 
-$.any.anyView.prototype._addSelections = function (type,id,model,preselected,mod_opt)
+$.any.anyView.prototype._addSelections = function (select_list_view)
 {
+  let model       = select_list_view.model;
+  let preselected = select_list_view.options.preselected;
+  let select      = select_list_view.options.select;
   for (var val in preselected) {
     if (preselected.hasOwnProperty(val)) {
       let d = preselected[val];
       let sel_id = d[model.id_key];
-      if (sel_id && parseInt(sel_id) != parseInt(id) /*&& (type != d.list || !d.parent_id || d.parent_id == id)*/)
-        mod_opt.select.add(parseInt(d[model.id_key]));
+      if ((sel_id || sel_id === 0) && d.list == model.type)
+        select.add(parseInt(d[model.id_key]));
       if (d.data)
-        this._addSelections(type,id,model,d.data,mod_opt);
+        this._addSelections(select_list_view);
     }
   }
 }; // _addSelections

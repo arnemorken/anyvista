@@ -54,10 +54,6 @@
  *                                Default: "[type]_name" if type is set, "" otherwise.
  *      {Object}   types:         The types the model might interact (link) with.
  *                                Default: null.
- *      {Array}    select:        List of ids that are marked as selected.
- *                                Default: new Set().
- *      {Array}    unselect:      List of ids that are marked as unselected.
- *                                Default: new Set().
  *      {String}   mode:          Indicates whether db* operations should be performed by a locally defined
  *                                method ("local") or call a database method on a remote server ("remote").
  *                                Default: "local".
@@ -151,20 +147,6 @@ var anyModel = function (options)
   * @description The model's types.
   */
   this.types = null;
-
-  /**
-  * @property {Object} select
-  * @default new Set()
-  * @description A list of items that are marked as "selected".
-  */
-  this.select = new Set();
-
-  /**
-  * @property {Object} unselect
-  * @default new Set()
-  * @description A list of items that are marked as "unselected".
-  */
-  this.unselect = new Set();
 
   /**
   * @property {String} mode
@@ -302,7 +284,6 @@ anyModel.prototype._dataInitDefault = function ()
   this.data            = null;
   this.id              = null;
   this.types           = null;
-  this._dataInitSelect();
   this.mode            = "local";
   this.fields          = null;
   this.search          = false;
@@ -321,12 +302,6 @@ anyModel.prototype._dataInitDefault = function ()
   this.last_db_command = null; // Used by dataInit
 }; // _dataInitDefault
 
-anyModel.prototype._dataInitSelect = function ()
-{
-  this.select   = new Set();
-  this.unselect = new Set();
-}; // _dataInitSelect
-
 /**
  * @method dataInit
  * @description Set the model's data, such as type, data and more with the specified options or to
@@ -343,8 +318,6 @@ anyModel.prototype._dataInitSelect = function ()
  *        {String}  id_key:         Id key, e.g. "user_id". Optional. Default: "[type]_id".
  *        {String}  name_key:       Name key, e.g. "user_name". Optional. Default: "[type]_name".
  *        {Object}  types:          The types the model might interact (link) with. Optional.
- *        {Array}   select:         List of ids that are marked as selected. Optional.
- *        {Array}   unselect:       List of ids that are marked as unselected. Optional.
  *        {String}  mode:           "local" or "remote". Optional.
  *        {Array}   fields:         An array of strings to be sent to the server, indicating which columns
  *                                  of the table should be used in a search or update/insert. Optional.
@@ -392,8 +365,6 @@ anyModel.prototype.dataInit = function (options)
     else
     if (!this.name_key && this.type)                   { this.name_key       = this.type+"_name"; }
     if (options.types)                                 { this.types          = options.types; }
-    if (options.select)                                { this.select         = options.select; }
-    if (options.unselect)                              { this.unselect       = options.unselect; }
     if (options.mode)                                  { this.mode           = options.mode; }
     if (options.fields)                                { this.fields         = options.fields; }
     if (options.search)                                { this.search         = options.search; }
@@ -1126,7 +1097,6 @@ anyModel.prototype.dataUpdateLinkList = function (options)
       } // if
     } // for
   }
-  this._dataInitSelect(); // Reset
   return true;
 }; // dataUpdateLinkList
 
