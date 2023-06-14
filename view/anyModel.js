@@ -42,30 +42,32 @@
  * @param {Object} options An object which may contain the following properties, all of which are optional
  *                         unless stated otherwise:
  *
- *      {Object}   data:          The data with which to initialize the model.
- *                                Default: null.
- *      {String}   type:          Type, e.g. "user".
- *                                Default: "".
- *      {String}   id:            Item id, if the top level data represents an item, e.g. "42".
- *                                Default: null.
- *      {String}   id_key:        Id key, e.g. "user_id".
- *                                Default: "[type]_id" if type is set, "" otherwise.
- *      {String}   name_key:      Name key, e.g. "user_name".
- *                                Default: "[type]_name" if type is set, "" otherwise.
- *      {Object}   types:         The types the model might interact (link) with.
- *                                Default: null.
- *      {String}   mode:          Indicates whether db* operations should be performed by a locally defined
- *                                method ("local") or call a database method on a remote server ("remote").
- *                                Default: "local".
- *      {Array}    fields:        An array of strings to be sent to the server, indicating which columns of
- *                                the table should be used in a search or update/insert. These fields are
- *                                only applied if the server fails to find a filter corresponding to `type`.
- *                                Default: null.
- *      {boolean}  search:        Whether to call the search method while initializing the class or while
- *                                searching on the server.
- *                                Default: false.
- *      {String}   search_term:   The string to search for when `search == true`.
- *                                Default: "".
+ *      {Object}   data:           The data with which to initialize the model.
+ *                                 Default: null.
+ *      {String}   type:           Type, e.g. "user".
+ *                                 Default: "".
+ *      {String}   id:             Item id, if the top level data represents an item, e.g. "42".
+ *                                 Default: null.
+ *      {String}   id_key:         Id key, e.g. "user_id".
+ *                                 Default: "[type]_id" if type is set, "" otherwise.
+ *      {String}   name_key:       Name key, e.g. "user_name".
+ *                                 Default: "[type]_name" if type is set, "" otherwise.
+ *      {Object}   types:          The types the model might interact (link) with, e.g ["event","document"].
+ *                                 Default: null.
+ *      {String}   mode:           Indicates whether db* operations should be performed by a locally defined
+ *                                 method ("local") or call a database method on a remote server ("remote").
+ *                                 Default: "local".
+ *      {Array}    db_fields:      An array of strings to be sent to the server, indicating which columns of
+ *                                 the table should be used in a search or update/insert. These fields are
+ *                                 only applied if the server fails to find a filter corresponding to `type`.
+ *                                 Default: null.
+ *      {boolean}  db_search:      Whether to call the search method while initializing the class or while
+ *                                 searching on the server.
+ *                                 Default: false.
+ *      {String}   db_search_term: The string to search for when `db_search == true`.
+ *                                 Default: "".
+ *      {String}   db_last_term:   The last string that was searched for.
+ *                                 Default: "".
  *      {boolean}  auto_search:   If true, the model will be initiated with the result of a search, and
  *                                cbExecute will be called.
  *                                Default: true.
@@ -83,11 +85,11 @@
  *                                                              Default: true.
  *                                  {boolean} is_admin:         True if the user has admin privileges.
  *                                                              Default: false.
- *      {String}   message:       Messages.
+ *      {String}   message:       Info messages.
  *                                Default: "".
- *      {String}   error:         Errors.
+ *      {String}   error:         Error messages.
  *                                Default: "".
- *      {String}   error_server:  Errors from server.
+ *      {String}   error_server:  Error messages from server.
  *                                Default: "".
  *
  * @example
@@ -156,35 +158,35 @@ var anyModel = function (options)
   this.mode = "local";
 
   /**
-  * @property {Boolean} fields
+  * @property {Boolean} db_fields
   * @default null
   * @description An array of strings to be sent to the server, indicating which columns of
   *              the table should be used in in a search or update/insert. These fields are
   *              only applied if the server fails to find a filter corresponding to `type`.
   */
-  this.fields = null;
+  this.db_fields = null;
 
   /**
-  * @property {Boolean} search
+  * @property {Boolean} db_search
   * @default false
   * @description Whether to call the search method while initializing the class,
   *              or while searching on the server. Optional.
   */
-  this.search = false;
+  this.db_search = false;
 
   /**
-  * @property {String} search_term
+  * @property {String} db_search_term
   * @default ""
-  * @description The string to search for when this.search == true.
+  * @description The string to search for when this.db_search == true.
   */
-  this.search_term = "";
+  this.db_search_term = "";
 
   /**
-  * @property {String} last_term
+  * @property {String} db_last_term
   * @default ""
   * @description The last string that was search for.
   */
-  this.last_term = "";
+  this.db_last_term = "";
 
   /**
   * @property {Boolean} auto_search
@@ -271,7 +273,7 @@ var anyModel = function (options)
     console.error("anyModel constructor: "+this.error_server);
 
   // Search
-  if (options && options.search)
+  if (options && options.db_search)
     this.dbSearch(options);
 }; // constructor
 
@@ -285,10 +287,10 @@ anyModel.prototype._dataInitDefault = function ()
   this.id              = null;
   this.types           = null;
   this.mode            = "local";
-  this.fields          = null;
-  this.search          = false;
-  this.search_term     = "";
-  this.last_term       = "";
+  this.db_fields       = null;
+  this.db_search       = false;
+  this.db_search_term  = "";
+  this.db_last_term    = "";
   this.auto_search     = true;
   this.auto_callback   = false;
   this.auto_refresh    = true;
@@ -319,11 +321,11 @@ anyModel.prototype._dataInitDefault = function ()
  *        {String}  name_key:       Name key, e.g. "user_name". Optional. Default: "[type]_name".
  *        {Object}  types:          The types the model might interact (link) with. Optional.
  *        {String}  mode:           "local" or "remote". Optional.
- *        {Array}   fields:         An array of strings to be sent to the server, indicating which columns
+ *        {Array}   db_fields:      An array of strings to be sent to the server, indicating which columns
  *                                  of the table should be used in a search or update/insert. Optional.
- *        {boolean} search:         Whether to call the search method. Optional.
- *        {String}  search_term:    The string to search for. Optional.
- *        {String}  last_term:      The string to search for. Optional.
+ *        {boolean} db_search:      Whether to call the search method. Optional.
+ *        {String}  db_search_term: The string to search for. Optional.
+ *        {String}  db_last_term:   The string to search for. Optional.
  *        {boolean} auto_search:    Whether to initiated model with the result of a search, and call
  *                                  cbExecute. Optional.
  *        {boolean}  auto_callback: Whether to call cbExecute after calling dataInsert, dataUpdate and
@@ -366,10 +368,10 @@ anyModel.prototype.dataInit = function (options)
     if (!this.name_key && this.type)                   { this.name_key       = this.type+"_name"; }
     if (options.types)                                 { this.types          = options.types; }
     if (options.mode)                                  { this.mode           = options.mode; }
-    if (options.fields)                                { this.fields         = options.fields; }
-    if (options.search)                                { this.search         = options.search; }
-    if (options.search_term)                           { this.search_term    = options.search_term; }
-    if (options.last_term)                             { this.last_term      = options.last_term; }
+    if (options.db_fields)                             { this.db_fields      = options.db_fields; }
+    if (options.db_search)                             { this.db_search      = options.db_search; }
+    if (options.db_search_term)                        { this.db_search_term = options.db_search_term; }
+    if (options.db_last_term)                          { this.db_last_term   = options.db_last_term; }
     if (options.auto_search)                           { this.auto_search    = options.auto_search; }
     if (options.auto_callback)                         { this.auto_callback  = options.auto_callback; }
     if (options.auto_refresh)                          { this.auto_refresh   = options.auto_refresh; }
@@ -392,8 +394,8 @@ anyModel.prototype.dataInit = function (options)
       this.error        = i18n.error.SERVER_ERROR;
     }
 
-    if (this.fields && this.id_key && !this.fields.includes(this.id_key))
-      this.id_key = this.fields[0];
+    if (this.db_fields && this.id_key && !this.db_fields.includes(this.id_key))
+      this.id_key = this.db_fields[0];
 
     if (!this.error) {
       if (!this.data)
@@ -1287,47 +1289,47 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *              or to this.dbSearchSuccess if no success handler is specified.
  * @param {Object} options An object which may contain these elements:
  *
- *        {string}   type:       Item's type.
- *                               Optional. Default: `this.type`.
- *        {integer}  id:         Item's id. If specified, the database will be searched for this item.
- *                               If not specified, a list of items of the specified type will be searched for.
- *                               Optional. Default: null.
- *        {integer}  group_id:   If specified, search only in group with this id.
- *                               Optional. Default: undefined.
+ *        {string}   type:           Item's type.
+ *                                   Optional. Default: `this.type`.
+ *        {integer}  id:             Item's id. If specified, the database will be searched for this item.
+ *                                   If not specified, a list of items of the specified type will be searched for.
+ *                                   Optional. Default: null.
+ *        {integer}  group_id:       If specified, search only in group with this id.
+ *                                   Optional. Default: undefined.
  *        {integer}  link_type:
  *
- *        {boolean}  simple:     If true, only values for _id and _name (e.g. "user_id" and "user_name")
- *                               will be returned from the server.
- *                               Optional. Default: undefined.
- *        [boolean}  header:     A parameter sent to the server to indicate whether a header should be
- *                               auto-generated.
- *                               Optional. Default: undefined.
- *        [boolean}  grouping:   If specified, tells the server to group the data before returning.
- *                               If false, 0, null or undefined, data will not be grouped. Any other
- *                               value will specify grouping.
- *                               Optional. Default: undefined.
+ *        {boolean}  simple:         If true, only values for _id and _name (e.g. "user_id" and "user_name")
+ *                                   will be returned from the server.
+ *                                   Optional. Default: undefined.
+ *        [boolean}  header:         A parameter sent to the server to indicate whether a header should be
+ *                                   auto-generated.
+ *                                   Optional. Default: undefined.
+ *        [boolean}  grouping:       If specified, tells the server to group the data before returning.
+ *                                   If false, 0, null or undefined, data will not be grouped. Any other
+ *                                   value will specify grouping.
+ *                                   Optional. Default: undefined.
  *        {integer}  from:
  *
  *        {integer}  num:
  *
- *        (string)   order:      Tell the server how to order the results.
- *                               Optional. Default: undefined (server decides).
- *        {string}   direction:  Sort in ascending or descending direction.
- *                               Optional. Default: undefined (server decides).
- *        (string)   term:       A string to search for.
- *                               Optional. Default: undefined.
- *        {Object}   fields:     An array of strings to be sent to the server, indicating which columns
- *                               of the table should be used in the search. These fields are only
- *                               applied if the server fails to find a filter corresponding to `type`.
- *                               Optional. Default: undefined.
- *        {integer}  timeoutSec: Number of seconds before timing out.
- *                               Optional. Default: 10.
- *        {Function} success:    Method to call on success.
- *                               Optional. Default: `this.dbSearchSuccess`.
- *        {Function} fail:       Method to call on error or timeout.
- *                               Optional. Default: `this._dbFail`.
- *        {Function} context:    The context of the success and fail methods.
- *                               Optional. Default: `this`.
+ *        (string)   order:          Tell the server how to order the results.
+ *                                   Optional. Default: undefined (server decides).
+ *        {string}   direction:      Sort in ascending or descending direction.
+ *                                   Optional. Default: undefined (server decides).
+ *        (string)   db_search_term: A string to search for.
+ *                                   Optional. Default: undefined.
+ *        {Object}   db_fields:      An array of strings to be sent to the server, indicating which columns
+ *                                   of the table should be used in the search. These fields are only
+ *                                   applied if the server fails to find a filter corresponding to `type`.
+ *                                   Optional. Default: undefined.
+ *        {integer}  timeoutSec:     Number of seconds before timing out.
+ *                                   Optional. Default: 10.
+ *        {Function} success:        Method to call on success.
+ *                                   Optional. Default: `this.dbSearchSuccess`.
+ *        {Function} fail:           Method to call on error or timeout.
+ *                                   Optional. Default: `this._dbFail`.
+ *        {Function} context:        The context of the success and fail methods.
+ *                                   Optional. Default: `this`.
  *
  * @return true if the database call was made, false otherwise.
  */
@@ -1357,11 +1359,11 @@ anyModel.prototype.dbSearch = function (options)
     if (!url)
       return false;
     let item_to_send = {};
-    if (options.fields)
-      item_to_send.fields = options.fields;
+    if (options.db_fields)
+      item_to_send.fields = options.db_fields;
     else
-    if (this.fields)
-      item_to_send.fields = this.fields;
+    if (this.db_fields) // TODO! What is this?
+      item_to_send.fields = this.db_fields;
     else
       item_to_send = null;
      //const start = Date.now();
@@ -1402,7 +1404,7 @@ anyModel.prototype.dbSearch = function (options)
  *        {integer} num:
  *        {string}  order:
  *        {string}  direction:
- *        {string}  term:
+ *        {string}  db_search_term:
  *
  * @return The complete URL for dbSearch or null on error (missing type or id_key).
  */
@@ -1448,9 +1450,9 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += options.num                          ? "&num="       +options.num : "";
   param_str += options.order                        ? "&order="     +options.order : "";
   param_str += options.direction                    ? "&dir="       +options.direction : "";
-  param_str += options.term                         ? "&term="      +options.term : "";
-  if (options.term)
-    this.last_term = options.term;
+  param_str += options.db_search_term               ? "&term="      +options.db_search_term : "";
+  if (options.db_search_term)
+    this.db_last_term = options.db_search_term;
   return this._getDataSourceName() + param_str;
 }; // dbSearchGetURL
 
@@ -1505,6 +1507,8 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
  *
  *        {integer}  type:       Item's type.
  *                               Optional. Default: `this.type`.
+ *        {Array}    db_fields:  (Coming soon.)
+ *
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
  *        {Function} success:    Method to call on success.
@@ -1539,11 +1543,11 @@ anyModel.prototype.dbSearchNextId = function (options)
     if (!url)
       return false;
     let item_to_send = {};
-    if (options.fields)
-      item_to_send.fields = options.fields;
+    if (options.db_fields)
+      item_to_send.fields = options.db_fields;
     else
-    if (this.fields)
-      item_to_send.fields = this.fields;
+    if (this.db_fields) // TODO! What is this?
+      item_to_send.fields = this.db_fields;
     else
       item_to_send = null;
     $.getJSON(url,item_to_send) // Call server
@@ -1645,7 +1649,7 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
  *                               rather than updated. Note: If set, an insert operation will be performed
  *                               even if `options.id` has a value.
  *                               Optional. Default: false.
- *        {Object}   fields:     An array of strings to be sent to the server, indicating which columns
+ *        {Object}   db_fields:  An array of strings to be sent to the server, indicating which columns
  *                               of the table should be used in the update/insert. These fields are only
  *                               applied if the server fails to find a filter corresponding to `type`.
  *                               Optional. Default: undefined.
@@ -1724,11 +1728,11 @@ anyModel.prototype.dbUpdate = function (options)
     let url = this.dbUpdateGetURL(options);
     if (!url)
       return false;
-    if (options.fields)
-      item_to_send.fields = options.fields;
+    if (options.db_fields)
+      item_to_send.fields = options.db_fields;
     else
-    if (this.fields)
-      item_to_send.fields = this.fields;
+    if (this.db_fields) // TODO! What is this?
+      item_to_send.fields = this.db_fields;
     $.getJSON(url,item_to_send) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
       return self.success ? self.success(self.context,serverdata,options) : false;
@@ -2028,9 +2032,9 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
       return null;
     }
   }
-  param_str += options.search   ? "&sea=y"                      : "";
-  param_str += options.header   ? "&header="  +options.header   : "";
-  param_str += options.grouping ? "&grouping="+options.grouping : "";
+  param_str += options.db_search ? "&sea=y"                      : "";
+  param_str += options.header    ? "&header="  +options.header   : "";
+  param_str += options.grouping  ? "&grouping="+options.grouping : "";
   return this._getDataSourceName() + param_str;
 }; // dbUpdateLinkListGetURL
 
@@ -2161,9 +2165,9 @@ anyModel.prototype.dbUpdateLinkGetURL = function (options)
   param_str += "&link_id="+options.link_id;
   let nam = [...options.names];
   let val = [...options.values];
-  param_str += options.search   ? "&sea=y"                      : "";
-  param_str += options.header   ? "&header="  +options.header   : "";
-  param_str += options.grouping ? "&grouping="+options.grouping : "";
+  param_str += options.db_search ? "&sea=y"                      : "";
+  param_str += options.header    ? "&header="  +options.header   : "";
+  param_str += options.grouping  ? "&grouping="+options.grouping : "";
   return this._getDataSourceName() + param_str;
 }; // dbUpdateLinkGetURL
 

@@ -152,7 +152,9 @@ function csv2table()
       //
       // Create data model
       //
-      let data_model = new anyModel({type:"rider",mode:"remote",search:false});
+      let data_model = new anyModel({type:      "rider",
+                                     mode:      "remote",
+                                     db_search: false});
       //
       // Create table
       //
@@ -302,9 +304,9 @@ function csv2display()
       //
       // Create data model
       //
-      let data_model = new anyModel({type:   "rider",
-                                     mode:   "local",
-                                     search: false});
+      let data_model = new anyModel({type:      "rider",
+                                     mode:      "local",
+                                     db_search: false});
       //
       // Create data view
       //

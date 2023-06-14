@@ -2560,15 +2560,15 @@ $.any.anyView.prototype.createView = function (params)
 $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
 {
   return {
-    data:       data,
-    type:       type,
-    kind:       kind,
-    id:         kind == "item" ? id : null,
-    mode:       this.model.mode,
-    fields:     this.model.fields,
-    permission: this.model.permission,
-    types:      this.model.types,
-    last_term:  this.model.last_term,
+    data:         data,
+    type:         type,
+    kind:         kind,
+    id:           kind == "item" ? id : null,
+    mode:         this.model.mode,
+    db_fields:    this.model.db_fields,
+    db_last_term: this.model.db_last_term,
+    permission:   this.model.permission,
+    types:        this.model.types,
   };
 }; // getCreateModelOptions
 
@@ -2961,7 +2961,7 @@ $.any.anyView.prototype.getListModelOptions = function (type,list_type,data)
     data:       data,
     link_type:  type,
     link_id:    "???", // TODO!
-    search:     false,
+    db_search:  false,
     mode:       this.model.mode,
     permission: this.model.permission,
   };
@@ -3172,12 +3172,12 @@ $.any.anyView.prototype._processSearch = function (event)
 {
   if (event.keyCode == 13) {
     let search_opt = event.data;
-    search_opt.term = $("#"+search_opt.inp_id).val();
-    search_opt.success   = this.searchSuccess; // TODO! Parameters to searchSuccess
-    search_opt.context   = this;
-    search_opt.grouping  = this.options.grouping;
-    search_opt.order     = this.options.sortBy;
-    search_opt.direction = this.options.sortDirection;
+    search_opt.db_search_term = $("#"+search_opt.inp_id).val();
+    search_opt.success        = this.searchSuccess; // TODO! Parameters to searchSuccess
+    search_opt.context        = this;
+    search_opt.grouping       = this.options.grouping;
+    search_opt.order          = this.options.sortBy;
+    search_opt.direction      = this.options.sortDirection;
     this.showMessages("",true);
     this.model.dbSearch(search_opt);
   }
@@ -3207,7 +3207,7 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
                       });
     if (search_view) {
       if (search_view.model && self.model)
-        search_view.model.last_term = self.model.last_term; // If paginating and we need to call server, repeat the last seach term
+        search_view.model.db_last_term = self.model.db_last_term; // If paginating and we need to call server, repeat the last seach term
       search_view.id_base = new_id_base;
       search_view.options.link_options    = context.options; // Remember options for link click
       search_view.options.grouping        = null;
@@ -3286,8 +3286,8 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
   if (this.model.mode == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
     this.options.ref_rec = 0;
     mod_opt.from -= 1; // from is 0-based on server
-    if (this.model.last_term && this.model.last_term != "")
-      mod_opt.term = this.model.last_term;
+    if (this.model.db_last_term && this.model.db_last_term != "")
+      mod_opt.db_search_term = this.model.db_last_term;
     this.showMessages("",true);
     this.model.dbSearch(mod_opt);
   }
@@ -3422,14 +3422,9 @@ $.any.anyView.prototype.addListEntry = function (event)
       this.showMessages("",true);
       this.model.dbSearchNextId({
          type:       type,
-         data:       the_data,
-         pdata:      pdata,
-         pid:        pid,
-         par_id_str: par_id_str,
-         row_id_str: row_id_str,
+         db_fields:  f,
          success:    this._addListEntryFromDB,
          context:    this,
-         fields:     f,
       });
     }
   }
@@ -3571,11 +3566,10 @@ $.any.anyView.prototype.showItem = function (event)
         let f = []; f[0] = this.model.id_key;
         this.showMessages({message:"Wait... "},true); // TODO! i18n
         this.model.dbSearchNextId({
-           type:    type,
-           is_new:  true,
-           success: this._foundNextIdFromDB,
-           context: this,
-           fields:  f,
+           type:      type,
+           db_fields: f,
+           success:   this._foundNextIdFromDB,
+           context:   this,
         }); // TODO! Asynchronous database call
       }
       else
