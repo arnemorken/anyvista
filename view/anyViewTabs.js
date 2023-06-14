@@ -17,8 +17,6 @@
  * @extends anyView
  * @constructor
  */
-(function($) {
-
 $.widget("any.anyViewTabs", $.any.anyView, {
   // Default options
   options: {
@@ -203,8 +201,6 @@ $.any.anyViewTabs.prototype.openTab = function (eventOrData)
   this.current_id_base = id_base;
   return;
 }; // openTab
-
-})($);
 
 /////////////////////////////////////////////////////////////////////////////
 //

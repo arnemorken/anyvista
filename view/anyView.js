@@ -86,7 +86,6 @@
  * @example
  *      new anyView({filters:my_filters,id:"my_content"});
  */
-(function($) {
 var ANY_LOCALE_NOT_FOUND = "No locale found. ";
 var ANY_MAX_REF_REC = 30;
 
@@ -4691,8 +4690,6 @@ $.any.anyView.prototype.initComponents = function ()
   }
   return this;
 }; // initComponents
-
-})($);
 
 ///////////////////////////////////////////////////////////////////////////////
 // This can be used to instantiate anyView:
