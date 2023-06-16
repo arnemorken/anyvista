@@ -663,7 +663,7 @@ anyModel.prototype.dataSearchNextId = function (type,data)
  *
  * @return The largest id found. If none can be found, -1 is returned and `this.max` is not changed.
  */
-anyModel.prototype.dataSearchMaxId = function (type,data)
+anyModel.prototype.dataSearchMaxId = function (type,data,_prev_type)
 {
   if (!type)
     type = this.type;
@@ -700,7 +700,9 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
                       : null
                 : null;
     if (!dtype)
-      dtype = this.type;
+      dtype = _prev_type;
+    else
+      _prev_type = dtype;
     if (!dtype)
       return -1;
     if (type == dtype)
@@ -730,7 +732,7 @@ anyModel.prototype.dataSearchMaxId = function (type,data)
         }
       }
       if (data[idc].data) // subdata
-        this.dataSearchMaxId(type,data[idc].data);
+        this.dataSearchMaxId(type,data[idc].data,_prev_type);
     }
   }
   return this.max;
