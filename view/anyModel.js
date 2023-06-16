@@ -809,15 +809,17 @@ anyModel.prototype.dataInsert = function (options)
     console.error("anyModel.dataInsert: "+i18n.error.NOTHING_TO_INSERT);
     return null;
   }
+  let data_allocated = false;
   if (!the_data) {
     this.data = {};
     the_data = this.data;
+    data_allocated = true;
   }
   let item = the_id || the_id === 0
              ? this.dataSearch({data:the_data,id:the_id,type:the_type})
              : the_data;
   if (!item || ((the_id || the_id === 0) && !item[the_id] && !item["+"+the_id])) {
-    if (this.data && this.data.length == 0)
+    if (data_allocated)
       this.data = null;
     console.error("anyModel.dataInsert: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_id));
     return null;
