@@ -573,7 +573,8 @@ function testModel()
     res   = dm.dataInsertHeader({type:"bar",header:"Head master"});
     res   = dm.dataInsert({new_data: mdata,
                            type:     "bar"});
-    deepEqual(dm.data["0"].bar_name == "Head master" &&
+    deepEqual(dm.data &&
+              dm.data["0"].bar_name == "Head master" &&
               dm.data["0"].data != undefined && dm.data["0"].data[99] != undefined,
               true, "dataInsertHeader in data structure not containing data: ok");
   });
@@ -1132,10 +1133,12 @@ function testModel()
               true, "dbUpdate({type:'user',id:2}) with different model type returns true");
     setTimeout(function() {
       let item = dm.dataSearch({type:"user",id:2});
-      deepEqual(item[2].user_name === "The faz user" &&
+      let str = item && item[2] ? item[2].user_name+","+item[2].dirty : null;
+      deepEqual(item && item[2] &&
+                item[2].user_name === "The faz user" &&
                 item[2].dirty === undefined,
                 true, "dbUpdate({type:'user',id:2}) with different model type returns with correct data in memory:"+
-                      item[2].user_name+","+item[2].dirty);
+                      str);
       let dm2 = new anyModel({type:"user",db_search:false,mode:"remote",data:null});
       dm2.dbSearch({type:"user",id:2});
       setTimeout(function() {
