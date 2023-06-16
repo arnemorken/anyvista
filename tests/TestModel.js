@@ -36,9 +36,11 @@ function testModel()
   // - cbExecute
   ///////////////////////
 
-  // Delete user with id 79, to satisify dbUpdate insert test (see below)
-  let tempdm = new anyModel({type:"user",db_search:false,mode:"remote",data:null});
+  // Delete users with id 79 and 34, to satisify dbUpdate insert test (see below)
+  let tempdm = new anyModel({type:"user",db_search:false,mode:"remote"});
   tempdm.dbDelete({sync:true,id:79});
+  tempdm = new anyModel({type:"user",db_search:false,mode:"remote"});
+  tempdm.dbDelete({sync:true,id:34});
   // Insert user with id 55, to satisfy dbDelete test (see below)
   tempdm.dbUpdate({sync:true,
                    is_new:true,
