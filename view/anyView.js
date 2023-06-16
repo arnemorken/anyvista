@@ -4014,7 +4014,7 @@ $.any.anyView.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
 $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,options)
 {
   let self = context ? context : this;
-  self.last_db_command = "sea";
+  self.db_last_command = "sea";
 
   if (serverdata) {
     if (serverdata.JSON_CODE)
@@ -4275,7 +4275,7 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
 $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
 {
   let self = context ? context : this;
-  self.last_db_command = "sea";
+  self.db_last_command = "sea";
 
   if (serverdata) {
     if (serverdata.JSON_CODE)
