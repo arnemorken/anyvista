@@ -301,7 +301,7 @@ anyModel.prototype._dataInitDefault = function ()
   // "Private" variables:
   this._listeners      = [];
   this.max             = -1;
-  this.last_db_command = null; // Used by dataInit
+  this.db_last_command = null; // Used by dataInit
 }; // _dataInitDefault
 
 /**
@@ -314,7 +314,7 @@ anyModel.prototype._dataInitDefault = function ()
  *                         The object may contain these elements:
  *
  *        {Object}  data:           Data. Will only be initialised if `dataInit` is called after a search
- *                                  (indicated by `this.last_db_command == "sea"`). Optional.
+ *                                  (indicated by `this.db_last_command == "sea"`). Optional.
  *        {String}  type:           Type, e.g. "user". Optional.
  *        {String}  id:             Item id, if the top level data represents an item, e.g. "42". Optional.
  *        {String}  id_key:         Id key, e.g. "user_id". Optional. Default: "[type]_id".
@@ -349,7 +349,7 @@ anyModel.prototype.dataInit = function (options)
   else
   if (options) {
     //console.log("anyModel.dataInit options:\n"+JSON.stringify(options,2,2));
-    if (options.data || this.last_db_command == "sea") { this.data           = options.data; }
+    if (options.data || this.db_last_command == "sea") { this.data           = options.data; }
     if (options.type)                                  { this.type           = options.type; }
     if (options.id)                                    { this.id             = options.id; }
     if (this.id && this.data) {
@@ -1268,7 +1268,7 @@ anyModel.prototype.dbCreate = function (options)
 anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
-  self.last_db_command = "cre";
+  self.db_last_command = "cre";
   if (serverdata) {
     if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
       serverdata = serverdata.JSON_CODE;
@@ -1475,7 +1475,7 @@ anyModel.prototype.dbSearchGetURL = function (options)
 anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
-  self.last_db_command = "sea";
+  self.db_last_command = "sea";
 
   if (serverdata) {
     if (serverdata.JSON_CODE)
@@ -1619,7 +1619,7 @@ anyModel.prototype.dbSearchNextIdGetURL = function (options)
 anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
-  self.last_db_command = "sea";
+  self.db_last_command = "sea";
   if (serverdata) {
     if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
       serverdata = serverdata.JSON_CODE;
@@ -1848,7 +1848,7 @@ anyModel.prototype.dbUpdateGetURL = function (options)
 anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
-  self.last_db_command = "upd";
+  self.db_last_command = "upd";
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
@@ -2049,7 +2049,7 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
 anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
-  self.last_db_command = "updlink";
+  self.db_last_command = "updlink";
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
@@ -2307,7 +2307,7 @@ anyModel.prototype.dbDeleteGetURL = function (options)
 anyModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
-  self.last_db_command = "del";
+  self.db_last_command = "del";
 
   if (serverdata) {
     if (serverdata.JSON_CODE)
