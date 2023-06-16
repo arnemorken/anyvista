@@ -877,23 +877,30 @@ anyModel.prototype.dataInsert = function (options)
  * @return The header that was inserted.
  *
  * @example
- *      mymodel.dataInsertHeader("rider","TdF 2021 riders");
+ *      mymodel.dataInsertHeader({type:"rider",header:"TdF 2021 riders"});
  */
-// TODO! Not tested
-anyModel.prototype.dataInsertHeader = function (type,headerStr)
+anyModel.prototype.dataInsertHeader = function (options)
 {
-  if (!headerStr && headerStr !== "")
+  if (!options)
     return null;
-  if (!type) {
+  let the_data   = options.data ? options.data : this.data;
+  let the_type   = options.type ? options.type : this.type;
+  let the_header = options.header;
+  if (!the_data) {
+    console.error("anyModel.dataInsertHeader: "+i18n.error.DATA_MISSING);
+    return null;
+  }
+  if (!the_type) {
     console.error("anyModel.dataInsertHeader: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  let orig_data = this.data;
-  this.data = null;
+  if (!the_header && the_header !== "")
+    return null;
+
   let top_data = {
-      head:           type,
-      [type+"_name"]: headerStr,
-      data:           orig_data,
+      head:               the_type,
+      [the_type+"_name"]: the_header,
+      data:               the_data,
   };
   return this.dataInsert({ new_data: top_data, new_id: "0" });
 }; // dataInsertHeader

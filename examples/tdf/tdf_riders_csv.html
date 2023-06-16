@@ -93,6 +93,8 @@ body {
 </div>
 
 <script>
+/* jshint esversion: 9 */
+/* globals $ */
 //let csv_url = "https://balanse.info/wp-content/csv/getfile.php?f=TDF_Riders_History.csv";
 let csv_url = "./TDF_Riders_History.csv";
 
@@ -324,7 +326,7 @@ function csv2display()
       //
       doLog("Updating data model...");
       if (show_header)
-        data_model.dataInsertHeader("rider","TdF 2021 riders"); // Add a header to the list
+        data_model.dataInsertHeader({type:"rider",header:"TdF 2021 riders"}); // Add a header to the list
       result.forEach(function (obj) {
         if (obj.Year == "2021") {
           let indata = getIndata(obj);

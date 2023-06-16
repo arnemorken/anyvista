@@ -562,17 +562,16 @@ function testModel()
     let mdata = {99:{list:"bar",data:{11:{list:"foo",foo_name:"The foo"},
                                       12:{list:"faz",faz_name:"The faz"}}}};
     let dm    = new anyModel({type:"bar",data:mdata});
-    let res   = dm.dataInsertHeader("bar","Head master");
+    let res   = dm.dataInsertHeader({type:"bar",header:"Head master"});
     deepEqual(dm.data["0"].bar_name == "Head master",
               true, "dataInsertHeader in data structure with same type, containing data: ok");
     dm    = new anyModel({type:"foo",data:mdata});
-    res   = dm.dataInsertHeader("bar","Head master");
+    res   = dm.dataInsertHeader({type:"bar",header:"Head master"});
     deepEqual(dm.data["0"].bar_name == "Head master",
               true, "dataInsertHeader in data structure with different type, containing data: ok");
     dm    = new anyModel({type:"foo",data:null});
-    res   = dm.dataInsertHeader("bar","Head master");
+    res   = dm.dataInsertHeader({type:"bar",header:"Head master"});
     res   = dm.dataInsert({new_data: mdata,
-                           id:       "0",
                            type:     "bar"});
     deepEqual(dm.data["0"].bar_name == "Head master" &&
               dm.data["0"].data != undefined && dm.data["0"].data[99] != undefined,
