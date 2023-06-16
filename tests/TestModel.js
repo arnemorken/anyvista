@@ -115,7 +115,7 @@ function testModel()
                 name_key:         "barobj_name",
                 mode:             "local",
                 db_search:        false,
-                db_search_term    "Some thing",
+                db_search_term:   "Some thing",
                 auto_search:      true,
                 auto_callback:    false,
                 message:          "The message",
