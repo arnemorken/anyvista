@@ -372,10 +372,10 @@ anyModel.prototype.dataInit = function (options)
     if (options.db_search)                             { this.db_search      = options.db_search; }
     if (options.db_search_term)                        { this.db_search_term = options.db_search_term; }
     if (options.db_last_term)                          { this.db_last_term   = options.db_last_term; }
+    if (options.db_timeout_sec)                        { this.db_timeout_sec = options.db_timeout_sec; }
     if (options.auto_search)                           { this.auto_search    = options.auto_search; }
     if (options.auto_callback)                         { this.auto_callback  = options.auto_callback; }
     if (options.auto_refresh)                          { this.auto_refresh   = options.auto_refresh; }
-    if (options.db_timeout_sec)                        { this.db_timeout_sec = options.db_timeout_sec; }
     if (options.permission)                            { this.permission     = options.permission; }
     if (options.message)                               { this.message        = options.message; }
     if (options.error)                                 { this.error          = options.error; }
@@ -1135,21 +1135,21 @@ anyModel.prototype.dataDelete = function (options)
     console.error("anyModel.dataDelete: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
-  let data = options.data ? options.data : this.data;
-  let type = options.type ? options.type : this.type;
-  let id   = options.id;
+  let the_data = options.data ? options.data : this.data;
+  let the_type = options.type ? options.type : this.type;
+  let the_id   = options.id;
 
-  if (!data)
+  if (!the_data)
     return null; // Nowhere to delete from
-  if (!type) {
+  if (!the_type) {
     console.error("anyModel.dataDelete: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  if ((!id && id !== 0) || (Number.isInteger(parseInt(id)) && id < 0)) {
+  if ((!the_id && the_id !== 0) || (Number.isInteger(parseInt(the_id)) && the_id < 0)) {
     console.error("anyModel.dataDelete: "+i18n.error.ID_MISSING);
     return null;
   }
-  let item = this.dataSearch({data:data,id:id,type:type,parent:true});
+  let item = this.dataSearch({data:the_data,id:the_id,type:the_type,parent:true});
   if (!item)
     return null;
   // When parent==true, dataSearch may return item indexed with [id]
@@ -1160,11 +1160,11 @@ anyModel.prototype.dataDelete = function (options)
     it_ptr = item.data;
   else
     it_ptr = item;
-  if (it_ptr[id])
-    it_idc = id;
+  if (it_ptr[the_id])
+    it_idc = the_id;
   else
-  if (it_ptr["+"+id])
-    it_idc = "+"+id;
+  if (it_ptr["+"+the_id])
+    it_idc = "+"+the_id;
   if ((!it_idc && it_idc !== 0) || !it_ptr || !it_ptr[it_idc])
     return null;
   let kind = it_ptr[it_idc].list ? "list" : it_ptr[it_idc].item ? "item" : it_ptr[it_idc].head ? "head" : null;
@@ -1179,7 +1179,7 @@ anyModel.prototype.dataDelete = function (options)
         delete item[key];
       else
       if (kind)
-        item[key][kind] = type;
+        item[key][kind] = the_type;
 
   if (this.auto_callback)
     this.cbExecute();
@@ -1214,9 +1214,7 @@ anyModel.prototype.dbCreate = function (options)
 {
   let type  = options.type ? options.type : this.type;
 
-  let db_timeout_sec = options.timeoutSec
-                       ? options.timeoutSec
-                       : this.db_timeout_sec;
+  let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   this.success = options.success ? options.success : this.dbCreateSuccess;
   this.fail    = options.fail    ? options.fail    : this._dbFail;
@@ -1348,9 +1346,7 @@ anyModel.prototype.dbSearch = function (options)
   if (options.id == "max")
     return this.dbSearchNextId(options);
 
-  let db_timeout_sec = options.timeoutSec
-                       ? options.timeoutSec
-                       : this.db_timeout_sec;
+  let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   if (options.sync)
     $.ajaxSetup({ async: false });
@@ -1532,9 +1528,7 @@ anyModel.prototype.dbSearchNextId = function (options)
   if (!options || typeof options != "object")
     options = {};
 
-  let db_timeout_sec = options.timeoutSec
-                       ? options.timeoutSec
-                       : this.db_timeout_sec;
+  let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   if (options.sync)
     $.ajaxSetup({ async: false });
@@ -1718,9 +1712,7 @@ anyModel.prototype.dbUpdate = function (options)
   options.client_id = options.id;     // Update this id in existing data structure with new id from server
   options.data      = the_data;       // Clean up this data structure after server returns successfully
 
-  let db_timeout_sec = options.timeoutSec
-                       ? options.timeoutSec
-                       : this.db_timeout_sec;
+  let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   if (options.sync)
     $.ajaxSetup({ async: false });
@@ -1948,9 +1940,7 @@ anyModel.prototype.dbUpdateLinkList = function (options)
   if (!options || typeof options != "object")
     options = {};
 
-  let db_timeout_sec = options.timeoutSec
-                       ? options.timeoutSec
-                       : this.db_timeout_sec;
+  let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   if (options.sync)
     $.ajaxSetup({ async: false });
@@ -2099,9 +2089,7 @@ anyModel.prototype.dbUpdateLink = function (options)
   if (!options || typeof options != "object")
     options = {};
 
-  let db_timeout_sec = options.timeoutSec
-                       ? options.timeoutSec
-                       : this.db_timeout_sec;
+  let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   if (options.sync)
     $.ajaxSetup({ async: false });
@@ -2170,8 +2158,8 @@ anyModel.prototype.dbUpdateLinkGetURL = function (options)
   if (options.link_type)
     param_str += "&link_type="+options.link_type;
   param_str += "&link_id="+options.link_id;
-  let nam = [...options.names];
-  let val = [...options.values];
+  let nam = [...options.names];  // TODO! Whats this for?
+  let val = [...options.values]; // TODO! Whats this for?
   param_str += options.db_search ? "&sea=y"                      : "";
   param_str += options.header    ? "&header="  +options.header   : "";
   param_str += options.grouping  ? "&grouping="+options.grouping : "";
@@ -2228,9 +2216,7 @@ anyModel.prototype.dbDelete = function (options)
     return false;
   }
 
-  let db_timeout_sec = options.timeoutSec
-                       ? options.timeoutSec
-                       : this.db_timeout_sec;
+  let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
   if (options.sync)
     $.ajaxSetup({ async: false });
