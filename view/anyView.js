@@ -3391,7 +3391,7 @@ $.any.anyView.prototype.addListEntry = function (event)
                  }); // Find the place to add the new item
   if (is_new) {
     if (this.model.mode != "remote") {
-      let new_id = this.model.dataSearchNextId(type);
+      let new_id = this.model.dataSearchNextId(null,type);
       if (new_id >= 0) {
         // Find a new row_id_str
         let the_id = Number.isInteger(parseInt(new_id)) ? parseInt(new_id) : new_id;
@@ -3551,7 +3551,7 @@ $.any.anyView.prototype.showItem = function (event)
     // Find id for a new item if one is not specified
     if (this.model.mode == "local") {
       if ((!id && id !== 0) || id < 0)
-        id = this.model.dataSearchNextId(type,this.model.data);
+        id = this.model.dataSearchNextId(this.model.data,type);
       if ((!id && id !== 0) || id < 0) {
         this.model.error = i18n.error.NEW_ID_NOT_FOUND.replace("%%", type);
         console.error(this.model.error,null);

@@ -350,15 +350,15 @@ function testModel()
                     data: data1,
                   });
     // dataSearchNextId basically just calls dataSearchMaxId and adds 1.
-    deepEqual(dm2.dataSearchNextId("group") === 7,
+    deepEqual(dm2.dataSearchNextId(null,"group") === 7,
               true, "dataSearchNextId('group') === 7");
-    deepEqual(dm2.dataSearchNextId("event") === 919412,
+    deepEqual(dm2.dataSearchNextId(null,"event") === 919412,
               true, "dataSearchNextId('event') === 919412");
     deepEqual(dm2.dataSearchNextId() === 830,
               true, "dataSearchNextId() === 830");
-    deepEqual(dm2.dataSearchNextId("user") === 830,
+    deepEqual(dm2.dataSearchNextId(null,"user") === 830,
               true, "dataSearchNextId('user') === 830");
-    deepEqual(dm2.dataSearchNextId("new_type") === -1,
+    deepEqual(dm2.dataSearchNextId(null,"new_type") === -1,
               true, "dataSearchNextId('new_type') === -1");
 
     // TODO: Tests for non-numerical indexes

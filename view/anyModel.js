@@ -641,10 +641,10 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
  *
  * @return The next available id. If none can be found, -1 is returned and `this.max == -1`.
  */
-anyModel.prototype.dataSearchNextId = function (type,data)
+anyModel.prototype.dataSearchNextId = function (data,type)
 {
   this.max = -1;
-  let res = this.dataSearchMaxId(type,data);
+  let res = this.dataSearchMaxId(data,type);
   if (res >= 0)
     return 1 + parseInt(this.max);
   this.max = -1;
@@ -663,12 +663,8 @@ anyModel.prototype.dataSearchNextId = function (type,data)
  *
  * @return The largest id found. If none can be found, -1 is returned and `this.max` is not changed.
  */
-anyModel.prototype.dataSearchMaxId = function (type,data,_prev_type)
+anyModel.prototype.dataSearchMaxId = function (data,type,_prev_type)
 {
-  if (!type)
-    type = this.type;
-  if (!type)
-    return -1;
   if (!data)
     data = this.data;
   // If empty dataset, start with 0
@@ -676,6 +672,10 @@ anyModel.prototype.dataSearchMaxId = function (type,data,_prev_type)
     this.max = 0;
     return 0;
   }
+  if (!type)
+    type = this.type;
+  if (!type)
+    return -1;
   // If a non-numerical index is found, return immediately
   let datakeys = Object.keys(data);
   for (const key in datakeys) {
@@ -732,7 +732,7 @@ anyModel.prototype.dataSearchMaxId = function (type,data,_prev_type)
         }
       }
       if (data[idc].data) // subdata
-        this.dataSearchMaxId(type,data[idc].data,_prev_type);
+        this.dataSearchMaxId(data[idc].data,type,_prev_type);
     }
   }
   return this.max;
@@ -832,7 +832,7 @@ anyModel.prototype.dataInsert = function (options)
     if (new_id) {
       // A new id was specified or should be auto-generated
       if (new_id < 0)
-        new_id = this.dataSearchNextId(the_type); // Auto-generate new id
+        new_id = this.dataSearchNextId(the_data,the_type); // Auto-generate new id
       if (new_id < 0) {
         console.error("anyModel.dataInsert: "+i18n.error.NEW_ID_NOT_FOUND.replace("%%",""+the_type));
         return null;
