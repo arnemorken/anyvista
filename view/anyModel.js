@@ -501,7 +501,7 @@ anyModel.prototype._getDataSourceName = function ()
 
 /**
  * @method dataSearch
- * @description Search for item of type `type` and id `id` in `data`.  If a type/id combination exists
+ * @description Search for item of type `type` and id `id` in `data`.  If the type/id combination exists
  *              several places in the data tree, only the first occurence found is returned.
  * @param {Object} options An object which may contain these elements:
  *
@@ -528,10 +528,10 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
     console.error("anyModel.dataSearch: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
-  let data      = options.data                   ? options.data      : this.data;
-  let type      = options.type                   ? options.type      : this.type;
-  let id        = options.id || options.id === 0 ? options.id        : null;
-  let prev_type = options.prev_type              ? options.prev_type : type; // Only used internally!
+  let data       = options.data                   ? options.data       : this.data;
+  let type       = options.type                   ? options.type       : this.type;
+  let id         = options.id || options.id === 0 ? options.id         : null;
+  let _prev_type = options._prev_type             ? options._prev_type : this.type; // Only used internally!
 
   if (!data)
     return null; // Not found
@@ -561,8 +561,8 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
                      ? data_ptr.item
                      : data_ptr.head
                        ? data_ptr.head
-                       : prev_type
-                 : prev_type;
+                       : _prev_type
+                 : _prev_type;
   if ((id || id === 0) && data_ptr && (dp_type == type || (!dp_type && (data_ptr[name_key] || data_ptr[name_key] === "")))) {
     if (parent_data && parent_data[parent_id]) {
       parent_data[parent_id].id = parent_id; // Hack
@@ -580,7 +580,7 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
                     ? data[idc].item
                     : data[idc].head
                       ? data[idc].head
-                      : prev_type;
+                      : _prev_type;
       if (dtype == type || (!dtype && data[idc][name_key])) {
         if (id || id === 0) {
           // id search
@@ -608,16 +608,16 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
                        : data["+"+id]
                          ? data["+"+id]
                          : null;
-        let prev_type = data_ptr
-                        ? data_ptr.list
-                          ? data_ptr.list
-                          : data_ptr.item
-                            ? data_ptr.item
-                            : data_ptr.head
-                              ? data_ptr.head
-                              : dtype
-                        : dtype;
-        item = this.dataSearch({data:data[idc].data,id:id,type:type,prev_type:prev_type},p_data,p_idc);
+        let _prev_type = data_ptr
+                         ? data_ptr.list
+                           ? data_ptr.list
+                           : data_ptr.item
+                             ? data_ptr.item
+                             : data_ptr.head
+                               ? data_ptr.head
+                               : dtype
+                         : dtype;
+        item = this.dataSearch({data:data[idc].data,id:id,type:type,_prev_type:_prev_type},p_data,p_idc);
         if (item && item.data)
           item = item.data;
       }
