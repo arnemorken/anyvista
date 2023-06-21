@@ -1052,9 +1052,12 @@ anyModel.prototype.dataUpdateLinkList = function (options)
     console.error("anyModel.dataUpdateLinkList: "+i18n.error.OPTIONS_MISSING);
     return false;
   }
-  let the_data = options.data ? options.data : this.data;
-  let the_type = options.type ? options.type : this.type;
-  let the_id   = options.id;
+  let the_data      = options.data     ? options.data     : this.data;
+  let the_type      = options.type     ? options.type     : this.type;
+  let the_id        = options.id;
+  let the_link_type = options.link_type;
+  let the_new_data  = options.new_data ? options.new_data : this.data;
+  let the_name_key  = options.name_key ? options.name_key : the_link_type+"_name";
 
   if (!the_data)
     return false;
@@ -1062,69 +1065,62 @@ anyModel.prototype.dataUpdateLinkList = function (options)
     console.error("anyModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
     return false;
   }
+  if (options.link_id) {
+    // Remove the link data with id 'options.link_id' and return
+    this.dataDelete({ data: the_data,
+                      id:   options.link_id,
+                      type: the_link_type,
+                   });
+    return true;
+  } // if
 
-  if (parseInt(this.id) == parseInt(options.link_id))
-    this.data = the_data; // TODO! Why?
-  else {
-    // Delete items
-    if (options.unselect) {
-      for (let id of options.unselect) {
-        if (parseInt(id) != parseInt(options.link_id)) {
-          this.dataDelete({ data: this.data,
-                            id:   id,
-                            type: options.link_type,
-                         });
-          //if (this.data[this.id] && !this.data[this.id].data)
-          //  delete this.data[this.id];
-          //else
-          //if (this.data["+"+this.id] && !this.data["+"+this.id].data)
-          //  delete this.data["+"+this.id];
-        }
-      } // for
-    } // if
-    else
-    if (options.link_id) {
-      this.dataDelete({ data: this.data,
-                        id:   options.link_id,
-                        type: options.link_type,
-                     });
-    } // if
-  } // else
-  // Insert items
+  if (options.unselect) {
+    // Remove links in `unselect`
+    for (let id of options.unselect) {
+      // Remove (delete) the link data with id 'id'
+      if (!this.dataDelete({ data: the_data,
+                             id:   id,
+                             type: the_link_type,
+                          }))
+        console.warn("Couldn't remove "+the_link_type+" item with id "+id+" (not found in data). "); // TODO! i18n
+    } // for
+  } // if
+
+  // Insert or update link in `select`
   if (options.select) {
     for (let id of options.select) {
-      if (parseInt(id) != parseInt(options.link_id)) {
-        // Insert item only if its not already in model
-        if (!this.dataSearch({ data: this.data,
-                               id:   id,
-                               type: the_type,
-                            })) {
-          // See if we got the new data
-          let item = this.dataSearch({ data: the_data,
-                                       id:   id,
-                                       type: the_type,
-                                    });
-          if (item) {
-            let ins_id = the_id;
-            if (!ins_id)
-              ins_id = "link-"+the_type; // TODO! Not general enough
-            let indata = {};
-            indata[ins_id] = {};
-            indata[ins_id].data = item;
-            indata[ins_id].head = the_type;
-            indata[ins_id][options.name_key] = the_type+"s";
-            indata.grouping = this.grouping;
-            this.dataInsert({ data:     this.data,
-                              id:       ins_id,
-                              type:     options.type,
-                              new_data: item[id] ? item[id] : item["+"+id],
-                              new_id:   id,
-                           });
-          }
-          else
-            console.warn("Couldn't add item for "+the_type+" "+id+" (not found in data). "); // TODO! i18n
-        } // if
+      // Only insert item if it is not already in model
+      if (!this.dataSearch({ data: the_data,
+                             id:   id,
+                             type: the_link_type,
+                          })) {
+        // See if we really got an item with id 'id' in the new data
+        let item = this.dataSearch({ data: the_new_data,
+                                     id:   id,
+                                     type: the_link_type,
+                                  });
+        if (item) {
+          let ins_id = "link-"+the_link_type;
+          let indata = {};
+          indata[ins_id] = {};
+          indata[ins_id].data = item;
+          indata[ins_id].head = the_link_type;
+          indata[ins_id][the_name_key] = the_link_type+"s";
+          indata.grouping = this.grouping; // TODO! Why?
+          this.dataInsert({ data:     the_data,
+                            id:       ins_id,
+                            type:     the_link_type,
+                            new_data: item[id] ? item[id] : item["+"+id],
+                            new_id:   id,
+                         });
+        }
+        else
+          console.warn("Couldn't add "+the_link_type+" item with id "+id+" (not found in data). "); // TODO! i18n
       } // if
+      else {
+        // Link item exists, update it with data in `the_new_data`
+        // TODO! Not implemented
+      }
     } // for
   }
   return true;
@@ -2062,7 +2058,7 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
     if (self.error_server)
       console.error("anyModel.dbUpdateLinkListSuccess: "+self.error_server);
     if (serverdata.error == "") {
-      options.data = serverdata.data;
+      options.new_data = serverdata.data;
       self.dataUpdateLinkList(options);
     }
   }

@@ -4408,17 +4408,10 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
 
   // Update database
   this.options.item_opening = true; // To make top right close icon appear
-  let the_id    = opt.item_id ? opt.item_id   : opt.id;
-  let the_type  = opt.item_id ? opt.item_type : opt.type;
-  let link_id   = opt.item_id ? opt.id        : opt.link_id;
-  let link_type = opt.item_id ? opt.type      : opt.link_type;
-
-  this.model.dataDelete({
-               type: opt.type,
-               data: opt.data,
-               id:   opt.id,
-             });
-  this.removeFromView(opt);
+  let the_type  = opt.item_type ? opt.item_type : opt.type;
+  let the_id    = opt.item_id   ? opt.item_id   : opt.id;
+  let link_type = opt.link_type;
+  let link_id   = opt.link_id;
   if (!this.model.dbUpdateLinkList({
          type:      the_type,
          id:        the_id,
@@ -4442,28 +4435,28 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   if (!event || !event.data)
     throw i18n.error.DATA_MISSING;
 
+  let data      = event.data.data;
   let type      = event.data.type;
   let kind      = event.data.kind;
-  let data      = event.data.data;
-  let id        = event.data.id;
+  let id        = event.data.item_id ? event.data.item_id   : event.data.pid;
+  let item_type = event.data.item_id ? event.data.item_type : event.data.type; // TODO! should be ptype, not type
   let item_id   = event.data.item_id;
-  let item_type = event.data.item_type;
   let pdata     = event.data.pdata;
   let pid       = event.data.pid;
   let id_str    = event.data.row_id_str;
-  let link_id   = pid && pdata && pdata[pid] ? pid : null; // TODO! Set correct link_id here, not in model!
-  let link_type = pid && pdata && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
-  if (!data || !data[id]) {
-    console.warn("Data not found ("+type+" id="+id+"). ");
+  let link_id   = event.data.id;   //pid && pdata && pdata[pid] ? pid : null;
+  let link_type = event.data.type; //pid && pdata && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
+  if (!data || !data[link_id]) {
+    console.warn("Data not found ("+type+" id="+link_id+"). ");
     return null;
   }
-  if (this.options.confirmRemove && !data[id].is_new) {
+  if (this.options.confirmRemove && !data[link_id].is_new) {
     let linkdata = this.model.dataSearch({ type:   type,
-                                           id:     id,
+                                           id:     link_id,
                                            parent: true,
                                         });
     let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
-    let the_name = data[id][name_key] ? data[id][name_key] : "";
+    let the_name = data[link_id][name_key] ? data[link_id][name_key] : "";
     let msgstr   = i18n.message.removeByName.replace("%%","'"+the_name+"'");
     if (kind == "list") {
       let lfname = linkdata && linkdata[this.model.name_key]
@@ -4497,7 +4490,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         link_type:  link_type,
         link_id:    link_id,
         select:     new Set(),
-        unselect:   new Set().add(id),
+        unselect:   new Set().add(link_id),
       });
   }
   else {
@@ -4511,7 +4504,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         link_type: link_type,
         link_id:   link_id,
         select:    new Set(),
-        unselect:  new Set().add(id),
+        unselect:  new Set().add(link_id),
     };
     this.dbUpdateLinkList(opt);
   }
