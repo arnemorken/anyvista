@@ -50,7 +50,7 @@ var i18n = {
     ID_ILLEGAL:          "Id må være et positivt heltall eller en streng. ",
     LINK_ITEMS_MISSING:  "Mangler elementer å legge til eller fjerne. ",
     NEW_ID_NOT_FOUND:    "Fant ikke ny id for type %%. ",
-    ITEM_NOT_FOUND:      "Fant ikke element med id %%. ",
+    ITEM_NOT_FOUND:      "Fant ikke %% element med id &&. ",
     FILTERS_MISSING:     "filter mangler. ",
     FILTER_NOT_FOUND:    "Filter for %% finnes ikke. ",
     TOO_MUCH_RECURSION:  "For mye rekursjon. ",

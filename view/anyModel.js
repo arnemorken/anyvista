@@ -2,6 +2,7 @@
 /* jshint esversion: 9 */
 /* globals $,i18n,any_defs,isInt, */
 "use strict";
+
 /****************************************************************************************
  *
  * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.
@@ -10,6 +11,7 @@
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
  *
  ***************************************************************************************/
+
 /**
  * __anyModel: Tree structure data model that can manipulate data as lists and items and optionally
  * synchronize with a database.__
@@ -309,8 +311,9 @@ anyModel.prototype._dataInitDefault = function ()
  * @description Set the model's data, such as type, data and more with the specified options or to
  *              default values. Called by the constructor and the success method of `dbSearch`.
  * @param {Object} options An object containing data with which to initialize the model.
- *                         If the encapsulation `options.JSON_CODE` has been set, it will be removed
- *                         from `options`. If `options == null`, default values will be set.
+ *                         If the encapsulation `options.JSON_CODE` has been set (ny the server,
+ *                         it will be removed from `options`. If `options == null`, default values
+ *                         will be set.<br/>
  *                         The object may contain these elements:
  *
  *        {Object}  data:           Data. Will only be initialised if `dataInit` is called after a search
@@ -413,12 +416,12 @@ anyModel.prototype.dataInit = function (options)
 /**
  * @method cbSubscribe
  * @description Adds a method to the list of methods to be called by cbExecute.
- * @param {Function} cbFunction A method to add to the list.
- *                              Mandatory.
- * @param {Object}   cbContext  The context the method should be executed in.
- *                              Mandatory.
+ * @param {Function} cbFunction A method to add to the list. Mandatory.
+ * @param {Object}   cbContext  The context the method should be executed in. Mandatory.
+ * @example
+ *      mymodel.cbSubscribe(myModelChange,myView);
  *
- * @throws {CALLBACK_MISSING} If `cbFunction` or `cbContext` are missing.
+ * @throws `CALLBACK_MISSING` If `cbFunction` or `cbContext` are missing.
  */
 anyModel.prototype.cbSubscribe = function (cbFunction,cbContext)
 {
@@ -433,8 +436,9 @@ anyModel.prototype.cbSubscribe = function (cbFunction,cbContext)
 /**
  * @method cbUnsubscribe
  * @description Remove a method from the list of methods to be called by cbExecute.
- * @param {Function} cbFunction A method to remove from the list.
- *                              Mandatory.
+ * @param {Function} cbFunction A method to remove from the list. Mandatory.
+ * @example
+ *      mymodel.cbUnsubscribe(myModelChange);
  */
 anyModel.prototype.cbUnsubscribe = function (cbFunction)
 {
@@ -811,7 +815,7 @@ anyModel.prototype.dataInsert = function (options)
   }
   let data_allocated = false;
   if (!the_data) {
-    this.data = {};
+    this.data = {}; // Allocate data if the data structure is empty
     the_data = this.data;
     data_allocated = true;
   }
@@ -821,10 +825,11 @@ anyModel.prototype.dataInsert = function (options)
   if (!item || ((the_id || the_id === 0) && !item[the_id] && !item["+"+the_id])) {
     if (data_allocated)
       this.data = null;
-    console.error("anyModel.dataInsert: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_id));
+    let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type)
+    errstr = errstr.replace("&&",""+the_id)
+    console.error("anyModel.dataInsert: "+errstr);
     return null;
   }
-
   if (the_id || the_id === 0) {
     // An id was specified and found in the_data
     if (!item[the_id])
@@ -885,8 +890,10 @@ anyModel.prototype.dataInsert = function (options)
  */
 anyModel.prototype.dataInsertHeader = function (options)
 {
-  if (!options)
+  if (!options || typeof options != "object") {
+    console.error("anyModel.dataInsertHeader: "+i18n.error.OPTIONS_MISSING);
     return null;
+  }
   let the_data   = options.data ? options.data : this.data;
   let the_type   = options.type ? options.type : this.type;
   let the_header = options.header;
@@ -971,10 +978,11 @@ anyModel.prototype.dataUpdate = function (options)
   }
   let item = this.dataSearch({data:the_data,id:the_id,type:the_type});
   if (!item || (!item[the_id] && !item["+"+the_id])) {
-    console.error("anyModel.dataUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_id));
+    let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type)
+    errstr = errstr.replace("&&",""+the_id)
+    console.error("anyModel.dataUpdate: "+errstr);
     return null;
   }
-
   if (!item[the_id].dirty)
     item[the_id].dirty = {};
   for (let filter_id in new_data) {
@@ -1157,7 +1165,7 @@ anyModel.prototype.dataDelete = function (options)
   if (!item)
     return null;
   // When parent==true, dataSearch may return item indexed with [id]
-  // if id is found on top level of data, so guard against that
+  // if id is found on top level of data, so guard against that.
   let it_ptr = null;
   let it_idc = null;
   if (item.data)
@@ -1216,7 +1224,7 @@ anyModel.prototype.dataDelete = function (options)
  */
 anyModel.prototype.dbCreate = function (options)
 {
-  let type  = options.type ? options.type : this.type;
+  let type = options.type ? options.type : this.type;
 
   let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
@@ -1417,27 +1425,26 @@ anyModel.prototype.dbSearch = function (options)
  */
 anyModel.prototype.dbSearchGetURL = function (options)
 {
-  let type = options.type ? options.type : this.type;
-  if (!type) {
+  let the_type      = options.type ? options.type   : this.type;
+  let the_id_key    = the_type     ? the_type+"_id" : this.id_key;
+  let the_link_type = options.link_type;
+  if (!the_type) {
     console.error("anyModel.dbSearchGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  let id_key = options.type && options.type != this.type
-               ? type+"_id"
-               : this.id_key;
-  if (!id_key) {
+  if (!the_id_key) {
     console.error("anyModel.dbSearchGetURL: "+i18n.error.ID_KEY_MISSING);
     return null;
   }
   let param_str = "?echo=y"+
-                  "&type="+type;
+                  "&type="+the_type;
   let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
                ? parseInt(options.id)
                : options.id
                  ? options.id
                  : null;
   param_str += the_id
-               ? "&"+id_key+"="+the_id // Item search
+               ? "&"+the_id_key+"="+the_id // Item search
                : ""; // List search
   let the_gid = Number.isInteger(parseInt(options.group_id)) && options.group_id >= 0
                 ? parseInt(options.group_id)
@@ -1447,7 +1454,7 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += the_gid
                ? "&group_id="+the_gid // Search specific group
                : ""; // Search all groups
-  param_str += type == "group" && options.link_type ? "&group_type="+options.link_type : "";
+  param_str += the_type == "group" && the_link_type ? "&group_type="+the_link_type : "";
   param_str += options.header === true  ||
                options.header === false ||
                typeof options.header == "string"    ? "&header="    +options.header : "";
@@ -1587,21 +1594,19 @@ anyModel.prototype.dbSearchNextId = function (options)
  */
 anyModel.prototype.dbSearchNextIdGetURL = function (options)
 {
-  let type = options.type ? options.type : this.type;
-  if (!type) {
+  let the_type   = options.type ? options.type   : this.type;
+  let the_id_key = the_type     ? the_type+"_id" : this.id_key;
+  if (!the_type) {
     console.error("anyModel.dbSearchNextIdGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  let id_key = options.type && options.type != this.type
-               ? type+"_id"
-               : this.id_key;
-  if (!id_key) {
+  if (!the_id_key) {
     console.error("anyModel.dbSearchNextIdGetURL: "+i18n.error.ID_KEY_MISSING);
     return null;
   }
   let param_str = "?echo=y"+
-                  "&type="+type;
-  param_str += "&"+id_key+"=max";
+                  "&type="+the_type;
+  param_str += "&"+the_id_key+"=max";
   return this._getDataSourceName() + param_str;
 }; // dbSearchNextIdGetURL
 
@@ -1641,15 +1646,16 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
  * @description Insert or update an item in a database table.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer}  type:       Item's type.
- *                               Optional. Default: `this.type`.
- *        {integer}  id:         Item's id. If given, an existing item in the database will be updated.
- *                               If not given, a new item will be inserted into the database.
- *                               Mandatory if updating, null or undefined if inserting.
- *        {Object}   new_data:   The data structure from which comes the data to insert/update.
- *                               An item matching id/type, must exist in `new_data`. If no such item
- *                               can be found, it is an error.
+ *        {Object}   new_data:   The data structure from which comes the data to insert/update. If null
+ *                               or not specified, data from `this.data` is used for the update. A data
+ *                               item matching id/type, must exist in the data structure. If no such
+ *                               item can be found, it is an error.
  *                               Optional. Default: `this.data`.
+ *        {integer}  type:       Type of the datem to update.
+ *                               Optional. Default: `this.type`.
+ *        {integer}  id:         The data item's id. If given, an existing item in the database will be
+ *                               updated. If not given, a new item will be inserted into the database.
+ *                               Mandatory if updating, null or undefined if inserting.
  *        {boolean}  is_new:     true if the item is new (does not exist in database) and should be inserted
  *                               rather than updated. Note: If set, an insert operation will be performed
  *                               even if `options.id` has a value.
@@ -1674,47 +1680,49 @@ anyModel.prototype.dbUpdate = function (options)
   if (!options || typeof options != "object")
     options = {};
 
-  let the_type = options.type ? options.type : this.type;
+  let new_data = options.new_data ? options.new_data : this.data;
+  let the_type = options.type     ? options.type     : this.type;
+  let the_id   = Number.isInteger(parseInt(options.id)) && options.id >= 0
+                 ? parseInt(options.id)
+                 : options.id
+                   ? options.id
+                   : null;
+  if (!new_data)
+    return null; // Nowhere to delete from
   if (!the_type) {
     console.error("anyModel.dbUpdate: "+i18n.error.TYPE_MISSING);
     return false;
   }
-  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
-               ? parseInt(options.id)
-               : options.id
-                 ? options.id
-                 : null;
-  if (!the_id && the_id !== 0 && typeof options.id !== "string") {
+  if (!the_id && the_id !== 0 && typeof the_id !== "string") {
     console.error("anyModel.dbUpdate: "+i18n.error.ID_ILLEGAL);
     return false;
   }
   // Check that we have new or dirty data
-  let the_data = options.new_data
-                 ? options.new_data // Update with data from the given new_data
-                 : this.data;       // Update with data from the model
-  let item = this.dataSearch({ type: the_type,
+  let item = this.dataSearch({ data: new_data,
+                               type: the_type,
                                id:   the_id,
-                               data: the_data,
                             });
-  if (!item || !item[options.id]) {
-    console.error("anyModel.dbUpdate: "+i18n.error.ITEM_NOT_FOUND.replace("%%",""+options.id));
+  if (!item || !item[the_id]) {
+    let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type)
+    errstr = errstr.replace("&&",""+the_id)
+    console.error("anyModel.dbUpdate: "+errstr);
     return false;
   }
-  if (!options.is_new && !item[options.id].is_new && !Object.size(item[options.id].dirty)) {
+  if (!options.is_new && !item[the_id].is_new && !Object.size(item[the_id].dirty)) {
     this.message = i18n.error.NOTHING_TO_UPDATE;
     console.log("anyModel.dbUpdate: "+this.message);
     this.cbExecute();
     return false;
   }
   // Data to update or insert
-  let item_to_send = item[options.id].is_new || options.is_new
-                     ? item[options.id]        // insert
-                     : item[options.id].dirty
-                       ? item[options.id].dirty
+  let item_to_send = item[the_id].is_new || options.is_new
+                     ? item[the_id]        // insert
+                     : item[the_id].dirty
+                       ? item[the_id].dirty
                        : {}; // update
   // Data used in dbUpdateSuccess method
-  options.client_id = options.id;     // Update this id in existing data structure with new id from server
-  options.data      = the_data;       // Clean up this data structure after server returns successfully
+  options.client_id = the_id;   // Update this id in existing data structure with new id from server
+  options.data      = new_data; // Clean up this data structure after server returns successfully
 
   let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
@@ -1777,34 +1785,30 @@ anyModel.prototype.dbUpdate = function (options)
  */
 anyModel.prototype.dbUpdateGetURL = function (options)
 {
-  let type = options.type ? options.type : this.type;
-  if (!type) {
+  let the_type   = options.type ? options.type   : this.type;
+  let the_id_key = the_type     ? the_type+"_id" : this.id_key;
+  if (!the_type) {
     console.error("anyModel.dbUpdateGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  let id_key = options.type && options.type != this.type
-               ? type+"_id"
-               : this.id_key;
-  if (!id_key) {
+  if (!the_id_key) {
     console.error("anyModel.dbUpdateGetURL: "+i18n.error.ID_KEY_MISSING);
     return null;
   }
   let param_str = "?echo=y"+
-                  "&type="+type;
-  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
-               ? parseInt(options.id)
-               : options.id
-                 ? options.id
-                 : null;
+                  "&type="+the_type;
+  let the_id   = Number.isInteger(parseInt(options.id)) && options.id >= 0
+                 ? parseInt(options.id)
+                 : options.id
+                   ? options.id
+                   : null;
   param_str += the_id
-               ? "&"+id_key+"="+the_id // Update item
+               ? "&"+the_id_key+"="+the_id // Update item
                : ""; // Insert item
 
   // If a group id is given, the item will be put into that group immediately
-  let group_id     = type != "group"
-                     ? options.group_id
-                     : null;
-  let the_group_id = type != "group"
+  let group_id     = the_type != "group" ? options.group_id : null;
+  let the_group_id = the_type != "group"
                      ? Number.isInteger(parseInt(group_id)) && group_id >= 0
                        ? parseInt(group_id)
                        : group_id
@@ -1987,24 +1991,23 @@ anyModel.prototype.dbUpdateLinkList = function (options)
  */
 anyModel.prototype.dbUpdateLinkListGetURL = function (options)
 {
-  if (!options.link_type) {
-    console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.LINK_TYPE_MISSING);
-    return null;
-  }
-  let the_type = options.type
-                 ? options.type
-                 : this.type;
+  let the_type      = options.type ? options.type : this.type;
+  let the_link_type = options.link_type;
+  let the_id        = Number.isInteger(parseInt(options.id)) && options.id >= 0
+                      ? parseInt(options.id)
+                      : options.id
+                        ? options.id
+                        : Number.isInteger(parseInt(this.id))
+                          ? parseInt(this.id)
+                          : this.id;
   if (!the_type) {
     console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
-               ? parseInt(options.id)
-               : options.id
-                 ? options.id
-                 : Number.isInteger(parseInt(this.id))
-                   ? parseInt(this.id)
-                   : this.id;
+  if (!the_link_type) {
+    console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.LINK_TYPE_MISSING);
+    return null;
+  }
   if (typeof options.id !== "string" && !the_id && the_id !== 0) {
     console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.ID_ILLEGAL);
     return null;
@@ -2013,7 +2016,7 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
                   "&cmd=upd"+
                   "&type="+the_type+
                   "&"+the_type+"_id"+"="+the_id+
-                  "&link_type="+options.link_type;
+                  "&link_type="+the_link_type;
   if (options.link_id)
     param_str += "&rem="+options.link_id;
   else {
@@ -2136,16 +2139,17 @@ anyModel.prototype.dbUpdateLink = function (options)
  */
 anyModel.prototype.dbUpdateLinkGetURL = function (options)
 {
-  let the_type = options.type ? options.type : this.type;
+  let the_type      = options.type ? options.type : this.type;
+  let the_id        = Number.isInteger(parseInt(options.id)) && options.id >= 0
+                      ? parseInt(options.id)
+                      : options.id
+                        ? options.id
+                        : null;
+  let the_link_type = options.link_type;
   if (!the_type) {
     console.error("anyModel.dbUpdateLinkGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
-               ? parseInt(options.id)
-               : options.id
-                 ? options.id
-                 : null;
   if (!the_id && typeof options.id !== "string") {
     console.error("anyModel.dbUpdateLinkGetURL: "+i18n.error.ID_ILLEGAL);
     return null;
@@ -2159,8 +2163,8 @@ anyModel.prototype.dbUpdateLinkGetURL = function (options)
                   "&cha=y"+
                   "&type="+the_type+
                   "&"+the_type+"_id"+"="+the_id;
-  if (options.link_type)
-    param_str += "&link_type="+options.link_type;
+  if (the_link_type)
+    param_str += "&link_type="+the_link_type;
   param_str += "&link_id="+options.link_id;
   let nam = [...options.names];  // TODO! Whats this for?
   let val = [...options.values]; // TODO! Whats this for?
@@ -2263,37 +2267,43 @@ anyModel.prototype.dbDelete = function (options)
  */
 anyModel.prototype.dbDeleteGetURL = function (options)
 {
-  let type = options.type ? options.type : this.type;
-  if (!type) {
+  let the_type   = options.type ? options.type   : this.type;
+  let the_id_key = the_type     ? the_type+"_id" : this.id_key;
+  let the_id     = Number.isInteger(parseInt(options.id)) && options.id >= 0
+                   ? parseInt(options.id)
+                   : options.id
+                     ? options.id
+                     : null;
+  if (!the_type) {
     console.error("anyModel.dbDeleteGetURL: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  let id_key = options.type && options.type != this.type
-               ? type+"_id"
-               : this.id_key;
-  if (!id_key) {
-    console.error("anyModel.dbDeleteGetURL: "+i18n.error.ID_KEY_MISSING);
-    return null;
-  }
-  let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
-               ? parseInt(options.id)
-               : options.id
-                 ? options.id
-                 : null;
   if (!the_id && typeof options.id !== "string") {
     console.error("anyModel.dbDeleteGetURL: "+i18n.error.ID_ILLEGAL);
     return false;
   }
+  if (!the_id_key) {
+    console.error("anyModel.dbDeleteGetURL: "+i18n.error.ID_KEY_MISSING);
+    return null;
+  }
   let param_str = "?echo=y"+
-                  "&type="+type;
+                  "&type="+the_type;
   param_str += "&cmd=del"+
-               "&del="+type+
-               "&"+id_key+"="+the_id;
+               "&del="+the_type+
+               "&"+the_id_key+"="+the_id;
 
   return this._getDataSourceName() + param_str;
 }; // dbDeleteGetURL
 
-// Default success callback method for dbDelete
+/**
+ * @method anyModel.dbDeleteSuccess
+ * @description Default success callback method for dbDelete.
+ * @param {Object} context
+ *        {Object} serverdata
+ *        {Object} options
+ *
+ * @return context
+ */
 anyModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;

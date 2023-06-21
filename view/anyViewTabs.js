@@ -1,7 +1,8 @@
 /* jshint sub:true */
-/* jshint esversion: 6 */
+/* jshint esversion: 9 */
 /* globals $,i18n,anyView */
 "use strict";
+
 /****************************************************************************************
  *
  * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.
@@ -10,6 +11,7 @@
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
  *
  ***************************************************************************************/
+
 /**
  * __Tab view for the anyVista data model.__
  *
@@ -21,24 +23,32 @@ $.widget("any.anyViewTabs", $.any.anyView, {
   // Default options
   options: {
     grouping: "tabs",
-  },
+  }, // options
 
-  // "Constructor"
+  // Constructor
   _create: function() {
     this._super();
     this.element.addClass("any-datatabs-view");
     this.first_id_base   = this.options.first_id_base   ? this.options.first_id_base : null;
     this.current_id_base = this.options.current_id_base ? this.options.current_id_base : null;
-  },
+    return this;
+  }, // constructor
 
+  // Destructor
   _destroy: function() {
     this.first_id_base   = null;
     this.current_id_base = null;
     this.element.removeClass("any-datatabs-view");
     this._super();
-  }
-}); // ViewTabs widget constructor
+  }, // destructor
 
+}); // anyViewTabs widget constructor
+
+/**
+ * @method anyViewTabs.getCreateViewOptions
+ * @description Coming soon.
+ * @return opt
+ */
 $.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,kind,data_level,indent_level,params)
 {
   let opt = $.any.anyView.prototype.getCreateViewOptions.call(this,model,parent,kind,data_level,indent_level,params);
@@ -48,9 +58,11 @@ $.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,kind,da
   return opt;
 }; // getCreateViewOptions
 
-//
-// Get the current tab container (div), or create a new one if it does not exist
-//
+/**
+ * @method anyViewTabs.getOrCreateTabsContainer
+ * @description Get the current tab container (div), or create a new one if it does not exist
+ * @return tabs_div
+ */
 $.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kind,data_level)
 {
   if (!parent)
@@ -202,10 +214,9 @@ $.any.anyViewTabs.prototype.openTab = function (eventOrData)
   return;
 }; // openTab
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// This can be used to instantiate anyViewTabs:
-//
+///////////////////////////////////////////////////////////////////////////////
+// This can be used to instantiate anyViewTabs
+///////////////////////////////////////////////////////////////////////////////
 var anyViewTabs = function (options)
 {
   if (!options)

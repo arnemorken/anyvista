@@ -50,7 +50,7 @@ var i18n = {
     ID_ILLEGAL:          "Id must be a positive integer or a string. ",
     LINK_ITEMS_MISSING:  "No items to add or remove. ",
     NEW_ID_NOT_FOUND:    "Could not find new id for type %%. ",
-    ITEM_NOT_FOUND:      "Could not find item with id %%. ",
+    ITEM_NOT_FOUND:      "Could not find %% item with id &&. ",
     FILTERS_MISSING:     "filter missing. ",
     FILTER_NOT_FOUND:    "Filter for %% not found. ",
     TOO_MUCH_RECURSION:  "Too much recursion. ",

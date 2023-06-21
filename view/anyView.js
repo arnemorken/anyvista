@@ -2,6 +2,7 @@
 /* jshint esversion: 9 */
 /* globals $,i18n,any_defs,isFunction,w3_modaldialog,w3_modaldialog_close,tinyMCE,tinymce */
 "use strict";
+
 /****************************************************************************************
  *
  * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.
@@ -10,6 +11,7 @@
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
  *
  ***************************************************************************************/
+
 /**
  * __anyView: View for the anyVista data model.__
  *
@@ -86,7 +88,7 @@
  *<li>    {Set}     unselect:              List of ids that are marked as unselected. Default: new Set().
  *
  * @example
- *      new anyView({filters:my_filters,id:"my_content"});
+ *      new anyView({model:mymodel,filters:myfilters,id:"mycontent"});
  */
 var ANY_LOCALE_NOT_FOUND = "No locale found. ";
 var ANY_MAX_REF_REC = 30;
@@ -114,6 +116,7 @@ $.widget("any.anyView", {
     showPaginator:         true,
     showToolbar:           true,
     showMessages:          true,
+  //showErrors:            false, // TODO! NOT IMPLEMENTED
     showServerErrors:      false,
   //showServerMessages:    true,  // TODO! NOT IMPLEMENTED
     showEmptyRows:         false,
@@ -243,7 +246,8 @@ $.widget("any.anyView", {
     this.options.top_view = null;
     this.options          = null;
     this.model            = null;
-  },
+  }, // destructor
+
 }); // anyView widget constructor
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -3417,7 +3421,7 @@ $.any.anyView.prototype.addListEntry = function (event)
     else { // remote
       // Find a new row_id_str
       let the_id = Number.isInteger(parseInt(new_id)) ? parseInt(new_id) : new_id;
-      let row_id_str = par_id_str ? par_id_str+"_"+the_id : ""+the_id;
+      let row_id_str = par_id_str ? par_id_str+"_"+the_id : ""+the_id; // TODO! Whats this for?
       let f = []; f[0] = this.model.id_key;
       this.showMessages("",true);
       this.model.dbSearchNextId({
@@ -4697,7 +4701,7 @@ $.any.anyView.prototype.initComponents = function ()
 }; // initComponents
 
 ///////////////////////////////////////////////////////////////////////////////
-// This can be used to instantiate anyView:
+// This can be used to instantiate anyView
 ///////////////////////////////////////////////////////////////////////////////
 var anyView = function (options)
 {
