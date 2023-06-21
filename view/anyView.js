@@ -394,10 +394,10 @@ $.any.anyView.prototype._setPermissions = function ()
  *              Calls `this.refresh` to refresh the view after model has changed.
  *              Normally, it is not neccessary to call this method directly.
  *              Override in derived classes if necessary.
- * @param {Object} model The model to refresh.
- *                 If not specified, the current model (`this.model`) is used.
- *                 If specified, `this.model` will be set to `model`, before calling `this.refresh`.
- * @return `this`.
+ * @param   {Object} model The model to refresh.
+ *                   If not specified, the current model (`this.model`) is used.
+ *                   If specified, `this.model` will be set to `model`, before calling `this.refresh`.
+ * @return  {Object} `this`.
  */
 $.any.anyView.prototype.onModelChange = function (model)
 {
