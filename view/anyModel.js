@@ -505,14 +505,14 @@ anyModel.prototype._getDataSourceName = function ()
  *              several places in the data tree, only the first occurence found is returned.
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data:   The data structure to search in.
- *                          Optional. Default: The model's data (`this.data`).
- *        {String}  type:   The type of the data to search for.
- *                          Optional. Default: The model's type (`this.type`).
- *        {integer} id:     The id to search for.
- *                          Optional. Default: null.
- *        {boolean} parent: If true, search for parent of the item with the specified id.
- *                          Optional. Default: Same as `type`.
+ *        {Object}  data   The data structure to search in.
+ *                         Optional. Default: The model's data (`this.data`).
+ *        {String}  type   The type of the data to search for.
+ *                         Optional. Default: The model's type (`this.type`).
+ *        {integer} id     The id to search for.
+ *                         Optional. Default: null.
+ *        {boolean} parent If true, search for parent of the item with the specified id.
+ *                         Optional. Default: Same as `type`.
  *
  * @return If id is specified and parent is false: A pointer to the item found, or null if not found or on error.
  *         If id is specified and parent is true: A pointer to the parent of the item found, or null if not found or on error.
@@ -638,10 +638,10 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
  * @description Sets `this.max` to the largest id for the specified type in the in-memory data structure
  *              and returns the next id (i.e. `this.max + 1`). If any of the indexes are non-numerical,
  *              the number of items in the data structure minus 1 will be returned.
- * @param {String} type: The type of the data to search for.
- *                       Optional. Default: The model's type (`this.type`).
- * @param {Object} data: The data structure to search in.
- *                       Optional. Default: The model's data (`this.data`).
+ * @param {Object} data The data structure to search in.
+ *                      Optional. Default: The model's data (`this.data`).
+ * @param {String} type The type of the data to search for.
+ *                      Optional. Default: The model's type (`this.type`).
  *
  * @return The next available id. If none can be found, -1 is returned and `this.max == -1`.
  */
@@ -660,10 +660,10 @@ anyModel.prototype.dataSearchNextId = function (data,type)
  * @description Sets `this.max` to the largest id for the specified type in the in-memory data structure
  *              and returns this.max. If any of the indexes are non-numerical, the number of items in the
  *              data structure minus 1 will be returned.
- * @param {String} type: The type of the data to search for.
- *                       Optional. Default: The model's type (`this.type`).
- * @param {Object} data: The data structure to search in.
- *                       Optional. Default: The model's data (`this.data`).
+ * @param {Object} data The data structure to search in.
+ *                      Optional. Default: The model's data (`this.data`).
+ * @param {String} type The type of the data to search for.
+ *                      Optional. Default: The model's type (`this.type`).
  *
  * @return The largest id found. If none can be found, -1 is returned and `this.max` is not changed.
  */
@@ -750,35 +750,35 @@ anyModel.prototype.dataSearchMaxId = function (data,type,_prev_type)
  *              insertion point will be overwritten.
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data:     The data structure to insert into.
- *                            Optional. Default: The model's data (`this.data`).
- *        {String}  type:     The type of the item where the new data should be inserted (i.e. the type of
- *                            the item with id `id`.)
- *                            Optional. Default: The model's type (`this.type`).
- *        {integer} id:       The id of the item in `data` where `new_data` should be inserted.
- *                            The data will be inserted like this:
- *                            1) If id is not specified:
- *                               - If `new_id` is not specified: `data              = new_data`
- *                               - If `new_id` is specified:     `data[new_id].data = new_data`
- *                            2) If id is specified and found in the data structure:
- *                               - If `new_id` is not specified: `data[id].data              = new_data`
- *                               - If `new_id` is specified:     `data[id].data[new_id].data = new_data`
- *                            3) If id is specified but not found in the data structure, it is an error.
- *                            Optional. Default: undefined.
- *        {Object}  new_data: The data item to insert into the data structure.
- *                            Must be on a format that can be recognized by the model.
- *                            See <a href="../modules/anyVista.html">`anyVista`</a> for more information.
- *                            Mandatory.
- *        {integer} new_id:   Indicates a new id that will be used when inserting the new data.
- *                            1) If `new_id` is not specified:
- *                               - If `id` is not specified: `data          = new_data`.
- *                               - If `id` is specified:     `data[id].data = new_data`.
- *                            2) If `new_id` is specified and >= 0:
- *                               - If `id` is not specified: `data[new_id].data     = new_data`.
- *                               - If `id` is specified:     `data[id].data[new_id] = new_data`.
- *                            3) If `new_id` is < 0, it will be created by `dataSearchNextId` and the
- *                               data will be inserted as in case 2) above.
- *                            Optional. Default: undefined.
+ *        {Object}  data     The data structure to insert into.
+ *                           Optional. Default: The model's data (`this.data`).
+ *        {String}  type     The type of the item where the new data should be inserted (i.e. the type of
+ *                           the item with id `id`.)
+ *                           Optional. Default: The model's type (`this.type`).
+ *        {integer} id       The id of the item in `data` where `new_data` should be inserted.
+ *                           The data will be inserted like this:
+ *                           1) If id is not specified:
+ *                              - If `new_id` is not specified: `data              = new_data`
+ *                              - If `new_id` is specified:     `data[new_id].data = new_data`
+ *                           2) If id is specified and an item found in the data structure:
+ *                              - If `new_id` is not specified: `item[id].data              = new_data`
+ *                              - If `new_id` is specified:     `item[id].data[new_id].data = new_data`
+ *                           3) If id is specified but not found in the data structure, it is an error.
+ *                           Optional. Default: undefined.
+ *        {Object}  new_data The data item to insert into the data structure.
+ *                           Must be on a format that can be recognized by the model.
+ *                           See <a href="../modules/anyVista.html">`anyVista`</a> for more information.
+ *                           Mandatory.
+ *        {integer} new_id   Indicates a new id that will be used when inserting the new data.
+ *                           1) If `new_id` is not specified:
+ *                              - If `id` is not specified: `data          = new_data`.
+ *                              - If `id` is specified:     `data[id].data = new_data`.
+ *                           2) If `new_id` is specified and >= 0 and an item is found in the data structure:
+ *                              - If `id` is not specified: `item[new_id].data     = new_data`.
+ *                              - If `id` is specified:     `item[id].data[new_id] = new_data`.
+ *                           3) If `new_id` is < 0, it will be created by `dataSearchNextId` and the
+ *                              data will be inserted as in case 2) above.
+ *                           Optional. Default: undefined.
  *
  * @return A pointer to the place where the new data item was inserted on success, or null on error.
  *
@@ -881,8 +881,9 @@ anyModel.prototype.dataInsert = function (options)
 /**
  * @method dataInsertHeader
  * @description Adds a header at the top of the data structure
- * @param  type:      The type of the data "below" the header.
- *         headerStr: The header string.
+ * @param  data   The data structue to use. Optional. Default: `this.data`.
+ *         type   The type of the data "below" the header. Optional. Default: `this.type`.
+ *         header The header string. Mandatory.
  * @return The header that was inserted.
  *
  * @example
@@ -923,24 +924,24 @@ anyModel.prototype.dataInsertHeader = function (options)
  *              place found is used. Data that exist at the insertion point will be overwritten.
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data:     The data structure to update.
- *                            Optional. Default: The model's data (`this.data`).
- *        {String}  type:     The type of the item in `data` with id `id`.
- *                            Optional. Default: The model's type (`this.type`).
- *        {integer} id:       The id of the item in `data` to update with values from `new_data`.
- *                            If id is not found in the data structure, it is an error.
- *                            Mandatory.
- *        {Object}  new_data: The data item to update the data structure with.
- *                            Must be on the format `new_data[filter_id]` where `filter_id` are the
- *                            values containing new values.
- *                            For example:
- *                              `new_data = { user_name:        "Johhny B. Goode",
- *                                            user_description: "Musician",
- *                                          }`
- *                            If an item with the specified `id` is found in the structure `data`, it
- *                            will be updated with the values for `user_name` and `user_description`.
- *                            If an item is not found it is an error.
- *                            Mandatory.
+ *        {Object}  data     The data structure to update.
+ *                           Optional. Default: The model's data (`this.data`).
+ *        {String}  type     The type of the item in `data` with id `id`.
+ *                           Optional. Default: The model's type (`this.type`).
+ *        {integer} id       The id of the item in `data` to update with values from `new_data`.
+ *                           If id is not found in the data structure, it is an error.
+ *                           Mandatory.
+ *        {Object}  new_data The data item to update the data structure with.
+ *                           Must be on the format `new_data[filter_id]` where `filter_id` are the
+ *                           values containing new values.
+ *                           For example:
+ *                             `new_data = { user_name:        "Johhny B. Goode",
+ *                                           user_description: "Musician",
+ *                                         }`
+ *                           If an item with the specified `id` is found in the structure `data`, it
+ *                           will be updated with the values for `user_name` and `user_description`.
+ *                           If an item is not found it is an error.
+ *                           Mandatory.
  *
  * @return A pointer to the place where the data was updated on success, or null on error.
  *
@@ -1008,30 +1009,38 @@ anyModel.prototype.dataUpdate = function (options)
  *              a link from one data item to another (e.g., add/remove a user to/from an event).
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data:      The data structure to update.
- *                             Optional. Default: The model's data (`this.data`).
- *        {String}  type:      The type of the data to update.
- *                             Optional. Default: The model's type (`this.type`).
- *        {integer} id:        The id of the item to which the list "belongs" (is linked to), for
- *                             example a user id, where the user may be associated with several
- *                             event ids.
- *                             Optional. If not specified, it wil be set to `"link-"+type`.
- *        {String}  link_type: The type of an item with id `link_id`, or the type of the items in
- *                             the `select` and the `unselect` arrays.
- *                             Mandatory if .
- *        {String}  link_id:   The id of an item to be removed.
- *                             If given, the specified link will be removed and no other action will
- *                             be taken (the `select` and `unselect` arrays will be ignored).
- *                             If not given, links will be added and/or removed as per the `select`
- *                             and `unselect` arrays.
- *                             Optional. Default: undefined.
- *        {Object}  unselect:  A list of ids to remove (if link_id is not given).
- *                             These ids will be removed *before* the ids in `select` has been added.
- *                             Optional.
- *        {Object}  select:    A list of ids to add (if link_id is not given).
- *                             These ids will be added *after* the ids in `unselect` has been removed.
- *                             Optional.
- *        {String}  name_key:
+ *        {Object}  data      The data structure to update.
+ *                            Optional. Default: The model's data (`this.data`).
+ *        {String}  type      The type of the item to which the list is linked to (e.g. "user").
+ *                            Optional. Default: `this.type`.
+ *        {integer} id        The id of the item to which the list is linked to (e.g. the user id "23").
+ *                            Optional. Default: `"link-"+type`.
+ *        {String}  link_type If `link_id` is specified, the type of an item in the data structure with
+ *                            id `link_id`.
+ *                            If `link_id` is not specified, the type of the items in the `select` and
+ *                            the `unselect` arrays.
+ *                            Mandatory.
+ *        {String}  link_id   The id of an item to unlink from item with id `id`.
+ *                            If specified, the link will be removed and no other action will be taken
+ *                            (the `select` and `unselect` arrays will be ignored).
+ *                            If not given, links will be added and/or removed as per the `select`
+ *                            and `unselect` arrays.
+ *                            Optional. Default: undefined.
+ *        {Object}  unselect  A list of ids to unlink from item with id `id` (if `link_id` is not given).
+ *                            This will be done *before* the ids in `select` are added.
+ *                            Optional. Default: undefined.
+ *        {Object}  select    A list of ids to link to item with id `id`(if `link_id` is not given).
+ *                            This will be done *after* the ids in `unselect` has been removed.
+ *                            If the link already exists, the link's data will be update with the data
+ *                            in `new_data`, if specified.
+ *                            Optional. Default: undefined.
+ *        {Object}  new_data  An object containing data to update the data structure with when the
+ *                            `select` list is specified and `link_id` is not specified. If `new_data`
+ *                            is not specified, the data to link is assumed to be found in the `data`
+ *                            data structure. If not found, it is an error.
+ *                            Optional. Default: null, and `data` will be searched for the items with
+ *                            ids specified in `select`.
+ *        {String}  name_key
  *
  * @return true on success, false on error.
  *
@@ -1131,12 +1140,12 @@ anyModel.prototype.dataUpdateLink = function (options)
  * @description Deletes an item with a specified id from the data structure.
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data:  The data structure to delete from.
- *                         Optional. Default: The model's data structure (`this.data`).
- *        {String}  type:  The type of the item to delete.
- *                         Optional. Default: The model's type (`this.type`).
- *        {integer} id:    The id of the item to delete.
- *                         Mandatory.
+ *        {Object}  data  The data structure to delete from.
+ *                        Optional. Default: The model's data structure (`this.data`).
+ *        {String}  type  The type of the item to delete.
+ *                        Optional. Default: The model's type (`this.type`).
+ *        {integer} id    The id of the item to delete.
+ *                        Mandatory.
  *
  * @return A pointer to the place where the data was deleted on success, or null if the place was not found or on error.
  */
@@ -1917,29 +1926,31 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *              in the database. This can be used to link/unlink an item to/from another item.
  * @param {Object}  options An object which may contain these elements:
  *
- *        {String}  type:       The type of items in the list.
- *                              Optional. Default: `this.type`.
- *        {integer} id:         The id of the item to which the list "belongs" (is linked to), for
- *                              example a user id, where the user may be associated with several
- *                              event ids.
- *                              Optional.
- *        {String}  link_type:  The type of an item with id `link_id`, or the type of the items in
- *                              the `select` and the `unselect` arrays.
- *                              Mandatory.
- *        {String}  link_id:    The id of an item to be removed.
- *                              If given, the specified link will be removed and no other action will
- *                              be taken (the `select` and `unselect` arrays will be ignored).
- *                              If not given, links will be added and/or removed as per the `select`
- *                              and `unselect` arrays.
- *                              Optional.
- *        {Object}  unselect:   A list of ids to remove (if link_id is not given).
- *                              These ids will be removed *before* the ids in `select` has been added.
- *                              Optional.
- *        {Object}  select:     A list of ids to add (if link_id is not given).
- *                              These ids will be added *after* the ids in `unselect` has been removed.
- *                              Optional.
- *        {integer} timeoutSec: Number of seconds before timing out.
- *                              Optional. Default: 10.
+ *        {String}  type       The type of the item to which the list is linked to (e.g. "user").
+ *                             Optional. Default: `this.type`.
+ *        {integer} id         The id of the item to which the list is linked to (e.g. the user  id "23").
+ *                             Optional.
+ *        {String}  link_type  If `link_id` is specified, the type of an item in the data structure with
+ *                             id `link_id`.
+ *                             If `link_id` is not specified, the type of the items in the `select` and
+ *                             the `unselect` arrays.
+ *                             Mandatory if `link_id` is given.
+ *        {String}  link_id    The id of an item to unlink from item with id `id`.
+ *                             If specified, the link will be removed and no other action will be taken
+ *                             (the `select` and `unselect` arrays will be ignored).
+ *                             If not given, links will be added and/or removed as per the `select`
+ *                             and `unselect` arrays.
+ *                             Optional. Default: undefined.
+ *        {Object}  unselect   A list of ids to unlink from item with id `id` (if `link_id` is not given).
+ *                             This will be done *before* the ids in `select` are added.
+ *                             Optional. Default: undefined.
+ *        {Object}  select     A list of ids to link to item with id `id`(if `link_id` is not given).
+ *                             This will be done *after* the ids in `unselect` has been removed.
+ *                             If the link already exists, the link's data will be update with the data
+ *                             in `new_data`, if specified.
+ *                             Optional. Default: undefined.
+ *        {integer} timeoutSec Number of seconds before timing out.
+ *                             Optional. Default: 10.
  *
  * @return true if the database call was made, false on error.
  */
