@@ -1100,7 +1100,15 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                                      type: the_link_type,
                                   });
         if (item) {
-          let ins_id = "link-"+the_link_type;
+          let ins_id = "link-"+the_link_type; // See if we have "link-" index (created by server)
+          let the_ins_type = the_link_type;
+          if (!this.dataSearch({ data: the_data,
+                                 id:   ins_id,
+                                 type: the_link_type,
+                              })) {
+            ins_id = the_id; // No "link-" index, use the_id as insertion point
+            the_ins_type = the_type;
+          }
           let indata = {};
           indata[ins_id] = {};
           indata[ins_id].data = item;
@@ -1109,7 +1117,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
           indata.grouping = this.grouping; // TODO! Why?
           this.dataInsert({ data:     the_data,
                             id:       ins_id,
-                            type:     the_link_type,
+                            type:     the_ins_type,
                             new_data: item[id] ? item[id] : item["+"+id],
                             new_id:   id,
                          });
