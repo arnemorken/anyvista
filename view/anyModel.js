@@ -880,7 +880,7 @@ anyModel.prototype.dataInsert = function (options)
 
 /**
  * @method dataInsertHeader
- * @description Adds a header at the top of the data structure
+ * @description Insert a header at the top of the data structure
  * @param  data   The data structue to use. Optional. Default: `this.data`.
  *         type   The type of the data "below" the header. Optional. Default: `this.type`.
  *         header The header string. Mandatory.
@@ -895,26 +895,22 @@ anyModel.prototype.dataInsertHeader = function (options)
     console.error("anyModel.dataInsertHeader: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
-  let the_data   = options.data ? options.data : this.data;
-  let the_type   = options.type ? options.type : this.type;
   let the_header = options.header;
-  if (!the_data) {
-    console.error("anyModel.dataInsertHeader: "+i18n.error.DATA_MISSING);
+  let the_type = options.type ? options.type : this.type;
+  let the_data = options.data ? options.data : this.data;
+
+  if (!the_header && the_header !== "")
     return null;
-  }
   if (!the_type) {
     console.error("anyModel.dataInsertHeader: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  if (!the_header && the_header !== "")
-    return null;
-
   let top_data = {
       head:               the_type,
       [the_type+"_name"]: the_header,
       data:               the_data,
   };
-  return this.dataInsert({ new_data: top_data, new_id: "0" });
+  return this.dataInsert({ data: the_data, new_data: top_data, new_id: "0" });
 }; // dataInsertHeader
 
 /**
