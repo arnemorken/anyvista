@@ -470,7 +470,7 @@ $.any.anyView.prototype.refresh = function (params)
   let item_id   = params && params.item_id   ? params.item_id   : null;
   let item_type = params && params.item_type ? params.item_type : null;
   let edit      = params && params.edit      ? params.edit      : false;
-  let id_str    = params && params.id_str    ? params.id_str    : this.id_str; // Id string accumulated through recursion
+  let id_str    = params && params.id_str    ? params.id_str    : this.id_str ? this.id_str : ""; // Id string accumulated through recursion
   let from      = params && params.from      ? params.from      : 1;
   let num       = params && params.num       ? params.num       : this.options.itemsPerPage;
 
