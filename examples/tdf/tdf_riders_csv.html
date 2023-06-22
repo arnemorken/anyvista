@@ -200,7 +200,7 @@ function csv2table()
                                       is_new:       true, // insert
                                       table:        "rider",
                                       auto_id:      false, // We manage the table id ourselves (as we do not use AUTOINCREMENT)
-                                      fields:       ["r_id","rank","rider_name","rider_no",
+                                      db_fields:    ["r_id","rank","rider_name","rider_no",
                                                      "times","gap","team","year","distance","num_stages","total_sec",
                                                      "gap_sec","result_type"],
                                       sync:         true, // Note!
@@ -236,11 +236,11 @@ function table2display()
     //
     // Create data model
     //
-    let data_model = new anyModel({type:   "rider",
-                                   mode:   "remote",
-                                   fields: ["r_id","rank","rider_name","rider_no",
-                                            "times","gap","team","year","distance","num_stages","total_sec",
-                                            "gap_sec","result_type"],
+    let data_model = new anyModel({type:      "rider",
+                                   mode:      "remote",
+                                   db_fields: ["r_id","rank","rider_name","rider_no",
+                                              "times","gap","team","year","distance","num_stages","total_sec",
+                                              "gap_sec","result_type"],
                                  });
     //
     // Create data view.
