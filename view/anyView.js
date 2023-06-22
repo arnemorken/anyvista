@@ -3287,6 +3287,7 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
   };
   this.options.data_level = 0;
   this.data_level = 0; // TODO! Why is this in 2 places?
+  this.id_str = "";
   if (this.model.mode == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
     this.options.ref_rec = 0;
     mod_opt.from -= 1; // from is 0-based on server
