@@ -74,7 +74,9 @@ body {
     <li>read a CSV file from remote server and display the data in an anyVista list</li>
   </div>
   <div style="margin-top:10px;">
-    <input type="button" value="Read CSV file, store in table" onclick="csv2table()">
+    <input type="button" value="Init db table from CSV file" onclick="csv2table()">
+  </div>
+  <div style="margin-top:10px;">
     <input type="button" value="Read table, display data"      onclick="table2display()">
     <input type="button" value="Read CSV file, display data"   onclick="csv2display()">
     <span style="font-size:10pt;">
@@ -326,7 +328,7 @@ function csv2display()
       //
       doLog("Updating data model...");
       if (show_header)
-        data_model.dataInsertHeader({type:"rider",header:"TdF 2021 riders"}); // Add a header to the list
+        data_model.dataInsertHeader({type:"rider",header:"TdF 2021 riders"}); // Add a header to the list // TODO! If we insert this after the loop, we get infinite recursion - why?
       result.forEach(function (obj) {
         if (obj.Year == "2021") {
           let indata = getIndata(obj);
