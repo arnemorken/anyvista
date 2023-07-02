@@ -2,6 +2,7 @@
 /* jshint esversion: 9 */
 /* globals $,i18n,any_defs,isFunction,w3_modaldialog,w3_modaldialog_close,tinyMCE,tinymce */
 "use strict";
+
 /********************************************************************************************
  *                                                                                          *
  * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.                 *
@@ -10,14 +11,15 @@
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).                  *
  *                                                                                          *
  ********************************************************************************************/
+
 /**
  * Class for interacting with an anyVista Alasql database table.
  *
  * Inherits from `dbTable`, which manages the database connection.
  * Contains methods for doing search, insert, update and delete on an AlaSQL database table.
  * Supports user defined table format.
- * The table format must be described in a table class that inherits from `anyTable` -
- * see `types/userTable.js` and `types/groupTable.js` for examples.
+ * The table format must be described in a table class that inherits from `anyTable`.
+ * See `types/userTable.js` and `types/groupTable.js` for examples.
  *
  * @class anyTable
  * @constructor
@@ -150,7 +152,6 @@ anyTable.prototype.dbSearch = function(options)
 }; // dbSearch
 
 // Internal method, do not call directly.
-// Error handling is done by dbSearch
 anyTable.prototype._dbSearch = function(type,id)
 {
   if (!type) {
@@ -160,7 +161,7 @@ anyTable.prototype._dbSearch = function(type,id)
     this.error = err;
     return Promise.resolve(null);
   }
-  this.error = null;
+  this.error = "";
   this.data  = null;
   let self   = this;
   if (id == "max") {
@@ -268,7 +269,7 @@ anyTable.prototype.dbSearchItemLists = async function(id,linking)
   if (!id || !linking) {
     return Promise.resolve(null);
   }
-  let factory = new anyTableFactory(gDbase);
+  let factory = new anyTableFactory(this.connection);
   let self = this;
   for (let link_type in linking) {
     let link_object    = linking[link_type];
@@ -727,11 +728,11 @@ anyTable.prototype.dbUpdate = async function(options)
     self.numRowsChanged = res;
     //console.log("upd res:"+res);
     if (self.numRowsChanged == 0) {
-      self.message = self.updateNothingToDo;
+      self.message = self.updateNothingToDo; // TODO! updateNothingToDo
       return null;
     }
     // Set result message
-    self.message = self.updateSuccessMsg;
+    self.message = self.updateSuccessMsg; // TODO! updateSuccessMsg
 
     // Call success handler
     if (options.successHandler && options.context)
