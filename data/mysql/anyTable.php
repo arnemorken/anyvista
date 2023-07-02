@@ -17,8 +17,8 @@ require_once "anyTableFactory.php";
  * Inherits from `dbTable`, which manages the database connection.
  * Contains methods for doing search, insert, update and delete on a MySQL database table.
  * Supports user defined table format, as well as data in (Wordpress) meta tables.
- * The table format must be described in a table class that inherits from `anyTable` -
- * see `types/user/userTable.php` and `types/group/groupTable.php` for examples.
+ * The table format must be described in a table class that inherits from `anyTable`.
+ * See `types/user/userTable.php` and `types/group/groupTable.php` for examples.
  *
  * ### Data structure:
  *
