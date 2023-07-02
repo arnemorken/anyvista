@@ -494,8 +494,6 @@ anyModel.prototype._getDataSourceName = function ()
 {
   if (this.mode == "remote")
     return any_defs.dataScript;
-  this.message = i18n.error.DATASOURCE_MISSING;
-  console.warn("anyModel._getDataSourceName: "+this.message);
   return "";
 }; // _getDataSourceName
 
@@ -825,8 +823,8 @@ anyModel.prototype.dataInsert = function (options)
   if (!item || ((the_id || the_id === 0) && !item[the_id] && !item["+"+the_id])) {
     if (data_allocated)
       this.data = null;
-    let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type)
-    errstr = errstr.replace("&&",""+the_id)
+    let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type);
+    errstr = errstr.replace("&&",""+the_id);
     console.error("anyModel.dataInsert: "+errstr);
     return null;
   }
@@ -975,8 +973,8 @@ anyModel.prototype.dataUpdate = function (options)
   }
   let item = this.dataSearch({data:the_data,id:the_id,type:the_type});
   if (!item || (!item[the_id] && !item["+"+the_id])) {
-    let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type)
-    errstr = errstr.replace("&&",""+the_id)
+    let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type);
+    errstr = errstr.replace("&&",""+the_id);
     console.error("anyModel.dataUpdate: "+errstr);
     return null;
   }
@@ -1188,7 +1186,6 @@ anyModel.prototype.dataDelete = function (options)
     it_idc = "+"+the_id;
   if ((!it_idc && it_idc !== 0) || !it_ptr || !it_ptr[it_idc])
     return null;
-  let kind = it_ptr[it_idc].list ? "list" : it_ptr[it_idc].item ? "item" : it_ptr[it_idc].head ? "head" : null;
   delete it_ptr[it_idc];
 
   if (this.auto_callback)
