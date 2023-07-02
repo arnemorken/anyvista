@@ -1,3 +1,13 @@
+
+/****************************************************************************************
+ *
+ * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.
+ *
+ * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
+ * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
+ *
+ ***************************************************************************************/
+
 /**
  * <h1>anyVista user's guide</h1>
  <p>
