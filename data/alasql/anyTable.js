@@ -822,7 +822,7 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
   let id_key      = this.idKey;
   let id_key_link = link_type + "_id"; // TODO! Not general enough
   let id          = options.id;
-  if (!id || id == "") {
+  if ((!id && id !== 0) || id == "") {
     this.error = this.type+" id missing. "; // TODO! i18n
     return null;
   }
