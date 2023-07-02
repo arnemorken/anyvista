@@ -924,9 +924,9 @@ anyTable.prototype.dbUpdateLink = async function(options)
     this.error = this.type+" id missing. "; // TODO! i18n
     return null;
   }
-  let link_id = options+"link_id";
+  let link_id = options.link_id;
   if ((!link_id && link_id !== 0) || link_id == "") {
-    this.error = link+" id missing. "; // TODO! i18n
+    this.error = link_type+" id missing. "; // TODO! i18n
     return null;
   }
   // Check if exists
