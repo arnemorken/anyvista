@@ -811,6 +811,9 @@ anyTable.prototype.dbItemExists = async function(id)
 // Add or remove a link
 anyTable.prototype.dbUpdateLinkList = async function(options)
 {
+  if (!options)
+    return null;
+
   let link_type = options.link_type;
   if (!link_type) {
     this.error = "Link type missing. "; // TODO! i18n
@@ -907,6 +910,9 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
 // Update the fields of a link. The link must exist in the link table.
 anyTable.prototype.dbUpdateLink = async function(options)
 {
+  if (!options)
+    return null;
+
   let link_type = options.link_type;
   if (!link_type || link_type == "") {
     this.error = "Link type missing. "; // TODO! i18n
@@ -971,6 +977,9 @@ anyTable.prototype.dbUpdateLink = async function(options)
  */
 anyTable.prototype.dbDelete = async function(options)
 {
+  if (!options)
+    return null;
+
   // Delete item(s) from table or file from disk
   if (options.del == "ulf") {
     // Delete file from disk (upload folder)
