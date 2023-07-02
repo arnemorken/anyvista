@@ -633,8 +633,8 @@ anyTable.prototype.dbInsert = async function(options)
     self.message = self.insertSuccessMsg;
 
     // Call success handler
-    if (options.successHandler && options.context)
-      options.successHandler.call(options.context,res);
+    if (options.success && options.context)
+      options.success.call(options.context,res);
 
     return res;
   })
@@ -735,8 +735,8 @@ anyTable.prototype.dbUpdate = async function(options)
     self.message = self.updateSuccessMsg; // TODO! updateSuccessMsg
 
     // Call success handler
-    if (options.successHandler && options.context)
-      options.successHandler.call(options.context,res);
+    if (options.success && options.context)
+      options.success.call(options.context,res);
 
     return res;
   })
@@ -1020,8 +1020,8 @@ anyTable.prototype.dbDelete = async function(options)
     }
     self.id = null;
     // Call success handler
-    if (options.successHandler && options.context)
-      options.successHandler.call(options.context,res);
+    if (options.success && options.context)
+      options.success.call(options.context,res);
     return Promise.resolve(true);
   })
   .catch(error => {
