@@ -605,7 +605,7 @@ $.any.anyView.prototype.refresh = function (params)
 
   // Refresh bottom toolbar
   if (this.options && this.options.showToolbar && this.options.data_level == 0) {
-    if (!this.options.isSelectable && this.model.type && this.data_level==0 && id_str == "" &&
+    if (!this.options.isSelectable && this.model && this.model.type && this.data_level==0 && id_str == "" &&
         (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
       this.refreshToolbarBottom({
          parent: parent,
