@@ -13,13 +13,13 @@
  ***************************************************************************************/
 
 /**
- * __Tab view for the anyVista data model.__
+ * <p>anyViewTabs extends anyView into a tab view for the anyVista data model.
+ *</p>
  *
- * @class anyViewTabs
+ * @constructs anyViewTabs
  * @extends anyView
- * @constructor
  */
-$.widget("any.anyViewTabs", $.any.anyView, {
+var anyViewTabsWidget = $.widget("any.anyViewTabs", $.any.anyView, {
   // Default options
   options: {
     grouping: "tabs",

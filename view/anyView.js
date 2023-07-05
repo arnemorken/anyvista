@@ -13,79 +13,79 @@
  ***************************************************************************************/
 
 /**
- * __anyView: View for the anyVista data model.__
- *
+ * <p>anyView can display data in an anyVista data model.
+ * </p><p>
  * See <a href="../classes/anyModel.html">`anyModel`</a> for a description of the data model class.
- *
+ * </p><p>
  * Note: All jQuery id's in anyVista are on the format [id_base]\_[type]\_[kind]\_[id]\_[html_name].
+ * </p>
  *
- * @class anyView
- * @constructor Sets the view's variables according to `options`, or to default values.
+ * @constructs anyView
  * @param {Object}  options An object which may contain these elements:
  *
- *        {Object}  model:                 The model with data to be displayed. Default: null.
- *        {Object}  filters:               The filters define how the data will be displayed. Default: null.
- *        {string}  id:                    The jQuery id of a container element in which to display the view. Default: null.
- *        {boolean} isCreatable:
- *        {boolean} isSelectable:          An icon for selecting a list row will be displayed. Ignored for items. If isSelectable is set,
- *                                         isAddable, isRemovable, isEditable and isDeletable will be ignored. Default: false.
- *        {boolean} isAddable:             An icon for adding new rows may be displayed. Ignored if isSelectable is set. Default: false.
- *        {boolean} isRemovable:           An icon for removing will be displayed. Ignored if isSelectable is set. Default: false.
- *        {boolean} isEditable:            Icons for edit, update and cancel will be displayed. Ignored if isSelectable is set. Default: false.
- *        {boolean} isDeletable:           An icon for deleting will be displayed. Ignored if isSelectable is set. Default: false.
- *        {boolean} isSortable:            List tables will be sortable by clicking on column headers. An icon indicating
- *                                         the direction of the sort wil be displayed. Default: true.
- *        {boolean} confirmRemove:         A remove confirmation dialog will be displayed. Default: true.
- *        {boolean} confirmDelete:         A delete confirmation dialog will be displayed. Default: true.
- *        {boolean} showHeader:            If false, all headers will be suppressed. Default: true.
- *        {boolean} showTableHeader:       Whether to show headers for list tables. Default: true.
- *        {boolean} showTableFooter:       Whether to show footers for list tables. Default: true.
- *        {boolean} showTableIngress:      Whether to show a description for list tables. Default: true.
- *        {boolean} showSearcher:          Whether to show a search field for list tables. Default: false.
- *        {boolean} showPaginator:         Whether to show paginator buttons for list tables. Default: true.
- *        {boolean} showToolbar:           Will show a toolbar at the bottom. Default: true.
- *        {boolean} showMessages:          Will show a message field in a toolbar. Default: false.
- *        {boolean} showServerErrors:      If true, errors from a server will be shown directly. Default: false.
- *        {boolean} showServerMessages:    If true, messages from a server will be shown directly. Default: true.
- *        {boolean} showEmptyRows:         Shows empty rows in non-edit mode. Default: false.
- *        {boolean} showButtonNew:         If isCreatable is true, a button for creating a new item may be shown. Default: false.
- *        {boolean} showButtonSelectAll:   If isSelectable is true, a button for selecting all rows may be shown in list table headers. Default: false.
- *        {integer} showButtonAdd:         If isAddable is true, a button for adding new rows may be shown in list table headers. Possible values:
- *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 0.
- *        {boolean} showButtonRemove:      If isRemovable is true, a remove button may be shown. Possible values:
- *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
- *        {boolean} showButtonEdit:        If isEditable is true, an edit button may be shown. Possible values:
- *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
- *        {boolean} showButtonUpdate:      If isEditable is true, an update button may be shown in edit-mode. Possible values:
- *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
- *        {boolean} showButtonDelete:      If isEditable is true, a delete button may be shown in edit-mode. Possible values:
- *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
- *        {boolean} showButtonCancel:      If isEditable is true, a cancel button may be shown in edit-mode. Possible values:
- *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
- *        {boolean} showButtonSelect:      If isSelectable is true, a button for selecting a row may be shown. Possible values:
- *                                         0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
- *        {boolean} showButtonAddLink:     Will show a button for adding links to an item. Default: true.
- *        {boolean} showButtonLabels:      Will show labels for buttons on the button panel. Default: false.
- *        {boolean} onEnterCallDatabase:   Pressing enter will update the database with the value of the row being edited. Default: true.
- *        {boolean} onEnterInsertNew:      A new row will be inserted when pressing enter while editing a list. Default: false.
- *        {boolean} onEnterMoveFocus:      Pressing enter will move the focus to the next input element if editing an item. Default: True.
- *        {boolean} onEscRemoveEmpty:      The current row being edited in a list will be removed when pressing the Esc key if the row is empty. Default: true.
- *        {boolean} onEscEndEdit:          Pressing the Esc key will end the current editing. Default: true.
- *        {boolean} onFocusoutRemoveEmpty: The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
- *        {boolean} onUpdateEndEdit:       Pressing the update button will close the element currently being edited for editing. Default: true.
- *        {boolean} useOddEven:            If true, tags for odd and even columns will be generated for list entries. Default: false.
- *        {string}  defaultKind:           The default kind to use. One of `head`. `list` or `item`. Default: `list`.
- *        {string}  defaultType:           The default type to use. Default: "".
- *        {integer} itemsPerPage:          The number of rows to show per page. Only applicable for "list" and "select" kinds.
- *        {integer} currentPage:           The current page to show. Only applicable for "list" and "select" kinds.
- *        {string}  grouping:              How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
- *        {string}  sortBy:                The filter id of the table header that the table should be sorted by. Only valid if isSortable is `true`. Default: "".
- *        {string}  sortDirection:         Whether the sorting of tables should be ascending (`ASC`) or descending (`DESC`). Only valid if isSortable is `true`. Default: "`ASC`".
- *        {boolean} refresh:               If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
- *        {boolean} uploadDirect:          If true, the selected file will be uploaded without the user having to press the "edit" and "update" buttons. Default: true.
- *        {object}  linkIcons:             Icons to use in the link popup menu. Default: null.
- *<li>    {Set}     select:                List of ids that are marked as selected. Default: new Set().
- *<li>    {Set}     unselect:              List of ids that are marked as unselected. Default: new Set().
+ * @param {Object}   options.model                 The model with data to be displayed. Default: null.
+ * @param {Object}   options.filters               The filters define how the data will be displayed. Default: null.
+ * @param {String}   options.id                    The jQuery id of a container element in which to display the view. Default: null.
+ * @param {boolean}  options.isCreatable           TODO! NOT IMPLEMENTED
+ * @param {boolean}  options.isSelectable          An icon for selecting a list row will be displayed. Ignored for items. If isSelectable is set,
+ *                                                 isAddable, isRemovable, isEditable and isDeletable will be ignored. Default: false.
+ * @param {boolean}  options.isAddable             An icon for adding new rows may be displayed. Ignored if isSelectable is set. Default: false.
+ * @param {boolean}  options.isRemovable           An icon for removing will be displayed. Ignored if isSelectable is set. Default: false.
+ * @param {boolean}  options.isEditable            Icons for edit, update and cancel will be displayed. Ignored if isSelectable is set. Default: false.
+ * @param {boolean}  options.isDeletable           An icon for deleting will be displayed. Ignored if isSelectable is set. Default: false.
+ * @param {boolean}  options.isSortable            List tables will be sortable by clicking on column headers. An icon indicating
+ *                                                 the direction of the sort wil be displayed. Default: true.
+ * @param {boolean}  options.confirmRemove         A remove confirmation dialog will be displayed. Default: true.
+ * @param {boolean}  options.confirmDelete         A delete confirmation dialog will be displayed. Default: true.
+ * @param {boolean}  options.showHeader            If false, data headers will not be shown. Default: true.
+ * @param {boolean}  options.showTableHeader       If false, list tables headers will not be shown. Default: true.
+ * @param {boolean}  options.showTableFooter       If false, list tables footers will not be shown. Default: true.
+ * @param {boolean}  options.showTableIngress      If false, a description for list tables will not be shown. Default: true.
+ * @param {boolean}  options.showSearcher          If true, a search field for list tables will be shown. Default: false.
+ * @param {boolean}  options.showPaginator         If false, a paginator buttons for list tables will not be shown. Default: true.
+ * @param {boolean}  options.showToolbar           If true, will show a toolbar at the bottom. Default: true.
+ * @param {boolean}  options.showMessages          If true, will show a message field in a toolbar. Default: false.
+ * @param {boolean}  options.showServerErrors      If true, errors from a server will be shown directly. Default: false.
+ * @param {boolean}  options.showServerMessages    If true, messages from a server will be shown directly. Default: true.
+ * @param {boolean}  options.showEmptyRows         If true, empty rows will be shown in non-edit mode. Default: false.
+ * @param {boolean}  options.showButtonNew         If isCreatable is true, a button for creating a new item may be shown. Default: false.
+ * @param {boolean}  options.showButtonSelectAll   If isSelectable is true, a button for selecting all rows may be shown in list table headers. Default: false.
+ * @param {integer}  options.showButtonAdd         If isAddable is true, a button for adding new rows may be shown in list table headers. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 0.
+ * @param {boolean}  options.showButtonRemove      If isRemovable is true, a remove button may be shown. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
+ * @param {boolean}  options.showButtonEdit        If isEditable is true, an edit button may be shown. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
+ * @param {boolean}  options.showButtonUpdate      If isEditable is true, an update button may be shown in edit-mode. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
+ * @param {boolean}  options.showButtonDelete      If isEditable is true, a delete button may be shown in edit-mode. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
+ * @param {boolean}  options.showButtonCancel      If isEditable is true, a cancel button may be shown in edit-mode. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
+ * @param {boolean}  options.showButtonSelect      If isSelectable is true, a button for selecting a row may be shown. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
+ * @param {boolean}  options.showButtonAddLink     Will show a button for adding links to an item. Default: true.
+ * @param {boolean}  options.showButtonLabels      Will show labels for buttons on the button panel. Default: false.
+ * @param {boolean}  options.onEnterCallDatabase   Pressing enter will update the database with the value of the row being edited. Default: true.
+ * @param {boolean}  options.onEnterInsertNew      A new row will be inserted when pressing enter while editing a list. Default: false.
+ * @param {boolean}  options.onEnterMoveFocus      Pressing enter will move the focus to the next input element if editing an item. Default: True.
+ * @param {boolean}  options.onEscRemoveEmpty      The current row being edited in a list will be removed when pressing the Esc key if the row is empty. Default: true.
+ * @param {boolean}  options.onEscEndEdit          Pressing the Esc key will end the current editing. Default: true.
+ * @param {boolean}  options.onFocusoutRemoveEmpty The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
+ * @param {boolean}  options.onUpdateEndEdit       Pressing the update button will close the element currently being edited for editing. Default: true.
+ * @param {boolean}  options.useOddEven            If true, tags for odd and even columns will be generated for list entries. Default: false.
+ * @param {String}   options.defaultKind           The default kind to use. One of `head`. `list` or `item`. Default: `list`.
+ * @param {String}   options.defaultType           The default type to use. Default: "".
+ * @param {integer}  options.itemsPerPage          The number of rows to show per page. Only applicable for "list" and "select" kinds. Default: 20.
+ * @param {integer}  options.currentPage           The current page to show. Only applicable for "list" and "select" kinds. Default: 1.
+ * @param {String}   options.grouping              How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
+ * @param {String}   options.sortBy                The filter id of the table header that the table should be sorted by. Only valid if isSortable is `true`. Default: "".
+ * @param {String}   options.sortDirection         Whether the sorting of tables should be ascending (`ASC`) or descending (`DESC`). Only valid if isSortable is `true`. Default: "`ASC`".
+ * @param {boolean}  options.refresh               If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
+ * @param {boolean}  options.uploadDirect          If true, the selected file will be uploaded without the user having to press the "edit" and "update" buttons. Default: true.
+ * @param {Object}   options.linkIcons             Icons to use in the link popup menu. Default: null.
+ * @param {Set}      options.select                List of ids that are marked as selected. Default: new Set().
+ * @param {Set}      options.unselect              List of ids that are marked as unselected. Default: new Set().
  *
  * @example
  *      new anyView({model:mymodel,filters:myfilters,id:"mycontent"});
@@ -93,7 +93,7 @@
 var ANY_LOCALE_NOT_FOUND = "No locale found. ";
 var ANY_MAX_REF_REC = 30;
 
-$.widget("any.anyView", {
+var anyViewWidget = $.widget("any.anyView", {
   // Default options
   options: {
     model:                 null,
@@ -257,9 +257,11 @@ $.widget("any.anyView", {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @method getIdBase
- * @description
- * @return this.id_base
+ * All jQuery ids in anyVista are on the format `[id_base]_[type]_[kind]_[id]_[html_name]`.
+ * This method will return the `id_base` prefix string.
+ *
+ * @method  anyView.getIdBase
+ * @return  {String} `this.id_base`
  */
 $.any.anyView.prototype.getIdBase = function ()
 {
@@ -267,16 +269,19 @@ $.any.anyView.prototype.getIdBase = function ()
 }; // getIdBase
 
 /**
- * @method getFilter
- * @description
- * @return If neither `type` nor `kind` are given or if only `kind` is given, `this.options.filters` is returned.
- *         `this.options.filters` is an object containing all the view's data filters (indexed by type (e.g. "event")
- *         and kind ("item", "list" or "head")).
- *         If only `type` is given, the filters of the given type are returned.
- *         If both `type` and `kind` are given, the filter of the given type and kind is returned.
- *         If no filters exist, `null` is returned.
- * @param {String} type Object type (e.g. "event"). Optional, but mandatory if `kind` is given.
- * @param {String} kind "item", "list" or "head". Ignored if `type` is not given.
+ * Returns the filter for the given type/kind combination.
+ *
+ * @method  anyView.getFilter
+ * @param   {String} type Object type (e.g. "event"). Optional, but mandatory if `kind` is given.
+ * @param   {String} kind "item", "list" or "head". Optional, and ignored if `type` is not given.
+ * @return  {Object}
+ *          <li>If neither `type` nor `kind` are given or if only `kind` is given, `this.options.filters` is returned.
+ *          `this.options.filters` is an object containing all the view's data filters (indexed by type (e.g. "event")
+ *          and kind ("item", "list" or "head")).</li>
+ *          <li>If only `type` is given, the filters of the given type are returned.</li>
+ *          <li>If both `type` and `kind` are given, the filter of the given type and kind is returned.</li>
+ *          <li>If no filters matching `type`/ `kind` exist, `null` is returned.</li>
+ * <p/>
  */
 $.any.anyView.prototype.getFilter = function (type,kind)
 {
@@ -389,11 +394,12 @@ $.any.anyView.prototype._setPermissions = function ()
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @method onModelChange
- * @description Default callback method.
- *              Calls `this.refresh` to refresh the view after model has changed.
- *              Normally, it is not neccessary to call this method directly.
- *              Override in derived classes if necessary.
+ * Default callback method.
+ * Calls `this.refresh` to refresh the view after the model has changed.
+ * Normally, it is not neccessary to call this method directly.
+ * Override in derived classes if necessary.
+ *
+ * @method  anyView.onModelChange
  * @param   {Object} model The model to refresh.
  *                   If not specified, the current model (`this.model`) is used.
  *                   If specified, `this.model` will be set to `model`, before calling `this.refresh`.
@@ -426,31 +432,32 @@ $.any.anyView.prototype.empty = function (params)
 }; // empty
 
 /**
- * @method refresh
- * @description Displays data in a DOM element. If an element matching the type/kind/id combination
- *              is found in the DOM, that element will be used for displaying the data. Otherwise,
- *              new elements will be created as needed.
- * @params {Object}  params  Undefined or an object which may contain these elements:
+ * Displays data in a DOM element. If an element matching the type/kind/id combination
+ * is found in the DOM, that element will be used for displaying the data. Otherwise,
+ * new elements will be created as needed.
  *
- *         {Object}  parent  The element in which to display data.
- *                           Default: `this.element`.
- *         {string}  type    The type of the data to display.
- *                           Default: "".
- *         {string}  kind    The kind of the data to display.
- *                           Default: "".
- *         {Object}  data    The data to display / display from.
- *                           Default: `this.model.data` if set, null otherwise.
- *         {Object}  pdata   The data on the level above `data`.
- *                           Default: null.
- *         {string}  pid     The id in `pdata` where `data` may be found (`pdata[pid] == data`).
- *                           Default: null.
- *         {boolean} edit    If true, the item should be displayed as editable.
- *                           Default: false.
- *         {string}  id_str  Default: null.
- *         {integer} from    Pagination start.
- *                           Default: 1.
- *         {integer} num     Pagination number of elements.
- *                           Default: `this.options.itemsPerPage`.
+ * @method anyView.refresh
+ * @param {Object}  params Undefined or an object which may contain these elements:
+ *
+ * @param {Object}  params.parent  The element in which to display data.
+ *                                 Default: `this.element`.
+ * @param {string}  params.type    The type of the data to display.
+ *                                 Default: "".
+ * @param {string}  params.kind    The kind of the data to display.
+ *                                 Default: "".
+ * @param {Object}  params.data    The data to display / display from.
+ *                                 Default: `this.model.data` if set, null otherwise.
+ * @param {Object}  params.pdata   The data on the level above `data`.
+ *                                 Default: null.
+ * @param {string}  params.pid     The id in `pdata` where `data` may be found (`pdata[pid] == data`).
+ *                                 Default: null.
+ * @param {boolean} params.edit    If true, the item should be displayed as editable.
+ *                                 Default: false.
+ * @param {string}  params.id_str  Default: null.
+ * @param {integer} params.from    Pagination start.
+ *                                 Default: 1.
+ * @param {integer} params.num     Pagination number of elements.
+ *                                  Default: `this.options.itemsPerPage`.
  *
  * @return this
  *
@@ -1357,7 +1364,7 @@ $.any.anyView.prototype.refreshDataFooter = function (params)
                    div_info: {
                      type:       type,
                      kind:       kind,
-                     group_id:   params.pid,
+                     group_id:   params.pid, // TODO! Is this used?
                      par_id_str: par_id_str,
                    },
                 });
@@ -3287,7 +3294,7 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
   };
   this.options.data_level = 0;
   this.data_level = 0; // TODO! Why is this in 2 places?
-  this.id_str = "";
+  this.id_str     = "";
   if (this.model.mode == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
     this.options.ref_rec = 0;
     mod_opt.from -= 1; // from is 0-based on server
@@ -3976,7 +3983,7 @@ $.any.anyView.prototype.removeFromView = function (opt)
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @method dbSearchParents
+ * @method anyView.dbSearchParents
  * @description Search for the list of possible parent items for the item with the given id.
  *              Called when processing type filters.
  *              The success metod builds a dropdown menu.
@@ -4247,7 +4254,7 @@ $.any.anyView.prototype.validateUpdate = function (data)
 }; // validateUpdate
 
 /**
- * @method dbSearchLinks
+ * @method anyView.dbSearchLinks
  * @description Search for the list of items to select from.
  *              Called when selecting in the "Add..." menu in bottom toolbar of an item.
  *              The success metod builds a list of selectable items in a dialog.
@@ -4513,7 +4520,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
 }; // dbRemoveDialog
 
 /**
- * @method dbDeleteDialog
+ * @method anyView.dbDeleteDialog
  * @description Deletes an item from memory and database and refreshes view.
  * @param {Object}  options
  *
@@ -4634,7 +4641,7 @@ $.any.anyView.prototype.dbDelete = function (opt)
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @method showMessages
+ * @method anyView.showMessages
  * @description Shows errors and/or messages.
  * @param {Object} modelOrString If a string, the message/error to display.
  *                               If a model, the model from which to display a message/error.
@@ -4672,7 +4679,7 @@ $.any.anyView.prototype.showMessages = function (modelOrString,spin)
 }; // showMessages
 
 /**
- * @method initComponents
+ * @method anyView.initComponents
  * @description Initializes various javascript components.
  *              If overridden by derived classes, this method *must* be called.
  * @return      `this`.
