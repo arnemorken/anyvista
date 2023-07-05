@@ -11,6 +11,7 @@
 // User-editable "constants" that define some basic properties of the anyVista API.
 //
 var gServer        = "//localhost/";
+var gMode          = "local";
 var gHomeFolder    = "Prosjekter/testserver/wp-content/plugins/anyvista/";
 var gThirdpartyPHP = "Prosjekter/testserver/php/";
 var gDataScript    = "data/mysql/anyGetData.php"; // Relative to gHomeFolder

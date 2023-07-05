@@ -137,9 +137,7 @@ anyTable.prototype.dbSearch = function(options)
   if (id)
     this.id = id;
   if (!type) {
-    let err = "dbSearch: type missing. ";
-    console.log(err);
-    this.error = err;
+    this.error = "dbSearch: type missing. ";
     return Promise.resolve(null);
   }
   let self = this;
@@ -156,9 +154,7 @@ anyTable.prototype._dbSearch = function(type,id)
 {
   if (!type) {
     // Error
-    let err = "dbSearch: type missing. ";
-    console.log(err);
-    this.error = err;
+    this.error = "dbSearch: type missing. ";
     return Promise.resolve(null);
   }
   this.error = "";
@@ -182,12 +178,7 @@ anyTable.prototype._dbSearch = function(type,id)
       // Search for an item
       return this.dbSearchItem(id)
       .then(function(data) {
-        if (!data) {
-          let err = "Warning: Cold not find "+type+" with id "+id+". ";
-          console.warn(err);
-          self.error = err;
-        }
-        self.data = self.prepareData(data);
+        self.data = data ? self.prepareData(data) : null;
         return Promise.resolve(self.data);
       });
     }
@@ -195,12 +186,7 @@ anyTable.prototype._dbSearch = function(type,id)
       // Search for a list
       return this.dbSearchList(type)
       .then(function(data) {
-        if (!data) {
-          let err = "Warning: Cold not find "+type+" list. ";
-          console.warn(err);
-          self.error = err;
-        }
-        self.data = self.prepareData(data);
+        self.data = data ? self.prepareData(data) : null;
         return Promise.resolve(self.data);
       });
     }
@@ -212,15 +198,18 @@ anyTable.prototype._dbSearch = function(type,id)
 //
 // Find max id for a table.
 //
-anyTable.prototype.dbSearchMaxId = function()
+anyTable.prototype.dbSearchMaxId = async function()
 {
-  let stmt = "SELECT MAX("+this.idKey+") FROM "+this.tableName;
+  let maxstr = "MAX("+this.idKey+")";
+  let stmt = "SELECT "+maxstr+" FROM "+this.tableName;
   let self = this;
-  return alasql.promise(stmt)
+  self.maxId = -1;
+  return await alasql.promise(stmt)
   .then (function(data) {
     if (data && data[0])
-      self.maxId = data[0];
-    //console.log("max:"); console.log(self.maxId["MAX("+self.idKey+")"]);
+      self.maxId = data[0][maxstr];
+    //console.log("max:"); console.log(self.maxId);
+    return {id:self.maxId};
   });
 }; // dbSearchMaxId
 
@@ -610,10 +599,8 @@ anyTable.prototype.dbInsert = async function(options)
 
   // Insert in normal table
   let stmt = await this.dbPrepareInsertStmt(options.keys,options.values);
-  if (!stmt) {
-    console.log(this.error);
-    return null;
-  }
+  if (!stmt)
+    return Promise.resolve(null);
   stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
   let self = this;
   //console.log("dbInsert:"+stmt);
@@ -624,23 +611,24 @@ anyTable.prototype.dbInsert = async function(options)
     //console.log("ins res:"+res);
     if (self.numRowsChanged == 0) {
       self.message = self.insertNothingToDo;
-      return null;
+      return Promise.resolve(self);
     }
     // An id will have been auto-created if the insert succeeded
-    self.last_insert_id = await self.queryMaxId(self.tableName);
+    self.id             = await self.queryMaxId(self.tableName);
+    self.last_insert_id = self.id; // TODO! Neccessary?
 
     // Set result message
     self.message = self.insertSuccessMsg;
 
     // Call success handler
     if (options.success && options.context)
-      options.success.call(options.context,res);
+      options.success.call(options.context,options.context,self,options);
 
-    return res;
+    return Promise.resolve(self);
   })
   .catch(error => {
      console.error("Insert error: "+error);
-     return null;
+     return Promise.resolve(null);
   });
 }; // dbInsert
 
@@ -685,8 +673,10 @@ anyTable.prototype.dbPrepareInsertStmt = async function(keys,values)
   for (let i=0; i<keys.length; i++) {
     let key = keys[i];
     let val = values[i];
-    if (val && val !== "")
+    if (val && val !== "" && typeof val === "string")
       stmt += "'"+val+"',";
+    else
+      stmt += val+",";
   }
   let pos = stmt.length-1;
   stmt = stmt.substring(0,pos) + "" + stmt.substring(pos+1); // Replace last "," with ""
@@ -700,12 +690,13 @@ anyTable.prototype.dbPrepareInsertStmt = async function(keys,values)
 
 anyTable.prototype.dbUpdate = async function(options)
 {
-  if (!options || !options.keys || !options.values || !this.dbValidateUpdate(options))
+  if (!options || !this.dbValidateUpdate(options))
     return Promise.resolve(null);
 
-  if (!options.id || options.id == "")
-    return this.dbInsert(options); // No id, assume it is a new item to be inserted
-  this.id = options.id; // TODO! Why?
+  if (!options.id || options.id == "" || options.is_new)
+    return this.dbInsert(options); // Assume it is a new item to be inserted
+
+  this.id = options.id;
 
   if (options.add || options.rem)
     return this.dbUpdateLinkList();
@@ -715,10 +706,9 @@ anyTable.prototype.dbUpdate = async function(options)
 
   // Update normal table
   let stmt = await this.dbPrepareUpdateStmt(options.keys,options.values);
-  if (!stmt) {
-    console.log(this.error);
-    return null;
-  }
+  if (!stmt)
+    return Promise.resolve(null);
+
   stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
   let self = this;
   //console.log("dbUpdate:"+stmt);
@@ -729,20 +719,20 @@ anyTable.prototype.dbUpdate = async function(options)
     //console.log("upd res:"+res);
     if (self.numRowsChanged == 0) {
       self.message = self.updateNothingToDo; // TODO! updateNothingToDo
-      return null;
+      return Promise.resolve(self);
     }
     // Set result message
     self.message = self.updateSuccessMsg; // TODO! updateSuccessMsg
 
     // Call success handler
     if (options.success && options.context)
-      options.success.call(options.context,res);
+      options.success.call(options.context,options.context,self,options);
 
-    return res;
+    return Promise.resolve(self);
   })
   .catch(error => {
      console.error("Update error: "+error);
-     return null;
+     return Promise.resolve(null);
   });
 }; // dbUpdate
 
@@ -759,11 +749,13 @@ anyTable.prototype.dbPrepareUpdateStmt = async function(keys,values)
 {
   if (!keys || !values)
     return null;
+/*
   let res = await this.dbItemExists(this.id);
   if (!res) {
     this.error = this.type + this.itemUnexists + " ("+this.id+") ";
     return null;
   }
+*/
   let stmt = "UPDATE "+this.tableName+" SET ";
   let to_set = "";
   for (let i=0; i<keys.length; i++) {
@@ -785,23 +777,31 @@ anyTable.prototype.dbPrepareUpdateStmtKeyVal = function(key,val)
 {
   if (!val || val === "")
     return key + "=NULL,";
-  return key + "='" + val + "',";
+  let kstr = typeof val === "string"
+             ? "='" + val + "',"
+             : "=" + val + ",";
+  return key + kstr;
 }; // dbPrepareUpdateStmtKeyVal
 
 anyTable.prototype.dbItemExists = async function(id)
 {
-  let stmt = "SELECT * FROM " + this.tableName + " WHERE " + this.idKey + "=" + id;
+  let stmt = "SELECT * FROM " + this.tableName + " WHERE " + this.idKey + "=" + id + " ";
   //console.log("dbItemExists:"+stmt);
-  return await alasql.promise(stmt)
-  .then( function(res) {
-    if (res.length)
-      return true;
-    return false;
-  })
-  .catch(error => {
-     console.error("dbItemExists error: "+error);
-     return null;
-  });
+  try {
+    return await alasql.promise(stmt)
+    .then( function(res) {
+      if (res.length)
+        return true;
+      return false;
+    })
+    .catch(error => {
+       console.error("dbItemExists error: "+error);
+       return false;
+    });
+  }
+  catch (err) {
+    console.log("dbItemExists: "+err);
+  }
 }; // dbItemExists
 
 /////////////////////////////////////////////////////////////////////////////
@@ -812,19 +812,19 @@ anyTable.prototype.dbItemExists = async function(id)
 anyTable.prototype.dbUpdateLinkList = async function(options)
 {
   if (!options)
-    return null;
+    return Promise.resolve(null);
 
   let link_type = options.link_type;
   if (!link_type) {
     this.error = "Link type missing. "; // TODO! i18n
-    return null;
+    return Promise.resolve(null);
   }
   let id_key      = this.idKey;
   let id_key_link = link_type + "_id"; // TODO! Not general enough
   let id          = options.id;
   if ((!id && id !== 0) || id == "") {
     this.error = this.type+" id missing. "; // TODO! i18n
-    return null;
+    return Promise.resolve(null);
   }
   let inslist = options.add;
   let dellist = options.rem;
@@ -834,7 +834,7 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
     let link_table = this.findLinkTableName(link_type);
     if (!link_table) {
       this.error = "Link table not found. "; // TODO! i18n
-      return null;
+      return Promise.resolve(null);
     }
     if (dellist) {
       // Remove elements from the item's list
@@ -911,35 +911,35 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
 anyTable.prototype.dbUpdateLink = async function(options)
 {
   if (!options)
-    return null;
+    return Promise.resolve(null);
 
   let link_type = options.link_type;
   if (!link_type || link_type == "") {
     this.error = "Link type missing. "; // TODO! i18n
-    return null;
+    return Promise.resolve(null);
   }
   let idKey = options.idKey ? options.idKey : this.idKey;
   let id    = options.id    ? options.id    : this.id;
   if ((!id && id !== 0) || id == "") {
     this.error = this.type+" id missing. "; // TODO! i18n
-    return null;
+    return Promise.resolve(null);
   }
   let link_id = options.link_id;
   if ((!link_id && link_id !== 0) || link_id == "") {
     this.error = link_type+" id missing. "; // TODO! i18n
-    return null;
+    return Promise.resolve(null);
   }
   // Check if exists
   let link_table = this.findLinkTableName(link_type);
   if (link_table === null) {
     this.error = "Link table not found";
-    return null;
+    return Promise.resolve(null);
   }
   let id_key_link = link_type+"_id"; // TODO! Not general enough
   /*
   if (!this.dbTableHasLink(link_table,id_key_link,link_id,this.idKey,this.id)) {
     this.message = "Link not found"; // TODO! i18n
-    return null;
+    return Promise.resolve(null);
   }
   */
   // Link found, we can update it
@@ -950,19 +950,22 @@ anyTable.prototype.dbUpdateLink = async function(options)
       let str = this.tableFieldsLeftJoin[link_type][t];
       let par = options[str];
       if (par || par===0) {
-        stmt +=  str+"='"+par+"',";
+        let pstr = typeof par === "string"
+                   ? "='"+par+"',"
+                   : "="+par+",";
+        stmt += str + pstr;
         val_found = true;
       }
     }
     if (!val_found)
-      return null;
+      return Promise.resolve(null);
     stmt = stmt.substring(0,stmt.length-1)+' '; // Replace last char (',') with ' *
     stmt += "WHERE "+idKey+"="+id;
     //console.log("dbUpdateLink:"+stmt);
     if (!this.query(stmt,false,true))
-      return null;
+      return Promise.resolve(null);
   }
-  return this.data;
+  return Promise.resolve(null);
 }; // dbUpdateLink
 
 /////////////////////////////////////////////////////////////////////////////
@@ -978,7 +981,7 @@ anyTable.prototype.dbUpdateLink = async function(options)
 anyTable.prototype.dbDelete = async function(options)
 {
   if (!options)
-    return null;
+    Promise.resolve(null);
 
   // Delete item(s) from table or file from disk
   if (options.del == "ulf") {
@@ -1013,7 +1016,7 @@ anyTable.prototype.dbDelete = async function(options)
       stmt = "UPDATE "+tableName+" SET parent_id=NULL WHERE parent_id="+id;
       //console.log("dbDelete(2):"+stmt);
       if (!self.query(stmt,false,true)) // TODO! alasql.promise...
-        return Promise.resolve(false);
+        return Promise.resolve(null);
     }
     // Delete all links for an item with given id from associated tables (to avoid orphaned links)
     if (self.linking) {
@@ -1023,15 +1026,16 @@ anyTable.prototype.dbDelete = async function(options)
           let stmt = "DELETE FROM "+link_table+" WHERE "+self.idKey+"="+id;
           //console.log("dbDelete(3):"+stmt);
           if (!self.query(stmt))
-            return Promise.resolve(false);
+            return Promise.resolve(null);
         }
       }
     }
     self.id = null;
     // Call success handler
     if (options.success && options.context)
-      options.success.call(options.context,res);
-    return Promise.resolve(true);
+      options.success.call(options.context,options.context,self,options);
+
+    return Promise.resolve(self);
   })
   .catch(error => {
      console.error("Delete error: "+error);

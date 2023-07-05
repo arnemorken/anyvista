@@ -40,6 +40,12 @@
 <script src="<?php print gAnyvistaURL;?>view/anyViewTabs.js"></script>
 <script src="<?php print gAnyvistaURL;?>view/anyFilter.js"></script>
 
+<script src="<?php print gAnyvistaURL;?>data/alasql/alasql.min.js"></script>
+<script src="<?php print gAnyvistaURL;?>data/alasql/db/dbConnection.js"></script>
+<script src="<?php print gAnyvistaURL;?>data/alasql/db/dbTable.js"></script>
+<script src="<?php print gAnyvistaURL;?>data/alasql/anyTable.js"></script>
+<script src="<?php print gAnyvistaURL;?>data/alasql/anyTableFactory.js"></script>
+
 <style>
 body {
   margin:0; padding:0;

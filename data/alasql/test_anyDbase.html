@@ -19,6 +19,7 @@
 
 <link  href="../../view/skin/default/anyvista.css" rel="stylesheet"/>
 <script src="../../view/functions.js"></script>
+<script src="../../view/anyDefs.js"></script>
 <script src="../../view/anyStrings_en-GB.js"></script>
 <script src="../../view/anyFilter.js"></script>
 <script src="../../view/anyModel.js"></script>
@@ -51,9 +52,9 @@ async function connectSuccess(options)
   let factory = new anyTableFactory(gDbase);
 
   // Create table classes
-  let grtab = factory.createClass("groupTable",{header:true});
-  let ustab = factory.createClass("userTable", {header:true});
-  let evtab = factory.createClass("eventTable",{header:true});
+  let grtab = await factory.createClass("groupTable",{header:true});
+  let ustab = await factory.createClass("userTable", {header:true});
+  let evtab = await factory.createClass("eventTable",{header:true});
 
   let du = null;
   let de = null;
