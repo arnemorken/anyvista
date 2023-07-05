@@ -1,6 +1,6 @@
 /* jshint sub:true */
 /* jshint esversion: 9 */
-/* globals $,i18n,any_defs,isInt, */
+/* globals $,i18n,any_defs,isInt,dbConnection,anyTableFactory, */
 "use strict";
 
 /****************************************************************************************
@@ -13,86 +13,99 @@
  ***************************************************************************************/
 
 /**
- * __anyModel: Tree structure data model that can manipulate data as lists and items and optionally
- * synchronize with a database.__
+ * anyModel contains a tree structure data model that can manipulate data as lists and items and
+ * optionally synchronize with a database.
  *
- * See <a href="../classes/anyView.html">`anyView`</a> for a description of a data view class.
+ * See <a href="anyView.html">`anyView`</a> for a description of a data view class for displaying
+ * data in the model.
  *
- * The model should have a type (e.g. `type = "user"`), an id key (e.g. `id_key = "user_id"`) and a name
- * key (e.g. `name_key = "user_name"`). If `id_key` or `name_key` is omitted, they are constructed from
- * `type` (for example will type "foo" give rise to id_key "foo_id" and name_key "foo_name"). If no type
- * is specified, the model cannot be searched, synchronized with database etc. If the model contains data
- * for an item (which may or may not contain any kind of subdata), the `id` property should be set to the
- * id of the item and either `this.data[id]` or `this.data[hdr_id].data[id]` should exist (where hdr_id
- * is the id of a single `head` entry).
+ * The model should have a type (e.g. `type = "user"`), an id key (e.g. `id_key = "user_id"`) and
+ * a name key (e.g. `name_key = "user_name"`). If `id_key` or `name_key` is omitted, they are
+ * constructed from `type` (for example will type "foo" give rise to id_key "foo_id" and name_key
+ * "foo_name"). If no type is specified, the model cannot be searched, synchronized with database
+ * etc. If the model contains data for an item (which may or may not contain any kind of subdata),
+ * the `id` property should be set to the id of the item and either `this.data[id]` or
+ * `this.data[hdr_id].data[id]` should exist (where hdr_id is the id of a single `head` entry).
  *
- * If used in connection with a database, `mode` should be set to "remote" (see below). `type` will then
- * correspond to a database table and `id_key` to an id column in that table.
+ * If used in connection with a database, `mode` should be set to "remote" (see below). `type` will
+ * then correspond to a database table and `id_key` to an id column in that table.
  *
- * See <a href="../modules/anyVista.html">anyVista</a> for a full description of the format of the data
+ * See <a href="module-anyVista.html">anyVista</a> for a full description of the format of the data
  * structure that the model works with.
  *
  * The class contains:
- * - a constructor, which sets the model's variables according to `options`, or to default values,
- * - the `dataInit` method for initializing the data model,
- * - `data*` methods for working with data in the internal data structure,
- * - `db*` methods for working with data in the database,
- * - subscribe/callback methods (`cb*` methods).
  *
- * @class anyModel
- * @constructor
- * @param {Object} options An object which may contain the following properties, all of which are optional
- *                         unless stated otherwise:
+ * <li>a constructor, which sets the model's variables according to `options`, or to default values,
+ * <li>methods for working with data in the internal data structure (`data*` methods),
+ * <li>methods for working with data in the database (`db*` methods),
+ * <li>subscribe/callback methods (`cb*` methods).
  *
- *      {Object}   data:           The data with which to initialize the model.
- *                                 Default: null.
- *      {String}   type:           Type, e.g. "user".
- *                                 Default: "".
- *      {String}   id:             Item id, if the top level data represents an item, e.g. "42".
- *                                 Default: null.
- *      {String}   id_key:         Id key, e.g. "user_id".
- *                                 Default: "[type]_id" if type is set, "" otherwise.
- *      {String}   name_key:       Name key, e.g. "user_name".
- *                                 Default: "[type]_name" if type is set, "" otherwise.
- *      {Object}   types:          The types the model might interact (link) with, e.g ["event","document"].
- *                                 Default: null.
- *      {String}   mode:           Indicates whether db* operations should be performed by a locally defined
- *                                 method ("local") or call a database method on a remote server ("remote").
- *                                 Default: "local".
- *      {Array}    db_fields:      An array of strings to be sent to the server, indicating which columns of
- *                                 the table should be used in a search or update/insert. These fields are
- *                                 only applied if the server fails to find a filter corresponding to `type`.
- *                                 Default: null.
- *      {boolean}  db_search:      Whether to call the search method while initializing the class or while
- *                                 searching on the server.
- *                                 Default: false.
- *      {String}   db_search_term: The string to search for when `db_search == true`.
- *                                 Default: "".
- *      {String}   db_last_term:   The last string that was searched for.
- *                                 Default: "".
- *      {boolean}  auto_search:   If true, the model will be initiated with the result of a search, and
- *                                cbExecute will be called.
- *                                Default: true.
- *      {boolean}  auto_callback: If true, cbExecute will be called after calling dataInsert, dataUpdate
- *                                and dataDelete.
- *                                Default: false.
- *      {boolean}  auto_refresh:  If true, cbExecute will be called after calling dbSearch, dbUpdate,
- *                                dbUpdateLinkList, dbUpdateLink and dbDelete.
- *                                Default: true.
- *      {Object}   permission:    Permissions (normally obtained from server). The object may contain:
- *                                  {integer} current_user_id:  The user id the current user is logged in
- *                                                              with (if applicable).
- *                                                              Default: null.
- *                                  {boolean} is_logged_in:     True if the user is logged in.
- *                                                              Default: true.
- *                                  {boolean} is_admin:         True if the user has admin privileges.
- *                                                              Default: false.
- *      {String}   message:       Info messages.
- *                                Default: "".
- *      {String}   error:         Error messages.
- *                                Default: "".
- *      {String}   error_server:  Error messages from server.
- *                                Default: "".
+ * @constructs anyModel
+ * @param {Object} options An object which may contain the following properties, all of which are
+ *                         optional unless stated otherwise:
+ *
+ * @param {Object}   options.data           The data with which to initialize the model.
+ *                                          Default: null.
+ * @param {String}   options.type           The model's base type, e.g. "user".
+ *                                          Default: "".
+ * @param {String}   options.id             Item id, e.g. "42". Only used if the top level data
+ *                                          represents an item.
+ *                                          Default: null.
+ * @param {String}   options.id_key         The model's base id key, e.g. "user_id".
+ *                                          Default: "[type]_id" if type is set, "" otherwise.
+ * @param {String}   options.name_key       The model's base name key, e.g. "user_name".
+ *                                          Default: "[type]_name" if type is set, "" otherwise.
+ * @param {Object}   options.types          The types the model might interact (link) with, e.g
+ *                                          ["event","document"].
+ *                                          Default: null.
+ * @param {String}   options.mode           Indicates whether db* operations should be performed by
+ *                                          a locally defined method ("local") or call a database
+ *                                          method on a remote server ("remote").
+ *                                          Default: "local".
+ * @param {Object}   options.db_connection  The database connection. Only valid in `"local"` mode.
+ *                                          Default: null.
+ * @param {Object}   options.table_factory  The table factory class. Only valid in `"local"` mode.
+ *                                          Default: null.
+ * @param {Array}    options.db_fields      An array of strings to be sent to the server, indicating
+ *                                          which columns ofthe table should be used in a search or
+ *                                          update/insert. These fields are only applied if the
+ *                                          server fails to find a filter corresponding to `type`.
+ *                                          Default: null.
+ * @param {boolean}  options.db_search      Whether to call the search method while initializing the
+ *                                          class or while searching on the server.
+ *                                          Default: false.
+ * @param {String}   options.db_search_term The string to search for when `db_search == true`.
+ *                                          Default: "".
+ * @param {String}   options.db_last_term   The last string that was searched for.
+ *                                          Default: "".
+ * @param {boolean}  options.auto_search    If true, the model will be initiated with the result of a search, and
+ *                                          cbExecute will be called.
+ *                                          Default: true.
+ * @param {boolean}  options.auto_callback  If true, cbExecute will be called after calling
+ *                                          dataInsert, dataUpdate and dataDelete.
+ *                                          Default: false.
+ * @param {boolean}  options.auto_refresh   If true, cbExecute will be called after calling
+ *                                          dbSearch, dbUpdate, dbUpdateLinkList, dbUpdateLink and
+ *                                          dbDelete.
+ *                                          Default: true.
+ * @param {Object}   options.permission     Permissions (normally obtained from server). The object
+ *                                          may contain:
+ *                                          <li> {integer} current_user_id: The user id the current
+ *                                                                          user is logged in with
+ *                                                                          (if applicable).
+ *                                                                          Default: null.
+ *                                          <li> {boolean} is_logged_in:    True if the user is
+ *                                                                          logged in.
+ *                                                                          Default: true.
+ *                                          <li> {boolean} is_admin:        True if the user has
+ *                                                                          admin privileges.
+ *                                                                          Default: false.
+ * @param {String}   options.message        Info messages.
+ *                                          Default: "".
+ * @param {String}   options.error          Error messages.
+ *                                          Default: "".
+ * @param {String}   options.error_server   Error messages from server.
+ *                                          Default: "".
  *
  * @example
  *      new anyModel({ type:"user",id_key:"user_id",id:"38",data:{user_name:"Aretha Franklin"} });
@@ -100,134 +113,166 @@
 var anyModel = function (options)
 {
   /**
-  * @property {Object} data
-  * @default null
-  * @description The model's data.
+  * The model's (tree) data structure.
+  *
+  * @type       {Object}
+  * @default    null
   */
   this.data = null;
 
   /**
-  * @property {String} type
-  * @default ""
-  * @description The model's type, e.g. `"user"`.
-  *              If already set (by a derived class), it will not be initialized.
+  * The model's base type, e.g. `"user"`.
+  * If already set (by a derived class), it will not be initialized.
+  *
+  * @type       {String}
+  * @default    ""
+  * @example    mymodel.type = "event";
   */
-  if (!this.type)
-    this.type = "";
+  this.type = this.type ? this.type : "";
 
   /**
-  * @property {String} id
-  * @default null
-  * @description Item id, if the top level data represents an item, e.g. "42".
+  * Item id, used if and only if the top level data represents an item.
+  * If already set (by a derived class), it will not be initialized.
+  *
+  * @type       {String}
+  * @default    null
+  * @example    mymodel.id = "42";
   */
-  if (!this.id)
-    this.id = null;
+  this.id = this.id || this.id === 0 ? this.id : null;
 
   /**
-  * @property {String} id_key
-  * @default "[type]_id" if type is set, "" otherwise.
-  * @description Name of the model's id key, e.g. `"user_id"`.
-  *              If already set (by a derived class), it will not be initialized.
-  *              If not specified, "[type]_id" is used as the model's id key
-  *              if `type` is set, otherwise it defaults to "".
+  * The model's base id key, e.g. `"user_id"`.
+  * If already set (by a derived class), it will not be initialized.
+  * If not specified and `type` is set, "[type]_id" is used as the model's id key.
+  * If `type` is not set, it defaults to "".
+  *
+  * @type       {String}
+  * @default    "[type]_id" if type is set, "" otherwise.
   */
-  if (!this.id_key)
-    this.id_key = this.type ? this.type+"_id" : "";
+  this.id_key = this.id_key ? this.id_key : this.type ? this.type+"_id" : "";
 
   /**
-  * @property {String} name_key
-  * @default "[type]_name" if type is set, "" otherwise.
-  * @description The model's name key, e.g. `"user_name"`.
-  *              If already set (by a derived class), it will not be initialized.
-  *              If not specified, "[type]_name" is used as the model's name key
-  *              if `type` is set, otherwise it defaults to "".
+  * The model's base name key, e.g. `"user_name"`.
+  * If already set (by a derived class), it will not be initialized.
+  * If not specified and `type` is set, "[type]_name" is used as the model's name key.
+  * If `type` is not set, it defaults to "".
+  *
+  * @type       {String}
+  * @default    "[type]_name" if type is set, "" otherwise.
   */
-  if (!this.name_key)
-    this.name_key = this.type ? this.type+"_name" : "";
+  this.name_key = this.name_key ? this.name_key : this.type ? this.type+"_name" : "";
 
   /**
-  * @property {Object} types
-  * @default null
-  * @description The model's types.
+  * The model's types.
+  *
+  * @type       {Array}
+  * @default    null
   */
   this.types = null;
 
   /**
-  * @property {String} mode
-  * @default "local"
-  * @description The model's mode, e.g. `"local"` or `remote"`.
+  * The model's mode, e.g. `"local"` or `remote"`.
+  *
+  * @type       {String}
+  * @default    "local"
   */
   this.mode = "local";
 
   /**
-  * @property {Boolean} db_fields
-  * @default null
-  * @description An array of strings to be sent to the server, indicating which columns of
-  *              the table should be used in in a search or update/insert. These fields are
-  *              only applied if the server fails to find a filter corresponding to `type`.
+  * The database connection. Only valid in `"local"` mode.
+  *
+  * @type       {String}
+  * @default    "local"
+  */
+  this.db_connection = null;
+
+  /**
+  * The table factory class. Only valid in `"local"` mode.
+  *
+  * @type       {String}
+  * @default    "local"
+  */
+  this.table_factory = null;
+
+  /**
+  * An array of strings to be sent to the server, indicating which columns of the table should be
+  * used in in a search or update/insert. These fields are only applied if the server fails to find
+  * a filter corresponding to `type`.
+  *
+  * @type       {Array}
+  * @default    null
   */
   this.db_fields = null;
 
   /**
-  * @property {Boolean} db_search
-  * @default false
-  * @description Whether to call the search method while initializing the class,
-  *              or while searching on the server. Optional.
+  * Whether to call the search method while initializing the class, or while searching on the
+  * server.
+  *
+  * @type       {boolean}
+  * @default    false
   */
   this.db_search = false;
 
   /**
-  * @property {String} db_search_term
-  * @default ""
-  * @description The string to search for when this.db_search == true.
+  * The string to search for when db_search == true.
+  *
+  * @type       {String}
+  * @default    ""
   */
   this.db_search_term = "";
 
   /**
-  * @property {String} db_last_term
-  * @default ""
-  * @description The last string that was search for.
+  * The last string that was searched for.
+  *
+  * @type       {String}
+  * @default    ""
   */
   this.db_last_term = "";
 
   /**
-  * @property {Boolean} auto_search
-  * @default true
-  * @description If auto_search is true, the model will be automatically initialized
-  *              with the data returned by dbSearch, and cbExecute will be called.
-  */
-  this.auto_search = true;
-
-  /**
-  * @property {Boolean} auto_callback
-  * @default false
-  * @description If auto_callback is true, cbExecute will be called after calling
-  *              dataInsert, dataUpdate and dataDelete.
-  */
-  this.auto_callback = false;
-
-  /**
-  * @property {Boolean} auto_refresh
-  * @default true
-  * @description If auto_refresh is true, cbExecute will be called after calling
-  *              dataInsert, dataUpdate and dataDelete.
-  */
-  this.auto_refresh = true;
-
-  /**
-  * @property {Integer} db_timeout_sec
-  * @default 10
   * @description Number of seconds to wait for database reply before timing out.
+  *
+  * @type       {integer}
+  * @default    10
   */
   this.db_timeout_sec = 10;
 
   /**
-  * @property {Object} permission
-  * @default An object with the following properties:
-  *      `current_user_id:  null,`
-  *      `is_logged_in:     true,`
-  *      `is_admin:         false,`
-  * @description Permission related info (normally obtained from server).
+  * If auto_callback is true, cbExecute will be called after calling
+  * dataInsert, dataUpdate and dataDelete.
+  *
+  * @type       {boolean}
+  * @default    false
+  */
+  this.auto_callback = false;
+
+  /**
+  * If auto_refresh is true, cbExecute will be called after calling dbSearch, dbUpdate,
+  * dbUpdateLinkList, dbUpdateLink and dbDelete.
+  *
+  * @type       {boolean}
+  * @default    true
+  */
+  this.auto_refresh = true;
+
+  /**
+  * If auto_search is true, the model will be automatically initialized with the data returned by
+  * dbSearch, and cbExecute will be called.
+  *
+  * @type       {boolean}
+  * @default    true
+  */
+  this.auto_search = true;
+
+  /**
+  * Permission related info (normally obtained from server).
+  *
+  * @type       {Object}
+  * @default    {
+  *       current_user_id: null,
+  *       is_logged_in:    true,
+  *       is_admin:        false,
+  *     }
   */
   this.permission = {
     current_user_id: null,  // Id the current user is logged in with
@@ -236,29 +281,58 @@ var anyModel = function (options)
   };
 
   /**
-  * @property {String} message
-  * @default ""
-  * @description Messages.
+  * Info messages.
+  *
+  * @type       {String}
+  * @default    ""
   */
   this.message = "";
 
   /**
-  * @property {String} error
-  * @default ""
-  * @description Errors.
+  * Error messages.
+  *
+  * @type       {String}
+  * @default    ""
   */
   this.error = "";
 
   /**
-  * @property {String} error_server
-  * @default ""
-  * @description Errors received from server.
+  * Error messages received from server.
+  *
+  * @type       {String}
+  * @default    ""
   */
   this.error_server = "";
 
   // Initialise
   this._dataInitDefault();
   this.dataInit(options);
+
+  // If mode is "local", we may need a connection to the database and a table factory
+  // TODO! Is this the best place to do it?
+  if (this.mode == "local") {
+    let dbname = "test_anydbase";
+    let params = {
+      dbtype:    "INDEXEDDB", // "LOCALSTORAGE"
+      dbname:    dbname,
+      dbversion: "1",
+      onSuccess: async function() {
+        console.log("anyModel: Local database "+dbname+" ready"); // TODO! i18n
+      },
+      onFail: function(err) {
+        console.error("anyModel: Could not create connection: "+err); // TODO! i18n
+        return false;
+      },
+    };
+    if (!this.db_connection)
+      this.db_connection = new dbConnection(params);
+    if (this.db_connection.error)
+      console.error(this.db_connection.error);
+    else {
+      if (!this.table_factory)
+        this.table_factory = new anyTableFactory(this.db_connection);
+    }
+  }
 
   // Warnings and errors
   if (options && !this.type)
@@ -289,6 +363,8 @@ anyModel.prototype._dataInitDefault = function ()
   this.id              = null;
   this.types           = null;
   this.mode            = "local";
+  this.db_connection   = null;
+  this.table_factory   = null;
   this.db_fields       = null;
   this.db_search       = false;
   this.db_search_term  = "";
@@ -307,38 +383,41 @@ anyModel.prototype._dataInitDefault = function ()
 }; // _dataInitDefault
 
 /**
- * @method dataInit
- * @description Set the model's data, such as type, data and more with the specified options or to
- *              default values. Called by the constructor and the success method of `dbSearch`.
+ * Initialize the model with with the specified options or to default values.
+ * Called by the constructor and the success method of `dbSearch`.
+ *
+ * @method anyModel.dataInit
  * @param {Object} options An object containing data with which to initialize the model.
  *                         If the encapsulation `options.JSON_CODE` has been set (ny the server,
  *                         it will be removed from `options`. If `options == null`, default values
  *                         will be set.<br/>
  *                         The object may contain these elements:
  *
- *        {Object}  data:           Data. Will only be initialised if `dataInit` is called after a search
- *                                  (indicated by `this.db_last_command == "sea"`). Optional.
- *        {String}  type:           Type, e.g. "user". Optional.
- *        {String}  id:             Item id, if the top level data represents an item, e.g. "42". Optional.
- *        {String}  id_key:         Id key, e.g. "user_id". Optional. Default: "[type]_id".
- *        {String}  name_key:       Name key, e.g. "user_name". Optional. Default: "[type]_name".
- *        {Object}  types:          The types the model might interact (link) with. Optional.
- *        {String}  mode:           "local" or "remote". Optional.
- *        {Array}   db_fields:      An array of strings to be sent to the server, indicating which columns
- *                                  of the table should be used in a search or update/insert. Optional.
- *        {boolean} db_search:      Whether to call the search method. Optional.
- *        {String}  db_search_term: The string to search for. Optional.
- *        {String}  db_last_term:   The string to search for. Optional.
- *        {boolean} auto_search:    Whether to initiated model with the result of a search, and call
- *                                  cbExecute. Optional.
- *        {boolean}  auto_callback: Whether to call cbExecute after calling dataInsert, dataUpdate and
- *                                  dataDelete. Optional.
- *        {boolean}  auto_refresh:  Whether to call cbExecute after calling dbSearch, dbUpdate,
- *                                  dbUpdateLinkList, dbUpdateLink and dbDelete. Optional.
- *        {Object}  permission:     Permissions. Optional.
- *        {String}  message:        Messages. Optional.
- *        {String}  error:          Errors. Optional.
- *        {String}  error_server:   Errors from server. Optional.
+ * @param {Object}  options.data           Data. Will only be initialised if `dataInit` is called after a search
+ *                                         (indicated by `this.db_last_command == "sea"`). Optional.
+ * @param {String}  options.type           Type, e.g. "user". Optional.
+ * @param {String}  options.id             Item id, if the top level data represents an item, e.g. "42". Optional.
+ * @param {String}  options.id_key         Id key, e.g. "user_id". Optional. Default: "[type]_id".
+ * @param {String}  options.name_key       Name key, e.g. "user_name". Optional. Default: "[type]_name".
+ * @param {Object}  options.types          The types the model might interact (link) with. Optional.
+ * @param {String}  options.mode           "local" or "remote". Optional.
+ * @param {Object}  options.db_connection  The database connection. Only valid in `"local"` mode. Optional.
+ * @param {Object}  options.table_factory  The table factory class. Only valid in `"local"` mode. Optional.
+ * @param {Array}   options.db_fields      An array of strings to be sent to the server, indicating which columns
+ *                                         of the table should be used in a search or update/insert. Optional.
+ * @param {boolean} options.db_search      Whether to call the search method. Optional.
+ * @param {String}  options.db_search_term The string to search for. Optional.
+ * @param {String}  options.db_last_term   The string to search for. Optional.
+ * @param {boolean} options.auto_search    Whether to initiated model with the result of a search, and call
+ *                                         cbExecute. Optional.
+ * @param {boolean} options.auto_callback  Whether to call cbExecute after calling dataInsert, dataUpdate and
+ *                                         dataDelete. Optional.
+ * @param {boolean} options.auto_refresh   Whether to call cbExecute after calling dbSearch, dbUpdate,
+ *                                         dbUpdateLinkList, dbUpdateLink and dbDelete. Optional.
+ * @param {Object}  options.permission     Permissions. Optional.
+ * @param {String}  options.message        Messages. Optional.
+ * @param {String}  options.error          Errors. Optional.
+ * @param {String}  options.error_server   Errors from server. Optional.
  *
  * @return options
  */
@@ -371,6 +450,8 @@ anyModel.prototype.dataInit = function (options)
     if (!this.name_key && this.type)                   { this.name_key       = this.type+"_name"; }
     if (options.types)                                 { this.types          = options.types; }
     if (options.mode)                                  { this.mode           = options.mode; }
+    if (options.db_connection)                         { this.db_connection  = options.db_connection; }
+    if (options.table_factory)                         { this.table_factory  = options.table_factory; }
     if (options.db_fields)                             { this.db_fields      = options.db_fields; }
     if (options.db_search)                             { this.db_search      = options.db_search; }
     if (options.db_search_term)                        { this.db_search_term = options.db_search_term; }
@@ -414,8 +495,9 @@ anyModel.prototype.dataInit = function (options)
 ////////////////////////////////////////////////////////////////
 
 /**
- * @method cbSubscribe
- * @description Adds a method to the list of methods to be called by cbExecute.
+ * Add a method to the list of methods to be called by cbExecute.
+ *
+ * @method anyModel.cbSubscribe
  * @param {Function} cbFunction A method to add to the list. Mandatory.
  * @param {Object}   cbContext  The context the method should be executed in. Mandatory.
  * @example
@@ -434,8 +516,9 @@ anyModel.prototype.cbSubscribe = function (cbFunction,cbContext)
 }; // cbSubscribe
 
 /**
- * @method cbUnsubscribe
- * @description Remove a method from the list of methods to be called by cbExecute.
+ * Remove a method from the list of methods to be called by cbExecute.
+ *
+ * @method anyModel.cbUnsubscribe
  * @param {Function} cbFunction A method to remove from the list. Mandatory.
  * @example
  *      mymodel.cbUnsubscribe(myModelChange);
@@ -452,8 +535,9 @@ anyModel.prototype.cbUnsubscribe = function (cbFunction)
 }; // cbUnsubscribe
 
 /**
- * @method cbReset
- * @description Empties the list of methods to be called by cbExecute.
+ * Empty the list of methods to be called by cbExecute.
+ *
+ * @method anyModel.cbReset
  * @example
  *      mymodel.cbReset();
  */
@@ -463,9 +547,12 @@ anyModel.prototype.cbReset = function ()
 }; // cbReset
 
 /**
- * @method cbExecute
- * @description Calls all callback methods registered with `cbSubscribe`.
- *              This method is called by the default success/fail methods if `auto_callback == true`.
+ * Call all callback methods registered with `cbSubscribe`.
+ * This method is called by the default success/fail methods if `auto_callback == true`.
+ *
+ * @method anyModel.cbExecute
+ * @example
+ *      mymodel.cbExecute();
  */
 anyModel.prototype.cbExecute = function ()
 {
@@ -498,9 +585,10 @@ anyModel.prototype._getDataSourceName = function ()
 }; // _getDataSourceName
 
 /**
- * @method dataSearch
- * @description Search for item of type `type` and id `id` in `data`.  If the type/id combination exists
- *              several places in the data tree, only the first occurence found is returned.
+ * Search for item of type `type` and id `id` in `data`.  If the type/id combination exists
+ * several places in the data tree, only the first occurence found is returned.
+ *
+ * @method anyModel.dataSearch
  * @param {Object} options An object which may contain these elements:
  *
  *        {Object}  data   The data structure to search in.
@@ -632,10 +720,11 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
 }; // dataSearch
 
 /**
- * @method dataSearchNextId
- * @description Sets `this.max` to the largest id for the specified type in the in-memory data structure
- *              and returns the next id (i.e. `this.max + 1`). If any of the indexes are non-numerical,
- *              the number of items in the data structure minus 1 will be returned.
+ * Set `this.max` to the largest id for the specified type in the in-memory data structure
+ * and returns the next id (i.e. `this.max + 1`). If any of the indexes are non-numerical,
+ * the number of items in the data structure minus 1 will be returned.
+ *
+ * @method anyModel.dataSearchNextId
  * @param {Object} data The data structure to search in.
  *                      Optional. Default: The model's data (`this.data`).
  * @param {String} type The type of the data to search for.
@@ -654,10 +743,11 @@ anyModel.prototype.dataSearchNextId = function (data,type)
 }; // dataSearchNextId
 
 /**
- * @method dataSearchMaxId
- * @description Sets `this.max` to the largest id for the specified type in the in-memory data structure
- *              and returns this.max. If any of the indexes are non-numerical, the number of items in the
- *              data structure minus 1 will be returned.
+ * Set `this.max` to the largest id for the specified type in the in-memory data structure
+ * and returns this.max. If any of the indexes are non-numerical, the number of items in the
+ * data structure minus 1 will be returned.
+ *
+ * @method anyModel.dataSearchMaxId
  * @param {Object} data The data structure to search in.
  *                      Optional. Default: The model's data (`this.data`).
  * @param {String} type The type of the data to search for.
@@ -741,11 +831,12 @@ anyModel.prototype.dataSearchMaxId = function (data,type,_prev_type)
 }; // dataSearchMaxId
 
 /**
- * @method dataInsert
- * @description Inserts `new_data` into the data structure at a place specified by `type`, `id`
- *              and optionally `new_id`. If the type/id combination exists several places in
- *              the data structure, only the first place found is used. Data that exist at the
- *              insertion point will be overwritten.
+ * Insert `new_data` into the data structure at a place specified by `type`, `id`
+ * and optionally `new_id`. If the type/id combination exists several places in
+ * the data structure, only the first place found is used. Data that exist at the
+ * insertion point will be overwritten.
+ *
+ * @method anyModel.dataInsert
  * @param {Object} options An object which may contain these elements:
  *
  *        {Object}  data     The data structure to insert into.
@@ -877,11 +968,13 @@ anyModel.prototype.dataInsert = function (options)
 }; // dataInsert
 
 /**
- * @method dataInsertHeader
- * @description Insert a header at the top of the data structure
+ * Insert a header at the top of the data structure
+ *
+ * @method anyModel.dataInsertHeader
  * @param  data   The data structue to use. Optional. Default: `this.data`.
  *         type   The type of the data "below" the header. Optional. Default: `this.type`.
  *         header The header string. Mandatory.
+  *
  * @return The header that was inserted.
  *
  * @example
@@ -912,10 +1005,11 @@ anyModel.prototype.dataInsertHeader = function (options)
 }; // dataInsertHeader
 
 /**
- * @method dataUpdate
- * @description Updates data structure at a place specified by `type` and `id` with data in `new_data`.
- *              If the type/id combination exists several places in the data structure, only the first
- *              place found is used. Data that exist at the insertion point will be overwritten.
+ * Update data structure at a place specified by `type` and `id` with data in `new_data`.
+ * If the type/id combination exists several places in the data structure, only the first
+ * place found is used. Data that exist at the insertion point will be overwritten.
+ *
+ * @method anyModel.dataUpdate
  * @param {Object} options An object which may contain these elements:
  *
  *        {Object}  data     The data structure to update.
@@ -998,9 +1092,11 @@ anyModel.prototype.dataUpdate = function (options)
 }; // dataUpdate
 
 /**
- * @method dataUpdateLinkList
- * @description Add or remove items to/from a link (association) list. This can be used to update
- *              a link from one data item to another (e.g., add/remove a user to/from an event).
+ * Add and/or remove items to/from a link (association) list. This can be used to link/unlink an
+ * item to/from another item in the data structure (e.g., add/remove a user to/from an event).
+ * For example a user may be associated with several events.
+ *
+ * @method anyModel.dataUpdateLinkList
  * @param {Object} options An object which may contain these elements:
  *
  *        {Object}  data      The data structure to update.
@@ -1039,6 +1135,7 @@ anyModel.prototype.dataUpdate = function (options)
  * @return true on success, false on error.
  *
  * @example
+ *      Coming soon
  */
 anyModel.prototype.dataUpdateLinkList = function (options)
 {
@@ -1134,8 +1231,9 @@ anyModel.prototype.dataUpdateLink = function (options)
 }; // dataUpdateLink
 
 /**
- * @method dataDelete
- * @description Deletes an item with a specified id from the data structure.
+ * Deletes an item with a specified id from the data structure.
+ *
+ * @method anyModel.dataDelete
  * @param {Object} options An object which may contain these elements:
  *
  *        {Object}  data  The data structure to delete from.
@@ -1198,8 +1296,10 @@ anyModel.prototype.dataDelete = function (options)
 /////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @method dbCreate
- * @description
+ * Create a database table on server.
+ * Experimental - only partially implemented.
+ *
+ * @method anyModel.dbCreate
  * @param {Object} options An object which may contain these elements:
  *
  *        {string}   type:       The table type, this will be the basis for the table name.
@@ -1215,7 +1315,7 @@ anyModel.prototype.dataDelete = function (options)
  *        {Function} context:    The context of the success and fail methods.
  *                               Optional. Default: `this`.
  *
- * @return true if
+ * @return true if the database call was made
  */
 anyModel.prototype.dbCreate = function (options)
 {
@@ -1230,7 +1330,7 @@ anyModel.prototype.dbCreate = function (options)
   this.error        = "";
   this.error_server = "";
   let self = this;
-  if (this.mode == "remote") { // Remote server call
+  if (this.mode == "remote") { // Remote server call (MySQL server)
     let url = this._getDataSourceName()+
               "?echo=y"+
               "&cmd=cre"+
@@ -1250,20 +1350,46 @@ anyModel.prototype.dbCreate = function (options)
     });
     return true;
   }
-  else { // Local method call
-    if (!self.success) {
-      this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyModel.dbCreate: "+this.message);
-      return false;
-    }
-    return self.success(this,this,options);
+  else { // Local method call (AlaSQL server)
+    this._dbCreateLocal(options);
+    return this.error == "";
   }
-
 }; // dbCreate
 
+// Internal method, do not call directly.
+anyModel.prototype._dbCreateLocal = async function (options)
+{
+  if (this.table_factory) {
+    let the_type   = options.type      ? options.type      : this.type;
+    let table_name = options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{header:true});
+    if (table) {
+      let self = this;
+      return table.dbCreate(options)
+      .then( function(serverdata) {
+        if (self.success)
+          return self.success(self.context,serverdata,options);
+        self.message = i18n.error.SUCCCESS_CB_MISSING;
+        console.warn("anyModel._dbCreateLocal: "+self.message);
+        return false;
+      });
+    } // if table
+    else
+      console.warn("anyModel._dbCreateLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+  } // if table_factory
+  else
+    console.warn("anyModel._dbCreateLocal: "+"No table factory. "); // TODO! i18n
+  if (this.success)
+    return this.success(this,this.data,options);
+  this.message = i18n.error.SUCCCESS_CB_MISSING;
+  console.warn("anyModel._dbCreateLocal: "+this.message);
+  return false;
+}; // _dbCreateLocal
+
 /**
- * @method dbCreateSuccess
- * @description Default success callback method for dbSearch.
+ * Default success callback method for dbSearch.
+ *
+ * @method anyModel.dbCreateSuccess
  * @param {Object} context
  *        {Object} serverdata
  *        {Object} options
@@ -1295,10 +1421,11 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
 }; // dbCreateSuccess
 
 /**
- * @method dbSearch
- * @description Gets an item or a list from server.
- *              The data will be handed to the success handler specified in options.success,
- *              or to this.dbSearchSuccess if no success handler is specified.
+ * Gets an item or a list from server.
+ * The data will be handed to the success handler specified in options.success,
+ * or to this.dbSearchSuccess if no success handler is specified.
+ *
+ * @method anyModel.dbSearch
  * @param {Object} options An object which may contain these elements:
  *
  *        {string}   type:           Item's type.
@@ -1372,11 +1499,11 @@ anyModel.prototype.dbSearch = function (options)
     if (options.db_fields)
       item_to_send.fields = options.db_fields;
     else
-    if (this.db_fields) // TODO! What is this?
+    if (this.db_fields)
       item_to_send.fields = this.db_fields;
     else
       item_to_send = null;
-     //const start = Date.now();
+    //const start = Date.now();
     $.getJSON(url,item_to_send) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
     //const end = Date.now();
@@ -1388,19 +1515,53 @@ anyModel.prototype.dbSearch = function (options)
     });
     return true;
   }
-  else { // Local method call
-    if (!self.success) {
-      this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyModel.dbSearch: "+this.message);
-      return false;
-    }
-    return self.success(this,this,options);
+  else { // Local method call (AlaSQL server)
+    this._dbSearchLocal(options);
+    return this.error == "";
   }
 }; // dbSearch
 
+// Internal method, do not call directly.
+anyModel.prototype._dbSearchLocal = async function (options)
+{
+  if (this.table_factory) {
+    let the_type   = options.type      ? options.type      : this.type;
+    let table_name = options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{header:true});
+    if (table && !table.error) {
+      let self = this;
+      return table.dbSearch(options)
+      .then( function(serverdata) {
+        self.error   = table.error;
+        self.message = table.message;
+        if (self.success)
+          return self.success(self.context,serverdata,options);
+        self.error = i18n.error.SUCCCESS_CB_MISSING;
+        console.warn("anyModel._dbSearchLocal: "+self.message);
+        return false;
+      });
+    } // if table
+    else {
+      console.warn("anyModel._dbSearchLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+      if (table.error) {
+        this.error = table.error;
+        console.log(this.error);
+      }
+    }
+  } // if table_factory
+  else
+    console.warn("anyModel._dbSearchLocal: "+"No table factory. "); // TODO! i18n
+  if (this.success)
+    return this.success(this,this.data,options);
+  this.error = i18n.error.SUCCCESS_CB_MISSING;
+  console.warn("anyModel._dbSearchLocal: "+this.message);
+  return false;
+}; // _dbSearchLocal
+
 /**
- * @method dbSearchGetURL
- * @description Builds a POST string for dbSearch to be sent to server.
+ * Builds a POST string for dbSearch to be sent to server.
+ *
+ * @method anyModel.dbSearchGetURL
  * @param {Object} options An object which may contain these elements:
  *
  *        {integer} type:
@@ -1466,8 +1627,9 @@ anyModel.prototype.dbSearchGetURL = function (options)
 }; // dbSearchGetURL
 
 /**
- * @method dbSearchSuccess
- * @description Default success callback method for dbSearch.
+ * Default success callback method for dbSearch.
+ *
+ * @method anyModel.dbSearchSuccess
  * @param {Object} context
  *        {Object} serverdata
  *        {Object} options
@@ -1508,7 +1670,7 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
 }; // dbSearchSuccess
 
 /**
- * @method dbSearchNextId
+ * @method anyModel.dbSearchNextId
  * @description Gets the next available id for the specified type from server.
  *              The data will be handed to the success handler specified in options.success,
  *              or to this.dbSearchNextIdSuccess if no success handler is specified.
@@ -1566,18 +1728,45 @@ anyModel.prototype.dbSearchNextId = function (options)
     });
     return true;
   }
-  else { // Local method call
-    if (!self.success) {
-      this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyModel.dbSearchNextId: "+this.message);
-      return false;
-    }
-    return self.success(this,this,options);
+  else { // Local method call (AlaSQL server)
+    this._dbSearchNextIdLocal(options);
+    return this.error == "";
   }
 }; // dbSearchNextId
 
+// Internal method, do not call directly.
+anyModel.prototype._dbSearchNextIdLocal = async function (options)
+{
+  if (this.table_factory) {
+    let the_type   = options.type      ? options.type      : this.type;
+    let table_name = options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{header:true});
+    if (table) {
+      let self = this;
+      return await table.dbSearchMaxId(options)
+      .then( async function(serverdata) {
+        self.max = serverdata.id;
+        if (self.success)
+          return self.success(self.context,serverdata,options);
+        self.message = i18n.error.SUCCCESS_CB_MISSING;
+        console.warn("anyModel._dbSearchNextIdLocal: "+self.message);
+        return false;
+      });
+    } // if table
+    else
+      console.warn("anyModel._dbSearchNextIdLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+  } // if table_factory
+  else
+    console.warn("anyModel._dbSearchNextIdLocal: "+"No table factory. "); // TODO! i18n
+  if (self.success)
+    return self.success(this,this.data,options);
+  this.message = i18n.error.SUCCCESS_CB_MISSING;
+  console.warn("anyModel._dbSearchNextIdLocal: "+this.message);
+  return false;
+}; // _dbSearchLocal
+
 /**
- * @method dbSearchNextIdGetURL
+ * @method anyModel.dbSearchNextIdGetURL
  * @description Builds a POST string for dbSearchNextId to be sent to server.
  * @param {Object} options An object which may contain these elements:
  *
@@ -1606,7 +1795,7 @@ anyModel.prototype.dbSearchNextIdGetURL = function (options)
 }; // dbSearchNextIdGetURL
 
 /**
- * @method dbSearchNextIdSuccess
+ * @method anyModel.dbSearchNextIdSuccess
  * @description Default success callback method for dbSearchNextId.
  * @param {Object} context
  *        {Object} serverdata
@@ -1637,7 +1826,7 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
 }; // dbSearchNextIdSuccess
 
 /**
- * @method dbUpdate
+ * @method anyModel.dbUpdate
  * @description Insert or update an item in a database table.
  * @param {Object} options An object which may contain these elements:
  *
@@ -1670,7 +1859,7 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
  *
  * @return true if the database call was made, false otherwise.
  */
-anyModel.prototype.dbUpdate = function (options)
+anyModel.prototype.dbUpdate = async function (options)
 {
   if (!options || typeof options != "object")
     options = {};
@@ -1683,7 +1872,7 @@ anyModel.prototype.dbUpdate = function (options)
                    ? options.id
                    : null;
   if (!new_data)
-    return null; // Nowhere to delete from
+    return null; // No new data
   if (!the_type) {
     console.error("anyModel.dbUpdate: "+i18n.error.TYPE_MISSING);
     return false;
@@ -1698,8 +1887,8 @@ anyModel.prototype.dbUpdate = function (options)
                                id:   the_id,
                             });
   if (!item || !item[the_id]) {
-    let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type)
-    errstr = errstr.replace("&&",""+the_id)
+    let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type);
+    errstr = errstr.replace("&&",""+the_id);
     console.error("anyModel.dbUpdate: "+errstr);
     return false;
   }
@@ -1748,18 +1937,53 @@ anyModel.prototype.dbUpdate = function (options)
     });
     return true;
   }
-  else {
-    if (!self.success) {
-      this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyModel.dbUpdate: "+this.message);
-      return false;
-    }
-    return self.success(this,this,options);
+  else { // Local method call (AlaSQL server)
+    await this._dbUpdateLocal(options,item_to_send);
+    if (this.error)
+      console.error(this.error);
+    return this.error == "";
   }
 }; // dbUpdate
 
+// Internal method, do not call directly.
+anyModel.prototype._dbUpdateLocal = async function (options,item_to_send)
+{
+  if (this.table_factory) {
+    let the_type   = options.type      ? options.type      : this.type;
+    let table_name = options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{header:true});
+    if (table) {
+      options.keys    = Object.keys  (item_to_send);
+      options.values  = Object.values(item_to_send);
+      options.success = this.success;
+      options.context = this.context;
+      let self = this;
+      await table.dbUpdate(options)
+      .then( function(serverdata) {
+        self.error   = table.error;
+        self.message = table.message;
+        if (self.success)
+          return self.success(self.context,serverdata,options);
+        self.message = i18n.error.SUCCCESS_CB_MISSING;
+        console.warn("anyModel._dbUpdateLocal: "+self.message);
+        return false;
+      });
+      return this.error == "";
+    } // if table
+    else
+      console.warn("anyModel._dbUpdateLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+  } // if table_factory
+  else
+    console.warn("anyModel._dbUpdateLocal: "+"No table factory. "); // TODO! i18n
+  if (this.success)
+    return this.success(this,this.data,options);
+  this.message = i18n.error.SUCCCESS_CB_MISSING;
+  console.warn("anyModel._dbUpdateLocal: "+this.message);
+  return false;
+}; // _dbUpdateLocal
+
 /**
- * @method dbUpdateGetURL
+ * @method anyModel.dbUpdateGetURL
  * @description Builds a POST string for dbUpdate to be sent to server.
  * @param {Object} options An object which may contain these elements:
  *
@@ -1832,7 +2056,7 @@ anyModel.prototype.dbUpdateGetURL = function (options)
 }; // dbUpdateGetURL
 
 /**
- * @method dbUpdateSuccess
+ * @method anyModel.dbUpdateSuccess
  * @description Default success callback method for dbUpdate.
  * @param {Object} context
  *        {Object} serverdata
@@ -1844,7 +2068,7 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
   self.db_last_command = "upd";
-  if (serverdata) {
+  if (serverdata && typeof serverdata == 'object') {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
     if (Object.size(serverdata.data) == 0)
@@ -1859,46 +2083,48 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
     if (self.error_server)
       console.error("anyModel.dbUpdateSuccess: "+self.error_server);
     else {
-      // If item is in model's data structure, we must update model after successful insert/update
-      let type = options.type ? options.type : self.type;
-      let item = self.dataSearch({ type: type,
-                                   id:   options.client_id,
-                                   data: options.data,
-                                });
-      if (item) {
-        if (options.id == options.client_id && (!item || (!item[options.client_id] && !item["+"+options.client_id]))) {
-          // Should never happen
-          console.error("anyModel.dbUpdateSuccess: System error: Could not find item with id "+options.client_id);
-          return false;
-        }
-        if (!["head","item","list"].includes(serverdata.id)) { // head, item and list are illegal as ids
-          self.last_insert_id = serverdata.id; // Id of the item inserted/updated, as provided by server
-          if ((options.client_id || options.client_id === 0) && (serverdata.id || serverdata.id === 0) && parseInt(options.client_id) != parseInt(serverdata.id)) {
-            // Replace item with defunct id with an item using new id from server
-            item[serverdata.id] = item[options.client_id]
-                                  ? item[options.client_id]
-                                  : item["+"+options.client_id];
-            if (item[serverdata.id][self.id_key])
-              item[serverdata.id][self.id_key] = serverdata.id;
-            delete item[serverdata.id].is_new;
-            delete item[serverdata.id].dirty;
-            self.dataDelete({ type: options.type,
-                              id:   options.client_id,
-                           });
+      if (options) {
+        // If item is in model's data structure, we must update model after successful insert/update
+        let type = options.type ? options.type : self.type;
+        let item = self.dataSearch({ type: type,
+                                     id:   options.client_id,
+                                     data: options.data,
+                                  });
+        if (item) {
+          if (options.id == options.client_id && (!item || (!item[options.client_id] && !item["+"+options.client_id]))) {
+            // Should never happen
+            console.error("anyModel.dbUpdateSuccess: System error: Could not find item with id "+options.client_id);
+            return false;
           }
-          // Remove the is_new mark and dirty data
-          let tmp_id = item[options.client_id]
-                       ? options.client_id
-                       : item["+"+options.client_id]
-                         ? "+"+options.client_id
-                         : null;
-          if (tmp_id && item[tmp_id]) {
-            delete item[tmp_id].is_new;
-            delete item[tmp_id].dirty;
+          if (!["head","item","list"].includes(serverdata.id)) { // head, item and list are illegal as ids
+            self.last_insert_id = serverdata.id; // Id of the item inserted/updated, as provided by server
+            if ((options.client_id || options.client_id === 0) && (serverdata.id || serverdata.id === 0) && parseInt(options.client_id) != parseInt(serverdata.id)) {
+              // Replace item with defunct id with an item using new id from server
+              item[serverdata.id] = item[options.client_id]
+                                    ? item[options.client_id]
+                                    : item["+"+options.client_id];
+              if (item[serverdata.id][self.id_key])
+                item[serverdata.id][self.id_key] = serverdata.id;
+              delete item[serverdata.id].is_new;
+              delete item[serverdata.id].dirty;
+              self.dataDelete({ type: options.type,
+                                id:   options.client_id,
+                             });
+            }
+            // Remove the is_new mark and dirty data
+            let tmp_id = item[options.client_id]
+                         ? options.client_id
+                         : item["+"+options.client_id]
+                           ? "+"+options.client_id
+                           : null;
+            if (tmp_id && item[tmp_id]) {
+              delete item[tmp_id].is_new;
+              delete item[tmp_id].dirty;
+            }
           }
-        }
-      } // if (item)
-      delete options.client_id; // Delete property set by dbUpdate
+        } // if (item)
+        delete options.client_id; // Delete property set by dbUpdate
+      }
     }
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
@@ -1907,9 +2133,12 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
 }; // dbUpdateSuccess
 
 /**
- * @method dbUpdateLinkList
- * @description Add and/or remove items to/from a link (association) list by updating the link table
- *              in the database. This can be used to link/unlink an item to/from another item.
+ * Add and/or remove items to/from a link (association) list by updating the link table
+ * in the database. This can be used to link/unlink an item to/from another item in the
+ * database (e.g., add/remove a user to/from an event). For example a user may be associated
+ * with several events.
+ *
+ * @method anyModel.dbUpdateLinkList
  * @param {Object}  options An object which may contain these elements:
  *
  *        {String}  type       The type of the item to which the list is linked to (e.g. "user").
@@ -1933,7 +2162,7 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *        {Object}  select     A list of ids to link to item with id `id`(if `link_id` is not given).
  *                             This will be done *after* the ids in `unselect` has been removed.
  *                             If the link already exists, the link's data will be update with the data
- *                             in `new_data`, if specified.
+ *                             in `new_data`, if specified. TODO! new_data does not exist here!
  *                             Optional. Default: undefined.
  *        {integer} timeoutSec Number of seconds before timing out.
  *                             Optional. Default: 10.
@@ -1968,19 +2197,45 @@ anyModel.prototype.dbUpdateLinkList = function (options)
       return self.fail    ? self.fail   (self,jqXHR) : false;
     });
   }
-  else {
-    if (!self.success) {
-      this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyModel.dbUpdateLinkList: "+this.message);
-      return false;
-    }
-    return self.success(this,this,options);
+  else { // Local method call (AlaSQL server)
+    this._dbUpdateLinkListLocal(options);
+    return this.error == "";
   }
   return true;
 }; // dbUpdateLinkList
 
+// Internal method, do not call directly.
+anyModel.prototype._dbUpdateLinkListLocalLocal = async function (options)
+{
+  if (this.table_factory) {
+    let the_type   = options.type      ? options.type      : this.type;
+    let table_name = options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{header:true});
+    if (table) {
+      let self = this;
+      return table.dbUpdateLinkList(options)
+      .then( function(serverdata) {
+        if (self.success)
+          return self.success(self.context,serverdata,options);
+        self.message = i18n.error.SUCCCESS_CB_MISSING;
+        console.warn("anyModel._dbUpdateLinkListLocal: "+self.message);
+        return false;
+      });
+    } // if table
+    else
+      console.warn("anyModel._dbUpdateLinkListLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+  } // if table_factory
+  else
+    console.warn("anyModel._dbUpdateLinkListLocal: "+"No table factory. "); // TODO! i18n
+  if (self.success)
+    return self.success(this,this.data,options);
+  this.message = i18n.error.SUCCCESS_CB_MISSING;
+  console.warn("anyModel._dbUpdateLinkListLocal: "+this.message);
+  return false;
+}; // _dbUpdateLinkListLocal
+
 /**
- * @method dbUpdateLinkListGetURL
+ * @method anyModel.dbUpdateLinkListGetURL
  * @description Builds a POST string for dbUpdateLinkListGetURL to be sent to server.
  * @param {Object} options See dbUpdateLinkList().
  *
@@ -2069,7 +2324,7 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
 }; // dbUpdateLinkListSuccess
 
 /**
- * @method dbUpdateLink
+ * @method anyModel.dbUpdateLink
  * @description Change individual value(s) for an item.
  * @param {Object} options An object which may contain these elements:
  *
@@ -2116,19 +2371,45 @@ anyModel.prototype.dbUpdateLink = function (options)
       return self.fail    ? self.fail   (self,jqXHR) : false;
     });
   }
-  else {
-    if (!self.success) {
-      this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyModel.dbUpdateLink: "+this.message);
-      return false;
-    }
-    return self.success(this,this,options);
+  else { // Local method call (AlaSQL server)
+    this._dbUpdateLinkLocal(options);
+    return this.error == "";
   }
   return true;
 }; // dbUpdateLink
 
+// Internal method, do not call directly.
+anyModel.prototype._dbUpdateLinkLocal = async function (options)
+{
+  if (this.table_factory) {
+    let the_type   = options.type      ? options.type      : this.type;
+    let table_name = options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{header:true});
+    if (table) {
+      let self = this;
+      return table.dbUpdateLink(options)
+      .then( function(serverdata) {
+        if (self.success)
+          return self.success(self.context,serverdata,options);
+        self.message = i18n.error.SUCCCESS_CB_MISSING;
+        console.warn("anyModel._dbUpdateLinkLocal: "+self.message);
+        return false;
+      });
+    } // if table
+    else
+      console.warn("anyModel._dbUpdateLinkLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+  } // if table_factory
+  else
+    console.warn("anyModel._dbUpdateLinkLocal: "+"No table factory. "); // TODO! i18n
+  if (self.success)
+    return self.success(this,this.data,options);
+  this.message = i18n.error.SUCCCESS_CB_MISSING;
+  console.warn("anyModel._dbUpdateLinkLocal: "+this.message);
+  return false;
+}; // _dbUpdateLinkLocal
+
 /**
- * @method dbUpdateLinkGetURL
+ * @method anyModel.dbUpdateLinkGetURL
  * @description Builds a POST string for dbUpdateLinkGetURL to be sent to server.
  * @param {Object} options An object which may contain these elements:
  *
@@ -2163,8 +2444,8 @@ anyModel.prototype.dbUpdateLinkGetURL = function (options)
   if (the_link_type)
     param_str += "&link_type="+the_link_type;
   param_str += "&link_id="+options.link_id;
-  let nam = [...options.names];  // TODO! Whats this for?
-  let val = [...options.values]; // TODO! Whats this for?
+  //let nam = [...options.names];  // TODO! Whats this for?
+  //let val = [...options.values]; // TODO! Whats this for?
   param_str += options.db_search ? "&sea=y"                      : "";
   param_str += options.header    ? "&header="  +options.header   : "";
   param_str += options.grouping  ? "&grouping="+options.grouping : "";
@@ -2178,7 +2459,7 @@ anyModel.prototype.dbUpdateLinkSuccess = function (context,serverdata,options)
 }; // dbUpdateLinkSuccess
 
 /**
- * @method dbDelete
+ * @method anyModel.dbDelete
  * @description Deletes an item from a database table.
  *              TODO! Check that the server also deletes any links the item may have in other tables.
  * @param {Object} options An object which may contain these elements:
@@ -2245,18 +2526,45 @@ anyModel.prototype.dbDelete = function (options)
     });
     return true;
   }
-  else {
-    if (!self.success) {
-      this.message = i18n.error.SUCCCESS_CB_MISSING;
-      console.warn("anyModel.dbDelete: "+this.message);
-      return false;
-    }
-    return self.success(this,this,options);
+  else { // Local method call (AlaSQL server)
+    this._dbDeleteLocal(options);
+    return this.error == "";
   }
+  return true;
 }; // dbDelete
 
+// Internal method, do not call directly.
+anyModel.prototype._dbDeleteLocal = async function (options)
+{
+  if (this.table_factory) {
+    let the_type   = options.type      ? options.type      : this.type;
+    let table_name = options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{header:true});
+    if (table) {
+      let self = this;
+      return table.dbDelete(options)
+      .then( function(serverdata) {
+        if (self.success)
+          return self.success(self.context,serverdata,options);
+        self.message = i18n.error.SUCCCESS_CB_MISSING;
+        console.warn("anyModel._dbDeleteLocal: "+self.message);
+        return false;
+      });
+    } // if table
+    else
+      console.warn("anyModel._dbDeleteLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+  } // if table_factory
+  else
+    console.warn("anyModel._dbDeleteLocal: "+"No table factory. "); // TODO! i18n
+  if (self.success)
+    return self.success(this,this.data,options);
+  this.message = i18n.error.SUCCCESS_CB_MISSING;
+  console.warn("anyModel._dbDeleteLocal: "+this.message);
+  return false;
+}; // _dbDeleteLocal
+
 /**
- * @method dbDeleteGetURL
+ * @method anyModel.dbDeleteGetURL
  * @description Builds a POST string for dbDelete to be sent to server.
  * @param {Object} options An object which may contain these elements:
  *
