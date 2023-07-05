@@ -48,6 +48,7 @@ dbTable.prototype.dbCreate = async function(mergeArray)
 {
   if (!this.sqlCreate)
     return Promise.resolve(false);
+  //console.log("dbCreate:"+this.sqlCreate);
   return await this.query(this.sqlCreate,mergeArray,true); // Create tables
 }; // dbCreate
 

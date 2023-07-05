@@ -14,7 +14,7 @@ var eventTable = function (connection,parameters)
     "event_description",
   ];
   this.sqlCreate = "\
-    CREATE TABLE IF NOT EXISTS any_event (\
+    CREATE TABLE IF NOT EXISTS "+this.tableName+" (\
       event_id          INT PRIMARY KEY AUTOINCREMENT,\
       event_name        STRING,\
       event_description BLOB,\

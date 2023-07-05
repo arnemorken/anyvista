@@ -14,7 +14,7 @@ var userTable = function (connection,parameters)
     "user_description",
   ];
   this.sqlCreate = "\
-    CREATE TABLE IF NOT EXISTS any_user (\
+    CREATE TABLE IF NOT EXISTS "+this.tableName+" (\
       user_id          INT PRIMARY KEY AUTOINCREMENT,\
       user_name        STRING,\
       user_description BLOB,\

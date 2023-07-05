@@ -23,7 +23,7 @@ define("gSkin",         "default");
 define("gVersion", "0.0.5.alpha");
 
 // Data source
-define("gDataScript",       "data/mysql/anyGetData.php"); // Relative to gHomeFolder
+define("gDataScript", "data/mysql/anyGetData.php"); // Relative to gHomeFolder
 
 // Paths
 $docroot = $_SERVER['DOCUMENT_ROOT'];
