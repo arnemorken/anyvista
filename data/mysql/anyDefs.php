@@ -20,7 +20,7 @@ define("gSkin",         "default");
 //////////////////////////////////////////////////////////////////
 
 // Version number
-define("gVersion", "0.0.5.alpha");
+define("gVersion", "0.0.7.alpha");
 
 // Data source
 define("gDataScript", "data/mysql/anyGetData.php"); // Relative to gHomeFolder
