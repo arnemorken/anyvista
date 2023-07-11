@@ -600,6 +600,8 @@ anyTable.prototype.dbInsert = async function(options)
   if (!options || !options.keys || !options.values || !this.dbValidateInsert(options))
     return Promise.resolve(null);
 
+  this.id = options.id ? options.id : null
+
   // Insert in normal table
   let stmt = await this.dbPrepareInsertStmt(options.keys,options.values);
   if (!stmt)
@@ -650,9 +652,15 @@ anyTable.prototype.dbPrepareInsertStmt = async function(keys,values)
     return null;
   let stmt = "INSERT INTO "+this.tableName+" (";
   let at_least_one = false;
+  if (this.id) {
+    stmt += this.idKey+",";
+    at_least_one = true;
+  }
   for (let i=0; i<keys.length; i++) {
     let key = keys[i];
     let val = values[i];
+    if (["head","item","list"].includes(key))
+      continue;
     if (val && val !== "") {
       at_least_one = true;
       stmt += key+",";
@@ -666,22 +674,24 @@ anyTable.prototype.dbPrepareInsertStmt = async function(keys,values)
       }
     }
   }
-  if (at_least_one) {
-    let pos = stmt.length-1;
-    stmt = stmt.substring(0,pos) + "" + stmt.substring(pos+1); // Replace last "," with ""
-  }
-  else
+  if (!at_least_one)
     return null;
+  let pos = stmt.length-1;
+  stmt = stmt.substring(0,pos) + "" + stmt.substring(pos+1); // Replace last "," with ""
   stmt += ") VALUES (";
+  if (this.id)
+    stmt += this.id+",";
   for (let i=0; i<keys.length; i++) {
     let key = keys[i];
     let val = values[i];
+    if (["head","item","list"].includes(key))
+      continue;
     if (val && val !== "" && typeof val === "string")
       stmt += "'"+val+"',";
     else
       stmt += val+",";
   }
-  let pos = stmt.length-1;
+  pos = stmt.length-1;
   stmt = stmt.substring(0,pos) + "" + stmt.substring(pos+1); // Replace last "," with ""
   stmt += ")";
   return stmt;
