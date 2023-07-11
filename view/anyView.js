@@ -3184,7 +3184,7 @@ $.any.anyView.prototype._processSearch = function (event)
   if (event.keyCode == 13) {
     let search_opt = event.data;
     search_opt.db_search_term = $("#"+search_opt.inp_id).val();
-    search_opt.success        = this.searchSuccess; // TODO! Parameters to searchSuccess
+    search_opt.onSuccess      = this.searchSuccess; // TODO! Parameters to searchSuccess
     search_opt.context        = this;
     search_opt.grouping       = this.options.grouping;
     search_opt.order          = this.options.sortBy;
@@ -3435,7 +3435,7 @@ $.any.anyView.prototype.addListEntry = function (event)
       this.model.dbSearchNextId({
          type:       type,
          db_fields:  f,
-         success:    this._addListEntryFromDB,
+         onSuccess:  this._addListEntryFromDB,
          context:    this,
       });
     }
@@ -3580,7 +3580,7 @@ $.any.anyView.prototype.showItem = function (event)
         this.model.dbSearchNextId({
            type:      type,
            db_fields: f,
-           success:   this._foundNextIdFromDB,
+           onSuccess: this._foundNextIdFromDB,
            context:   this,
         }); // TODO! Asynchronous database call
       }
@@ -4006,7 +4006,7 @@ $.any.anyView.prototype.dbSearchParents = function (type,kind,id,val,edit,pid)
    parent_id: pid,
    child_id:  id,
    simple:    true,
-   success:   this.createParentDropdownMenu,
+   onSuccess: this.createParentDropdownMenu,
    context:   this,
   };
   if (edit) {
@@ -4275,7 +4275,7 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
    simple:      true,
    from:        0,
    num:         this.options.itemsPerPage,
-   success:     this.dbUpdateLinkListDialog, // Call the view success handler
+   onSuccess:   this.dbUpdateLinkListDialog, // Call the view success handler
   };
   this.showMessages("",true);
   return this.model.dbSearch(options); // TODO! What if mode == "local"?
@@ -4609,14 +4609,14 @@ $.any.anyView.prototype.dbDelete = function (opt)
     this.model.data = null;
     if (this.options.top_view && this.options.top_view.model) {
       let top_model = this.options.top_view.model;
-      opt.success = top_model.dbDeleteSuccess;
-      opt.context = top_model;
+      opt.onSuccess = top_model.dbDeleteSuccess;
+      opt.context   = top_model;
       top_model.dataDelete({id:opt.id,type:opt.type});
     }
   }
   else {
-    opt.success = null;
-    opt.context = null;
+    opt.onSuccess = null;
+    opt.context   = null;
     this.model.dataDelete(opt);
   }
 

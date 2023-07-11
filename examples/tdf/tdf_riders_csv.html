@@ -182,7 +182,7 @@ function csv2table()
         type:   "rider",
         table:  table,
         unique: "rider_name,year",
-        success: function(context,serverdata,options) {
+        onSuccess: function(context,serverdata,options) {
           if (serverdata && serverdata.JSON_CODE && serverdata.JSON_CODE.error) {
             doLog("Error:"+serverdata.JSON_CODE.error,true);
           }
@@ -207,10 +207,10 @@ function csv2table()
                                                      "gap_sec","result_type"],
                                       sync:         true, // Note!
                                       auto_refresh: false,
-                                      success: function() {
+                                      onSuccess: function() {
                                         doLog("Insertion of "+n_obj+" records complete",true);
                                       },
-                                      fail:    function(con,jqXHR) {
+                                      onFail:    function(con,jqXHR) {
                                         doLog(jqXHR.responseText,true);
                                       },
                                     });
@@ -218,7 +218,7 @@ function csv2table()
             }); // forEach
           } // else
         }, // success function
-        fail: function(con,jqXHR) {
+        onFail: function(con,jqXHR) {
           doLog(jqXHR.responseText,true);
         },
       }); // dbCreate
@@ -268,7 +268,7 @@ function table2display()
       grouping: false,
       from: from,
       num:  num,
-      success: function(context,serverdata,options) {
+      onSuccess: function(context,serverdata,options) {
         //
         // Display data
         //
@@ -278,7 +278,7 @@ function table2display()
           $("#any_result").html("<span style='color:red'>"+serverdata.JSON_CODE.error+"</span>");
         console.log("Done.");
       },
-      fail: function(context,jqXHR) {
+      onFail: function(context,jqXHR) {
         let err = jqXHR.responseText;
         $("#any_result").html("<span style='color:red'>"+err+"</span>");
       },

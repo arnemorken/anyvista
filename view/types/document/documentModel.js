@@ -37,8 +37,8 @@ documentModel.prototype.dataInit = function (options)
 documentModel.prototype.dbDelete = function (options)
 {
   // Remove from database (shouldnt be necessary - the dbDeleteSuccess method should do both things)
-  options.success = this.dbDeleteSuccess;
-  options.context = this;
+  options.onSuccess = this.dbDeleteSuccess;
+  options.context   = this;
   return anyModel.prototype.dbDelete.call(this,options);
 };
 

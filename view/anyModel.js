@@ -1308,9 +1308,9 @@ anyModel.prototype.dataDelete = function (options)
  *                               Optional. If not specified, only the id and name fields will be created.
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
- *        {Function} success:    Method to call on success.
+ *        {Function} onSuccess:  Method to call on success.
  *                               Optional. Default: `this.dbCreateSuccess`.
- *        {Function} fail:       Method to call on error or timeout.
+ *        {Function} onFail:     Method to call on error or timeout.
  *                               Optional. Default: `this._dbFail`.
  *        {Function} context:    The context of the success and fail methods.
  *                               Optional. Default: `this`.
@@ -1323,9 +1323,9 @@ anyModel.prototype.dbCreate = function (options)
 
   let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
   $.ajaxSetup({ timeout: db_timeout_sec*1000 });
-  this.success = options.success ? options.success : this.dbCreateSuccess;
-  this.fail    = options.fail    ? options.fail    : this._dbFail;
-  this.context = options.context ? options.context : this;
+  this.success = options.onSuccess ? options.onSuccess : this.dbCreateSuccess;
+  this.fail    = options.onFail    ? options.onFail    : this._dbFail;
+  this.context = options.context   ? options.context   : this;
   this.message      = "";
   this.error        = "";
   this.error_server = "";
@@ -1463,9 +1463,9 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                                   Optional. Default: undefined.
  *        {integer}  timeoutSec:     Number of seconds before timing out.
  *                                   Optional. Default: 10.
- *        {Function} success:        Method to call on success.
+ *        {Function} onSuccess:      Method to call on success.
  *                                   Optional. Default: `this.dbSearchSuccess`.
- *        {Function} fail:           Method to call on error or timeout.
+ *        {Function} onFail:         Method to call on error or timeout.
  *                                   Optional. Default: `this._dbFail`.
  *        {Function} context:        The context of the success and fail methods.
  *                                   Optional. Default: `this`.
@@ -1481,17 +1481,17 @@ anyModel.prototype.dbSearch = function (options)
     return this.dbSearchNextId(options);
 
   let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
-  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
-  if (options.sync)
-    $.ajaxSetup({ async: false });
-  this.success = options.success ? options.success : this.dbSearchSuccess;
-  this.fail    = options.fail    ? options.fail    : this._dbFail;
-  this.context = options.context ? options.context : this;
-  this.message      = "";
-  this.error        = "";
-  this.error_server = "";
+  this.success       = options.onSuccess  ? options.onSuccess  : this.dbSearchSuccess;
+  this.fail          = options.onFail     ? options.onFail     : this._dbFail;
+  this.context       = options.context    ? options.context    : this;
+  this.message       = "";
+  this.error         = "";
+  this.error_server  = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
+    $.ajaxSetup({ timeout: db_timeout_sec*1000 });
+    if (options.sync)
+      $.ajaxSetup({ async: false });
     let url = this.dbSearchGetURL(options);
     if (!url)
       return false;
@@ -1682,9 +1682,9 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
  *
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
- *        {Function} success:    Method to call on success.
+ *        {Function} onSuccess:  Method to call on success.
  *                               Optional. Default: `this.dbSearchNextIdSuccess`.
- *        {Function} fail:       Method to call on error or timeout.
+ *        {Function} onFail:     Method to call on error or timeout.
  *                               Optional. Default: `this._dbFail`.
  *        {Function} context:    The context of the success and fail methods.
  *                               Optional. Default: `this`.
@@ -1697,17 +1697,17 @@ anyModel.prototype.dbSearchNextId = function (options)
     options = {};
 
   let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
-  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
-  if (options.sync)
-    $.ajaxSetup({ async: false });
-  this.success = options.success ? options.success : this.dbSearchNextIdSuccess;
-  this.fail    = options.fail    ? options.fail    : this._dbFail;
-  this.context = options.context ? options.context : this;
+  this.success = options.onSuccess ? options.onSuccess : this.dbSearchNextIdSuccess;
+  this.fail    = options.onFail    ? options.onFail    : this._dbFail;
+  this.context = options.context   ? options.context   : this;
   this.message      = "";
   this.error        = "";
   this.error_server = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
+    $.ajaxSetup({ timeout: db_timeout_sec*1000 });
+    if (options.sync)
+      $.ajaxSetup({ async: false });
     let url = this.dbSearchNextIdGetURL(options);
     if (!url)
       return false;
@@ -1850,9 +1850,9 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
  *                               Optional. Default: undefined.
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
- *        {Function} success:    Method to call on success.
+ *        {Function} onSuccess:  Method to call on success.
  *                               Optional. Default: `this.dbUpdateSuccess`.
- *        {Function} fail:       Method to call on error or timeout.
+ *        {Function} onFail:     Method to call on error or timeout.
  *                               Optional. Default: `this._dbFail`.
  *        {Function} context:    The context of the success and fail methods.
  *                               Optional. Default: `this`.
@@ -1909,17 +1909,17 @@ anyModel.prototype.dbUpdate = async function (options)
   options.data      = new_data; // Clean up this data structure after server returns successfully
 
   let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
-  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
-  if (options.sync)
-    $.ajaxSetup({ async: false });
-  this.success = options.success ? options.success : this.dbUpdateSuccess;
-  this.fail    = options.fail    ? options.fail    : this._dbFail;
-  this.context = options.context ? options.context : this;
+  this.success = options.onSuccess ? options.onSuccess : this.dbUpdateSuccess;
+  this.fail    = options.onFail    ? options.onFail    : this._dbFail;
+  this.context = options.context   ? options.context   : this;
   this.message      = "";
   this.error        = "";
   this.error_server = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
+    $.ajaxSetup({ timeout: db_timeout_sec*1000 });
+    if (options.sync)
+      $.ajaxSetup({ async: false });
     let url = this.dbUpdateGetURL(options);
     if (!url)
       return false;
@@ -1953,10 +1953,10 @@ anyModel.prototype._dbUpdateLocal = async function (options,item_to_send)
     let table_name = options.tableName ? options.tableName : the_type+"Table";
     let table = await this.table_factory.createClass(table_name,{header:true});
     if (table) {
-      options.keys    = Object.keys  (item_to_send);
-      options.values  = Object.values(item_to_send);
-      options.success = this.success;
-      options.context = this.context;
+      options.keys      = Object.keys  (item_to_send);
+      options.values    = Object.values(item_to_send);
+      options.onSuccess = this.success;
+      options.context   = this.context;
       let self = this;
       await table.dbUpdate(options)
       .then( function(serverdata) {
@@ -2164,6 +2164,12 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *                             If the link already exists, the link's data will be update with the data
  *                             in `new_data`, if specified. TODO! new_data does not exist here!
  *                             Optional. Default: undefined.
+ *        {Function} onSuccess Method to call on success.
+ *                             Optional. Default: `this.dbUpdateSuccess`.
+ *        {Function} onFail    Method to call on error or timeout.
+ *                             Optional. Default: `this._dbFail`.
+ *        {Function} context   The context of the success and fail methods.
+ *                             Optional. Default: `this`.
  *        {integer} timeoutSec Number of seconds before timing out.
  *                             Optional. Default: 10.
  *
@@ -2175,17 +2181,17 @@ anyModel.prototype.dbUpdateLinkList = function (options)
     options = {};
 
   let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
-  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
-  if (options.sync)
-    $.ajaxSetup({ async: false });
-  this.success = options.success ? options.success : this.dbUpdateLinkListSuccess;
-  this.fail    = options.fail    ? options.fail    : this._dbFail;
-  this.context = options.context ? options.context : this;
+  this.success = options.onSuccess ? options.onSuccess : this.dbUpdateLinkListSuccess;
+  this.fail    = options.onFail    ? options.onFail    : this._dbFail;
+  this.context = options.context   ? options.context   : this;
   this.message      = "";
   this.error        = "";
   this.error_server = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
+    $.ajaxSetup({ timeout: db_timeout_sec*1000 });
+    if (options.sync)
+      $.ajaxSetup({ async: false });
     let url = this.dbUpdateLinkListGetURL(options);
     if (!url)
       return false;
@@ -2328,18 +2334,20 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
  * @description Change individual value(s) for an item.
  * @param {Object} options An object which may contain these elements:
  *
- *        {String}  type:       The type of items in the list.
- *                              Optional. Default: `this.type`.
- *        {String}  id:         The id of the item.
- *                              Mandatory.
- *        {Object}  link_type:  The type of the item to which the list "belongs" (is linked to).
- *                              Optional. Default: `this.type`.
- *        {String}  link_id:    The id of the item to which the list "belongs" (is linked to).
- *                              Mandatory.
- *        {Array}   names:
- *        {Array}   values:
- *        {integer} timeoutSec: Number of seconds before timing out.
- *                              Optional. Default: 10.
+ *        {String}   type:       The type of items in the list.
+ *                               Optional. Default: `this.type`.
+ *        {String}   id:         The id of the item.
+ *                               Mandatory.
+ *        {Object}   link_type:  The type of the item to which the list "belongs" (is linked to).
+ *                               Optional. Default: `this.type`.
+ *        {String}   link_id:    The id of the item to which the list "belongs" (is linked to).
+ *                               Mandatory.
+ *        {Array}    names:
+ *        {Array}    values:
+ *        {Function} onSuccess:
+ *        {Function} onFail:
+ *        {integer}  timeoutSec: Number of seconds before timing out.
+ *                               Optional. Default: 10.
  *
  * @return true if the database call was made, false on error.
  */
@@ -2349,17 +2357,17 @@ anyModel.prototype.dbUpdateLink = function (options)
     options = {};
 
   let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
-  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
-  if (options.sync)
-    $.ajaxSetup({ async: false });
-  this.success = options.success ? options.success : this.dbUpdateLinkSuccess;
-  this.fail    = options.fail    ? options.fail    : this._dbFail;
-  this.context = options.context ? options.context : this;
+  this.success = options.onSuccess ? options.onSuccess : this.dbUpdateLinkSuccess;
+  this.fail    = options.onFail    ? options.onFail    : this._dbFail;
+  this.context = options.context   ? options.context   : this;
   this.message      = "";
   this.error        = "";
   this.error_server = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
+    $.ajaxSetup({ timeout: db_timeout_sec*1000 });
+    if (options.sync)
+      $.ajaxSetup({ async: false });
     let url = this.dbUpdateLinkGetURL(options);
     if (!url)
       return false;
@@ -2470,9 +2478,9 @@ anyModel.prototype.dbUpdateLinkSuccess = function (context,serverdata,options)
  *                               Mandatory.
  *        {integer}  timeoutSec: Number of seconds before timing out.
  *                               Optional. Default: 10.
- *        {Function} success:    Method to call on success.
+ *        {Function} onSuccess:  Method to call on success.
  *                               Optional. Default: `this.dbDeleteSuccess`.
- *        {Function} fail:       Method to call on error or timeout.
+ *        {Function} onFail:     Method to call on error or timeout.
  *                               Optional. Default: `this._dbFail`.
  *        {Function} context:    The context of the success and fail methods.
  *                               Optional. Default: `this`.
@@ -2503,17 +2511,17 @@ anyModel.prototype.dbDelete = function (options)
   }
 
   let db_timeout_sec = options.timeoutSec ? options.timeoutSec : this.db_timeout_sec;
-  $.ajaxSetup({ timeout: db_timeout_sec*1000 });
-  if (options.sync)
-    $.ajaxSetup({ async: false });
-  this.success = options.success ? options.success : this.dbDeleteSuccess;
-  this.fail    = options.fail    ? options.fail    : this._dbFail;
-  this.context = options.context ? options.context : this;
+  this.success = options.onSuccess ? options.onSuccess : this.dbDeleteSuccess;
+  this.fail    = options.onFail    ? options.onFail    : this._dbFail;
+  this.context = options.context   ? options.context   : this;
   this.message      = "";
   this.error        = "";
   this.error_server = "";
   let self = this;
   if (this.mode == "remote") { // Remote server call
+    $.ajaxSetup({ timeout: db_timeout_sec*1000 });
+    if (options.sync)
+      $.ajaxSetup({ async: false });
     let url = this.dbDeleteGetURL(options);
     if (!url)
       return false;
