@@ -1649,6 +1649,10 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
+    if (options.id == "max") {
+      serverdata.is_new = options.is_new;
+      self.max     = parseInt(serverdata.id);
+    }
     if (Object.size(serverdata.data) == 0)
       serverdata.data = null;
     self.message = serverdata.message;
