@@ -1365,7 +1365,7 @@ anyModel.prototype._dbCreateLocal = async function (options)
     let table = await this.table_factory.createClass(table_name,{header:true});
     if (table && table.error == "") {
       let self = this;
-      return table.dbCreate(options)
+      return await table.dbCreate(options)
       .then( function(serverdata) {
         if (self.success)
           return self.success(self.context,serverdata,options);
