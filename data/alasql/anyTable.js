@@ -51,10 +51,13 @@ var anyTable = function (connection,parameters,tableName,type,id,idKey,nameKey,o
   this.linking   = null;
   this.maxId     = -1;
 
+  // TODO! i18n
   this.insertSuccessMsg  = "Insert succeeded. ";
   this.insertNothingToDo = "Nothing to insert. ";
   this.itemExists        = "Item already exist. ";
   this.itemUnexists      = "Item does not exist. ";
+  this.deleteSuccessMsg  = "%% deleted. ";
+  this.deleteNothingToDo = "Nothing to delete. ";
 }; // constructor
 
 anyTable.prototype = new dbTable();
@@ -1006,8 +1009,10 @@ anyTable.prototype.dbDelete = async function(options)
   .then( async function(res) {
     //console.log("del res:"+res);
     self.numRowsChanged = res; // numRowsChanged >= 1 if the delete succeeded
-    if (self.numRowsChanged > 0)
-      self.message = self.deleteSuccessMsg;
+    if (self.numRowsChanged > 0) {
+      let tstr = options.type ? options.type.capitalize() : "unknown type"; // TODO! i18n
+      self.message = self.deleteSuccessMsg.replace("%%",""+tstr);
+    }
     else
       self.message = self.deleteNothingToDo;
 
