@@ -1363,7 +1363,7 @@ anyModel.prototype._dbCreateLocal = async function (options)
     let the_type   = options.type      ? options.type      : this.type;
     let table_name = options.tableName ? options.tableName : the_type+"Table";
     let table = await this.table_factory.createClass(table_name,{header:true});
-    if (table) {
+    if (table && table.error == "") {
       let self = this;
       return table.dbCreate(options)
       .then( function(serverdata) {
@@ -1374,8 +1374,13 @@ anyModel.prototype._dbCreateLocal = async function (options)
         return false;
       });
     } // if table
-    else
+    else {
+      if (table && table.error != "") {
+        this.error = table.error;
+        console.log(this.error);
+      }
       console.warn("anyModel._dbCreateLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+    }
   } // if table_factory
   else
     console.warn("anyModel._dbCreateLocal: "+"No table factory. "); // TODO! i18n
@@ -1528,7 +1533,7 @@ anyModel.prototype._dbSearchLocal = async function (options)
     let the_type   = options.type      ? options.type      : this.type;
     let table_name = options.tableName ? options.tableName : the_type+"Table";
     let table = await this.table_factory.createClass(table_name,{header:true});
-    if (table && !table.error) {
+    if (table && table.error == "") {
       let self = this;
       return table.dbSearch(options)
       .then( function(serverdata) {
@@ -1542,11 +1547,11 @@ anyModel.prototype._dbSearchLocal = async function (options)
       });
     } // if table
     else {
-      console.warn("anyModel._dbSearchLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
-      if (table.error) {
+      if (table && table.error != "") {
         this.error = table.error;
         console.log(this.error);
       }
+      console.warn("anyModel._dbSearchLocal: "+"Search in "+table_name+" failed. "); // TODO! i18n
     }
   } // if table_factory
   else
@@ -1741,7 +1746,7 @@ anyModel.prototype._dbSearchNextIdLocal = async function (options)
     let the_type   = options.type      ? options.type      : this.type;
     let table_name = options.tableName ? options.tableName : the_type+"Table";
     let table = await this.table_factory.createClass(table_name,{header:true});
-    if (table) {
+    if (table && table.error == "") {
       let self = this;
       return await table.dbSearchMaxId(options)
       .then( async function(serverdata) {
@@ -1753,8 +1758,13 @@ anyModel.prototype._dbSearchNextIdLocal = async function (options)
         return false;
       });
     } // if table
-    else
-      console.warn("anyModel._dbSearchNextIdLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+    else {
+      if (table && table.error != "") {
+        this.error = table.error;
+        console.log(this.error);
+      }
+      console.warn("anyModel._dbSearchNextIdLocal: "+"Could not find next id in "+table_name+". "); // TODO! i18n
+    }
   } // if table_factory
   else
     console.warn("anyModel._dbSearchNextIdLocal: "+"No table factory. "); // TODO! i18n
@@ -1952,7 +1962,7 @@ anyModel.prototype._dbUpdateLocal = async function (options,item_to_send)
     let the_type   = options.type      ? options.type      : this.type;
     let table_name = options.tableName ? options.tableName : the_type+"Table";
     let table = await this.table_factory.createClass(table_name,{header:true});
-    if (table) {
+    if (table && table.error == "") {
       options.keys      = Object.keys  (item_to_send);
       options.values    = Object.values(item_to_send);
       options.onSuccess = this.success;
@@ -1970,8 +1980,13 @@ anyModel.prototype._dbUpdateLocal = async function (options,item_to_send)
       });
       return this.error == "";
     } // if table
-    else
-      console.warn("anyModel._dbUpdateLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+    else {
+      if (table && table.error != "") {
+        this.error = table.error;
+        console.log(this.error);
+      }
+      console.warn("anyModel._dbUpdateLocal: "+"Could not update table "+table_name+". "); // TODO! i18n
+    }
   } // if table_factory
   else
     console.warn("anyModel._dbUpdateLocal: "+"No table factory. "); // TODO! i18n
@@ -2217,7 +2232,7 @@ anyModel.prototype._dbUpdateLinkListLocalLocal = async function (options)
     let the_type   = options.type      ? options.type      : this.type;
     let table_name = options.tableName ? options.tableName : the_type+"Table";
     let table = await this.table_factory.createClass(table_name,{header:true});
-    if (table) {
+    if (table && table.error == "") {
       let self = this;
       return table.dbUpdateLinkList(options)
       .then( function(serverdata) {
@@ -2228,8 +2243,13 @@ anyModel.prototype._dbUpdateLinkListLocalLocal = async function (options)
         return false;
       });
     } // if table
-    else
-      console.warn("anyModel._dbUpdateLinkListLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+    else {
+      if (table && table.error != "") {
+        this.error = table.error;
+        console.log(this.error);
+      }
+      console.warn("anyModel._dbUpdateLinkListLocal: "+"Could not update link list in table "+table_name+". "); // TODO! i18n
+    }
   } // if table_factory
   else
     console.warn("anyModel._dbUpdateLinkListLocal: "+"No table factory. "); // TODO! i18n
@@ -2393,7 +2413,7 @@ anyModel.prototype._dbUpdateLinkLocal = async function (options)
     let the_type   = options.type      ? options.type      : this.type;
     let table_name = options.tableName ? options.tableName : the_type+"Table";
     let table = await this.table_factory.createClass(table_name,{header:true});
-    if (table) {
+    if (table && table.error == "") {
       let self = this;
       return table.dbUpdateLink(options)
       .then( function(serverdata) {
@@ -2404,8 +2424,13 @@ anyModel.prototype._dbUpdateLinkLocal = async function (options)
         return false;
       });
     } // if table
-    else
-      console.warn("anyModel._dbUpdateLinkLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+    else {
+      if (table && table.error != "") {
+        this.error = table.error;
+        console.log(this.error);
+      }
+      console.warn("anyModel._dbUpdateLinkLocal: "+"Could not update link in table "+table_name+". "); // TODO! i18n
+    }
   } // if table_factory
   else
     console.warn("anyModel._dbUpdateLinkLocal: "+"No table factory. "); // TODO! i18n
@@ -2548,9 +2573,9 @@ anyModel.prototype._dbDeleteLocal = async function (options)
     let the_type   = options.type      ? options.type      : this.type;
     let table_name = options.tableName ? options.tableName : the_type+"Table";
     let table = await this.table_factory.createClass(table_name,{header:true});
-    if (table) {
+    if (table && table.error == "") {
       let self = this;
-      return table.dbDelete(options)
+      return await table.dbDelete(options)
       .then( function(serverdata) {
         if (self.success)
           return self.success(self.context,serverdata,options);
@@ -2559,8 +2584,13 @@ anyModel.prototype._dbDeleteLocal = async function (options)
         return false;
       });
     } // if table
-    else
-      console.warn("anyModel._dbDeleteLocal: "+"Could not create table "+table_name+". "); // TODO! i18n
+    else {
+      if (table && table.error != "") {
+        this.error = table.error;
+        console.log(this.error);
+      }
+      console.warn("anyModel._dbDeleteLocal: "+"Could not delete from table "+table_name+". "); // TODO! i18n
+    }
   } // if table_factory
   else
     console.warn("anyModel._dbDeleteLocal: "+"No table factory. "); // TODO! i18n

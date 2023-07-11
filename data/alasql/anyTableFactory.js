@@ -14,6 +14,7 @@ var anyTableFactory = function (connection)
 //
 anyTableFactory.prototype.createClass = async function(className,parameters,callback)
 {
+  this.error = "";
   if (!className) {
     this.error = "Class name missing. "; // TODO! i18n
     console.error(this.error);
