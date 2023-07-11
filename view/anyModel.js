@@ -916,7 +916,7 @@ anyModel.prototype.dataInsert = function (options)
       this.data = null;
     let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type);
     errstr = errstr.replace("&&",""+the_id);
-    console.error("anyModel.dataInsert: "+errstr);
+    console.warn("anyModel.dataInsert: "+errstr);
     return null;
   }
   if (the_id || the_id === 0) {
@@ -1069,7 +1069,7 @@ anyModel.prototype.dataUpdate = function (options)
   if (!item || (!item[the_id] && !item["+"+the_id])) {
     let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type);
     errstr = errstr.replace("&&",""+the_id);
-    console.error("anyModel.dataUpdate: "+errstr);
+    console.warn("anyModel.dataUpdate: "+errstr);
     return null;
   }
   if (!item[the_id].dirty)
@@ -1173,7 +1173,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                              id:   id,
                              type: the_link_type,
                           }))
-        console.warn("Couldn't remove "+the_link_type+" item with id "+id+" (not found in data). "); // TODO! i18n
+        console.warn("Could not remove "+the_link_type+" item with id "+id+" (not found in data). "); // TODO! i18n
     } // for
   } // if
 
@@ -1214,7 +1214,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                          });
         }
         else
-          console.warn("Couldn't add "+the_link_type+" item with id "+id+" (not found in data). "); // TODO! i18n
+          console.warn("Could not add "+the_link_type+" item with id "+id+" (not found in data). "); // TODO! i18n
       } // if
       else {
         // Link item exists, update it with data in `the_new_data`
