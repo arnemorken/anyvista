@@ -1222,7 +1222,7 @@ class anyTable extends dbTable
   protected function dbSearchMeta(&$data,$kind)
   {
     if (!$this->tableExists($this->mTableNameMeta)) {
-      $this->mMessage .= "No meta table for '$this->mType' type. ";
+      //$this->mMessage .= "No meta table for '$this->mType' type. ";
       return false;
     }
 
