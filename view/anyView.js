@@ -139,7 +139,7 @@ var anyViewWidget = $.widget("any.anyView", {
     onFocusoutRemoveEmpty: true,
   //onUpdateEndEdit:       true, // TODO! NOT IMPLEMENTED
     useOddEven:            true,
-    defaultKind:           "head",
+    defaultKind:           "list", // TODO! Is this always the right choice?
     defaultType:           "",
     itemsPerPage:          20,
     currentPage:           1,
@@ -353,6 +353,8 @@ $.any.anyView.prototype._findType = function (data,id,otype)
     type = otype;
   if (!type)
     type = this.options.defaultType;
+  if (!type)
+    type = this.model.type;
   return type;
 }; // _findType
 
