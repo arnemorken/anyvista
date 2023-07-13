@@ -23,7 +23,7 @@ var gSkin          = "default";
 // Do not edit below unless you really know what you are doing. //
 //////////////////////////////////////////////////////////////////
 
-var gVersion = "0.0.7.alpha";
+var gVersion = "0.0.8.alpha";
 
 var any_defs = {
   dataScript:   gServer + gHomeFolder + gDataScript,      // URL of the data source script
