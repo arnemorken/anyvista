@@ -36,7 +36,7 @@ anyTableFactory.prototype._createClass = function(className,parameters,callback)
   js.src   = path;
   let res = new Promise( function(resolve) {
     js.addEventListener("load", function() {
-      console.log("creating class "+className);
+      //console.log("creating class "+className);
       let table_class = new window[className](self.connection,parameters);
       table_class.className = className;
       //if (callback)
