@@ -1900,12 +1900,14 @@ anyModel.prototype.dbUpdate = async function (options)
                                type: the_type,
                                id:   the_id,
                             });
-  if (!item || !item[the_id]) {
+  if (!item || (!item[the_id] && !item["+"+the_id])) {
     let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type);
     errstr = errstr.replace("&&",""+the_id);
     console.error("anyModel.dbUpdate: "+errstr);
     return false;
   }
+  if (!item[the_id])
+    the_id = "+"+the_id;
   if (!options.is_new && !item[the_id].is_new && !Object.size(item[the_id].dirty)) {
     this.message = i18n.error.NOTHING_TO_UPDATE;
     console.log("anyModel.dbUpdate: "+this.message);
