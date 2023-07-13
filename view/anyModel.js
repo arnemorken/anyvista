@@ -174,15 +174,15 @@ var anyModel = function (options)
   * The model's mode, e.g. `"local"` or `remote"`.
   *
   * @type       {String}
-  * @default    "local"
+  * @default    gMode (global var. defined in anyDefs.js)
   */
-  this.mode = "local";
+  this.mode = gMode;
 
   /**
   * The database connection. Only valid in `"local"` mode.
   *
   * @type       {String}
-  * @default    "local"
+  * @default    null
   */
   this.db_connection = null;
 
@@ -190,7 +190,7 @@ var anyModel = function (options)
   * The table factory class. Only valid in `"local"` mode.
   *
   * @type       {String}
-  * @default    "local"
+  * @default    null
   */
   this.table_factory = null;
 
