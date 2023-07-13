@@ -760,15 +760,13 @@ anyTable.prototype.dbValidateUpdate = function(options)
 
 anyTable.prototype.dbPrepareUpdateStmt = async function(keys,values)
 {
-  if (!keys || !values)
-    return null;
-/*
   let res = await this.dbItemExists(this.id);
   if (!res) {
     this.error = this.type + this.itemUnexists + " ("+this.id+") ";
     return null;
   }
-*/
+  if (!keys || !values)
+    return null;
   let stmt = "UPDATE "+this.tableName+" SET ";
   let to_set = "";
   for (let i=0; i<keys.length; i++) {
