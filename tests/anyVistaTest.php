@@ -20,6 +20,12 @@
 <script src="<?php print gjQuery_js;?>"></script>
 
 <!-- anyVista -->
+<script src="<?php print gAnyvistaURL;?>/data/alasql/alasql.min.js"></script>
+<script src="<?php print gAnyvistaURL;?>/data/alasql/db/dbConnection.js"></script>
+<script src="<?php print gAnyvistaURL;?>/data/alasql/db/dbTable.js"></script>
+<script src="<?php print gAnyvistaURL;?>/data/alasql/anyTable.js"></script>
+<script src="<?php print gAnyvistaURL;?>/data/alasql/anyTableFactory.js"></script>
+
 <script src="<?php print gAnyvistaURL;?>view/functions.js"></script>
 <script src="<?php print gAnyvistaURL;?>view/anyDefs.js"></script>
 <script src="<?php print gAnyvistaURL;?>view/anyStrings_en-GB.js"></script>
@@ -33,7 +39,7 @@
 <!-- Test files -->
 <script src="TestModel.js"></script>
 <script>
-new Promise(function(resolve) { resolve(); })
+new Promise(function(resolve) { resolve(); }) // TODO! Why?
 .then(function() { doTest("Model"); })
 </script>
 </head>
