@@ -1924,6 +1924,9 @@ class anyTable extends dbTable
    */
   public function dbUpdate()
   {
+    if (!$this->dbValidateUpdate())
+      return null;
+
     if (!isset($this->mId) || $this->mId == "")
       return $this->dbInsert(); // No id, assume it is a new item
 
@@ -1933,8 +1936,6 @@ class anyTable extends dbTable
     if (Parameters::get("cha")) // TODO! Not tested
       return $this->dbUpdateLink();
 
-    if (!$this->dbValidateUpdate())
-      return null;
     // Initialize
     $this->mData           = null;
     $this->mNumRowsChanged = 0;
