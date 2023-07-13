@@ -1062,7 +1062,7 @@ anyModel.prototype.dataUpdate = function (options)
     return null;
   }
   if (!new_data) {
-    console.error("anyModel.dataUpdate: "+i18n.error.NOTHING_TO_UPDATE);
+    console.warn("anyModel.dataUpdate: "+i18n.error.NOTHING_TO_UPDATE);
     return null;
   }
   let item = this.dataSearch({data:the_data,id:the_id,type:the_type});
@@ -1914,10 +1914,10 @@ anyModel.prototype.dbUpdate = async function (options)
   }
   // Data to update or insert
   let item_to_send = item[the_id].is_new || options.is_new
-                     ? item[the_id]        // insert
+                     ? item[the_id]         // insert
                      : item[the_id].dirty
-                       ? item[the_id].dirty
-                       : {}; // update
+                       ? item[the_id].dirty // update
+                       : {};
   // Data used in dbUpdateSuccess method
   options.client_id = the_id;   // Update this id in existing data structure with new id from server
   options.data      = new_data; // Clean up this data structure after server returns successfully
@@ -1967,10 +1967,8 @@ anyModel.prototype._dbUpdateLocal = async function (options,item_to_send)
     let table_name = options.tableName ? options.tableName : the_type+"Table";
     let table = await this.table_factory.createClass(table_name,{header:true});
     if (table && table.error == "") {
-      options.keys      = Object.keys  (item_to_send);
-      options.values    = Object.values(item_to_send);
-      options.onSuccess = this.success;
-      options.context   = this.context;
+      options.keys   = Object.keys  (item_to_send);
+      options.values = Object.values(item_to_send);
       let self = this;
       await table.dbUpdate(options)
       .then( function(serverdata) {
