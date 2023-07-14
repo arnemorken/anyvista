@@ -354,7 +354,7 @@ $.any.anyView.prototype._findType = function (data,id,otype)
   if (!type)
     type = this.options.defaultType;
   if (!type)
-    type = this.model.type;
+    type = this.model.type; // TODO! Is thgis always the right choice?
   return type;
 }; // _findType
 
@@ -3296,7 +3296,7 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
   };
   this.options.data_level = 0;
   this.data_level = 0; // TODO! Why is this in 2 places?
-  this.id_str     = "";
+  this.id_str     = this.id_str.substring(0,this.id_str.lastIndexOf("_"));
   if (this.model.mode == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
     this.options.ref_rec = 0;
     mod_opt.from -= 1; // from is 0-based on server
