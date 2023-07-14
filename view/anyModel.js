@@ -15,10 +15,10 @@
 /**
  * anyModel contains a tree structure data model that can manipulate data as lists and items and
  * optionally synchronize with a database.
- *
+ *<p/>
  * See <a href="anyView.html">`anyView`</a> for a description of a data view class for displaying
  * data in the model.
- *
+ *<p/>
  * The model should have a type (e.g. `type = "user"`), an id key (e.g. `id_key = "user_id"`) and
  * a name key (e.g. `name_key = "user_name"`). If `id_key` or `name_key` is omitted, they are
  * constructed from `type` (for example will type "foo" give rise to id_key "foo_id" and name_key
@@ -26,20 +26,21 @@
  * etc. If the model contains data for an item (which may or may not contain any kind of subdata),
  * the `id` property should be set to the id of the item and either `this.data[id]` or
  * `this.data[hdr_id].data[id]` should exist (where hdr_id is the id of a single `head` entry).
- *
- * If used in connection with a database, `mode` should be set to "remote" (see below). `type` will
- * then correspond to a database table and `id_key` to an id column in that table.
- *
+ *<p/>
+ * If used in connection with a server side database, `mode` should be set to "remote" (see below),
+ * otherwise it defaults to "local". `type` corresponds to a database table and `id_key` to an id
+ * column in that table.
+ *<p/>
  * See <a href="module-anyVista.html">anyVista</a> for a full description of the format of the data
  * structure that the model works with.
- *
+ *<p/>
  * The class contains:
- *
+ *<p/>
  * <li>a constructor, which sets the model's variables according to `options`, or to default values,
  * <li>methods for working with data in the internal data structure (`data*` methods),
  * <li>methods for working with data in the database (`db*` methods),
  * <li>subscribe/callback methods (`cb*` methods).
- *
+ *<p/>
  * @constructs anyModel
  * @param {Object} options An object which may contain the following properties, all of which are
  *                         optional unless stated otherwise:
@@ -996,10 +997,13 @@ anyModel.prototype.dataInsertHeader = function (options)
     console.error("anyModel.dataInsertHeader: "+i18n.error.TYPE_MISSING);
     return null;
   }
+  let name_key = this.name_key
+                 ? this.name_key
+                 : the_type+"_name";
   let top_data = {
-      head:               the_type,
-      [the_type+"_name"]: the_header,
-      data:               the_data,
+      head:       the_type,
+      [name_key]: the_header,
+      data:       the_data,
   };
   return this.dataInsert({ data: the_data, new_data: top_data, new_id: "0" });
 }; // dataInsertHeader
@@ -1433,47 +1437,47 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  * @method anyModel.dbSearch
  * @param {Object} options An object which may contain these elements:
  *
- *        {string}   type:           Item's type.
- *                                   Optional. Default: `this.type`.
- *        {integer}  id:             Item's id. If specified, the database will be searched for this item.
- *                                   If not specified, a list of items of the specified type will be searched for.
- *                                   Optional. Default: null.
- *        {integer}  group_id:       If specified, search only in group with this id.
- *                                   Optional. Default: undefined.
- *        {integer}  link_type:
+ * @param {string}   options.type:       Item's type.
+ *                                       Optional. Default: `this.type`.
+ * @param {integer}  options.id:         Item's id. If specified, the database will be searched for this item.
+ *                                       If not specified, a list of items of the specified type will be searched for.
+ *                                       Optional. Default: null.
+ * @param {integer}  options.group_id:   If specified, search only in group with this id.
+ *                                       Optional. Default: undefined.
+ * @param {integer}  options.link_type:
  *
- *        {boolean}  simple:         If true, only values for _id and _name (e.g. "user_id" and "user_name")
- *                                   will be returned from the server.
- *                                   Optional. Default: undefined.
- *        [boolean}  header:         A parameter sent to the server to indicate whether a header should be
- *                                   auto-generated.
- *                                   Optional. Default: undefined.
- *        [boolean}  grouping:       If specified, tells the server to group the data before returning.
- *                                   If false, 0, null or undefined, data will not be grouped. Any other
- *                                   value will specify grouping.
- *                                   Optional. Default: undefined.
- *        {integer}  from:
- *
- *        {integer}  num:
- *
- *        (string)   order:          Tell the server how to order the results.
- *                                   Optional. Default: undefined (server decides).
- *        {string}   direction:      Sort in ascending or descending direction.
- *                                   Optional. Default: undefined (server decides).
- *        (string)   db_search_term: A string to search for.
- *                                   Optional. Default: undefined.
- *        {Object}   db_fields:      An array of strings to be sent to the server, indicating which columns
- *                                   of the table should be used in the search. These fields are only
- *                                   applied if the server fails to find a filter corresponding to `type`.
- *                                   Optional. Default: undefined.
- *        {integer}  timeoutSec:     Number of seconds before timing out.
- *                                   Optional. Default: 10.
- *        {Function} onSuccess:      Method to call on success.
- *                                   Optional. Default: `this.dbSearchSuccess`.
- *        {Function} onFail:         Method to call on error or timeout.
- *                                   Optional. Default: `this._dbFail`.
- *        {Function} context:        The context of the success and fail methods.
- *                                   Optional. Default: `this`.
+ * @param {boolean}  options.simple:     If true, only values for _id and _name (e.g. "user_id" and "user_name")
+ *                                       will be returned from the server.
+ *                                       Optional. Default: undefined.
+ * @param {boolean}  options.header:     A parameter sent to the server to indicate whether a header should be
+ *                                       auto-generated.
+ *                                       Optional. Default: undefined.
+ * @param {boolean}  options.grouping:   If specified, tells the server to group the data before returning.
+ *                                       If false, 0, null or undefined, data will not be grouped. Any other
+ *                                       value will specify grouping.
+ *                                       Optional. Default: undefined.
+ * @param {integer}  options.from:       The first element to display. Used in pagination.
+ *                                       Optional. Default: 0.
+ * @param {integer}  options.num:        The number of elements to display. Used in pagination.
+ *                                       Optional. Default: 20.
+ * @param {string}   options.order:      Tell the server how to order the results.
+ *                                       Optional. Default: undefined (server decides).
+ * @param {string}   options.direction:  Sort in ascending or descending direction.
+ *                                       Optional. Default: undefined (server decides).
+ * @param {string}   options.db_search_term: A string to search for.
+ *                                       Optional. Default: undefined.
+ * @param {Object}   options.db_fields:  An array of strings to be sent to the server, indicating which columns
+ *                                       of the table should be used in the search. These fields are only
+ *                                       applied if the server fails to find a filter corresponding to `type`.
+ *                                       Optional. Default: undefined.
+ * @param {integer}  options.timeoutSec: Number of seconds before timing out.
+ *                                       Optional. Default: 10.
+ * @param {Function} options.onSuccess : Method to call on success.
+ *                                       Optional. Default: `this.dbSearchSuccess`.
+ * @param {Function} options.onFail:     Method to call on error or timeout.
+ *                                       Optional. Default: `this._dbFail`.
+ * @param {Function} options.context:    The context of the success and fail methods.
+ *                                       Optional. Default: `this`.
  *
  * @return true if the database call was made, false otherwise.
  */
