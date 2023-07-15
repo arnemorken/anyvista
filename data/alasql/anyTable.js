@@ -472,7 +472,8 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,linkId)
                 : Number.isInteger(gidx)
                   ? "+"+gidx
                   : gidx;
-    data_tree[ngidx] = {};
+    if (!data_tree[ngidx]) // TODO! This may not be the correct solution
+      data_tree[ngidx] = {};
     if (data[gidx]) {
       let gname = null;
       data_tree[ngidx]["head"] = "group";
@@ -488,7 +489,8 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,linkId)
           data_tree[ngidx][this.nameKey] = data[gidx][idx][this.nameKey];
       }
     }
-    data_tree[ngidx]["data"] = this.buildDataTree(data[gidx],null);
+    if (!data_tree[ngidx]["data"]) // TODO! This may not be the correct solution
+      data_tree[ngidx]["data"] = this.buildDataTree(data[gidx],null);
     if (!data_tree[ngidx]["data"])
       delete data_tree[ngidx]["data"];
   } // for

@@ -1534,7 +1534,8 @@ class anyTable extends dbTable
                : ( isInteger($gidx)
                    ? "+".$gidx
                    : $gidx );
-      $data_tree[$ngidx] = array();
+      if (!isset($data_tree[$ngidx])) // TODO! This may not be the correct solution
+        $data_tree[$ngidx] = array();
       if ($this->mGrouping && !empty($data[$gidx])) { // Add a head data layer
         $data_tree[$ngidx]["head"] = "group";
         if (!isset($this->mId) || $this->mId == "") {
@@ -1562,7 +1563,8 @@ class anyTable extends dbTable
             $data_tree[$ngidx][$this->mNameKey] = $data[$gidx][$idx][$this->mNameKey];
         }
       } // if mGrouping
-      $data_tree[$ngidx]["data"] = $this->buildDataTree($data[$gidx],null);
+      if (!isset($data_tree[$ngidx]["data"])) // TODO! This may not be the correct solution
+        $data_tree[$ngidx]["data"] = $this->buildDataTree($data[$gidx],null);
       // Preserve "grouping_num_results" value
       if (isset($data[$gidx]["grouping_num_results"]))
         $data_tree[$ngidx]["data"]["grouping_num_results"] = $data[$gidx]["grouping_num_results"];
