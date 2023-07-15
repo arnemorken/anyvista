@@ -14,33 +14,32 @@
 
 /**
  * anyModel contains a tree structure data model that can manipulate data as lists and items and
- * optionally synchronize with a database.
- *<p/>
+ * optionally synchronize with a (server or client side) database.
+ * <p/>
  * See <a href="anyView.html">`anyView`</a> for a description of a data view class for displaying
  * data in the model.
- *<p/>
- * The model should have a type (e.g. `type = "user"`), an id key (e.g. `id_key = "user_id"`) and
- * a name key (e.g. `name_key = "user_name"`). If `id_key` or `name_key` is omitted, they are
+ * <p/>
+ * The model must have a type (e.g. `type = "user"`), an should have id key (e.g. `id_key = "user_id"`)
+ * and a name key (e.g. `name_key = "user_name"`). If `id_key` or `name_key` is omitted, they are
  * constructed from `type` (for example will type "foo" give rise to id_key "foo_id" and name_key
  * "foo_name"). If no type is specified, the model cannot be searched, synchronized with database
- * etc. If the model contains data for an item (which may or may not contain any kind of subdata),
+ * etc. If the model contains data for an item, which may or may not contain subdata (of any kind),
  * the `id` property should be set to the id of the item and either `this.data[id]` or
  * `this.data[hdr_id].data[id]` should exist (where hdr_id is the id of a single `head` entry).
- *<p/>
+ * <p/>
  * If used in connection with a server side database, `mode` should be set to "remote" (see below),
  * otherwise it defaults to "local". `type` corresponds to a database table and `id_key` to an id
  * column in that table.
- *<p/>
- * See <a href="module-anyVista.html">anyVista</a> for a full description of the format of the data
+ * <p/>
+ * See <a href="anyVista.html">anyVista</a> for a full description of the format of the data
  * structure that the model works with.
- *<p/>
+ * <p/>
  * The class contains:
- *<p/>
- * <li>a constructor, which sets the model's variables according to `options`, or to default values,
- * <li>methods for working with data in the internal data structure (`data*` methods),
- * <li>methods for working with data in the database (`db*` methods),
- * <li>subscribe/callback methods (`cb*` methods).
- *<p/>
+ * <li>- a constructor, which sets the model's variables according to `options`, or to default values,</li>
+ * <li>- methods for working with data in the internal data structure (`data*` methods),</li>
+ * <li>- methods for working with data in a (server or client side) database (`db*` methods),</li>
+ * <li>- subscribe/callback methods (`cb*` methods),</li>
+ * <li>- helper methods.</li>
  * @constructs anyModel
  * @param {Object} options An object which may contain the following properties, all of which are
  *                         optional unless stated otherwise:
@@ -109,7 +108,7 @@
  *                                          Default: "".
  *
  * @example
- *      new anyModel({ type:"user",id_key:"user_id",id:"38",data:{user_name:"Aretha Franklin"} });
+ *      new anyModel({ type:"user",id_key:"user_id",id:"38",data:{38:{user_name:"Aretha Franklin"}}});
  */
 var anyModel = function (options)
 {
