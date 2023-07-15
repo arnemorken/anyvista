@@ -84,6 +84,11 @@ $.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kin
   return tabs_div;
 }; // getOrCreateTabsContainer
 
+$.any.anyViewTabs.prototype.postRefresh = function (params,skipName)
+{
+  this.openTab({ id_base:this.current_id_base });
+}; // postRefresh
+
 $.any.anyViewTabs.prototype.refreshHeader = function (params,skipName)
 {
   if (!params || !params.data || !this.options || !this.options.showHeader)
@@ -174,6 +179,17 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
 $.any.anyViewTabs.prototype.refreshData = function (params)
 {
   let table_div = $.any.anyView.prototype.refreshData.call(this,params);
+  let id = this.element.attr("id");
+  let p1 = $("#"+id).parent();
+  if (p1.length) {
+    id = p1.attr("id");
+    if (id) {
+      id = id.substring(0,id.lastIndexOf("_"));
+      let elm = $("#"+id+"_data_tab_btn");
+      if (elm.length)
+        this.current_id_base = id;
+    }
+  }
   this.openTab({ id_base:this.current_id_base });
   return table_div;
 }; // refreshData
@@ -208,7 +224,7 @@ $.any.anyViewTabs.prototype.openTab = function (eventOrData)
   curr_tab_header.show();
   curr_tab_data.show();
 
-  if (this.first_id_base == undefined || this.first_id_base == null)
+  if (!this.first_id_base)
     this.first_id_base = id_base;
   this.current_id_base = id_base;
   return;
