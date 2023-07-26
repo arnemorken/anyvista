@@ -23,30 +23,40 @@
  More uses for anyVista can probably be conceived of.
  </p>
  <p>
- The anyVista API alows for user-defined types and some types are included, specifically `user`, `group`, `event`
+ The anyVista API allows for user-defined types and some types are included, specifically `user`, `group`, `event`
  and `document`, all described below. More types are under development. Types may be "linked", e.g. users
  may attend events, groups may have a number of documents, events may publish notes, and so on. When anyVista
  is used with Wordpress, these types can offer useful functionality otherwise provided by several separate
  Wordpress plugins.
  </p>
  <p>
- Below we describe the anyVista client API, the server API for using anyVista with a database in a PHP environment,
- how to write anyVista types and how to use anyVista with Wordpress.
+ Below we describe:<br/>
+ - the client model/view API,<br/>
+ - the server database API for using anyVista with a MySQL database in a PHP environment,<br/>
+ - the client database API for using anyVista with an AlaSQL database in a browser or mobile app,<br/>
+ - how to write anyVista types, and<br/>
+ - how to use anyVista with Wordpress.
  </p>
  *
  * __TABLE OF CONTENTS__
  *
- * &nbsp;<a href="#client_api">Client API</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#client_api_anyVista_classes">- Basic classes</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#client_api_data_format">- Data format</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#client_api_data_filter">- Data filter</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#client_api_css_formatting">- CSS formatting</a><br/>
+ * &nbsp;<a href="#client_mv_api">Client Model/View API</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#client_mv_api_anyVista_classes">- Basic classes</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#client_mv_api_data_format">- Data format</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#client_mv_api_data_filter">- Data filter</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#client_mv_api_css_formatting">- CSS formatting</a><br/>
  * <br/>
- * &nbsp;<a href="#server_api">Server API</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#server_api_anyVista_classes">- Basic classes</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#server_api_data_format">- Data format</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#server_api_data_filter">- Data filter</a><br/>
- * &nbsp;&nbsp;&nbsp;<a href="#server_api_anyDefs">- Configuration files</a><br/>
+ * &nbsp;<a href="#server_db_api">Server database API (MySQL)</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#server_db_api_anyVista_classes">- Basic classes</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#server_db_api_data_format">- Data format</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#server_db_api_data_filter">- Data filter</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#server_db_api_anyDefs">- Configuration files</a><br/>
+ * <br/>
+ * &nbsp;<a href="#client_db_api">Client database API (AlaSQL)</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#client_db_api_anyVista_classes">- Basic classes</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#client_db_api_data_format">- Data format</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#client_db_api_data_filter">- Data filter</a><br/>
+ * &nbsp;&nbsp;&nbsp;<a href="#client_db_api_anyDefs">- Configuration files</a><br/>
  * <br/>
  * &nbsp;<a href="#api_type_classes">User defined types</a><br/>
  * <br/>
@@ -56,10 +66,10 @@
  *
  * <hr/>
  *
- * <a name="client_api"></a>
- * <h2>Client API (jQuery)</h2>
+ * <a name="client_mv_api"></a>
+ * <h2>Client Model/View API (jQuery)</h2>
  *
- * The client API is written in Javascript and uses the jQuery library. It is easily integrated into web
+ * The client Model/View API is written in Javascript and uses the jQuery library. It is easily integrated into web
  * pages for displaying and modifying information (for example from database tables) by including the
  * following in your index.html (replace `anyvista.1.0.0` with your actual version of anyVista):
  *
@@ -69,12 +79,12 @@
  *
  * Note: The first line (including the <b>anyDefs.js</b> configuration file) is only neccessary when using
  * anyVista with a server backend.
- * See <a href="#server_api_anyDefs">configuration files</a> and the <a href="#server_api">server API</a>
+ * See <a href="#server_db_api_anyDefs">configuration files</a> and the <a href="#server_db_api">server API</a>
  * documentation below for more info on this.
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="client_api_anyVista_classes"></a>
+ * <a name="client_mv_api_anyVista_classes"></a>
  * <h3>Basic classes</h3>
  *
  * anyVista currently contains three basic classes: `anyModel`, `anyView` and `anyViewTabs`.
@@ -91,7 +101,7 @@
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="client_api_data_format"></a>
+ * <a name="client_mv_api_data_format"></a>
  * <h3>Data format</h3>
  *
  * The data of <a href="../classes/anyModel.html">`anyModel`</a> is stored in a tree structure with
@@ -100,7 +110,7 @@
  * work on the in-memory data tree, methods whose name begins with `db` communicate with the database.
  * Objects from the database are filtered before operated upon, i.e. only explicitely specified columns of a
  * table are being selected, inserted, updated or deleted. (The same goes for determining which values are
- * returned from the database to the client script. See the  <a href="#server_api">server API</a> documentation
+ * returned from the database to the client script. See the  <a href="#server_db_api">server API</a> documentation
  * for the format of database tables and server filters.) Note that the database doesn't have to be server based;
  * a Javascript-only database such as AlaSQL could also be used. Client filters that determine which data are
  * displayed and how, are described below.
@@ -298,12 +308,12 @@
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="client_api_data_filter"></a>
+ * <a name="client_mv_api_data_filter"></a>
  * <h2>__Data filter__</h2>
  *
  * The data filter on the client determines which data in the `data` stucture will be displayed, and how. (On
  * the server, the filter determines which data will be operated upon and returned to the client - see the
- * <a href="#server_api">server API</a> for detailed information on the server filters).
+ * <a href="#server_db_api">server API</a> for detailed information on the server filters).
  *
  * The filter object contains key / value pairs. The key is the name of a field to display (e.g. `event_name`) and
  * if used with a database, must be the same as the corresponding entry in the server filter. The value is an object
@@ -385,28 +395,28 @@
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="client_api_css_formatting"></a>
+ * <a name="client_mv_api_css_formatting"></a>
  * <h2>__CSS formatting__</h2>
  *
  * Coming soon.
  *
  * <hr/>
  *
- * <a name="server_api"></a>
- * <h2>MySql server API (PHP)</h2>
+ * <a name="server_db_api"></a>
+ * <h2>MySql server database API (PHP)</h2>
  *
  * The server API implements a simplified abstraction of a general database table as well as some specific table
- * classes corresponding to types in the client API. Currently the following types are implemented:
+ * classes corresponding to types in the client Model/View API. Currently the following types are implemented:
  * `user`, `event`, `document` and `group`. The user can easily defined other types as needed.
  * The anyVista server API is developed for and tested in the Apache/MySQL
  * (and Wordpress) environment but should also work in other settings.
  *
  * The file <b>`data/mysql/mysql/anyDefs.php`</b> should be edited to match the `anyDefs.js` file of the client.
- * See <a href="#server_api_anyDefs">configuration files</a> below for more info on this.
+ * See <a href="#server_db_api_anyDefs">configuration files</a> below for more info on this.
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="server_api_anyVista_classes"></a>
+ * <a name="server_db_api_anyVista_classes"></a>
  * <h3>Basic classes</h3>
  *
  * The general database abstraction is implemented through:
@@ -423,7 +433,7 @@
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="server_api_data_format"></a>
+ * <a name="server_db_api_data_format"></a>
  * <h3>Data format</h3>
  *
  * On the server side, data from the database are handled by the (abstract) `anyTable` class.
@@ -436,7 +446,7 @@
  *
  * Data returned from the server is formatted by the `anyTable` class into a hierarchical tree structure
  * that can be displayed by the `anyView` class on the client. This structure is exactly the same
- * as for the client <a href="#client_api_data_format">described above</a> (except that it is encoded
+ * as for the client <a href="#client_mv_api_data_format">described above</a> (except that it is encoded
  * in PHP of course).
  *
  * <div style="border:1px solid #888; padding:5px;padding-bottom:0px;">
@@ -497,16 +507,18 @@
  * data structure before it is processed further. If supplying your own success methods, this unwrapping
  * should be done explicitely, like this:
  * <pre>
- *   let serverdata = jqXHR;
+ * dbSearchSuccess = function (context,serverdata,options)
+ * {
  *   if (serverdata.JSON_CODE)
  *     serverdata = serverdata.JSON_CODE;
+ *   // Access serverdata here
  *   ...
  * </pre>
  * </div>
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="server_api_data_filter"></a>
+ * <a name="server_db_api_data_filter"></a>
  * <h3>Data filter</h3>
  *
  * The filters on the server side are used to indicate
@@ -540,7 +552,7 @@
  *
  * <hr style="color:#eee;"/>
  *
- * <a name="server_api_anyDefs"></a>
+ * <a name="server_db_api_anyDefs"></a>
  * <h3>Configuration files</h3>
  *
  * When anyVista is used in a server environment, the client and server must know how to communicate with each other.
@@ -653,6 +665,14 @@
  *      ?>
  *
  * <hr/>
+ *
+ *
+ * <hr/>
+ *
+ * <a name="client_db_api"></a>
+ * <h2>AlaSQL client database API (Javascript)</h2>
+ *
+ * Coming soon.
  *
  * <a name="api_type_classes"></a>
  * <h3>User defined types</h3>

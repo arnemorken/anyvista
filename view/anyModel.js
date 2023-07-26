@@ -355,7 +355,7 @@ var anyModel = function (options)
 
 //
 // _dataInitDefault: "Private" method.
-// Does not init type, id_key or name_key.
+// Does not initialize type, id_key or name_key.
 //
 anyModel.prototype._dataInitDefault = function ()
 {
@@ -383,7 +383,7 @@ anyModel.prototype._dataInitDefault = function ()
 }; // _dataInitDefault
 
 /**
- * Initialize the model with with the specified options or to default values.
+ * Initialize the model with the specified options or to default values.
  * Called by the constructor and the success method of `dbSearch`.
  *
  * @method anyModel.dataInit
@@ -408,6 +408,7 @@ anyModel.prototype._dataInitDefault = function ()
  * @param {boolean} options.db_search      Whether to call the search method. Optional.
  * @param {String}  options.db_search_term The string to search for. Optional.
  * @param {String}  options.db_last_term   The string to search for. Optional.
+ * @param {String}  options.db_timeout_sec Optional.
  * @param {boolean} options.auto_search    Whether to initiated model with the result of a search, and call
  *                                         cbExecute. Optional.
  * @param {boolean} options.auto_callback  Whether to call cbExecute after calling dataInsert, dataUpdate and
@@ -591,14 +592,14 @@ anyModel.prototype._getDataSourceName = function ()
  * @method anyModel.dataSearch
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data   The data structure to search in.
- *                         Optional. Default: The model's data (`this.data`).
- *        {String}  type   The type of the data to search for.
- *                         Optional. Default: The model's type (`this.type`).
- *        {integer} id     The id to search for.
- *                         Optional. Default: null.
- *        {boolean} parent If true, search for parent of the item with the specified id.
- *                         Optional. Default: Same as `type`.
+ * @param {Object}  options.data   The data structure to search in.
+ *                                 Optional. Default: The model's data (`this.data`).
+ * @param {String}  options.type   The type of the data to search for.
+ *                                 Optional. Default: The model's type (`this.type`).
+ * @param {integer} options.id     The id to search for.
+ *                                 Optional. Default: null.
+ * @param {boolean} options.parent If true, search for parent of the item with the specified id.
+ *                                 Optional. Default: Same as `type`.
  *
  * @return If id is specified and parent is false: A pointer to the item found, or null if not found or on error.
  *         If id is specified and parent is true: A pointer to the parent of the item found, or null if not found or on error.
@@ -839,35 +840,35 @@ anyModel.prototype.dataSearchMaxId = function (data,type,_prev_type)
  * @method anyModel.dataInsert
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data     The data structure to insert into.
- *                           Optional. Default: The model's data (`this.data`).
- *        {String}  type     The type of the item where the new data should be inserted (i.e. the type of
- *                           the item with id `id`.)
- *                           Optional. Default: The model's type (`this.type`).
- *        {integer} id       The id of the item in `data` where `new_data` should be inserted.
- *                           The data will be inserted like this:
- *                           1) If id is not specified:
- *                              - If `new_id` is not specified: `data              = new_data`
- *                              - If `new_id` is specified:     `data[new_id].data = new_data`
- *                           2) If id is specified and an item found in the data structure:
- *                              - If `new_id` is not specified: `item[id].data              = new_data`
- *                              - If `new_id` is specified:     `item[id].data[new_id].data = new_data`
- *                           3) If id is specified but not found in the data structure, it is an error.
- *                           Optional. Default: undefined.
- *        {Object}  new_data The data item to insert into the data structure.
- *                           Must be on a format that can be recognized by the model.
- *                           See <a href="../modules/anyVista.html">`anyVista`</a> for more information.
- *                           Mandatory.
- *        {integer} new_id   Indicates a new id that will be used when inserting the new data.
- *                           1) If `new_id` is not specified:
- *                              - If `id` is not specified: `data          = new_data`.
- *                              - If `id` is specified:     `data[id].data = new_data`.
- *                           2) If `new_id` is specified and >= 0 and an item is found in the data structure:
- *                              - If `id` is not specified: `item[new_id].data     = new_data`.
- *                              - If `id` is specified:     `item[id].data[new_id] = new_data`.
- *                           3) If `new_id` is < 0, it will be created by `dataSearchNextId` and the
- *                              data will be inserted as in case 2) above.
- *                           Optional. Default: undefined.
+ * @param {Object}  options.data     The data structure to insert into.
+ *                                   Optional. Default: The model's data (`this.data`).
+ * @param {String}  options.type     The type of the item where the new data should be inserted (i.e. the type of
+ *                                   the item with id `id`.)
+ *                                   Optional. Default: The model's type (`this.type`).
+ * @param {integer} options.id       The id of the item in `data` where `new_data` should be inserted.
+ *                                   The data will be inserted like this:<br/>
+ *                                   1) If id is not specified:<br/>
+ *                                      - If `new_id` is not specified: `data = new_data`<br/>
+ *                                      - If `new_id` is specified:     `data[new_id].data = new_data`<br/>
+ *                                   2) If id is specified and an item found in the data structure:<br/>
+ *                                      - If `new_id` is not specified: `item[id].data = new_data`<br/>
+ *                                      - If `new_id` is specified:     `item[id].data[new_id].data = new_data`<br/>
+ *                                   3) If id is specified but not found in the data structure, it is an error.<br/>
+ *                                   Optional. Default: undefined.
+ * @param {Object}  options.new_data The data item to insert into the data structure.
+ *                                   Must be on a format that can be recognized by the model.
+ *                                   See <a href="../modules/anyVista.html">`anyVista`</a> for more information.
+ *                                   Mandatory.
+ * @param {integer} options.new_id   Indicates a new id that will be used when inserting the new data.<br/>
+ *                                   1) If `new_id` is not specified:<br/>
+ *                                      - If `id` is not specified: `data = new_data`.<br/>
+ *                                      - If `id` is specified:     `data[id].data = new_data`.<br/>
+ *                                   2) If `new_id` is specified and >= 0 and an item is found in the data structure:<br/>
+ *                                      - If `id` is not specified: `item[new_id].data = new_data`.<br/>
+ *                                      - If `id` is specified:     `item[id].data[new_id] = new_data`.<br/>
+ *                                   3) If `new_id` is < 0, it will be created by `dataSearchNextId` and the
+ *                                      data will be inserted as in case 2) above.<br/>
+ *                                   Optional. Default: undefined.
  *
  * @return A pointer to the place where the new data item was inserted on success, or null on error.
  *
@@ -971,10 +972,12 @@ anyModel.prototype.dataInsert = function (options)
  * Insert a header at the top of the data structure
  *
  * @method anyModel.dataInsertHeader
- * @param  data   The data structue to use. Optional. Default: `this.data`.
- *         type   The type of the data "below" the header. Optional. Default: `this.type`.
- *         header The header string. Mandatory.
-  *
+ * @param {Object} options An object which may contain these elements:
+ *
+ * @param {Object} options.data   The data structue to use. Optional. Default: `this.data`.
+ * @param {String} options.type   The type of the data "below" the header. Optional. Default: `this.type`.
+ * @param {String} options.header The header string. Mandatory.
+ *
  * @return The header that was inserted.
  *
  * @example
@@ -1015,31 +1018,34 @@ anyModel.prototype.dataInsertHeader = function (options)
  * @method anyModel.dataUpdate
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data     The data structure to update.
- *                           Optional. Default: The model's data (`this.data`).
- *        {String}  type     The type of the item in `data` with id `id`.
- *                           Optional. Default: The model's type (`this.type`).
- *        {integer} id       The id of the item in `data` to update with values from `new_data`.
- *                           If id is not found in the data structure, it is an error.
- *                           Mandatory.
- *        {Object}  new_data The data item to update the data structure with.
- *                           Must be on the format `new_data[filter_id]` where `filter_id` are the
- *                           values containing new values.
- *                           For example:
- *                             `new_data = { user_name:        "Johhny B. Goode",
- *                                           user_description: "Musician",
- *                                         }`
- *                           If an item with the specified `id` is found in the structure `data`, it
- *                           will be updated with the values for `user_name` and `user_description`.
- *                           If an item is not found it is an error.
- *                           Mandatory.
+ * @param {Object}  options.data     The data structure to update.
+ *                                   Optional. Default: The model's data (`this.data`).
+ * @param {String}  options.type     The type of the item in `data` with id `id`.
+ *                                   Optional. Default: The model's type (`this.type`).
+ * @param {integer} options.id       The id of the item in `data` to update with values from `new_data`.
+ *                                   If id is not found in the data structure, it is an error.
+ *                                   Mandatory.
+ * @param {Object}  options.new_data The data item to update the data structure with.
+ *                                   Must be on the format `new_data[filter_id]` where `filter_id` are the
+ *                                   values containing new values.
+ *                                   For example:
+ *                                   <code>
+ *                                     new_data = {
+ *                                       user_name:        "Johhny B. Goode",
+ *                                       user_description: "Musician",
+ *                                     }
+ *                                   </code>
+ *                                   If an item with the specified `id` is found in the structure `data`, it
+ *                                   will be updated with the values for `user_name` and `user_description`.
+ *                                   If an item is not found it is an error.
+ *                                   Mandatory.
  *
  * @return A pointer to the place where the data was updated on success, or null on error.
  *
  * @example
  *      mymodel.dataUpdate({new_data:{user_name:"Foz Baz"},id:"38",type:"user"});
  */
-// TODO! Not tested with non-numerical indexes
+// TODO! Not tested well enough with non-numerical indexes
 // TODO! If type/id combination exists several places in data structure, all places should be updated (optionally)
 anyModel.prototype.dataUpdate = function (options)
 {
@@ -1102,38 +1108,38 @@ anyModel.prototype.dataUpdate = function (options)
  * @method anyModel.dataUpdateLinkList
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data      The data structure to update.
- *                            Optional. Default: The model's data (`this.data`).
- *        {String}  type      The type of the item to which the list is linked to (e.g. "user").
- *                            Optional. Default: `this.type`.
- *        {integer} id        The id of the item to which the list is linked to (e.g. the user id "23").
- *                            Optional. Default: `"link-"+type`.
- *        {String}  link_type If `link_id` is specified, the type of an item in the data structure with
- *                            id `link_id`.
- *                            If `link_id` is not specified, the type of the items in the `select` and
- *                            the `unselect` arrays.
- *                            Mandatory.
- *        {String}  link_id   The id of an item to unlink from item with id `id`.
- *                            If specified, the link will be removed and no other action will be taken
- *                            (the `select` and `unselect` arrays will be ignored).
- *                            If not given, links will be added and/or removed as per the `select`
- *                            and `unselect` arrays.
- *                            Optional. Default: undefined.
- *        {Object}  unselect  A list of ids to unlink from item with id `id` (if `link_id` is not given).
- *                            This will be done *before* the ids in `select` are added.
- *                            Optional. Default: undefined.
- *        {Object}  select    A list of ids to link to item with id `id`(if `link_id` is not given).
- *                            This will be done *after* the ids in `unselect` has been removed.
- *                            If the link already exists, the link's data will be update with the data
- *                            in `new_data`, if specified.
- *                            Optional. Default: undefined.
- *        {Object}  new_data  An object containing data to update the data structure with when the
- *                            `select` list is specified and `link_id` is not specified. If `new_data`
- *                            is not specified, the data to link is assumed to be found in the `data`
- *                            data structure. If not found, it is an error.
- *                            Optional. Default: null, and `data` will be searched for the items with
- *                            ids specified in `select`.
- *        {String}  name_key
+ * @param {Object}  options.data      The data structure to update.
+ *                                    Optional. Default: The model's data (`this.data`).
+ * @param {String}  options.type      The type of the item to which the list is linked to (e.g. "user").
+ *                                    Optional. Default: `this.type`.
+ * @param {integer} options.id        The id of the item to which the list is linked to (e.g. the user id "23").
+ *                                    Optional. Default: `"link-"+type`.
+ * @param {String}  options.link_type If `link_id` is specified, the type of an item in the data structure with
+ *                                    id `link_id`.
+ *                                    If `link_id` is not specified, the type of the items in the `select` and
+ *                                    the `unselect` arrays.
+ *                                    Mandatory.
+ * @param {String}  options.link_id   The id of an item to unlink from item with id `id`.
+ *                                    If specified, the link will be removed and no other action will be taken
+ *                                    (the `select` and `unselect` arrays will be ignored).
+ *                                    If not given, links will be added and/or removed as per the `select`
+ *                                    and `unselect` arrays.
+ *                                    Optional. Default: undefined.
+ * @param {Object}  options.unselect  A list of ids to unlink from item with id `id` (if `link_id` is not given).
+ *                                    This will be done *before* the ids in `select` are added.
+ *                                    Optional. Default: undefined.
+ * @param {Object}  options.select    A list of ids to link to item with id `id`(if `link_id` is not given).
+ *                                    This will be done *after* the ids in `unselect` has been removed.
+ *                                    If the link already exists, the link's data will be update with the data
+ *                                    in `new_data`, if specified.
+ *                                    Optional. Default: undefined.
+ * @param {Object}  options.new_data  An object containing data to update the data structure with when the
+ *                                    `select` list is specified and `link_id` is not specified. If `new_data`
+ *                                    is not specified, the data to link is assumed to be found in the `data`
+ *                                    data structure. If not found, it is an error.
+ *                                    Optional. Default: null, and `data` will be searched for the items with
+ *                                    ids specified in `select`.
+ * @param {String}  options.name_key
  *
  * @return true on success, false on error.
  *
@@ -1239,12 +1245,12 @@ anyModel.prototype.dataUpdateLink = function (options)
  * @method anyModel.dataDelete
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}  data  The data structure to delete from.
- *                        Optional. Default: The model's data structure (`this.data`).
- *        {String}  type  The type of the item to delete.
- *                        Optional. Default: The model's type (`this.type`).
- *        {integer} id    The id of the item to delete.
- *                        Mandatory.
+ * @param {Object}  options.data  The data structure to delete from.
+ *                                Optional. Default: The model's data structure (`this.data`).
+ * @param {String}  options.type  The type of the item to delete.
+ *                                Optional. Default: The model's type (`this.type`).
+ * @param {integer} options.id    The id of the item to delete.
+ *                                Mandatory.
  *
  * @return A pointer to the place where the data was deleted on success, or null if the place was not found or on error.
  */
@@ -1305,18 +1311,18 @@ anyModel.prototype.dataDelete = function (options)
  * @method anyModel.dbCreate
  * @param {Object} options An object which may contain these elements:
  *
- *        {string}   type:       The table type, this will be the basis for the table name.
- *                               Optional. Default: `this.type`.
- *        {Object}   table:      The fields of the table.
- *                               Optional. If not specified, only the id and name fields will be created.
- *        {integer}  timeoutSec: Number of seconds before timing out.
- *                               Optional. Default: 10.
- *        {Function} onSuccess:  Method to call on success.
- *                               Optional. Default: `this.dbCreateSuccess`.
- *        {Function} onFail:     Method to call on error or timeout.
- *                               Optional. Default: `this._dbFail`.
- *        {Function} context:    The context of the success and fail methods.
- *                               Optional. Default: `this`.
+ * @param {string}   options.type       The table type, this will be the basis for the table name.
+ *                                      Optional. Default: `this.type`.
+ * @param {Object}   options.table      The fields of the table.
+ *                                      Optional. If not specified, only the id and name fields will be created.
+ * @param {integer}  options.timeoutSec Number of seconds before timing out.
+ *                                      Optional. Default: 10.
+ * @param {Function} options.onSuccess  Method to call on success.
+ *                                      Optional. Default: `this.dbCreateSuccess`.
+ * @param {Function} options.onFail     Method to call on error or timeout.
+ *                                      Optional. Default: `this._dbFail`.
+ * @param {Function} options.context    The context of the success and fail methods.
+ *                                      Optional. Default: `this`.
  *
  * @return true if the database call was made
  */
@@ -1436,47 +1442,47 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  * @method anyModel.dbSearch
  * @param {Object} options An object which may contain these elements:
  *
- * @param {string}   options.type:       Item's type.
- *                                       Optional. Default: `this.type`.
- * @param {integer}  options.id:         Item's id. If specified, the database will be searched for this item.
- *                                       If not specified, a list of items of the specified type will be searched for.
- *                                       Optional. Default: null.
- * @param {integer}  options.group_id:   If specified, search only in group with this id.
- *                                       Optional. Default: undefined.
- * @param {integer}  options.link_type:
+ * @param {string}   options.type       Item's type.
+ *                                      Optional. Default: `this.type`.
+ * @param {integer}  options.id         Item's id. If specified, the database will be searched for this item.
+ *                                      If not specified, a list of items of the specified type will be searched for.
+ *                                      Optional. Default: null.
+ * @param {integer}  options.group_id   If specified, search only in group with this id.
+ *                                      Optional. Default: undefined.
+ * @param {integer}  options.link_type
  *
- * @param {boolean}  options.simple:     If true, only values for _id and _name (e.g. "user_id" and "user_name")
- *                                       will be returned from the server.
- *                                       Optional. Default: undefined.
- * @param {boolean}  options.header:     A parameter sent to the server to indicate whether a header should be
- *                                       auto-generated.
- *                                       Optional. Default: undefined.
- * @param {boolean}  options.grouping:   If specified, tells the server to group the data before returning.
- *                                       If false, 0, null or undefined, data will not be grouped. Any other
- *                                       value will specify grouping.
- *                                       Optional. Default: undefined.
- * @param {integer}  options.from:       The first element to display. Used in pagination.
- *                                       Optional. Default: 0.
- * @param {integer}  options.num:        The number of elements to display. Used in pagination.
- *                                       Optional. Default: 20.
- * @param {string}   options.order:      Tell the server how to order the results.
- *                                       Optional. Default: undefined (server decides).
- * @param {string}   options.direction:  Sort in ascending or descending direction.
- *                                       Optional. Default: undefined (server decides).
- * @param {string}   options.db_search_term: A string to search for.
- *                                       Optional. Default: undefined.
- * @param {Object}   options.db_fields:  An array of strings to be sent to the server, indicating which columns
- *                                       of the table should be used in the search. These fields are only
- *                                       applied if the server fails to find a filter corresponding to `type`.
- *                                       Optional. Default: undefined.
- * @param {integer}  options.timeoutSec: Number of seconds before timing out.
- *                                       Optional. Default: 10.
- * @param {Function} options.onSuccess : Method to call on success.
- *                                       Optional. Default: `this.dbSearchSuccess`.
- * @param {Function} options.onFail:     Method to call on error or timeout.
- *                                       Optional. Default: `this._dbFail`.
- * @param {Function} options.context:    The context of the success and fail methods.
- *                                       Optional. Default: `this`.
+ * @param {boolean}  options.simple     If true, only values for _id and _name (e.g. "user_id" and "user_name")
+ *                                      will be returned from the server.
+ *                                      Optional. Default: undefined.
+ * @param {boolean}  options.header     A parameter sent to the server to indicate whether a header should be
+ *                                      auto-generated.
+ *                                      Optional. Default: undefined.
+ * @param {boolean}  options.grouping   If specified, tells the server to group the data before returning.
+ *                                      If false, 0, null or undefined, data will not be grouped. Any other
+ *                                      value will specify grouping.
+ *                                      Optional. Default: undefined.
+ * @param {integer}  options.from       The first element to display. Used in pagination.
+ *                                      Optional. Default: 0.
+ * @param {integer}  options.num        The number of elements to display. Used in pagination.
+ *                                      Optional. Default: 20.
+ * @param {string}   options.order      Tell the server how to order the results.
+ *                                      Optional. Default: undefined (server decides).
+ * @param {string}   options.direction  Sort in ascending or descending direction.
+ *                                      Optional. Default: undefined (server decides).
+ * @param {string}   options.db_search_term A string to search for.
+ *                                      Optional. Default: undefined.
+ * @param {Object}   options.db_fields  An array of strings to be sent to the server, indicating which columns
+ *                                      of the table should be used in the search. These fields are only
+ *                                      applied if the server fails to find a filter corresponding to `type`.
+ *                                      Optional. Default: undefined.
+ * @param {integer}  options.timeoutSec Number of seconds before timing out.
+ *                                      Optional. Default: 10.
+ * @param {Function} options.onSuccess  Method to call on success.
+ *                                      Optional. Default: `this.dbSearchSuccess`.
+ * @param {Function} options.onFail     Method to call on error or timeout.
+ *                                      Optional. Default: `this._dbFail`.
+ * @param {Function} options.context    The context of the success and fail methods.
+ *                                      Optional. Default: `this`.
  *
  * @return true if the database call was made, false otherwise.
  */
@@ -1572,18 +1578,18 @@ anyModel.prototype._dbSearchLocal = async function (options)
  * @method anyModel.dbSearchGetURL
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer} type:
- *        {integer} id:
- *        {integer} group_id:
- *        {integer} link_type:
- *        {boolean} simple:
- *        {string}  header:
- *        {string}  grouping:
- *        {integer} from:
- *        {integer} num:
- *        {string}  order:
- *        {string}  direction:
- *        {string}  db_search_term:
+ * @param {integer} options.type
+ * @param {integer} options.id
+ * @param {integer} options.group_id
+ * @param {integer} options.link_type
+ * @param {boolean} options.simple
+ * @param {string}  options.header
+ * @param {string}  options.grouping
+ * @param {integer} options.from
+ * @param {integer} options.num
+ * @param {string}  options.order
+ * @param {string}  options.direction
+ * @param {string}  options.db_search_term
  *
  * @return The complete URL for dbSearch or null on error (missing type or id_key).
  */
@@ -1682,24 +1688,25 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
 }; // dbSearchSuccess
 
 /**
+ * Gets the next available id for the specified type from server.
+ * The data will be handed to the success handler specified in options.success,
+ * or to this.dbSearchNextIdSuccess if no success handler is specified.
+ *
  * @method anyModel.dbSearchNextId
- * @description Gets the next available id for the specified type from server.
- *              The data will be handed to the success handler specified in options.success,
- *              or to this.dbSearchNextIdSuccess if no success handler is specified.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer}  type:       Item's type.
- *                               Optional. Default: `this.type`.
- *        {Array}    db_fields:  (Coming soon.)
+ * @param {integer}  options.type       Item's type.
+ *                                      Optional. Default: `this.type`.
+ * @param {Array}    options.db_fields
  *
- *        {integer}  timeoutSec: Number of seconds before timing out.
- *                               Optional. Default: 10.
- *        {Function} onSuccess:  Method to call on success.
- *                               Optional. Default: `this.dbSearchNextIdSuccess`.
- *        {Function} onFail:     Method to call on error or timeout.
- *                               Optional. Default: `this._dbFail`.
- *        {Function} context:    The context of the success and fail methods.
- *                               Optional. Default: `this`.
+ * @param {integer}  options.timeoutSec Number of seconds before timing out.
+ *                                      Optional. Default: 10.
+ * @param {Function} options.onSuccess  Method to call on success.
+ *                                      Optional. Default: `this.dbSearchNextIdSuccess`.
+ * @param {Function} options.onFail     Method to call on error or timeout.
+ *                                      Optional. Default: `this._dbFail`.
+ * @param {Function} options.context    The context of the success and fail methods.
+ *                                      Optional. Default: `this`.
  *
  * @return true if the database call was made, false otherwise.
  */
@@ -1783,13 +1790,14 @@ anyModel.prototype._dbSearchNextIdLocal = async function (options)
 }; // _dbSearchLocal
 
 /**
+ * Builds a POST string for dbSearchNextId to be sent to server.
+ *
  * @method anyModel.dbSearchNextIdGetURL
- * @description Builds a POST string for dbSearchNextId to be sent to server.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer} type: Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
- *                        be used as the id_key instead of the value in `this.id_key` when calling the server.
- *                        Optional. Default: `this.type`.
+ * @param {integer} options.type Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
+ *                               be used as the id_key instead of the value in `this.id_key` when calling the server.
+ *                               Optional. Default: `this.type`.
  *
  * @return The complete URL for dbSearchNextId or null on error (missing type or id_key).
  */
@@ -1812,8 +1820,9 @@ anyModel.prototype.dbSearchNextIdGetURL = function (options)
 }; // dbSearchNextIdGetURL
 
 /**
+ * Default success callback method for dbSearchNextId.
+ *
  * @method anyModel.dbSearchNextIdSuccess
- * @description Default success callback method for dbSearchNextId.
  * @param {Object} context
  *        {Object} serverdata
  *        {Object} options
@@ -1843,36 +1852,37 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
 }; // dbSearchNextIdSuccess
 
 /**
+ * Insert or update an item in a database table.
+ *
  * @method anyModel.dbUpdate
- * @description Insert or update an item in a database table.
  * @param {Object} options An object which may contain these elements:
  *
- *        {Object}   new_data:   The data structure from which comes the data to insert/update. If null
- *                               or not specified, data from `this.data` is used for the update. A data
- *                               item matching id/type, must exist in the data structure. If no such
- *                               item can be found, it is an error.
- *                               Optional. Default: `this.data`.
- *        {integer}  type:       Type of the datem to update.
- *                               Optional. Default: `this.type`.
- *        {integer}  id:         The data item's id. If given, an existing item in the database will be
- *                               updated. If not given, a new item will be inserted into the database.
- *                               Mandatory if updating, null or undefined if inserting.
- *        {boolean}  is_new:     true if the item is new (does not exist in database) and should be inserted
- *                               rather than updated. Note: If set, an insert operation will be performed
- *                               even if `options.id` has a value.
- *                               Optional. Default: false.
- *        {Object}   db_fields:  An array of strings to be sent to the server, indicating which columns
- *                               of the table should be used in the update/insert. These fields are only
- *                               applied if the server fails to find a filter corresponding to `type`.
- *                               Optional. Default: undefined.
- *        {integer}  timeoutSec: Number of seconds before timing out.
- *                               Optional. Default: 10.
- *        {Function} onSuccess:  Method to call on success.
- *                               Optional. Default: `this.dbUpdateSuccess`.
- *        {Function} onFail:     Method to call on error or timeout.
- *                               Optional. Default: `this._dbFail`.
- *        {Function} context:    The context of the success and fail methods.
- *                               Optional. Default: `this`.
+ * @param {Object}   options.new_data   The data structure from which comes the data to insert/update. If null
+ *                                      or not specified, data from `this.data` is used for the update. A data
+ *                                      item matching id/type, must exist in the data structure. If no such
+ *                                      item can be found, it is an error.
+ *                                      Optional. Default: `this.data`.
+ * @param {integer}  options.type       Type of the datem to update.
+ *                                      Optional. Default: `this.type`.
+ * @param {integer}  options.id         The data item's id. If given, an existing item in the database will be
+ *                                      updated. If not given, a new item will be inserted into the database.
+ *                                      Mandatory if updating, null or undefined if inserting.
+ * @param {boolean}  options.is_new     true if the item is new (does not exist in database) and should be inserted
+ *                                      rather than updated. Note: If set, an insert operation will be performed
+ *                                      even if `options.id` has a value.
+ *                                      Optional. Default: false.
+ * @param {Object}   options.db_fields  An array of strings to be sent to the server, indicating which columns
+ *                                      of the table should be used in the update/insert. These fields are only
+ *                                      applied if the server fails to find a filter corresponding to `type`.
+ *                                      Optional. Default: undefined.
+ * @param {integer}  options.timeoutSec Number of seconds before timing out.
+ *                                      Optional. Default: 10.
+ * @param {Function} options.onSuccess  Method to call on success.
+ *                                      Optional. Default: `this.dbUpdateSuccess`.
+ * @param {Function} options.onFail     Method to call on error or timeout.
+ *                                      Optional. Default: `this._dbFail`.
+ * @param {Function} options.context    The context of the success and fail methods.
+ *                                      Optional. Default: `this`.
  *
  * @return true if the database call was made, false otherwise.
  */
@@ -2005,22 +2015,23 @@ anyModel.prototype._dbUpdateLocal = async function (options,item_to_send)
 }; // _dbUpdateLocal
 
 /**
+ * Builds a POST string for dbUpdate to be sent to server.
+ *
  * @method anyModel.dbUpdateGetURL
- * @description Builds a POST string for dbUpdate to be sent to server.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer}  id:      Item's id. If specified, the server will update the item,
- *                            if not specified, the server will insert the item.
- *                            Optional. Default: null.
- *        {integer}  type:    Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
- *                            be used as the id_key instead of the value in `this.id_key` when calling the server.
- *                            Optional. Default: `this.type`.
- *        {boolean}  is_new:  true if the item is new (does not exist in database) and should be inserted
- *                            and not updated. Note: If set, an insert operation will be performed even if
- *                            `options.id` has a value.
- *                            Optional. Default: false.
- *        {boolean} auto_id:  Tells the server whether to update the id field by AUTOINCREMENT. If false, the server
- *                            will use the value provide, if tru use AUTOINCREMENT. Default: true.
+ * @param {integer} options.id      Item's id. If specified, the server will update the item,
+ *                                  if not specified, the server will insert the item.
+ *                                  Optional. Default: null.
+ * @param {integer} options.type    Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
+ *                                  be used as the id_key instead of the value in `this.id_key` when calling the server.
+ *                                  Optional. Default: `this.type`.
+ * @param {boolean} options.is_new  true if the item is new (does not exist in database) and should be inserted
+ *                                  and not updated. Note: If set, an insert operation will be performed even if
+ *                                  `options.id` has a value.
+ *                                  Optional. Default: false.
+ * @param {boolean} options.auto_id Tells the server whether to update the id field by AUTOINCREMENT. If false, the server
+ *                                  will use the value provide, if tru use AUTOINCREMENT. Default: true.
  *
  * @return The complete URL for dbUpdate or null on error.
  */
@@ -2078,11 +2089,12 @@ anyModel.prototype.dbUpdateGetURL = function (options)
 }; // dbUpdateGetURL
 
 /**
+ * Default success callback method for dbUpdate.
+ *
  * @method anyModel.dbUpdateSuccess
- * @description Default success callback method for dbUpdate.
  * @param {Object} context
- *        {Object} serverdata
- *        {Object} options
+ * @param {Object} serverdata
+ * @param {Object} options
  *
  * @return context
  */
@@ -2161,39 +2173,39 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  * with several events.
  *
  * @method anyModel.dbUpdateLinkList
- * @param {Object}  options An object which may contain these elements:
+ * @param {Object} options An object which may contain these elements:
  *
- *        {String}  type       The type of the item to which the list is linked to (e.g. "user").
- *                             Optional. Default: `this.type`.
- *        {integer} id         The id of the item to which the list is linked to (e.g. the user  id "23").
- *                             Optional.
- *        {String}  link_type  If `link_id` is specified, the type of an item in the data structure with
- *                             id `link_id`.
- *                             If `link_id` is not specified, the type of the items in the `select` and
- *                             the `unselect` arrays.
- *                             Mandatory if `link_id` is given.
- *        {String}  link_id    The id of an item to unlink from item with id `id`.
- *                             If specified, the link will be removed and no other action will be taken
- *                             (the `select` and `unselect` arrays will be ignored).
- *                             If not given, links will be added and/or removed as per the `select`
- *                             and `unselect` arrays.
- *                             Optional. Default: undefined.
- *        {Object}  unselect   A list of ids to unlink from item with id `id` (if `link_id` is not given).
- *                             This will be done *before* the ids in `select` are added.
- *                             Optional. Default: undefined.
- *        {Object}  select     A list of ids to link to item with id `id`(if `link_id` is not given).
- *                             This will be done *after* the ids in `unselect` has been removed.
- *                             If the link already exists, the link's data will be update with the data
- *                             in `new_data`, if specified. TODO! new_data does not exist here!
- *                             Optional. Default: undefined.
- *        {Function} onSuccess Method to call on success.
- *                             Optional. Default: `this.dbUpdateSuccess`.
- *        {Function} onFail    Method to call on error or timeout.
- *                             Optional. Default: `this._dbFail`.
- *        {Function} context   The context of the success and fail methods.
- *                             Optional. Default: `this`.
- *        {integer} timeoutSec Number of seconds before timing out.
- *                             Optional. Default: 10.
+ * @param {String}   options.type       The type of the item to which the list is linked to (e.g. "user").
+ *                                      Optional. Default: `this.type`.
+ * @param {integer}  options.id         The id of the item to which the list is linked to (e.g. the user  id "23").
+ *                                      Optional.
+ * @param {String}   options.link_type  If `link_id` is specified, the type of an item in the data structure with
+ *                                      id `link_id`.
+ *                                      If `link_id` is not specified, the type of the items in the `select` and
+ *                                      the `unselect` arrays.
+ *                                      Mandatory if `link_id` is given.
+ * @param {String}   options.link_id    The id of an item to unlink from item with id `id`.
+ *                                      If specified, the link will be removed and no other action will be taken
+ *                                      (the `select` and `unselect` arrays will be ignored).
+ *                                      If not given, links will be added and/or removed as per the `select`
+ *                                      and `unselect` arrays.
+ *                                      Optional. Default: undefined.
+ * @param {Object}   options.unselect   A list of ids to unlink from item with id `id` (if `link_id` is not given).
+ *                                      This will be done *before* the ids in `select` are added.
+ *                                      Optional. Default: undefined.
+ * @param {Object}   options.select     A list of ids to link to item with id `id`(if `link_id` is not given).
+ *                                      This will be done *after* the ids in `unselect` has been removed.
+ *                                      If the link already exists, the link's data will be update with the data
+ *                                      in `new_data`, if specified. TODO! new_data does not exist here!
+ *                                      Optional. Default: undefined.
+ * @param {Function} options.onSuccess  Method to call on success.
+ *                                      Optional. Default: `this.dbUpdateSuccess`.
+ * @param {Function} options.onFail     Method to call on error or timeout.
+ *                                      Optional. Default: `this._dbFail`.
+ * @param {Function} options.context    The context of the success and fail methods.
+ *                                      Optional. Default: `this`.
+ * @param {integer}  options.timeoutSec Number of seconds before timing out.
+ *                                      Optional. Default: 10.
  *
  * @return true if the database call was made, false on error.
  */
@@ -2268,8 +2280,9 @@ anyModel.prototype._dbUpdateLinkListLocalLocal = async function (options)
 }; // _dbUpdateLinkListLocal
 
 /**
+ * Builds a POST string for dbUpdateLinkListGetURL to be sent to server.
+ *
  * @method anyModel.dbUpdateLinkListGetURL
- * @description Builds a POST string for dbUpdateLinkListGetURL to be sent to server.
  * @param {Object} options See dbUpdateLinkList().
  *
  * @return The complete URL for dbUpdateLinkList or null on error.
@@ -2327,7 +2340,16 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
   return this._getDataSourceName() + param_str;
 }; // dbUpdateLinkListGetURL
 
-// Default success callback method for dbUpdateLinkList
+/**
+ * Default success callback method for dbUpdateLinkList.
+ *
+ * @method anyModel.dbUpdateLinkListSuccess
+ * @param {Object} context
+ * @param {Object} serverdata
+ * @param {Object} options
+ *
+ * @return context
+ */
 anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
@@ -2357,24 +2379,25 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
 }; // dbUpdateLinkListSuccess
 
 /**
+ * Change individual value(s) for an item.
+ *
  * @method anyModel.dbUpdateLink
- * @description Change individual value(s) for an item.
  * @param {Object} options An object which may contain these elements:
  *
- *        {String}   type:       The type of items in the list.
- *                               Optional. Default: `this.type`.
- *        {String}   id:         The id of the item.
- *                               Mandatory.
- *        {Object}   link_type:  The type of the item to which the list "belongs" (is linked to).
- *                               Optional. Default: `this.type`.
- *        {String}   link_id:    The id of the item to which the list "belongs" (is linked to).
- *                               Mandatory.
- *        {Array}    names:
- *        {Array}    values:
- *        {Function} onSuccess:
- *        {Function} onFail:
- *        {integer}  timeoutSec: Number of seconds before timing out.
- *                               Optional. Default: 10.
+ * @param {String}   options.type       The type of items in the list.
+ *                                      Optional. Default: `this.type`.
+ * @param {String}   options.id         The id of the item.
+ *                                      Mandatory.
+ * @param {Object}   options.link_type  The type of the item to which the list "belongs" (is linked to).
+ *                                      Optional. Default: `this.type`.
+ * @param {String}   options.link_id    The id of the item to which the list "belongs" (is linked to).
+ *                                      Mandatory.
+ * @param {Array}    options.names
+ * @param {Array}    options.values
+ * @param {Function} options.onSuccess
+ * @param {Function} options.onFail
+ * @param {integer}  options.timeoutSec Number of seconds before timing out.
+ *                                      Optional. Default: 10.
  *
  * @return true if the database call was made, false on error.
  */
@@ -2449,9 +2472,10 @@ anyModel.prototype._dbUpdateLinkLocal = async function (options)
 }; // _dbUpdateLinkLocal
 
 /**
+ * Builds a POST string for dbUpdateLinkGetURL to be sent to server.
+ *
  * @method anyModel.dbUpdateLinkGetURL
- * @description Builds a POST string for dbUpdateLinkGetURL to be sent to server.
- * @param {Object} options An object which may contain these elements:
+ * @param {Object} options See dbUpdateLink().
  *
  * @return The complete URL for dbUpdateLink or null on error.
  */
@@ -2492,7 +2516,16 @@ anyModel.prototype.dbUpdateLinkGetURL = function (options)
   return this._getDataSourceName() + param_str;
 }; // dbUpdateLinkGetURL
 
-// Default success callback method for dbUpdateLink
+/**
+ * Default success callback method for dbUpdateLink.
+ *
+ * @method anyModel.dbUpdateLinkSuccess
+ * @param {Object} context
+ * @param {Object} serverdata
+ * @param {Object} options
+ *
+ * @return context
+ */
 anyModel.prototype.dbUpdateLinkSuccess = function (context,serverdata,options)
 {
   // TODO! Not implemented
@@ -2504,18 +2537,18 @@ anyModel.prototype.dbUpdateLinkSuccess = function (context,serverdata,options)
  *              TODO! Check that the server also deletes any links the item may have in other tables.
  * @param {Object} options An object which may contain these elements:
  *
- *        {integer}  type:       Item's type.
- *                               Optional. Default: `this.type`.
- *        {integer}  id:         The id of the item to delete.
- *                               Mandatory.
- *        {integer}  timeoutSec: Number of seconds before timing out.
- *                               Optional. Default: 10.
- *        {Function} onSuccess:  Method to call on success.
- *                               Optional. Default: `this.dbDeleteSuccess`.
- *        {Function} onFail:     Method to call on error or timeout.
- *                               Optional. Default: `this._dbFail`.
- *        {Function} context:    The context of the success and fail methods.
- *                               Optional. Default: `this`.
+ * @param {integer}  options.type       Item's type.
+ *                                      Optional. Default: `this.type`.
+ * @param {integer}  options.id         The id of the item to delete.
+ *                                      Mandatory.
+ * @param {integer}  options.timeoutSec Number of seconds before timing out.
+ *                                      Optional. Default: 10.
+ * @param {Function} options.onSuccess  Method to call on success.
+ *                                      Optional. Default: `this.dbDeleteSuccess`.
+ * @param {Function} options.onFail     Method to call on error or timeout.
+ *                                      Optional. Default: `this._dbFail`.
+ * @param {Function} options.context    The context of the success and fail methods.
+ *                                      Optional. Default: `this`.
  *
  * @return true if the database call was made, false otherwise.
  */
@@ -2609,9 +2642,10 @@ anyModel.prototype._dbDeleteLocal = async function (options)
 }; // _dbDeleteLocal
 
 /**
+ * Builds a POST string for dbDelete to be sent to server.
+ *
  * @method anyModel.dbDeleteGetURL
- * @description Builds a POST string for dbDelete to be sent to server.
- * @param {Object} options An object which may contain these elements:
+ * @param {Object} options See dbDelete().
  *
  * @return The complete URL for dbDelete or null on error.
  */
@@ -2646,8 +2680,9 @@ anyModel.prototype.dbDeleteGetURL = function (options)
 }; // dbDeleteGetURL
 
 /**
+ * Default success callback method for dbDelete.
+ *
  * @method anyModel.dbDeleteSuccess
- * @description Default success callback method for dbDelete.
  * @param {Object} context
  *        {Object} serverdata
  *        {Object} options
