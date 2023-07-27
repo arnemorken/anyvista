@@ -20,17 +20,16 @@ define("gSkin",         "default");
 //////////////////////////////////////////////////////////////////
 
 // Version number
-define("gVersion", "0.0.8.alpha");
-
-// Data source
-define("gDataScript", "data/mysql/anyGetData.php"); // Relative to gHomeFolder
+define("gVersion", "0.1.0.beta");
 
 // Paths
 $docroot = $_SERVER['DOCUMENT_ROOT'];
-define("gHomePath",   $docroot."/".gHomeFolder);
-define("gAnyvistaURL", gServer . gHomeFolder);
+define("gHomePath",     $docroot . "/" . gHomeFolder);
+define("gAnyvistaURL",  gServer . gHomeFolder);
 
-define("gDataSource", $docroot . "/" . gHomeFolder . "/" . gDataScript);
+// Data source
+define("gDataScript",   "data/mysql/anyGetData.php"); // Relative to gHomeFolder
+define("gDataSource",   $docroot . "/" . gHomeFolder . "/" . gDataScript);
 
 // File upload
 define("gUploadFolder", "upload/"); // Relative to gHomeFolder
@@ -41,35 +40,38 @@ define("gUploadPath",   $docroot . "/" . gHomeFolder . "/" . gUploadFolder);
 //
 
 // anyPaginator
-define("gAnyPaginatorURL",  gServer          . gHomeFolder . "../anyPaginator/");
-define("gAnyPaginator_css", gAnyPaginatorURL . "anyPaginator.css");
-define("gAnyPaginator_js",  gAnyPaginatorURL . "anyPaginator.js");
+define("gAnyPaginatorURL",  gServer          . gThirdpartyJS . "anyPaginator/");
+define("gAnyPaginator_css", gAnyPaginatorURL . "anypaginator-1.1.0.min.css");
+define("gAnyPaginator_js",  gAnyPaginatorURL . "anypaginator-1.1.0.min.js");
 
 // jQuery / jQuery widget factory
-define("gjQueryURL",        gServer            . gThirdpartyJS . "jquery/");
-define("gjQuery_js",        gjQueryURL         . "jquery-3.6.0.min.js");
-define("gjQueryWidgetURL",  gServer            . gThirdpartyJS . "jquery/");
-define("gjQueryWidget_js",  gjQueryWidgetURL   . "jquery-widget-1.12.1.min.js");
+define("gjQueryURL",        gServer          . gThirdpartyJS . "jquery/");
+define("gjQuery_js",        gjQueryURL       . "jquery-3.7.0.min.js");
+define("gjQueryWidgetURL",  gServer          . gThirdpartyJS . "jquery/");
+define("gjQueryWidget_js",  gjQueryWidgetURL . "jquery-widget-1.12.1.min.js");
 
 // W3CSS
-define("gW3CSSURL",         gServer            . gThirdpartyJS . "w3css/");
-define("gW3CSS_css",        gW3CSSURL          . "w3.css");
+define("gW3CSSURL",         gServer          . gThirdpartyJS . "w3css/");
+define("gW3CSS_css",        gW3CSSURL        . "w3.css");
 
 // Font Awesome
-define("gFontAwesomeURL",   gServer            . gThirdpartyJS . "fontawesome/");
-define("gFontAwesome_css",  gFontAwesomeURL    . "fa.min.css");
+define("gFontAwesomeURL",   gServer          . gThirdpartyJS . "fontawesome/");
+define("gFontAwesome_css",  gFontAwesomeURL  . "fa.min.css");
 
 // TinyMCE
-define("gTinyMCEURL",       gServer            . gThirdpartyJS . "tinymce/js/tinymce/");
-define("gTinyMCE_js",       gTinyMCEURL        . "tinymce.min.js");
+define("gTinyMCEURL",       gServer          . gThirdpartyJS . "tinymce/js/tinymce/");
+define("gTinyMCE_js",       gTinyMCEURL      . "tinymce.min.js");
 
+//
 // Wordpress stuff
+//
+
 //define("WP_PLUGIN",""); // Comment out if using the server API, but not as a Wordpress plugin
 define("gWordpressURL",     gServer            . "Prosjekter/testserver/");
 define("gWProot", dirname(dirname(dirname(dirname(dirname(__FILE__)))))); // Path to wp-load.php
 define("gWPLoad", gWProot . "/wp-load.php"); // Wordpress functions
 
-// The name of user tables and columns depend on whether we run against a Wordpress database
+// The names of user tables and columns depend on whether we run against a Wordpress database or not
 if (defined("WP_PLUGIN")) {
   define('ANY_DB_USER_TABLE',    'wp_users');     // Name of user table
   define('ANY_DB_USERMETA_TABLE','wp_usermeta');  // Name of user meta table
