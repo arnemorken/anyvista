@@ -2,7 +2,9 @@
 
 # anyVista <img src="balanselogo_85x95.png" align="right">
 
-A Javascript library for grouping, manipulating, displaying and editing general hierarchical data as items or lists of almost any combination of HTML elements, freely mixing lists and items of different types, interacting with lists and list items, using predefined or user defined types and more.
+anyVista is a Javascript/jQuery library that can view, manage and persist data as lists and/or individual items.
+
+anyVista can group, manipulate, display, edit and store general hierarchical data as items or lists of almost any combination of HTML elements, freely mixing lists and items of different types, interacting with lists and list items, using predefined or user defined types and more.
 
 anyVista can read complex hierarchical and clustered data structures and display them in beautiful tables. The data may be read from server or client databases (both included), Ajax, inline code or indeed any data source, as long as it follows a certain flexible data format.
 
