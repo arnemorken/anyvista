@@ -64,8 +64,8 @@ eventModel.prototype.dbSetAttended = function (options)
   }
   param_str += lf_str;
   if (this.mode == "remote") { // Remote server call
+    let url  = this._getDataSourceName() + param_str;
     let self = this;
-    let url = any_defs.dataScript + param_str;
     jQuery.getJSON(url)
     .done(function(jqXHR) { return self.dbSetAttendedSuccess(jqXHR,options); });
   }

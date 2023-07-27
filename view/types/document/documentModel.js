@@ -52,7 +52,7 @@ documentModel.prototype.dbDeleteSuccess = function (jqXHR,options)
   }
   // Remove from disk
   let param_str = "?echo=y&type=document&cmd=del&del=ulf&ulf="+options.filename;
-  let url  = any_defs.dataScript + param_str;
+  let url  = this._getDataSourceName() + param_str;
   let self = this;
   let req  = jQuery.getJSON(url,jQuery.proxy(this.dbDeleteSuccess,this,options));
   req.fail(function(jqXHR) { self.fileDeleteFailed(options.filename,jqXHR,self); });
