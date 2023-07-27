@@ -389,13 +389,13 @@ anyModel.prototype._dataInitDefault = function ()
  *
  * @method anyModel.dataInit
  * @param {Object} options An object containing data with which to initialize the model.
- *                         If the encapsulation `options.JSON_CODE` has been set (ny the server,
+ *                         If the encapsulation `options.JSON_CODE` has been set (by the server),
  *                         it will be removed from `options`. If `options == null`, default values
  *                         will be set.<br/>
  *                         The object may contain these elements:
  *
- * @param {Object}  options.data           Data. Will only be initialised if `dataInit` is called after a search
- *                                         (indicated by `this.db_last_command == "sea"`). Optional.
+ * @param {Object}  options.data           Data. Will only be initialised if `dataInit` is called after a search.
+ *                                         Optional.
  * @param {String}  options.type           Type, e.g. "user". Optional.
  * @param {String}  options.id             Item id, if the top level data represents an item, e.g. "42". Optional.
  * @param {String}  options.id_key         Id key, e.g. "user_id". Optional. Default: "[type]_id".

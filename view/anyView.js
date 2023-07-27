@@ -301,6 +301,7 @@ $.any.anyView.prototype.getFilter = function (type,kind)
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 
+// Get a unique id to be used as a prefix for elements
 $.any.anyView.prototype._createIdBase = function ()
 {
   return "idBase" + 1 + Math.floor(Math.random()*10000000); // Pseudo-unique id
@@ -337,6 +338,7 @@ $.any.anyView.prototype._getOrCreateFilters = function (model)
   return f;
 }; // _getOrCreateFilters
 
+// Find the current type to use
 $.any.anyView.prototype._findType = function (data,id,otype)
 {
   let type = null;
@@ -354,10 +356,11 @@ $.any.anyView.prototype._findType = function (data,id,otype)
   if (!type)
     type = this.options.defaultType;
   if (!type)
-    type = this.model.type; // TODO! Is thgis always the right choice?
+    type = this.model.type; // TODO! Is this always the right choice?
   return type;
 }; // _findType
 
+// Find the current kind to use
 $.any.anyView.prototype._findKind = function (data,id,okind)
 {
   let kind = null;
@@ -377,6 +380,7 @@ $.any.anyView.prototype._findKind = function (data,id,okind)
   return kind;
 }; // _findKind
 
+// Set isEditable according to model's permissions
 $.any.anyView.prototype._setPermissions = function ()
 {
   if (this.options.admin_always_edits) {
@@ -640,7 +644,7 @@ $.any.anyView.prototype.refresh = function (params)
 $.any.anyView.prototype.refreshNoData = function (params)
 {
   //this.showItem({ data: params });
-};
+}; // refreshNoData
 
 $.any.anyView.prototype._clearBeforeRefresh = function ()
 {
