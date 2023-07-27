@@ -117,7 +117,11 @@ We will then get a view like this:
 
 # API
 
-Coming soon.
+The documentation is currently being updated. Use with caution!
+
+<a href="http://anyvista.balanse.info/docs/module-anyVista.html">anyVista user's guide</a>
+
+The user's guide contains links to the classes of the API.
 
 # Improvements
 
