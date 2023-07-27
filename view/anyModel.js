@@ -363,7 +363,7 @@ anyModel.prototype._dataInitDefault = function ()
   this.data            = null;
   this.id              = null;
   this.types           = null;
-  this.mode            = gMode;
+  this.mode            = typeof gMode !== 'undefined' ? gMode : "local";
   this.db_connection   = null;
   this.table_factory   = null;
   this.db_fields       = null;
