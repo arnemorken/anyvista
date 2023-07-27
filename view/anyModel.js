@@ -176,7 +176,7 @@ var anyModel = function (options)
   * @type       {String}
   * @default    gMode (global var. defined in anyDefs.js)
   */
-  this.mode = gMode;
+  this.mode = typeof gMode !== 'undefined' ? gMode : "local";
 
   /**
   * The database connection. Only valid in `"local"` mode.
@@ -324,13 +324,14 @@ var anyModel = function (options)
         return false;
       },
     };
-    if (!this.db_connection)
+    if (!this.db_connection && typeof dbConnection !== 'undefined') {
       this.db_connection = new dbConnection(params);
-    if (this.db_connection.error)
-      console.error(this.db_connection.error);
-    else {
-      if (!this.table_factory)
-        this.table_factory = new anyTableFactory(this.db_connection);
+      if (this.db_connection.error)
+        console.error(this.db_connection.error);
+      else {
+        if (!this.table_factory)
+          this.table_factory = new anyTableFactory(this.db_connection);
+      }
     }
   }
 
