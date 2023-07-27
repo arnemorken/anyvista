@@ -31,7 +31,7 @@
  * otherwise it defaults to "local". `type` corresponds to a database table and `id_key` to an id
  * column in that table.
  * <p/>
- * See <a href="anyVista.html">anyVista</a> for a full description of the format of the data
+ * See <a href="module-anyVista.html">anyVista</a> for a full description of the format of the data
  * structure that the model works with.
  * <p/>
  * The class contains:
