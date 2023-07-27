@@ -40,7 +40,7 @@ var is_admin      = serverdata.permission && serverdata.permission.is_admin;
 var is_logged_in  = serverdata.permission && serverdata.permission.is_logged_in && parseInt(serverdata.permission.current_user_id) > 0;
 var is_new        = (data_id == "new" || parseInt(data_id) == -1) && (!is_logged_in || is_admin);
 var is_me         = serverdata.permission && parseInt(serverdata.permission.current_user_id) == parseInt(data_id);
-var model_options = { mode:         gMode,
+var model_options = { mode:         "remote",
                       data:         serverdata ? serverdata.data       : null,
                       message:      serverdata ? serverdata.message    : null,
                       error_server: serverdata ? serverdata.error      : null,

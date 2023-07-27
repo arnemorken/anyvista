@@ -29,7 +29,7 @@
 var serverdata = <?php echo $the_data;?>;
 if (serverdata && serverdata.JSON_CODE)
   serverdata = serverdata.JSON_CODE;
-var model = new groupModel({ mode:         gMode,
+var model = new groupModel({ mode:         "remote",
                              data:         serverdata ? serverdata.data : null,
                              message:      serverdata ? serverdata.message: null,
                              error_server: serverdata ? serverdata.error: null,
