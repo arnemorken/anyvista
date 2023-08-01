@@ -119,7 +119,7 @@ We will then get a view like this:
 
 The documentation is currently being updated. Use with caution!
 
-<a href="http://anyvista.balanse.info/docs/module-anyVista.html">anyVista user's guide</a>
+<a href="https://anyvista.balanse.info/docs/module-anyVista.html">anyVista user's guide</a>
 
 The user's guide contains links to the classes of the API.
 
