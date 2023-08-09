@@ -382,13 +382,15 @@ $.any.anyView.prototype._findKind = function (data,id,okind)
 // Set isEditable according to model's permissions
 $.any.anyView.prototype._setPermissions = function ()
 {
-  if (this.options.admin_always_edits) {
-    let is_admin = this.model && this.model.permission && this.model.permission.is_admin;
-    this.options.isEditable = this.options.isEditable || is_admin;
-  }
-  else
-  if (this.model && this.model.permission && this.model.permission.isEditable) {
-    this.options.isEditable = this.model.permission.isEditable;
+  if (this.options) {
+    if (this.options.admin_always_edits) {
+      let is_admin = this.model && this.model.permission && this.model.permission.is_admin;
+      this.options.isEditable = this.options.isEditable || is_admin;
+    }
+    else
+    if (this.model && this.model.permission && this.model.permission.isEditable) {
+      this.options.isEditable = this.model.permission.isEditable;
+    }
   }
 }; // _setPermissions
 
@@ -470,9 +472,11 @@ $.any.anyView.prototype.empty = function (params)
  */
 $.any.anyView.prototype.refresh = function (params)
 {
-  if (!params || !params.dont_reset_rec || !this.options)
-    this.options.ref_rec = 0; // Reset on every call to refresh, unless specifically told not to do so
-
+  if (!params || !params.dont_reset_rec || !this.options) {
+    if (!this.options)
+      this.options = {};
+    this.options.ref_rec = 0; // Reset on every call to refresh
+  }
   let parent    = params && params.parent    ? params.parent    : this.element;
   let type      = params && params.type      ? params.type      : "";
   let kind      = params && params.kind      ? params.kind      : "";
@@ -4312,26 +4316,26 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
 // TODO! When deleting the last entry in a list, the tab is not removed (if anyViewTabs is used)
 $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
 {
-  let self = context ? context : this;
-  self.db_last_command = "sea";
+  let model = context ? context : this;
+  model.db_last_command = "sea";
 
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
     if (Object.size(serverdata.data) == 0)
       serverdata.data = null;
-    self.message = serverdata.message;
+    model.message = serverdata.message;
     if (serverdata.error) {
-      self.error_server = serverdata.error;
-      self.error        = i18n.error.SERVER_ERROR;
+      model.error_server = serverdata.error;
+      model.error        = i18n.error.SERVER_ERROR;
     }
-    if (self.message)
-      console.log("anyView.dbUpdateLinkListDialog: "+self.message);
-    if (self.error_server)
-      console.error("anyView.dbUpdateLinkListDialog: "+self.error_server);
+    if (model.message)
+      console.log("anyView.dbUpdateLinkListDialog: "+model.message);
+    if (model.error_server)
+      console.error("anyView.dbUpdateLinkListDialog: "+model.error_server);
 
     if (serverdata.data) {
-      let parent_view = options.parent_view ? options.parent_view : this;
+      let parent_view = options.parent_view ? options.parent_view : null;
       if (parent_view) {
         let list_type   = options.type;
         let new_id_base = parent_view._createIdBase();
@@ -4384,14 +4388,15 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             okFunction: parent_view.dbUpdateLinkList,
             context:    parent_view,
             // Sent to okFunction:
-            type:       self.type,
-            data:       self.data,
-            id:         self.id,
+            type:       model.type,
+            data:       model.data,
+            id:         model.id,
             link_type:  select_list_view.model.type,
             link_id:    null,
             name_key:   select_list_view.model.name_key,
             select:     select_list_view.options.select,
             unselect:   select_list_view.options.unselect,
+            grouping:   parent_view.options.grouping,
           };
           w3_modaldialog(mod_opt);
           select_list_view.refresh();
@@ -4442,7 +4447,8 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
     throw i18n.error.MODEL_MISSING;
 
   // Update database
-  this.options.item_opening = true; // To make top right close icon appear
+  if (this.options)
+    this.options.item_opening = true; // To make top right close icon appear
   let the_type  = opt.item_type ? opt.item_type : opt.type;
   let the_id    = opt.item_id   ? opt.item_id   : opt.id;
   let link_type = opt.link_type;
@@ -4455,8 +4461,8 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
         select:    opt.select,
         unselect:  opt.unselect,
         name_key:  opt.name_key,
-        header:    true,                  // TODO! Is this used?
-        grouping:  this.options.grouping, // TODO! Is this used?
+        header:    true,                                                // TODO! Is this used?
+        grouping:  this.options ? this.options.grouping : opt.grouping, // TODO! Is this used?
       };
   if (!this.model.dbUpdateLinkList(upd_opt))
     return false;

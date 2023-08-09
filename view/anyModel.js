@@ -1208,6 +1208,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                                  id:   ins_id,
                                  type: the_link_type,
                               })) {
+            // TODO! Is this always correct?
             if (the_data[0])
               the_data = the_data[0].data;
             else
