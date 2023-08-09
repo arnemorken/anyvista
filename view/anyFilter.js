@@ -8,8 +8,7 @@
  *
  ***************************************************************************************/
 /**
- * __anyVista filter class.__
- * Minimal fallback filter that just displays the name key variable.
+ * anyFilter is a minimal fallback filter that just displays the name key variable.
  *
  * @class anyFilter
  * @constructor

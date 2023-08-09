@@ -13,8 +13,8 @@
  ***************************************************************************************/
 
 /**
- * anyModel contains a tree structure data model that can manipulate data as lists and items and
- * optionally synchronize with a (server or client side) database.
+ * The anyModel class contains a tree structure data model that can manipulate data as lists and
+ * items and optionally synchronize with a (server or client side) database.
  * <p/>
  * See <a href="anyView.html">`anyView`</a> for a description of a data view class for displaying
  * data in the model.
@@ -40,6 +40,7 @@
  * <li>- methods for working with data in a (server or client side) database (`db*` methods),</li>
  * <li>- subscribe/callback methods (`cb*` methods),</li>
  * <li>- helper methods.</li>
+ *
  * @constructs anyModel
  * @param {Object} options An object which may contain the following properties, all of which are
  *                         optional unless stated otherwise:
@@ -230,7 +231,7 @@ var anyModel = function (options)
   this.db_last_term = "";
 
   /**
-  * @description Number of seconds to wait for database reply before timing out.
+  * Number of seconds to wait for database reply before timing out.
   *
   * @type       {integer}
   * @default    10
@@ -2533,9 +2534,9 @@ anyModel.prototype.dbUpdateLinkSuccess = function (context,serverdata,options)
 }; // dbUpdateLinkSuccess
 
 /**
+ * Deletes an item from a database table.
+ *
  * @method anyModel.dbDelete
- * @description Deletes an item from a database table.
- *              TODO! Check that the server also deletes any links the item may have in other tables.
  * @param {Object} options An object which may contain these elements:
  *
  * @param {integer}  options.type       Item's type.
@@ -2553,6 +2554,7 @@ anyModel.prototype.dbUpdateLinkSuccess = function (context,serverdata,options)
  *
  * @return true if the database call was made, false otherwise.
  */
+// TODO! Check that the server also deletes any links the item may have in other tables.
 anyModel.prototype.dbDelete = function (options)
 {
   if (!options || typeof options != "object")

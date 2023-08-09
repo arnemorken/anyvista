@@ -45,8 +45,9 @@ var anyViewTabsWidget = $.widget("any.anyViewTabs", $.any.anyView, {
 }); // anyViewTabs widget constructor
 
 /**
+ * Get the view options for a new tab view
+ *
  * @method anyViewTabs.getCreateViewOptions
- * @description Coming soon.
  * @return opt
  */
 $.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,kind,data_level,indent_level,params)
@@ -59,8 +60,9 @@ $.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,kind,da
 }; // getCreateViewOptions
 
 /**
+ * Get the current tab container (div), or create a new one if it does not exist
+ *
  * @method anyViewTabs.getOrCreateTabsContainer
- * @description Get the current tab container (div), or create a new one if it does not exist
  * @return tabs_div
  */
 $.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kind,data_level)

@@ -13,12 +13,11 @@
  ***************************************************************************************/
 
 /**
- * <p>anyView can display data in an anyVista data model.
- * </p><p>
- * See <a href="../classes/anyModel.html">`anyModel`</a> for a description of the data model class.
- * </p><p>
+ * The anyView class can display, edit and persist data in an anyVista data model.
+ * <p/>
+ * See <a href="anyModel.html">`anyModel`</a> for a description of the data model class.
+ * <p/>
  * Note: All jQuery id's in anyVista are on the format [id_base]\_[type]\_[kind]\_[id]\_[html_name].
- * </p>
  *
  * @constructs anyView
  * @param {Object} options An object which may contain these elements:
@@ -2489,11 +2488,13 @@ $.any.anyView.prototype.showLinkMenu = function (event)
 }; // showLinkMenu
 
 /////////////////////////////////////////////////////////////////////////////////////////
-//
-// Create a new model in a new view and return the view
-//
-/////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Create a new model in a new view and return the view.
+ *
+ * @method anyView.getCreateViewOptions
+ * @return view
+ */
 $.any.anyView.prototype.createView = function (params)
 {
   let parent       = params && params.parent                                      ? params.parent       : null;
@@ -2574,6 +2575,12 @@ $.any.anyView.prototype.createView = function (params)
   return view;
 }; // createView
 
+/**
+ * Get the model options for a new view.
+ *
+ * @method anyView.getCreateViewOptions
+ * @return opt
+ */
 $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
 {
   return {
@@ -2589,6 +2596,12 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
   };
 }; // getCreateModelOptions
 
+/**
+ * Get the view options for a new view.
+ *
+ * @method anyView.getCreateViewOptions
+ * @return opt
+ */
 // TODO! options.localRemove etc. must be sent as params when creating new view
 $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,kind,id_str,data_level,indent_level,params)
 {
@@ -3989,10 +4002,11 @@ $.any.anyView.prototype.removeFromView = function (opt)
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Search for the list of possible parent items for the item with the given id.
+ * Called when processing type filters.
+ * The success metod builds a dropdown menu.
+ *
  * @method anyView.dbSearchParents
- * @description Search for the list of possible parent items for the item with the given id.
- *              Called when processing type filters.
- *              The success metod builds a dropdown menu.
  * @param  type
  * @param  kind
  * @param  id
@@ -4260,10 +4274,11 @@ $.any.anyView.prototype.validateUpdate = function (data)
 }; // validateUpdate
 
 /**
+ * Search for the list of items to select from.
+ * Called when selecting in the "Add..." menu in bottom toolbar of an item.
+ * The success metod builds a list of selectable items in a dialog.
+ *
  * @method anyView.dbSearchLinks
- * @description Search for the list of items to select from.
- *              Called when selecting in the "Add..." menu in bottom toolbar of an item.
- *              The success metod builds a list of selectable items in a dialog.
  * @param  {Object} event
  * @return true on success, false on error.
  */
@@ -4526,8 +4541,9 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
 }; // dbRemoveDialog
 
 /**
+ * Deletes an item from memory and database and refreshes view.
+ *
  * @method anyView.dbDeleteDialog
- * @description Deletes an item from memory and database and refreshes view.
  * @param {Object}  options
  *
  * @return this
@@ -4647,8 +4663,9 @@ $.any.anyView.prototype.dbDelete = function (opt)
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Shows errors and/or messages.
+ *
  * @method anyView.showMessages
- * @description Shows errors and/or messages.
  * @param {Object} modelOrString If a string, the message/error to display.
  *                               If a model, the model from which to display a message/error.
  *                               If null, `this.model` is assumed.
@@ -4685,9 +4702,10 @@ $.any.anyView.prototype.showMessages = function (modelOrString,spin)
 }; // showMessages
 
 /**
+ * Initializes various javascript components.
+ * If overridden by derived classes, this method *must* be called.
+ *
  * @method anyView.initComponents
- * @description Initializes various javascript components.
- *              If overridden by derived classes, this method *must* be called.
  * @return      `this`.
  */
 $.any.anyView.prototype.initComponents = function ()
