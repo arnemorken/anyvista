@@ -8,15 +8,16 @@
 <h1>TODO</h1>
 
     <h3>Code:</h3>
+    <h4>- Server:</h4>
+    <ol>
+        <li>If a child item is not a member of any groups, it is not listed below the parent</li>
+    </ol>
+    <h4>- Client:</h4>
     <ol>
         <li>When adding an entry to a plugin/type tab for an item, the view always switches to the first tab</li>
         <li>Pagination must remember sort order</li>
         <li>Go through all TODO comments in code</li>
         <li>Standard plugins (anyVista types) only partially implemented.</li>
-        <li>Sort list rows (data-position attribute) (user defined)</li>
-        <li>Tab order (data-position attribute) (user defined)</li>
-        <li>Handle duplicate ids/names (rename event's parent_id to event_parent_id, etc.)</li>
-        <li>anyModel::dbInsert() convenience method</li>
         <li>Server authorization (permissions) only partially implemented.</li>
         <li>Back button on tablets</li>
         <li>i18n</li>
@@ -30,14 +31,24 @@
         <li>Documentation incomplete</li>
         <li>Examples incomplete</li>
         <li>Wordpress integration not uploaded to GitHub.</li>
-        <li>Web site not created</li>
+        <li>anyVista web site</li>
     </ol>
 
+    <hr/>
+
     <h3>Next version:</h3>
+    <h4>- Server:</h4>
     <ol>
+        <li>Handle duplicate ids/names to avoid theoretical conflicts in SQL queries (rename event's parent_id to event_parent_id, etc.)</li>
+    </ol>
+    <h4>- Client:</h4>
+    <ol>
+        <li>anyModel::dbInsert() convenience method</li>
         <li>Use [type]_description as table ingress (optionally)</li>
         <li>Insert/update: If type/id combination is found several places, all places should be
             (optionally) inserted/updated into</li>
+        <li>Sort list rows (data-position attribute) (user defined)</li>
+        <li>Tab order (data-position attribute) (user defined)</li>
         <li>Search field in header</li>
         <li>Edit/delete buttons for "head"</li>
         <li>Meta table support for AlaSQL db</li>
