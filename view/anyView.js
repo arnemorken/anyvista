@@ -4368,7 +4368,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           if (select_list_view.options.preselected)
             parent_view._addPreSelections(select_list_view);
           let par_view_id = parent_view.id_base+"_group_head_0_data";
-          w3_modaldialog({
+          let mod_opt = {
             parentId:   par_view_id,
             elementId:  "",
             heading:    "Select "+list_type+"s to add / remove", // TODO! i18n
@@ -4387,7 +4387,8 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             name_key:   select_list_view.model.name_key,
             select:     select_list_view.options.select,
             unselect:   select_list_view.options.unselect,
-          });
+          };
+          w3_modaldialog(mod_opt);
           select_list_view.refresh();
         }
       } // if parent_view
@@ -4441,17 +4442,18 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
   let the_id    = opt.item_id   ? opt.item_id   : opt.id;
   let link_type = opt.link_type;
   let link_id   = opt.link_id;
-  if (!this.model.dbUpdateLinkList({
-         type:      the_type,
-         id:        the_id,
-         link_type: link_type,
-         link_id:   link_id,
-         select:    opt.select,
-         unselect:  opt.unselect,
-         name_key:  opt.name_key,
-         header:    true,                  // TODO! Is this used?
-         grouping:  this.options.grouping, // TODO! Is this used?
-       }))
+  let upd_opt = {
+        type:      the_type,
+        id:        the_id,
+        link_type: link_type,
+        link_id:   link_id,
+        select:    opt.select,
+        unselect:  opt.unselect,
+        name_key:  opt.name_key,
+        header:    true,                  // TODO! Is this used?
+        grouping:  this.options.grouping, // TODO! Is this used?
+      };
+  if (!this.model.dbUpdateLinkList(upd_opt))
     return false;
 
   return true;

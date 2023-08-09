@@ -1208,7 +1208,17 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                                  id:   ins_id,
                                  type: the_link_type,
                               })) {
-            ins_id = the_id; // No "link-" index, use the_id as insertion point
+            if (the_data[0])
+              the_data = the_data[0].data;
+            else
+            if (the_data["+0"])
+              the_data = the_data["+0"].data;
+            if (the_data && the_data[the_id]) {
+              the_data[the_id].data[ins_id] = {};
+              the_data[the_id].data[ins_id].head = the_link_type;
+            }
+            else
+              ins_id = the_id; // No "link-" index, use the_id as insertion point
             the_ins_type = the_type;
           }
           let indata = {};
@@ -1219,7 +1229,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
           indata.grouping = this.grouping; // TODO! Why?
           this.dataInsert({ data:     the_data,
                             id:       ins_id,
-                            type:     the_ins_type,
+                            type:     the_link_type,
                             new_data: item[id] ? item[id] : item["+"+id],
                             new_id:   id,
                          });
