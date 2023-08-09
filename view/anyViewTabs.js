@@ -88,6 +88,13 @@ $.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kin
 
 $.any.anyViewTabs.prototype.postRefresh = function (params,skipName)
 {
+  if (Object.size(this.model.data) == 0) {
+    let elm = $("#"+this.current_id_base+"_data");
+    elm.remove();
+    elm = $("#"+this.current_id_base+"_data_tab_btn");
+    elm.remove();
+    this.current_id_base = this.first_id_base;
+  }
   this.openTab({ id_base:this.current_id_base });
 }; // postRefresh
 

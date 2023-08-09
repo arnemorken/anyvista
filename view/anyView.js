@@ -519,6 +519,11 @@ $.any.anyView.prototype.refresh = function (params)
     let prev_kind  = kind;
     let the_parent = parent;
     let row_no     = 0;
+    if (Object.size(data) == 0) {
+      let elm = $("#"+this.element[0].id);
+      elm.remove();
+    }
+    else
     for (let idc in data) {
       if (data.hasOwnProperty(idc) && idc != "id") {
         if (view && !idc.startsWith("grouping")) {
@@ -4682,7 +4687,7 @@ $.any.anyView.prototype.showMessages = function (modelOrString,spin)
     if (!modelOrString)
       modelOrString = this.model;
     let close_icon = "<span id='"+div_id+"_close' style='padding-right:5px;' class='far fa-window-close'></span>";
-    if (typeof modelOrString == "object") {
+    if (typeof modelOrString == "object" && this.options) {
       let err = this.options.showServerErrors && modelOrString.error_server ? modelOrString.error_server : modelOrString.error;
       if (err)
         msgdiv.append(close_icon+"<span style='color:red;'>"+err+"</span>");
