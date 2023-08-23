@@ -1048,6 +1048,8 @@ class anyTable extends dbTable
   {
     $cur_uid = $this->mPermission["current_user_id"];
     $lj = "";
+    if ($this->hasParentId())
+      $lj .= "LEFT JOIN ".$this->mTableName." temp ON ".$this->mTableName.".parent_id=temp.".$this->mIdKey." ";
     // Always left join group table, except if has parent_id while being a list-for list
     if ($this->mType != "group")
       $lj .= $this->findListLeftJoinOne($cur_uid,"group",$gid);
@@ -1059,8 +1061,6 @@ class anyTable extends dbTable
         $lj .= $this->findListLeftJoinOne($cur_uid,$this->mLinkType,$gid);
       }
     }
-    if ($this->hasParentId())
-      $lj .= "LEFT JOIN ".$this->mTableName." temp ON ".$this->mTableName.".parent_id=temp.".$this->mIdKey." ";
     return $lj;
   } // findListLeftJoin
 
@@ -1081,6 +1081,8 @@ class anyTable extends dbTable
     $lj = "";
     if ($has_linktable) {
       $lj .= "LEFT JOIN ".$linktable.  " ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ";
+      if ($this->hasParentId())
+        $lj .= "OR ".$this->mTableName.".parent_id=temp.".$this->mIdKeyTable." ";
       if (!isset($this->mLinkType) && $link_type == "user" && $cur_uid)
         $lj .= "AND CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$cur_uid." AS INT) "; // Only return results for current user
       if ($has_typetable) {
