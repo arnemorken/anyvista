@@ -3497,6 +3497,7 @@ $.any.anyView.prototype._addListEntryFromDB = function (context,serverdata,optio
       console.error("anyView._addListEntryFromDB: "+self.error_server);
     let view = options.context ? options.context : null;
     if (view) {
+      view.showMessages("",false);
       serverdata.kind       = "list";
       serverdata.type       = options.type;
       serverdata.par_id_str = options.par_id_str;
