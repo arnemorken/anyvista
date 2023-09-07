@@ -588,6 +588,8 @@ $.any.anyView.prototype.refresh = function (params)
                  par_id_str: par_id_str,
                  row_id_str: row_id_str,
               });
+              if (curr_kind == "list" && !view.rows_changed)
+                --row_no;
             }
           } // if view
           prev_type = curr_type;
@@ -1035,7 +1037,7 @@ $.any.anyView.prototype.refreshData = function (params)
   if (kind == "list" || kind == "item") {
     let tbody = this.getOrCreateTbody(table_div,type,kind,par_id_str);
     if (tbody) {
-      this.refreshTbodyRow({
+      this.rows_changed = this.refreshTbodyRow({
          parent:     tbody,
          type:       type,
          kind:       kind,
@@ -1412,7 +1414,8 @@ $.any.anyView.prototype.refreshDataFooter = function (params)
 }; // refreshDataFooter
 
 //
-// Refresh a single table row
+// Refresh a single table row.
+// Return table row (if list) or body (if item), or null on error.
 //
 $.any.anyView.prototype.refreshTbodyRow = function (params)
 {
@@ -1426,6 +1429,7 @@ $.any.anyView.prototype.refreshTbodyRow = function (params)
   return null;
 }; // refreshTbodyRow
 
+// Return table row, or null on error
 $.any.anyView.prototype.refreshListTableDataRow = function (params)
 {
   if (!params || !this.options)
@@ -1562,6 +1566,7 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
   return true;
 }; // refreshTableDataListCells
 
+// Return table body, or null on error
 $.any.anyView.prototype.refreshItemTableDataRow = function (params)
 {
   if (!params || !this.options)
@@ -2502,7 +2507,7 @@ $.any.anyView.prototype.showLinkMenu = function (event)
 /**
  * Create a new model in a new view and return the view.
  *
- * @method anyView.getCreateViewOptions
+ * @method anyView.getCreateView
  * @return view
  */
 $.any.anyView.prototype.createView = function (params)
