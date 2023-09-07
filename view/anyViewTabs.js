@@ -31,6 +31,8 @@ var anyViewTabsWidget = $.widget("any.anyViewTabs", $.any.anyView, {
     this.element.addClass("any-datatabs-view");
     this.first_id_base   = this.options.first_id_base   ? this.options.first_id_base : null;
     this.current_id_base = this.options.current_id_base ? this.options.current_id_base : null;
+    if (this.grandparent && !this.grandparent.idbase)
+      this.grandparent.idbase = this.current_id_base;
     return this;
   }, // constructor
 
@@ -54,7 +56,7 @@ $.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,kind,da
 {
   let opt = $.any.anyView.prototype.getCreateViewOptions.call(this,model,parent,kind,data_level,indent_level,params);
   opt.first_id_base   = this.first_id_base;
-  opt.current_id_base = this.current_id_base;
+  opt.current_id_base = this.grandparent ? this.grandparent.current_id_base : this.current_id_base;
   opt.grouping        = "tabs";
   return opt;
 }; // getCreateViewOptions
@@ -94,6 +96,8 @@ $.any.anyViewTabs.prototype.postRefresh = function (params,skipName)
     elm = $("#"+this.current_id_base+"_data_tab_btn");
     elm.remove();
     this.current_id_base = this.first_id_base;
+    if (this.grandparent && !this.grandparent.idbase)
+      this.grandparent.idbase = this.current_id_base;
   }
   this.openTab({ id_base:this.current_id_base });
 }; // postRefresh
@@ -137,12 +141,13 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
   if (!params || !params.parent || !params.data || !this.options.showHeader)
     return null;
 
-  let parent     = params.parent; // NOTE! Different parent than in anyView.refreshHeader!
-  let type       = params.type;
-  let kind       = params.kind;
-  let data       = params.data;
-  let id         = params.id;
-  let row_id_str = params.row_id_str;
+  let parent       = params.parent; // NOTE! Different parent than in anyView.refreshHeader!
+  this.grandparent = params.grandparent; // To remember current tab
+  let type         = params.type;
+  let kind         = params.kind;
+  let data         = params.data;
+  let id           = params.id;
+  let row_id_str   = params.row_id_str;
 
   // Get or create a container for the header tab buttons
   let ptype = this._findType(params.pdata,params.pid,type);
@@ -181,6 +186,8 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
       this.current_id_base = this.first_id_base;
     else
       this.current_id_base = id_base;
+    if (this.grandparent && !this.grandparent.idbase)
+      this.grandparent.idbase = this.current_id_base;
   }
 }; // refreshTabPanel
 
@@ -236,6 +243,8 @@ $.any.anyViewTabs.prototype.openTab = function (eventOrData)
   if (!this.first_id_base)
     this.first_id_base = id_base;
   this.current_id_base = id_base;
+  if (this.grandparent)
+    this.grandparent.idbase = this.current_id_base;
   return;
 }; // openTab
 

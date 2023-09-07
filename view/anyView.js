@@ -717,6 +717,7 @@ $.any.anyView.prototype.refreshOne = function (params)
                                                      have_data:  have_data,
                                                      doNotEmpty: false,
                                                   });
+  params.grandparent = parent; // TODO! Fix for anyViewTabs remember-current-tab problem
   params.parent = header_div;
   this.refreshHeader(params);
 
@@ -4396,7 +4397,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             name_key:   select_list_view.model.name_key,
             select:     select_list_view.options.select,
             unselect:   select_list_view.options.unselect,
-            grouping:   parent_view.options.grouping,
+            grouping:   model.grouping,
           };
           w3_modaldialog(mod_opt);
           select_list_view.refresh();
