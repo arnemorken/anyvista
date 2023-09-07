@@ -3614,6 +3614,7 @@ $.any.anyView.prototype.showItem = function (event)
         this.showMessages({message:"Wait... "},true); // TODO! i18n
         this.model.dbSearchNextId({
            type:      type,
+           is_new:    is_new,
            db_fields: f,
            onSuccess: this._foundNextIdFromDB,
            context:   this,
