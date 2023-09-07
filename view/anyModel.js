@@ -611,16 +611,17 @@ anyModel.prototype._getDataSourceName = function ()
  *      mymodel.dataSearch({type:"user",id:"38"});
 */
 // TODO! Not tested with non-numerical indexes
-anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
+anyModel.prototype.dataSearch = function (options,_prev_type,parent_data,parent_id)
 {
   if (!options || typeof options != "object") {
     console.error("anyModel.dataSearch: "+i18n.error.OPTIONS_MISSING);
     return null;
   }
-  let data       = options.data                   ? options.data       : this.data;
-  let type       = options.type                   ? options.type       : this.type;
-  let id         = options.id || options.id === 0 ? options.id         : null;
-  let _prev_type = options._prev_type             ? options._prev_type : this.type; // Only used internally!
+  let data = options.data                   ? options.data : this.data;
+  let type = options.type                   ? options.type : this.type;
+  let id   = options.id || options.id === 0 ? options.id   : null;
+  if (!options._prev_type)
+    _prev_type = this.type;
 
   if (!data)
     return null; // Not found
@@ -680,13 +681,19 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
         }
         else {
           // type search
-          if (!data[idc].head)
+          if (!data[idc].head) {
             if (!options.parent)
               itemlist.push(data[idc]);
             else {
               itemlist.push(data);
               break;
             }
+          }
+          else // head kind
+          if (options.parent) {
+            itemlist.push(data[idc]);
+            break;
+          }
         }
       }
       if (!item && data[idc].data) { // subdata
@@ -706,8 +713,9 @@ anyModel.prototype.dataSearch = function (options,parent_data,parent_id)
                                ? data_ptr.head
                                : dtype
                          : dtype;
-        item = this.dataSearch({data:data[idc].data,id:id,type:type,_prev_type:_prev_type},p_data,p_idc);
-        if (item && item.data)
+        item = this.dataSearch({ data:data[idc].data,id:id,type:type,parent:options.parent },
+                                _prev_type,p_data,p_idc);
+        if (item && item.data && !options.parent)
           item = item.data;
       }
       if (item && itemlist.length < 1)
