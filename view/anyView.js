@@ -3471,6 +3471,7 @@ $.any.anyView.prototype.addListEntry = function (event)
          db_fields:  f,
          onSuccess:  this._addListEntryFromDB,
          context:    this,
+         par_id_str: par_id_str,
       });
     }
   }
