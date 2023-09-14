@@ -1216,7 +1216,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                                  id:   ins_id,
                                  type: the_link_type,
                               })) {
-            // TODO! Is this always correct?
+            ins_id = id; // No "link-" index, use id as insertion point
             if (the_data[0])
               the_data = the_data[0].data;
             else
@@ -1227,7 +1227,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
               the_data[the_id].data[ins_id].head = the_link_type;
             }
             else
-              ins_id = the_id; // No "link-" index, use the_id as insertion point
+              ins_id = the_id;
             the_ins_type = the_type;
           }
           let indata = {};
