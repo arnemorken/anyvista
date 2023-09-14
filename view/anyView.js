@@ -214,6 +214,8 @@ var anyViewWidget = $.widget("any.anyView", {
                       ? this.options.model
                       : null;
 
+    this.views = {};
+
     if (this.model && this.options.subscribe_default) {
       if (this.options.reset_listeners)
         this.model.cbUnsubscribe(this.onModelChange);
@@ -4447,6 +4449,24 @@ $.any.anyView.prototype._addPreSelections = function (select_list_view)
   }
 }; // _addPreSelections
 
+$.any.anyView.prototype._findViewOfType = function (type)
+{
+  let v = null;
+  if (this.views) {
+    // Find the view to refresh
+    for (let x in this.views) {
+      if (this.views[x].model && this.views[x].model.type == type)
+        return this.views[x];
+      else {
+        v = this.views[x]._findViewOfType(type);
+        if (v && v.model && v.model.type == type)
+          return v;
+      }
+    }
+  }
+  return v;
+};
+
 $.any.anyView.prototype.dbUpdateLinkList = function (opt)
 {
   // Close dialog
@@ -4454,6 +4474,10 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
 
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
+
+  let v = this._findViewOfType(opt.link_type);
+  if (!v)
+    v = this;
 
   // Update database
   if (this.options)
@@ -4473,7 +4497,7 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
         header:    true,                                                // TODO! Is this used?
         grouping:  this.options ? this.options.grouping : opt.grouping, // TODO! Is this used?
       };
-  if (!this.model.dbUpdateLinkList(upd_opt))
+  if (!v.model.dbUpdateLinkList(upd_opt))
     return false;
 
   return true;
