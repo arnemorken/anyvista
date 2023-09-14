@@ -210,6 +210,32 @@ $.any.anyViewTabs.prototype.refreshData = function (params)
   return table_div;
 }; // refreshData
 
+$.any.anyViewTabs.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
+{
+  $.any.anyView.prototype.dbUpdateLinkListDialog.call(this,context,serverdata,options);
+  let list_type = null;
+  if (serverdata) {
+    if (serverdata.JSON_CODE)
+      serverdata = serverdata.JSON_CODE;
+    if (serverdata.data) {
+      let parent_view = options.parent_view ? options.parent_view : null;
+      if (parent_view)
+        list_type = options.type;
+    }
+  }
+  if (options.parent_view) {
+    if (list_type) {
+      let v = options.parent_view._findViewOfType(list_type);
+      if (v) {
+        let id = v.element.attr("id");
+        id = id.substring(0,id.lastIndexOf("_"));
+        id = id + "_link-" + list_type;
+        v.openTab({id_base:id});
+      }
+    }
+  }
+}; // dbUpdateLinkListDialog
+
 // Display a tab
 // If called by user clicking a tab: Hide/inactivate currently active tab and show/activate new tab.
 // If called by a function: Show/activate currently active tab.
