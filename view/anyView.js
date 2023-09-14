@@ -2582,6 +2582,7 @@ $.any.anyView.prototype.createView = function (params)
       view = null;
     }
     view.id_str = id_str;
+    this.views[id_str] = view;
   }
   catch (err) {
     let errstr = "Couldn't create view "+v_str+": "+err; // TODO! i18n
