@@ -620,7 +620,7 @@ anyModel.prototype.dataSearch = function (options,_prev_type,parent_data,parent_
   let data = options.data                   ? options.data : this.data;
   let type = options.type                   ? options.type : this.type;
   let id   = options.id || options.id === 0 ? options.id   : null;
-  if (!options._prev_type)
+  if (!_prev_type)
     _prev_type = this.type;
 
   if (!data)
