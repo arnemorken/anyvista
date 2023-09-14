@@ -356,7 +356,9 @@ function testModel()
     let dm = new anyModel({data:data});
     let res = dm.dataSearch({type:"foo",id:"11",parent:true});
     deepEqual(res              !== null &&
-              res[11].foo_name === "The foo",
+              res.data         !== null &&
+              res.data[11]     !== null &&
+              res.data[11].foo_name === "The foo",
               true, "dm.dataSearch('foo','11', true)) return parent data");
   });
 
@@ -906,8 +908,8 @@ function testModel()
 
   let myid   = "11";
   let idchk  = gDBMode == "local" ? "11" : "+11";
-  let uname  = "user 1";
-  let ulogin = "loginA";
+  let uname  = "The faz user";
+  let ulogin = "fazuser";
 
   asyncTest('dbSearch normal case - item, with header', 4, function() {
     let dm = new anyModel({ type:"user",db_search:false,mode:gDBMode} );
