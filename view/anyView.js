@@ -3743,6 +3743,10 @@ $.any.anyView.prototype._doShowItem = function (opt)
     view.options.isDeletable = false;
     view.options.isRemovable = false;
   }
+  // Spinner
+  let spdiv = view.element;
+  spdiv.append($('<div style="padding:10px;"><i class="fas fa-solid fa-spinner fa-spin"></i></div>'));
+
   // Display the item data
   if (view.model.mode == "remote" && !is_new) {
     // Remote search: Will (normally) call refresh via onModelChange
@@ -4252,6 +4256,11 @@ $.any.anyView.prototype.dbUpdate = function (event)
     this.options.isDeletable = this.options.isEditable;
     this.refresh();
   }
+  // Spinner
+  let icid = event.currentTarget.id.replace("update","edit");
+  let icdiv = $("#"+icid);
+  let res = icdiv.find($(".fas"));
+  res.toggleClass('fa-pencil-alt').toggleClass('fa-solid fa-spinner fa-spin');
 
   // Update database
   if (this.model.mode == "remote") {
