@@ -544,7 +544,7 @@ $.any.anyView.prototype.refresh = function (params)
                            ? id_str
                            : id_str
                              ? curr_kind == "item"
-                               ? id_str+"_"+idx
+                               ? idx // id_str+"_"+idx
                                : id_str
                              : idx;
           // Create new view whenever we encounter a new type or a new kind
