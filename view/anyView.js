@@ -567,7 +567,7 @@ $.any.anyView.prototype.refresh = function (params)
           }
           if (view) {
             // Refresh a header, a single list row or a single item
-            if (row_no == 0 && this.options.indent_level == 0) {
+            if (row_no == 0 && this.options.indent_level == 0 && curr_kind != "head") {
               let id = view.element.attr("id");
               $("#"+id).empty();
             }
