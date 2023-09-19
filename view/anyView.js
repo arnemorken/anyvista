@@ -963,38 +963,6 @@ $.any.anyView.prototype.refreshHeaderEntry = function (parent,data_item,filter_i
 }; // refreshHeaderEntry
 
 //
-// Refresh the table description (ingress)
-// TODO! No longer used
-//
-$.any.anyView.prototype.refreshIngress = function (params)
-{
-  if (!params || !this.options || !this.options.showTableIngress)
-    return null;
-
-  let ingress_div = params.ingress_div;
-//let type        = params.type;
-//let kind        = params.kind;
-  let data        = params.data;
-  let id          = params.id;
-  let row_id_str  = params.row_id_str;
-
-  if (!ingress_div)
-    return null;
-  if (!data || !data[id] || !data[id].group_description || !row_id_str)
-    return null;
-
-  let ingress_str = data[id].group_description;
-  if (!ingress_str || ingress_str == "")
-    return null;
-  ingress_div.append(ingress_str);
-
-  // Clean up
-  if (!ingress_div.length)
-    ingress_div.remove();
-  return ingress_div;
-}; // refreshIngress
-
-//
 // Refresh the data for an object.
 //
 $.any.anyView.prototype.refreshData = function (params)
