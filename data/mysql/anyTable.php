@@ -1081,7 +1081,7 @@ class anyTable extends dbTable
     $lj = "";
     if ($has_linktable) {
       $lj .= "LEFT JOIN ".$linktable.  " ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ";
-      if ($this->hasParentId())
+      if ($this->hasParentId() && $this->mLinkId == null)
         $lj .= "OR ".$this->mTableName.".parent_id=temp.".$this->mIdKeyTable." ";
       if (!isset($this->mLinkType) && $link_type == "user" && $cur_uid)
         $lj .= "AND CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$cur_uid." AS INT) "; // Only return results for current user
