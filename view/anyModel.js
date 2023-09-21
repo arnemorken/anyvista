@@ -2266,7 +2266,7 @@ anyModel.prototype.dbUpdateLinkList = function (options)
 }; // dbUpdateLinkList
 
 // Internal method, do not call directly.
-anyModel.prototype._dbUpdateLinkListLocalLocal = async function (options)
+anyModel.prototype._dbUpdateLinkListLocal = async function (options)
 {
   if (this.table_factory) {
     let the_type   = options.type      ? options.type      : this.type;
