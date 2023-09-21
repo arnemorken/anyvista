@@ -483,14 +483,14 @@ $.any.anyView.prototype.refresh = function (params)
   let type      = params && params.type      ? params.type      : "";
   let kind      = params && params.kind      ? params.kind      : "";
   let data      = params && params.data      ? params.data      : this.model && this.model.data ? this.model.data : null;
-  let pdata     = params && params.pdata     ? params.pdata     : null;
-  let pid       = params && params.pid       ? params.pid       : "";
   let item_id   = params && params.item_id   ? params.item_id   : null;
   let item_type = params && params.item_type ? params.item_type : null;
   let edit      = params && params.edit      ? params.edit      : false;
   let id_str    = params && params.id_str    ? params.id_str    : this.id_str ? this.id_str : ""; // Id string accumulated through recursion
   let from      = params && params.from      ? params.from      : 1;
   let num       = params && params.num       ? params.num       : this.options.itemsPerPage;
+  let pdata     = params && params.pdata     ? params.pdata     : null; // TODO! Can we get rid of this?
+  let pid       = params && params.pid       ? params.pid       : "";   // TODO! Can we get rid of this?
 
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
@@ -515,11 +515,9 @@ $.any.anyView.prototype.refresh = function (params)
     this.refreshCloseItemButton(params);
 
   if (data) {
-    // Display data
+    // Display data: Loop over all entries and refresh views
     if (kind == "head")
       ++this.data_level;
-
-    // Loop over all entries and refresh
     let view       = this;
     let prev_type  = type;
     let prev_kind  = kind;
@@ -597,7 +595,7 @@ $.any.anyView.prototype.refresh = function (params)
           prev_type = curr_type;
           prev_kind = curr_kind;
         } // if view
-      }
+      } // if
     } // for
 
     if (kind == "head")
@@ -759,9 +757,9 @@ $.any.anyView.prototype.refreshOne = function (params)
              data:       d.data,
              item_id:    item_id,
              item_type:  item_type,
+             edit:       edit,
              pdata:      data,
              pid:        id,
-             edit:       edit,
              id_str:     the_id_str,
              dont_reset_rec: true,
            });
@@ -2493,10 +2491,10 @@ $.any.anyView.prototype.createView = function (params)
   let kind         = params && params.kind                                        ? params.kind         : null;
   let data         = params && params.data                                        ? params.data         : null;
   let id           = params && (params.id || params.id === 0)                     ? params.id           : "";
-  let id_str       = params && params.id_str                                      ? params.id_str       : "";
   let data_level   = params && (params.data_level   || params.data_level   === 0) ? params.data_level   : this.data_level   ? this.data_level   : 0;
   let indent_level = params && (params.indent_level || params.indent_level === 0) ? params.indent_level : this.indent_level ? this.indent_level : 0;
   let model        = params && (params.model || params.model===null)              ? params.model        : null;
+  let id_str       = params && params.id_str                                      ? params.id_str       : "";
 
   if (!parent)
     parent = this.element;
@@ -2538,13 +2536,11 @@ $.any.anyView.prototype.createView = function (params)
   let view = null;
   try {
     let view_opt = this.getCreateViewOptions(model,parent,type,kind,id_str,data_level,indent_level,params);
-    if (params.showHeader === false)
+    if (params && params.showHeader === false)
       view_opt.showHeader = false;
-    v_str = params && params.view_class
-            ? params.view_class
-            : view_opt.grouping
-              ? type+"View"+view_opt.grouping.capitalize()
-              : type+"View";
+    v_str = view_opt.grouping
+            ? type+"View"+view_opt.grouping.capitalize()
+            : type+"View";
     if (!window[v_str]) {
       let def_str = "anyView";// Use fallback view name
       console.warn("View class "+v_str+" not found, using "+def_str+". "); // TODO! i18n
@@ -3745,7 +3741,8 @@ $.any.anyView.prototype._doShowItem = function (opt)
   }
   // Spinner
   let spdiv = view.element;
-  spdiv.append($('<div style="padding:10px;"><i class="fas fa-solid fa-spinner fa-spin"></i></div>'));
+  if (spdiv && spdiv != "")
+    spdiv.append($('<div style="padding:10px;"><i class="fas fa-solid fa-spinner fa-spin"></i></div>'));
 
   // Display the item data
   if (view.model.mode == "remote" && !is_new) {
@@ -4258,9 +4255,11 @@ $.any.anyView.prototype.dbUpdate = function (event)
   }
   // Spinner
   let icid = event.currentTarget.id.replace("update","edit");
-  let icdiv = $("#"+icid);
-  let res = icdiv.find($(".fas"));
-  res.toggleClass('fa-pencil-alt').toggleClass('fa-solid fa-spinner fa-spin');
+  if (icid && icid != "") {
+    let icdiv = $("#"+icid);
+    let res = icdiv.find($(".fas"));
+    res.toggleClass('fa-pencil-alt').toggleClass('fa-solid fa-spinner fa-spin');
+  }
 
   // Update database
   if (this.model.mode == "remote") {
