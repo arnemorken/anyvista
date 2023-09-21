@@ -1415,7 +1415,7 @@ anyModel.prototype._dbCreateLocal = async function (options)
   else
     console.warn("anyModel._dbCreateLocal: "+"No table factory. "); // TODO! i18n
   if (this.success)
-    return this.success(this,this.data,options);
+    return this.success(this,this,options);
   this.message = i18n.error.SUCCCESS_CB_MISSING;
   console.warn("anyModel._dbCreateLocal: "+this.message);
   return false;
@@ -1587,7 +1587,7 @@ anyModel.prototype._dbSearchLocal = async function (options)
   else
     console.warn("anyModel._dbSearchLocal: "+"No table factory. "); // TODO! i18n
   if (this.success)
-    return this.success(this,this.data,options);
+    return this.success(this,this,options);
   this.error = i18n.error.SUCCCESS_CB_MISSING;
   console.warn("anyModel._dbSearchLocal: "+this.message);
   return false;
@@ -2029,7 +2029,7 @@ anyModel.prototype._dbUpdateLocal = async function (options,item_to_send)
   else
     console.warn("anyModel._dbUpdateLocal: "+"No table factory. "); // TODO! i18n
   if (this.success)
-    return this.success(this,this.data,options);
+    return this.success(this,this,options);
   this.message = i18n.error.SUCCCESS_CB_MISSING;
   console.warn("anyModel._dbUpdateLocal: "+this.message);
   return false;
@@ -2293,8 +2293,8 @@ anyModel.prototype._dbUpdateLinkListLocalLocal = async function (options)
   } // if table_factory
   else
     console.warn("anyModel._dbUpdateLinkListLocal: "+"No table factory. "); // TODO! i18n
-  if (self.success)
-    return self.success(this,this.data,options);
+  if (this.success)
+    return this.success(this,this,options);
   this.message = i18n.error.SUCCCESS_CB_MISSING;
   console.warn("anyModel._dbUpdateLinkListLocal: "+this.message);
   return false;
