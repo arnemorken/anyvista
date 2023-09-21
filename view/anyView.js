@@ -529,15 +529,14 @@ $.any.anyView.prototype.refresh = function (params)
     }
     else
     for (let idc in data) {
-      if (data.hasOwnProperty(idc) && idc != "id") {
-        if (view && !idc.startsWith("grouping")) {
-          // Find the type and kind of the current data item
+      if (data.hasOwnProperty(idc) && idc != "id" && !idc.startsWith("grouping")) {
+        if (view) {
+          // Find the type and kind of the current data item (default is the previous type/kind)
           let curr_type = view._findType(data,idc,prev_type);
           let curr_kind = view._findKind(data,idc,prev_kind);
-          // Find identifier strings for containers and rows
-          let idx = Number.isInteger(parseInt(idc))
-                    ? ""+parseInt(idc)
-                    : idc;
+
+          // Create the current id_str
+          let idx = Number.isInteger(parseInt(idc)) ? ""+parseInt(idc) : idc;
           let par_id_str = curr_kind == "list"
                            ? id_str
                            : id_str
@@ -550,7 +549,6 @@ $.any.anyView.prototype.refresh = function (params)
             // If the new type/kind is contained within a list, create a new row to contain a new parent container
             if (prev_kind == "list")
               the_parent = view._addContainerRow(parent,prev_type,prev_kind,curr_type,curr_kind,par_id_str);
-            let view_class = params && params.view_class ? params.view_class : null;
             let mdl        = params && params.model      ? params.model      : null;
             view = view.createView({
                      parent:     the_parent,
@@ -559,7 +557,6 @@ $.any.anyView.prototype.refresh = function (params)
                      data:       data,
                      id:         idx, // Used by model
                      id_str:     curr_kind == "list" ? id_str : par_id_str,
-                     view_class: view_class,
                      model:      mdl, // Let the calling method specify the model explicitely
                    });
           }
@@ -582,9 +579,9 @@ $.any.anyView.prototype.refresh = function (params)
                      id:         idc,
                      item_id:    curr_kind == "item" ? idx       : item_id,
                      item_type:  curr_kind == "item" ? curr_type : item_type,
+                     edit:      edit,
                      pdata:      pdata,
                      pid:        pid,
-                     edit:       edit,
                      par_id_str: par_id_str,
                      row_id_str: row_id_str,
                    });
@@ -708,7 +705,7 @@ $.any.anyView.prototype.refreshOne = function (params)
   let row_id_str = params.row_id_str;
   let edit       = params.edit;
 
-  let the_id_str = kind == "list" ? par_id_str : row_id_str;
+  let id_str = kind == "list" ? par_id_str : row_id_str;
 
   // Refresh header
   let have_data  = data && Object.size(data[id]) > 0;
@@ -716,7 +713,7 @@ $.any.anyView.prototype.refreshOne = function (params)
                           parent:     parent,
                           type:       type,
                           kind:       kind,
-                          id_str:     the_id_str,
+                          id_str:     id_str,
                           have_data:  have_data,
                           doNotEmpty: false,
                         });
@@ -729,13 +726,13 @@ $.any.anyView.prototype.refreshOne = function (params)
                             parent: parent,
                             type:   type,
                             kind:   kind,
-                            id_str: the_id_str,
+                            id_str: id_str,
                           });
   params.table_div = this.getOrCreateTable({
                             parent: params.data_div,
                             type:   type,
                             kind:   kind,
-                            id_str: the_id_str,
+                            id_str: id_str,
                           });
   this.refreshData(params);
 
@@ -760,7 +757,7 @@ $.any.anyView.prototype.refreshOne = function (params)
              edit:       edit,
              pdata:      data,
              pid:        id,
-             id_str:     the_id_str,
+             id_str:     id_str,
              dont_reset_rec: true,
            });
       if ((kind == "list"))
