@@ -1728,8 +1728,14 @@ class anyTable extends dbTable
     // Find and set the header
     $hdr = $this->findHeader($inData);
     if (isset($hdr) && $hdr != "") {
-      $data["data"]["+0"]["head"] = "group";
-      $data["data"]["+0"]["group_name"] = $hdr;
+      if (($this->mId || $this->mId === 0) && $this->mId != "") {
+        $data["data"]["+0"]["head"] = $this->mType;
+        $data["data"]["+0"][$this->mNameKey] = $hdr;
+      }
+      else {
+        $data["data"]["+0"]["head"] = "group";
+        $data["data"]["+0"]["group_name"] = $hdr;
+      }
     }
 
     // Set data

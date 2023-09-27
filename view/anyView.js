@@ -2563,7 +2563,7 @@ $.any.anyView.prototype.createView = function (params)
 /**
  * Get the model options for a new view.
  *
- * @method anyView.getCreateViewOptions
+ * @method anyView.getCreateModelOptions
  * @return opt
  */
 $.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
@@ -4372,7 +4372,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                                                                      type: list_type });
           if (select_list_view.options.preselected)
             parent_view._addPreSelections(select_list_view);
-          let par_view_id = parent_view.id_base+"_group_head_0_data";
+          let par_view_id = parent_view.id_base+"_"+model.type+"_head_0_data";
           let mod_opt = {
             parentId:   par_view_id,
             elementId:  "",
