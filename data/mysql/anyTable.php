@@ -832,39 +832,44 @@ class anyTable extends dbTable
     $group_table->mGrouping = false;
 
     // Search through all registered link types/tables
+    foreach ($this->mLinking as $i => $link_type)
+      $this->dbSearchItemListOfType($data,$link_type,$group_id,$group_table);
+    return true;
+  } // dbSearchItemLists
+
+  protected function dbSearchItemListOfType(&$data,$link_type,$group_id,$group_table)
+  {
     $idx = "+".$this->mId;
-    foreach ($this->mLinking as $i => $link_type) {
-      $table = anyTableFactory::createClass($link_type,$this);
-      if ($table) {
-        $link_table = $this->findLinkTableName($link_type);
-        if ($table->mType != $this->mType || $this->hasParentId()) {
-          if ($this->tableExists($link_table)) {
-            $g = Parameters::get("grouping");
-            $s = Parameters::get("simple");
-            $table->mGrouping   = $g !== false && $g !== "false" && $g !== "0";
-            $table->mSimpleList = $s === true  || $s === "true"  || $s === "1";
-            $table->mLinkType   = $this->mType;
-            $table->mLinkId     = $this->mId;
-            $table_data         = null;
-            $group_table->dbSearchGroupInfo($table->mType,$group_id);
-            if (!$table->dbSearchList($table_data,$group_table))
-              $this->mError .= $table->getError();
-            if ($table_data) {
-              $link_idx = "link-".$link_type;
-              $name_key = $table->getNameKey();
-              $data[$idx]["data"]["grouping"] = $table->mGrouping;
-              $data[$idx]["data"][$link_idx]["grouping"] = $table->mGrouping;
-              $data[$idx]["data"][$link_idx]["head"]     = $link_type;
-              $data[$idx]["data"][$link_idx]["data"]     = $table_data;
-              if ($name_key)
-                $data[$idx]["data"][$link_idx][$name_key] = $this->findDefaultItemListHeader($link_type,$table_data,true);
-            }
+    $table = anyTableFactory::createClass($link_type,$this);
+    if ($table) {
+      $link_table = $this->findLinkTableName($link_type);
+      if ($table->mType != $this->mType || $this->hasParentId()) {
+        if ($this->tableExists($link_table)) {
+          $g = Parameters::get("grouping");
+          $s = Parameters::get("simple");
+          $table->mGrouping   = $g !== false && $g !== "false" && $g !== "0";
+          $table->mSimpleList = $s === true  || $s === "true"  || $s === "1";
+          $table->mLinkType   = $this->mType;
+          $table->mLinkId     = $this->mId;
+          $table_data         = null;
+          $group_table->dbSearchGroupInfo($table->mType,$group_id);
+          if (!$table->dbSearchList($table_data,$group_table))
+            $this->mError .= $table->getError();
+          if ($table_data) {
+            $link_idx = "link-".$link_type;
+            $name_key = $table->getNameKey();
+            $data[$idx]["data"]["grouping"] = $table->mGrouping;
+            $data[$idx]["data"][$link_idx]["grouping"] = $table->mGrouping;
+            $data[$idx]["data"][$link_idx]["head"]     = $link_type;
+            $data[$idx]["data"][$link_idx]["data"]     = $table_data;
+            if ($name_key)
+              $data[$idx]["data"][$link_idx][$name_key] = $this->findDefaultItemListHeader($link_type,$table_data,true);
           }
         }
       }
-    } // foreach
-    return true;
-  } // dbSearchItemLists
+    }
+    return !$this->isError();
+} // dbSearchItemListOfType
 
   //////////////////////////////// List search ////////////////////////////////
 
