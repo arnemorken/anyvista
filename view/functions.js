@@ -190,7 +190,7 @@ function w3_modaldialog(options)
   if (!cancelFunction)
     cancelFunction = w3_modaldialog_close;
 
-  let dia_id = "moddia_"+parentId+"_"+elementId;
+  let dia_id = elementId && elementId != "" ? parentId+"_"+elementId+"_moddia" : parentId+"_moddia";
   $("#"+dia_id).remove();
   let ok_btn_str    = ok     ? "<button id='"+dia_id+"_ok_btn'     type='button' class='w3-button' style='border:1px solid #aaa;'>Ok</button>" : "";
   let can_btn_str   = cancel ? "<button id='"+dia_id+"_cancel_btn' type='button' class='w3-button' style='border:1px solid #aaa;'>Cancel</button>" : "";
@@ -238,7 +238,7 @@ function w3_modaldialog_close(options)
     return;
   let parentId  = options.parentId,
       elementId = options.elementId;
-  let dia_id = "moddia_"+parentId+"_"+elementId;
+  let dia_id = elementId && elementId != "" ? parentId+"_"+elementId+"_moddia" : parentId+"_moddia";
   $("#"+dia_id).remove();
 } // w3_modaldialog_close
 
@@ -246,7 +246,7 @@ function w3_modaldialog_resize(options)
 {
   let parentId  = options.parentId,
       elementId = options.elementId;
-  let dia_id = "moddia_"+parentId+"_"+elementId;
+  let dia_id = elementId && elementId != "" ? parentId+"_"+elementId+"_moddia" : parentId+"_moddia";
   if (options.width)
     $("#"+dia_id).css("width", options.width);
   if (options.height)
