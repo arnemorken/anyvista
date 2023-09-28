@@ -1223,6 +1223,8 @@ anyModel.prototype.dataUpdateLinkList = function (options)
             if (the_data["+0"])
               the_data = the_data["+0"].data;
             if (the_data && the_data[the_id]) {
+              if (!the_data[the_id].data)
+                the_data[the_id].data = {};
               the_data[the_id].data[ins_id] = {};
               the_data[the_id].data[ins_id].head = the_link_type;
             }
