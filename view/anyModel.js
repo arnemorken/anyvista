@@ -1805,8 +1805,8 @@ anyModel.prototype._dbSearchNextIdLocal = async function (options)
   } // if table_factory
   else
     console.warn("anyModel._dbSearchNextIdLocal: "+"No table factory. "); // TODO! i18n
-  if (self.success)
-    return self.success(this,this.data,options);
+  if (this.success)
+    return this.success(this,this.data,options);
   this.message = i18n.error.SUCCCESS_CB_MISSING;
   console.warn("anyModel._dbSearchNextIdLocal: "+this.message);
   return false;
@@ -2487,8 +2487,8 @@ anyModel.prototype._dbUpdateLinkLocal = async function (options)
   } // if table_factory
   else
     console.warn("anyModel._dbUpdateLinkLocal: "+"No table factory. "); // TODO! i18n
-  if (self.success)
-    return self.success(this,this.data,options);
+  if (this.success)
+    return this.success(this,this.data,options);
   this.message = i18n.error.SUCCCESS_CB_MISSING;
   console.warn("anyModel._dbUpdateLinkLocal: "+this.message);
   return false;
@@ -2658,8 +2658,8 @@ anyModel.prototype._dbDeleteLocal = async function (options)
   } // if table_factory
   else
     console.warn("anyModel._dbDeleteLocal: "+"No table factory. "); // TODO! i18n
-  if (self.success)
-    return self.success(this,this.data,options);
+  if (this.success)
+    return this.success(this,this.data,options);
   this.message = i18n.error.SUCCCESS_CB_MISSING;
   console.warn("anyModel._dbDeleteLocal: "+this.message);
   return false;
