@@ -2344,7 +2344,7 @@ class anyTable extends dbTable
         return null;
       $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
       $stmt .= "WHERE ".$id_key."=".$id;
-      elog("dbUpdateLink:".$stmt);
+      //elog("dbUpdateLink:".$stmt);
       if (!$this->query($stmt))
         return null;
     }
