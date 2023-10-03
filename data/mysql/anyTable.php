@@ -932,7 +932,49 @@ class anyTable extends dbTable
           }
         }
       }
+      // Build and execute the query for ungrouped data (if not queried already)
+      if (!$has_nogroup)
         $success = $this->dbExecListStmt($data,"nogroup",$limit) || $success;
+
+      // Build and execute the query for grouped data that may have illegal group type (i.e. not same as list type).
+      // Ideally this should not happen, but if it does, such data will not show up unless we do this.
+      if ($group_data && isset($group_data["group"]) && $this->mLinkId == "") {
+        //$success = $this->dbExecListStmt($data,-1,$limit) || $success; // -1 signifies this special query
+        $linktable    = $this->findLinkTableName("group");
+        $linktable_id = $this->findLinkTableId("group");
+        $stmt =  "SELECT DISTINCT ".$this->mTableName.".*  ".
+                 "FROM ".$this->mTableName." ".
+                 "LEFT JOIN ".$linktable." ON CAST(".$linktable.".".$this->mIdKey." AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ".
+                 "WHERE (";
+        $part_stmt = "";
+        foreach ($group_data["group"] as $gid => $group) {
+          if ($gid != "nogroup")
+            $part_stmt .= $linktable.".".$linktable_id." != CAST(".$gid." AS INT) AND ";
+        }
+        $part_stmt  = rtrim($part_stmt,"AND ");
+        if ($part_stmt != "") {
+          $part_stmt .= ") ";
+          $stmt .= $part_stmt."ORDER BY ". $this->mTableName.".".$this->mIdKeyTable." ";
+          //elog("dbSearchList:".$stmt);
+          if (!(!$stmt || $stmt == "" || !$this->query($stmt) || $this->isError())) {
+            // Get the data
+            $xdata = null;
+            $ok = $this->getRowData($xdata,"list");
+            if ($ok) {
+              if ($xdata && $xdata["nogroup"]) {
+                $data["unknown"] = null;
+                $i = 0;
+                foreach ($xdata["nogroup"] as $key => $val) {
+                  $data["unknown"][$key] = $val;
+                  ++$i;
+                }
+                $data["unknown"]["grouping_num_results"] = $i;
+              }
+              $x=0;
+            }
+          }
+        }
+      }
     }
     if ($success) {
       // Search and get the meta data
@@ -966,7 +1008,6 @@ class anyTable extends dbTable
     //elog("dbExecListStmt1:".$stmt);
     if (!$stmt || $stmt == "" || !$this->query($stmt) || $this->isError())
       return false; // Something went wrong
-
     // Get the data
     $success = $this->getRowData($data,"list");
 
@@ -1293,7 +1334,7 @@ class anyTable extends dbTable
     while (($nextrow = $this->getNext(true)) !== null) {
       //elog("getRowData,nextrow:".var_export($nextrow,true));
       ++$this->mLastNumRows;
-      $gid  = isset($nextrow["group_id"])
+      $gid  = isset($nextrow["group_id"]) && $nextrow["group_type"] == $this->mType
               ? $nextrow["group_id"]
               : "nogroup";
       $gidx = $this->mGrouping && $this->mType != "group"
@@ -1584,6 +1625,15 @@ class anyTable extends dbTable
     if ($this->mGrouping && !$this->mSimpleList &&
         (!isset($this->mId) || $this->mId == "") &&
         !isset($this->mLinkId)) {
+      if (!isset($data_tree["unknown"]))
+        $data_tree["unknown"] = null;
+      if ($data_tree["unknown"]) {
+        $group_data["group"]["unknown"] = null;
+        $group_data["group"]["unknown"]["group_id"]   = "unknown";
+        $group_data["group"]["unknown"]["group_name"] = "Unknown"; // TODO! i18n
+        $group_data["group"]["unknown"]["group_description"] = ucfirst($this->mType)."s belonging to non-".$this->mType." group&nbsp;&nbsp;".
+        						       '<i style="color:red" class="fa fad fa-exclamation-triangle"></i>'; // TODO! i18n
+      }
       $this->dbAttachToGroups($group_data["group"],$data_tree);
       $group_data["group"]["grouping"] = true;
       //vlog("buildGroupTreeAndAttach,group_data:",$group_data);
