@@ -479,17 +479,17 @@ $.any.anyView.prototype.refresh = function (params)
       this.options = {};
     this.options.ref_rec = 0; // Reset on every call to refresh
   }
-  let parent    = params && params.parent    ? params.parent    : this.element;
-  let type      = params && params.type      ? params.type      : "";
-  let kind      = params && params.kind      ? params.kind      : "";
-  let data      = params && params.data      ? params.data      : this.model && this.model.data ? this.model.data : null;
-  let item_id   = params && params.item_id   ? params.item_id   : null;
-  let item_type = params && params.item_type ? params.item_type : null;
-  let edit      = params && params.edit      ? params.edit      : false;
-  let from      = params && params.from      ? params.from      : 1;
-  let num       = params && params.num       ? params.num       : this.options.itemsPerPage;
-  let pdata     = params && params.pdata     ? params.pdata     : null; // TODO! Can we get rid of this?
-  let pid       = params && params.pid       ? params.pid       : "";   // TODO! Can we get rid of this?
+  let parent = params && params.parent ? params.parent : this.element;
+  let type   = params && params.type   ? params.type   : "";
+  let kind   = params && params.kind   ? params.kind   : "";
+  let data   = params && params.data   ? params.data   : this.model && this.model.data ? this.model.data : null;
+  let edit   = params && params.edit   ? params.edit   : false;
+  let from   = params && params.from   ? params.from   : 1;
+  let num    = params && params.num    ? params.num    : this.options.itemsPerPage;
+  let ptype  = params && params.ptype  ? params.ptype  : "";
+  let pkind  = params && params.pkind  ? params.pkind  : "";
+  let pdata  = params && params.pdata  ? params.pdata  : null;
+  let pid    = params && params.pid    ? params.pid    : "";
 
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
@@ -568,16 +568,16 @@ $.any.anyView.prototype.refresh = function (params)
             ++row_no;
             if (this.options && (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num))) {
               view.refreshOne({
-                     parent:    the_parent,
-                     type:      curr_type,
-                     kind:      curr_kind,
-                     data:      data,
-                     id:        idc,
-                     item_id:   curr_kind == "item" ? idc       : item_id,
-                     item_type: curr_kind == "item" ? curr_type : item_type,
-                     edit:      edit,
-                     pdata:     pdata,
-                     pid:       pid,
+                     parent: the_parent,
+                     type:   curr_type,
+                     kind:   curr_kind,
+                     data:   data,
+                     id:     idc,
+                     ptype:  ptype,
+                     pkind:  pkind,
+                     pdata:  pdata,
+                     pid:    pid,
+                     edit:   edit,
                    });
               if (curr_kind == "list" && !view.rows_changed)
                 --row_no;
@@ -597,16 +597,16 @@ $.any.anyView.prototype.refresh = function (params)
   else {
     // Arrive here if no data
     this.refreshNoData({
-           parent:     parent,
-           type:       type,
-           kind:       kind,
-           data:       null,
-           id:         null,
-           item_id:    item_id,
-           item_type:  item_type,
-           edit:       edit,
-           pdata:      pdata,
-           pid:        pid,
+           parent: parent,
+           type:   type,
+           kind:   kind,
+           data:   null,
+           id:     null,
+           ptype:  ptype,
+           pkind:  pkind,
+           pdata:  pdata,
+           pid:    pid,
+           edit:   edit,
          });
   }
 
@@ -693,10 +693,12 @@ $.any.anyView.prototype.refreshOne = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
-  let item_type  = params.item_type;
-  let item_id    = Number.isInteger(parseInt(params.item_id))
-                   ? ""+parseInt(params.item_id)
-                   : params.item_id;
+  let ptype      = params.ptype;
+  let pkind      = params.pkind;
+  let pdata      = params.pdata;
+  let pid        = Number.isInteger(parseInt(params.pid))
+                   ? ""+parseInt(params.pid)
+                   : params.pid;
   let edit       = params.edit;
 
   // Find identifier strings for containers and rows
@@ -743,8 +745,8 @@ $.any.anyView.prototype.refreshOne = function (params)
 
   // If the data contains subdata, make a recursive call
   if (data) {
-    let d = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
-    if (d && d.data && Object.size(d.data) > 0) {
+    let subdata = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
+    if (subdata && subdata.data && Object.size(subdata.data) > 0) {
       ++this.options.ref_rec;
       if (this.options.ref_rec > ANY_MAX_REF_REC) {
         this.options.ref_rec = 0;
@@ -752,21 +754,24 @@ $.any.anyView.prototype.refreshOne = function (params)
       }
       if (kind == "list")
         ++this.options.indent_level;
+      let subtype = subdata.head ? subdata.head : subdata.list ? subdata.list : subdata.item;
+      let subkind = subdata.head ? "head"       : subdata.list ? "list"       : "item";
+      subdata = subdata.data;
       this.refresh({
-             parent:     params.data_div,
-             type:       type,
-             kind:       kind,
-             data:       d.data,
-             item_id:    item_id,
-             item_type:  item_type,
-             edit:       edit,
-             pdata:      data,
-             pid:        id,
+             parent:         params.data_div,
+             type:           subtype,
+             kind:           subkind,
+             data:           subdata,
+             ptype:          kind == "item" || pkind != "item" ? type :  ptype,
+             pkind:          kind == "item" || pkind != "item" ? kind :  pkind,
+             pdata:          kind == "item" || pkind != "item" ? data :  pdata,
+             pid:            kind == "item" || pkind != "item" ? id   :  pid,
+             edit:           edit,
              dont_reset_rec: true,
            });
       if ((kind == "list"))
         --this.options.indent_level;
-    } // if d
+    } // if subdata
   } // if data
 
   // Clean up
@@ -974,8 +979,8 @@ $.any.anyView.prototype.refreshData = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
-  let item_id    = params.item_id;
-  let item_type  = params.item_type;
+  let ptype      = params.ptype;
+  let pkind      = params.pkind;
   let pdata      = params.pdata;
   let pid        = params.pid;
   let edit       = params.edit;
@@ -1021,8 +1026,8 @@ $.any.anyView.prototype.refreshData = function (params)
                                  kind:       kind,
                                  data:       data,
                                  id:         id,
-                                 item_id:    item_id,
-                                 item_type:  item_type,
+                                 ptype:      ptype,
+                                 pkind:      pkind,
                                  pdata:      pdata,
                                  pid:        pid,
                                  edit:       edit,
@@ -1421,8 +1426,8 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
-  let item_id    = params.item_id;
-  let item_type  = params.item_type;
+  let ptype      = params.ptype;
+  let pkind      = params.pkind;
   let pdata      = params.pdata;
   let pid        = params.pid;
   let edit       = params.edit;
@@ -1471,8 +1476,8 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     kind:       kind,
     data:       data,
     id:         id,
-    item_id:    item_id,
-    item_type:  item_type,
+    ptype:      ptype,
+    pkind:      pkind,
     pdata:      pdata,
     pid:        pid,
     edit:       edit,
@@ -1730,8 +1735,8 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
-  let item_id    = params.item_id;
-  let item_type  = params.item_type;
+  let ptype      = params.ptype;
+  let pkind      = params.pkind;
   let pdata      = params.pdata;
   let pid        = params.pid;
   let edit       = params.edit;
@@ -1757,8 +1762,8 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
     kind:       kind,
     data:       data,
     id:         id,
-    item_id:    item_id,
-    item_type:  item_type,
+    ptype:      ptype,
+    pkind:      pkind,
     pdata:      pdata,
     pid:        pid,
     id_str:     id_str,
@@ -1810,8 +1815,8 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
   let kind       = params.kind;
   let data       = params.data;
   let id         = params.id;
-  let item_id    = params.item_id;
-  let item_type  = params.item_type;
+  let ptype      = params.ptype;
+  let pkind      = params.pkind;
   let pdata      = params.pdata;
   let pid        = params.pid;
   let edit       = params.edit;
@@ -1840,8 +1845,8 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
         kind:       kind,
         data:       data,
         id:         id,
-        item_id:    item_id,
-        item_type:  item_type,
+        ptype:      ptype,
+        pkind:      pkind,
         pdata:      pdata,
         pid:        pid,
         edit:       edit,
@@ -3843,8 +3848,8 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
         kind:       opt.kind,
         data:       opt.data,
         id:         opt.id,
-        item_id:    opt.item_id,
-        item_type:  opt.item_type,
+        ptype:      opt.ptype,
+        pkind:      opt.pkind,
         pdata:      opt.pdata,
         pid:        opt.pid,
         edit:       opt.edit,
@@ -4122,6 +4127,8 @@ $.any.anyView.prototype.dbUpdate = function (event)
   let kind       = event.data.kind;
   let new_data   = event.data.new_data;
   let id         = event.data.id;
+  let ptype      = event.data.ptype;
+  let pkind      = event.data.pkind;
   let pdata      = event.data.pdata;
   let pid        = event.data.pid;
   let id_str     = event.data.id_str;
@@ -4204,6 +4211,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
         if (data_values[this.model.name_key]) {
           head_item["+0"][this.options.view.model.name_key] = data_values[this.model.name_key];
           this.options.view.options.item_opening = true;
+          this.options.view.id_stack = [];
           this.options.view.refresh(); // TODO! Refreshes entire view, but only need to refresh header
         }
       }
@@ -4250,8 +4258,8 @@ $.any.anyView.prototype.dbUpdate = function (event)
       kind:       kind,
       data:       new_data,
       id:         id,
-      item_id:    event.data.item_id,
-      item_type:  event.data.item_type,
+      ptype:      ptype,
+      pkind:      pkind,
       pdata:      pdata,
       pid:        pid,
       edit:       false,
@@ -4262,6 +4270,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
   }
   else {
     this.options.isDeletable = this.options.isEditable;
+    this.id_stack.pop();
     this.refresh();
   }
   // Spinner
@@ -4481,13 +4490,13 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
   // Update database
   if (this.options)
     this.options.item_opening = true; // To make top right close icon appear
-  let the_type  = opt.item_type ? opt.item_type : opt.type;
-  let the_id    = opt.item_id   ? opt.item_id   : opt.id;
+  let type      = opt.ptype ? opt.ptype : opt.type;
+  let id        = opt.pid   ? opt.pid   : opt.id;
   let link_type = opt.link_type;
   let link_id   = opt.link_id;
   let upd_opt = {
-        type:      the_type,
-        id:        the_id,
+        type:      type,
+        id:        id,
         link_type: link_type,
         link_id:   link_id,
         select:    opt.select,
@@ -4499,11 +4508,13 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
         onSuccess: function(context,serverdata,options)
                    {
                      v.model.dbUpdateLinkListSuccess(context,serverdata,options);
-                     let x = v.id_stack.pop();
-                     v.refresh();
-                     v.id_stack.push(x);
-                     if (options.kind == "list") // TODO! Not a good solution
-                       v.model.cbExecute();
+                     if (options.link_id)
+                       v.refresh();
+                     else {
+                       let x = v.id_stack.pop();
+                       v.refresh();
+                       v.id_stack.push(x);
+                     }
                    },
       };
   if (!v.model.dbUpdateLinkList(upd_opt))
@@ -4521,14 +4532,13 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   let data      = event.data.data;
   let type      = event.data.type;
   let kind      = event.data.kind;
-  let id        = event.data.item_id ? event.data.item_id   : event.data.pid;
-  let item_type = event.data.item_id ? event.data.item_type : event.data.type; // TODO! should be ptype, not type
-  let item_id   = event.data.item_id;
-  let pdata     = event.data.pdata;
+  let id        = event.data.id;
+  let ptype     = event.data.ptype;
+  let pkind     = event.data.pkind;
   let pid       = event.data.pid;
   let id_str    = event.data.row_id_str;
-  let link_id   = event.data.id;   //pid && pdata && pdata[pid] ? pid : null;
-  let link_type = event.data.type; //pid && pdata && pdata[pid] ? pdata[pid].list ? pdata[pid].list : pdata[pid].head ? pdata[pid].head : null : null;
+  let link_id   = id;
+  let link_type = type;
   if (!data || !data[link_id]) {
     console.warn("Data not found ("+type+" id="+link_id+"). ");
     return null;
@@ -4563,17 +4573,15 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         okFunction: this.dbUpdateLinkList,
         context:    this,
         // Sent to okFunction:
-        type:       type,
-        kind:       kind,
-        id:         id,
-        item_id:    item_id,
-        item_type:  item_type,
+        type:       ptype,
+        kind:       pkind,
+        id:         pid,
         data:       data,
-        id_str:     id_str,
         link_type:  link_type,
         link_id:    link_id,
         select:     new Set(),
         unselect:   new Set().add(link_id),
+        id_str:     id_str,
       });
   }
   else {
@@ -4582,7 +4590,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         kind:      kind,
         data:      data,
         id:        id,
-        item_id:   item_id,
+        pid:       pid,
         id_str:    id_str,
         link_type: link_type,
         link_id:   link_id,

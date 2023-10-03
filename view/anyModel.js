@@ -2104,8 +2104,8 @@ anyModel.prototype.dbUpdateGetURL = function (options)
                : "&cmd=upd";
 
   // Link elements?
-  param_str += options.item_id && options.item_type
-               ? "&link_type="+options.item_type+"&link_id="+options.item_id
+  param_str += options.ptype && options.pid
+               ? "&link_type="+options.ptype+"&link_id="+options.pid
                : "";
 
   return this._getDataSourceName() + param_str;
