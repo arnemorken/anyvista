@@ -924,15 +924,14 @@ class anyTable extends dbTable
       if ($group_data && isset($group_data["group"])) {
         foreach ($group_data["group"] as $gid => $group) {
           if ($group["group_type"] == $this->mType) {
-            if ($this->tableExists($this->mTableNameGroupLink))
+            if ($this->tableExists($this->mTableNameGroupLink)) {
               $success = $this->dbExecListStmt($data,$gid,$limit) || $success;
-            if ($gid == "nogroup")
-              $has_nogroup = true;
+              if ($gid == "nogroup")
+                $has_nogroup = true;
+            }
           }
         }
       }
-      // Build and execute the query for ungrouped data
-      if ($has_nogroup)
         $success = $this->dbExecListStmt($data,"nogroup",$limit) || $success;
     }
     if ($success) {
