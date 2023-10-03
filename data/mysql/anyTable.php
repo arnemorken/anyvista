@@ -2281,7 +2281,21 @@ class anyTable extends dbTable
       }
     }
     $this->setMessage($this->mUpdateSuccessMsg);
-    return $this->dbSearch(); // Return the complete data set to client
+
+    // Get group data to a "flat" list
+    $group_id    = Parameters::get("group_id");
+    $group_table = anyTableFactory::createClass("group",$this);
+    $group_table->mGrouping = false;
+
+    // Get the (updated) list for the item
+    $ok = $this->dbSearchItemListOfType($data,$link_type,$group_id,$group_table);
+
+    if (!$ok)
+      return null;
+    $this->mData = array();
+    if ($data)
+      $this->mData = $data["+".$id];
+    return $this->mData; //$this->prepareData($this->mData);
   } // dbUpdateLinkList
 
   // Update the fields of a link. The link must exist in the link table.
