@@ -57,7 +57,7 @@ $.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,type,ki
   let opt = $.any.anyView.prototype.getCreateViewOptions.call(this,model,parent,type,kind,id_str,data_level,indent_level,params);
   opt.first_id_base   = this.first_id_base;
   opt.current_id_base = this.grandparent ? this.grandparent.current_id_base : this.current_id_base;
-  opt.grouping        = "tabs";
+  opt.grouping        = this.options.grouping || this.options.grouping === "" ? this.options.grouping : "tabs";
   return opt;
 }; // getCreateViewOptions
 
