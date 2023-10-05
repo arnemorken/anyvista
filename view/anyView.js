@@ -649,8 +649,8 @@ $.any.anyView.prototype.refreshNoData = function (params)
 
 $.any.anyView.prototype.clearBeforeRefresh = function ()
 {
-  let e = this.element;//.find("table").parent();
-  e.empty();
+  let e_id = this.element.attr("id");
+  $("#"+e_id).empty();
   this.current_edit = null;
 }; // clearBeforeRefresh
 
