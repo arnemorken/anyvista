@@ -1175,6 +1175,17 @@ anyModel.prototype.dataUpdateLinkList = function (options)
     console.error("anyModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
     return false;
   }
+  if (the_data[0])
+    the_data = the_data[0].data;
+  else
+  if (the_data["+0"])
+    the_data = the_data["+0"].data;
+  if (the_data[the_id])
+    the_data = the_data[the_id].data;
+  else
+  if (the_data["+"+the_id])
+    the_data = the_data["+"+the_id].data;
+
   if (options.link_id) {
     // Remove the link data with id 'options.link_id' and return
     this.dataDelete({ data: the_data,
@@ -1194,6 +1205,8 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                           }))
         console.warn("Could not remove "+the_link_type+" item with id "+id+" (not found in data). "); // TODO! i18n
     } // for
+    if (the_data && the_data["link-"+the_link_type] && (!the_data["link-"+the_link_type].data || !Object.size(the_data["link-"+the_link_type].data)))
+      delete the_data["link-"+the_link_type];
   } // if
 
   // Insert or update link in `select`
@@ -1212,38 +1225,9 @@ anyModel.prototype.dataUpdateLinkList = function (options)
         if (item) {
           let ins_id = "link-"+the_link_type; // See if we have "link-" index (created by server)
           let the_ins_type = the_link_type;
-          if (!this.dataSearch({ data: the_data,
-                                 id:   ins_id,
-                                 type: the_link_type,
-                              })) {
-            ins_id = id; // No "link-" index, use id as insertion point
-            if (the_data[0])
-              the_data = the_data[0].data;
-            else
-            if (the_data["+0"])
-              the_data = the_data["+0"].data;
-            if (the_data && the_data[the_id]) {
-              if (!the_data[the_id].data)
-                the_data[the_id].data = {};
-              the_data[the_id].data[ins_id] = {};
-              the_data[the_id].data[ins_id].head = the_link_type;
-            }
-            else
-              ins_id = the_id;
-            the_ins_type = the_type;
-          }
-          let indata = {};
-          indata[ins_id] = {};
-          indata[ins_id].data = item;
-          indata[ins_id].head = the_link_type;
-          indata[ins_id][the_name_key] = the_link_type+"s";
-          indata.grouping = this.grouping; // TODO! Why?
-          this.dataInsert({ data:     the_data,
-                            id:       ins_id,
-                            type:     the_link_type,
-                            new_data: item[id] ? item[id] : item["+"+id],
-                            new_id:   id,
-                         });
+          if (!the_data[ins_id])
+            the_data[ins_id] = {};
+          $.extend(true, the_data[ins_id], the_new_data[ins_id]);
         }
         else
           console.warn("Could not add "+the_link_type+" item with id "+id+" (not found in data). "); // TODO! i18n
