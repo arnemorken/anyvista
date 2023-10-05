@@ -4560,13 +4560,13 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
               msgstr+"?"+
               "</div>";
     let parent_id = this.element.attr("id");
-    if (parent_id)
-      w3_modaldialog({
+    if (parent_id) {
+      let mod_opt = {
         parentId:   parent_id,
         elementId:  "",
         heading:    kind == "item" ? i18n.button.buttonRemove : i18n.button.buttonRemoveFromList.replace("%%",type),
         contents:   msg,
-        width:      "25em",
+        width:      "25em", // TODO! css
         ok:         true,
         cancel:     true,
         okFunction: this.dbUpdateLinkList,
@@ -4581,7 +4581,9 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         select:     new Set(),
         unselect:   new Set().add(link_id),
         id_str:     id_str,
-      });
+      };
+      w3_modaldialog(mod_opt);
+    }
   }
   else {
     let opt = {
