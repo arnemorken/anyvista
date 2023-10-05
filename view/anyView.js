@@ -2535,7 +2535,7 @@ $.any.anyView.prototype.createView = function (params)
       m_str = def_str;
     }
     try {
-      let model_opt = this.getCreateModelOptions(data,id,type,kind);
+      let model_opt = this.getCreateModelOptions(data,id,type);
       model = new window[m_str](model_opt);
     }
     catch (err) {
@@ -2584,13 +2584,12 @@ $.any.anyView.prototype.createView = function (params)
  * @method anyView.getCreateModelOptions
  * @return opt
  */
-$.any.anyView.prototype.getCreateModelOptions = function(data,id,type,kind)
+$.any.anyView.prototype.getCreateModelOptions = function(data,id,type)
 {
   return {
     data:         data,
     type:         type,
-    kind:         kind,
-    id:           kind == "item" ? id : null,
+    id:           id,
     mode:         this.model.mode,
     db_fields:    this.model.db_fields,
     db_last_term: this.model.db_last_term,
