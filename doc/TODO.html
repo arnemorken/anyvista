@@ -1,7 +1,7 @@
 <html>
 <head>
 <style>
-    li { height: 28px; }
+    li { line-height: 26px; }
 </style>
 </head>
 <body>
@@ -14,13 +14,12 @@
     </ol>
     <h4>- Client:</h4>
     <ol>
-        <li>Adding an entry to a list for an item when the list is empty does not create tab at correct place</li>
-        <li>Pagination must remember sort order</li>
         <li>anyModel: Some async / await should be tested to see if they are neccessary</li>
         <li>Go through all TODO comments in code</li>
         <li>Standard plugins (anyVista types) only partially implemented.</li>
         <li>Server authorization (permissions) only partially implemented.</li>
-        <li>Back button on tablets</li>
+        <li>Some view methods are not tested well enough.</li>
+        <li>Support for back button on tablets not tested</li>
         <li>i18n</li>
         <li>CSS</li>
     </ol>
@@ -28,7 +27,6 @@
     <h3>Other:</h3>
     <ol>
         <li>Unit tests: Test for nonnumerical indexes in dataSearch</li>
-        <li>Some view methods are not tested well enough.</li>
         <li>Documentation incomplete</li>
         <li>Examples incomplete</li>
         <li>Wordpress integration not uploaded to GitHub.</li>
@@ -41,13 +39,26 @@
     <h4>- Server:</h4>
     <ol>
         <li>Handle duplicate ids/names to avoid theoretical conflicts in SQL queries (rename event's parent_id to event_parent_id, etc.)</li>
+        <li>i18n for server code</li>
     </ol>
     <h4>- Client:</h4>
     <ol>
+        <li>Adding an entry to a list for an item when the list is empty should create tab at correct place</li>
+        <li>Pagination should remember sort order</li>
         <li>anyModel::dbInsert() convenience method</li>
+        <li>New options/functionality:
+          <ul>
+            <li>@param {boolean} options.isCreatable. Default: false</li>
+            <li>@param {boolean} options.showServerMessages    If true, messages from a server will be shown directly. Default: true.</li>
+            <li>@param {boolean} options.showButtonSelectAll   If isSelectable is true, a button for selecting all rows may be shown in list table headers. Default: false.</li>
+            <li>@param {boolean} options.showButtonSelectAll   If isSelectable is true, a button for selecting all rows may be shown in list table headers. Default: false.</li>
+            <li>@param {boolean} options.onUpdateEndEdit       Pressing the update button will close the element currently being edited for editing. Default: true.</li>
+          </ul>
+        </li>
+        <li>When closing an item window we should check for changed values and give warning before closing</li>
+        <li>Tabulator should move focus to next field while editing (optionally)</li>
         <li>Use [type]_description as table ingress (optionally)</li>
-        <li>Insert/update: If type/id combination is found several places, all places should be
-            (optionally) inserted/updated into</li>
+        <li>Insert/update: If type/id combination is found several places, all places should be (optionally) inserted/updated into</li>
         <li>Sort list rows (data-position attribute) (user defined)</li>
         <li>Tab order (data-position attribute) (user defined)</li>
         <li>Search field in header</li>
@@ -60,10 +71,7 @@
         <li>Option for edit: Direct edit for some (all?) field types (e.g. checkbox, date, ...)</li>
         <li>Hook for anyVista types in refresh loop etc.</li>
         <li>"tokenlist" type in view filter</li>
-        <li>i18n for server</li>
     </ol>
 
 </body>
 </html>
-
-
