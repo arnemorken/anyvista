@@ -734,13 +734,13 @@ function testModel()
     let new_data = {14:{list:"user",user_name:"Added user 14"}};
     let res = dm.dataUpdateLinkList({type:      "user",
                                      id:        99,
+                                     link_type: "user",
                                      unselect:  del,
                                      select:    ins,
-                                     link_type: "user",
                                      new_data:  new_data,
                                    });
     console.log(JSON.stringify(dm.data));
-    deepEqual(res !== null &&
+    deepEqual(res === true &&
               dm.data[99] !== undefined &&
               dm.data[99].data[11] === undefined &&
               dm.data[99].data[12] !== undefined &&
@@ -908,8 +908,8 @@ function testModel()
 
   let myid   = "11";
   let idchk  = gDBMode == "local" ? "11" : "+11";
-  let uname  = "The faz user";
-  let ulogin = "fazuser";
+  let uname  = "The faz user"; // "user 1"
+  let ulogin = "fazuser";      // "loginA"
 
   asyncTest('dbSearch normal case - item, with header', 4, function() {
     let dm = new anyModel({ type:"user",db_search:false,mode:gDBMode} );
