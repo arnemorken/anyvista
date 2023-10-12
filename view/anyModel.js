@@ -1226,6 +1226,8 @@ anyModel.prototype.dataUpdateLinkList = function (options)
               the_ins_data[the_id].data = {};
             the_ins_data = the_ins_data[the_id].data;
             let ins_id = "link-"+the_link_type; // See if we have "link-" index (created by server)
+            if (!the_new_data[ins_id])
+              ins_id = sel_id;
             if (!the_ins_data[ins_id])
               the_ins_data[ins_id] = {};
             $.extend(true, the_ins_data[ins_id], the_new_data[ins_id]);
