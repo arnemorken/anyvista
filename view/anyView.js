@@ -25,7 +25,6 @@
  * @param {Object}  options.model                 The model with data to be displayed. Default: null.
  * @param {Object}  options.filters               The filters define how the data will be displayed. Default: null.
  * @param {String}  options.id                    The jQuery id of a container element in which to display the view. Default: null.
- * @param {boolean} options.isCreatable           TODO! NOT IMPLEMENTED
  * @param {boolean} options.isSelectable          An icon for selecting a list row will be displayed. Ignored for items. If isSelectable is set,
  *                                                isAddable, isRemovable, isEditable and isDeletable will be ignored. Default: false.
  * @param {boolean} options.isAddable             An icon for adding new rows may be displayed. Ignored if isSelectable is set. Default: false.
@@ -45,10 +44,8 @@
  * @param {boolean} options.showToolbar           If true, will show a toolbar at the bottom. Default: true.
  * @param {boolean} options.showMessages          If true, will show a message field in a toolbar. Default: false.
  * @param {boolean} options.showServerErrors      If true, errors from a server will be shown directly. Default: false.
- * @param {boolean} options.showServerMessages    If true, messages from a server will be shown directly. Default: true.
  * @param {boolean} options.showEmptyRows         If true, empty rows will be shown in non-edit mode. Default: false.
- * @param {boolean} options.showButtonNew         If isCreatable is true, a button for creating a new item may be shown. Default: false.
- * @param {boolean} options.showButtonSelectAll   If isSelectable is true, a button for selecting all rows may be shown in list table headers. Default: false.
+ * @param {boolean} options.showButtonNew         If true, a button for creating a new item may be shown. Default: false.
  * @param {integer} options.showButtonAdd         If isAddable is true, a button for adding new rows may be shown in list table headers. Possible values:
  *                                                0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 0.
  * @param {boolean} options.showButtonRemove      If isRemovable is true, a remove button may be shown. Possible values:
@@ -71,7 +68,6 @@
  * @param {boolean} options.onEscRemoveEmpty      The current row being edited in a list will be removed when pressing the Esc key if the row is empty. Default: true.
  * @param {boolean} options.onEscEndEdit          Pressing the Esc key will end the current editing. Default: true.
  * @param {boolean} options.onFocusoutRemoveEmpty The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
- * @param {boolean} options.onUpdateEndEdit       Pressing the update button will close the element currently being edited for editing. Default: true.
  * @param {boolean} options.useOddEven            If true, tags for odd and even columns will be generated for list entries. Default: false.
  * @param {String}  options.defaultKind           The default kind to use. One of `head`. `list` or `item`. Default: `list`.
  * @param {String}  options.defaultType           The default type to use. Default: "".
@@ -98,7 +94,6 @@ var anyViewWidget = $.widget("any.anyView", {
     model:                 null,
     filters:               null,
     id:                    null,
-  //isCreatable:           true, // TODO! NOT IMPLEMENTED
     isSelectable:          false,
     isAddable:             true,
     isRemovable:           true,
@@ -115,12 +110,9 @@ var anyViewWidget = $.widget("any.anyView", {
     showPaginator:         true,
     showToolbar:           true,
     showMessages:          true,
-  //showErrors:            false, // TODO! NOT IMPLEMENTED
     showServerErrors:      false,
-  //showServerMessages:    true,  // TODO! NOT IMPLEMENTED
     showEmptyRows:         false,
     showButtonNew:         true,
-  //showButtonSelectAll:   false, // TODO! NOT IMPLEMENTED
     showButtonAdd:         1,
     showButtonRemove:      2,
     showButtonEdit:        1,
@@ -136,9 +128,8 @@ var anyViewWidget = $.widget("any.anyView", {
     onEscRemoveEmpty:      true,
     onEscEndEdit:          true,
     onFocusoutRemoveEmpty: true,
-  //onUpdateEndEdit:       true, // TODO! NOT IMPLEMENTED
     useOddEven:            true,
-    defaultKind:           "list", // TODO! Is this always the right choice?
+    defaultKind:           "list",
     defaultType:           "",
     itemsPerPage:          20,
     currentPage:           1,
@@ -161,7 +152,7 @@ var anyViewWidget = $.widget("any.anyView", {
     localEdit:       null,
     localCancel:     null,
     localCloseItem:  null,
-    itemLinkClicked: null, // TODO! rename?
+    itemLinkClicked: null,
 
     // "Private" and undocumented options:
     subscribe_default: true, // The default onModelChange method will be subscribed to.
@@ -358,7 +349,7 @@ $.any.anyView.prototype._findType = function (data,id,otype)
   if (!type)
     type = this.options.defaultType;
   if (!type)
-    type = this.model.type; // TODO! Is this always the right choice?
+    type = this.model.type;
   return type;
 }; // _findType
 
@@ -457,6 +448,10 @@ $.any.anyView.prototype.empty = function (params)
  *                                Default: "".
  * @param {Object}  params.data   The data to display / display from.
  *                                Default: `this.model.data` if set, null otherwise.
+ * @param {string}  params.ptype  The type of the data on the level above.
+ *                                Default: "".
+ * @param {string}  params.pkind  The kind of the data on the level above.
+ *                                Default: "".
  * @param {Object}  params.pdata  The data on the level above `data`.
  *                                Default: null.
  * @param {string}  params.pid    The id in `pdata` where `data` may be found (`pdata[pid] == data`).
@@ -483,13 +478,13 @@ $.any.anyView.prototype.refresh = function (params)
   let type   = params && params.type   ? params.type   : "";
   let kind   = params && params.kind   ? params.kind   : "";
   let data   = params && params.data   ? params.data   : this.model && this.model.data ? this.model.data : null;
-  let edit   = params && params.edit   ? params.edit   : false;
-  let from   = params && params.from   ? params.from   : 1;
-  let num    = params && params.num    ? params.num    : this.options.itemsPerPage;
   let ptype  = params && params.ptype  ? params.ptype  : "";
   let pkind  = params && params.pkind  ? params.pkind  : "";
   let pdata  = params && params.pdata  ? params.pdata  : null;
   let pid    = params && params.pid    ? params.pid    : "";
+  let edit   = params && params.edit   ? params.edit   : false;
+  let from   = params && params.from   ? params.from   : 1;
+  let num    = params && params.num    ? params.num    : this.options.itemsPerPage;
 
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
@@ -541,11 +536,12 @@ $.any.anyView.prototype.refresh = function (params)
           let id_str = this.id_stack.join('_');
 
           // Create new view whenever we encounter a new type or a new kind
-          if (curr_type != "" && (prev_type != curr_type || (prev_kind != curr_kind && prev_kind != ""))) {
+          if ((curr_type != "" && prev_type != curr_type) ||
+              (prev_kind != "" && prev_kind != curr_kind)) {
             // If the new type/kind is contained within a list, create a new row to contain a new parent container
             if (prev_kind == "list")
               the_parent = view._addContainerRow(parent,prev_type,prev_kind,curr_type,curr_kind,idc,id_str);
-            view = view.createView({
+            view = this.createView({
                      parent: the_parent,
                      type:   curr_type,
                      kind:   curr_kind,
@@ -560,13 +556,23 @@ $.any.anyView.prototype.refresh = function (params)
             }
           }
           if (view) {
+            /*
             // Refresh a header, a single list row or a single item
             if (row_no == 0 && this.options.indent_level == 0 && curr_kind != "head") {
               let id = view.element.attr("id");
               $("#"+id).empty();
             }
+            */
             ++row_no;
             if (this.options && (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num))) {
+              if (!ptype || !pdata || !pid) {
+                let it = this._findParentItemModel();
+                if (it && it.id) {
+                  ptype = it.type;
+                  pdata = it.data;
+                  pid   = it.id;
+                }
+              }
               view.refreshOne({
                      parent: the_parent,
                      type:   curr_type,
@@ -639,6 +645,18 @@ $.any.anyView.prototype.refresh = function (params)
 
   return this;
 }; // refresh
+
+$.any.anyView.prototype._findParentItemModel = function ()
+{
+  let cntdwn = ANY_MAX_REF_REC;
+  let it = this.model;
+  while (cntdwn-- && it) {
+    if (it.id)
+      break;
+    it = it.parent;
+  }
+  return it;
+}; // _findParentItemModel
 
 // Called by refresh() if no data was given.
 // Shows a new, empty item for entering data.
@@ -983,9 +1001,9 @@ $.any.anyView.prototype.refreshData = function (params)
   let pkind      = params.pkind;
   let pdata      = params.pdata;
   let pid        = params.pid;
-  let edit       = params.edit;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
+  let edit       = params.edit;
 
   let extra_foot = this.getOrCreateDataFooter(table_div,type,kind,id_str);
   if (extra_foot) {
@@ -1012,9 +1030,9 @@ $.any.anyView.prototype.refreshData = function (params)
              data:       data,
              pdata:      pdata,
              pid:        pid,
-             edit:       edit,
              id_str:     id_str,
              row_id_str: row_id_str,
+             edit:       edit,
            });
   }
   if (kind == "list" || kind == "item") {
@@ -1030,24 +1048,24 @@ $.any.anyView.prototype.refreshData = function (params)
                                  pkind:      pkind,
                                  pdata:      pdata,
                                  pid:        pid,
-                                 edit:       edit,
                                  id_str:     id_str,
                                  row_id_str: row_id_str,
+                                 edit:       edit,
                                });
     }
   }
   let tfoot = this.getOrCreateTfoot(table_div,type,kind,id_str);
   if (tfoot) {
     this.refreshTfoot({
-           parent:     tfoot,
-           type:       type,
-           kind:       kind,
-           data:       data,
-           id:         id,
-           pdata:      pdata,
-           pid:        pid,
-           edit:       edit,
-           id_str:     id_str,
+           parent: tfoot,
+           type:   type,
+           kind:   kind,
+           data:   data,
+           id:     id,
+           pdata:  pdata,
+           pid:    pid,
+           id_str: id_str,
+           edit:   edit,
          });
   }
   // Clean up
@@ -1480,9 +1498,9 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     pkind:      pkind,
     pdata:      pdata,
     pid:        pid,
-    edit:       edit,
     id_str:     id_str,
     row_id_str: row_id_str,
+    edit:       edit,
     filter:     filter,
   };
   this.refreshTableDataFirstCell(cell_opt);
@@ -1506,9 +1524,9 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
   let id         = params.id;
   let pdata      = params.pdata;
   let pid        = params.pid;
-  let edit       = params.edit;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
+  let edit       = params.edit;
   let filter     = params.filter;
 
   if (!filter || !tr|| !data || !data[id])
@@ -1563,9 +1581,9 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
   let id         = params.id;
   let pdata      = params.pdata;
   let pid        = params.pid;
-  let edit       = params.edit;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
+  let edit       = params.edit;
 
   if (!tbody || !data || (!data[id] && !data["+"+id]))
     return null;
@@ -1654,9 +1672,9 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
           id:         id,
           pdata:      pdata,
           pid:        pid,
-          edit:       edit,
           id_str:     id_str,
           row_id_str: row_id_str,
+          edit:       edit,
           filter:     filter,
           // The options below are only used by refreshTableDataItemCells
           filter_id:  filter_id,
@@ -1687,9 +1705,9 @@ $.any.anyView.prototype.refreshTableDataItemCells = function (params)
   let id         = params.id;
   let pdata      = params.pdata;
   let pid        = params.pid;
-  let edit       = params.edit;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
+  let edit       = params.edit;
   let filter     = params.filter;
   let filter_id  = params.filter_id;
   let filter_key = params.filter_key;
@@ -1739,9 +1757,9 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
   let pkind      = params.pkind;
   let pdata      = params.pdata;
   let pid        = params.pid;
-  let edit       = params.edit;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
+  let edit       = params.edit;
   let filter     = params.filter;
 
   let first = true;
@@ -1819,9 +1837,9 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
   let pkind      = params.pkind;
   let pdata      = params.pdata;
   let pid        = params.pid;
-  let edit       = params.edit;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
+  let edit       = params.edit;
   let filter     = params.filter;
 
   let first = true;
@@ -1849,9 +1867,9 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
         pkind:      pkind,
         pdata:      pdata,
         pid:        pid,
-        edit:       edit,
         id_str:     id_str,
         row_id_str: row_id_str,
+        edit:       edit,
         filter:     filter,
       };
       if (this.options.showButtonRemove==2 && this.options.isRemovable && id && kind == "list" && !edit)
@@ -1901,9 +1919,9 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,id
     id:         id,
     pdata:      pdata,
     pid:        pid,
-    edit:       edit,
     id_str:     id_str,
     row_id_str: row_id_str,
+    edit:       edit,
     filter:     filter,
     filter_id:  filter_id,
     types:      this.model.types,
@@ -2440,8 +2458,7 @@ $.any.anyView.prototype.refreshLinkButton = function (opt,onClickMethod)
   if (!opt)
     return null;
 
-  let sub     = opt.type == opt.link_type ? "sub"+opt.type : opt.link_type;
-  let tit_str = sub; //i18n.button.buttonAdd+" "+sub;
+  let tit_str = opt.link_type == opt.type ? "sub"+opt.type : opt.link_type;
   let btn_str = tit_str; //this.option("showButtonLabels") ? tit_str : "";
   let btn_id  = this.id_base+"_"+opt.type+"_"+opt.link_type+"_link_icon";
   let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2535,8 +2552,9 @@ $.any.anyView.prototype.createView = function (params)
       m_str = def_str;
     }
     try {
-      let model_opt = this.getCreateModelOptions(data,id,type);
+      let model_opt = this.getCreateModelOptions(data,kind=="item"?id:null,type);
       model = new window[m_str](model_opt);
+      model.parent = this.model;
     }
     catch (err) {
       console.error("Couldn't create model "+m_str+": "+err);
@@ -2568,6 +2586,8 @@ $.any.anyView.prototype.createView = function (params)
       console.error("Couldn't create view "+v_str+" with id "+view_opt.id);
       view = null;
     }
+    else
+      view.kind = kind;
   }
   catch (err) {
     let errstr = "Couldn't create view "+v_str+": "+err; // TODO! i18n
@@ -2914,7 +2934,7 @@ $.any.anyView.prototype.getCheckStr = function (type,kind,id,val,edit,filter_key
     let id_str      = ""+the_id;
     let it_id       = this.id_base+"_"+type+"_"+kind+"_"+id_str+"_"+filter_id+"_check";
     let check_class = (val == "1") ? "far fa-check-square" : "far fa-square";
-    let title   = "Check if attended"; // TODO! Move to event class
+    let title   = "Check if attended"; // TODO! Move to event class, also i18n
     str = "<div class='itemUnedit inlineDiv pointer' "+
           "id='"+it_id+"' "+
           "title='"+title+"'>"+
@@ -2991,8 +3011,8 @@ $.any.anyView.prototype.getListModelOptions = function (type,list_type,data)
   return {
     type:       list_type,
     data:       data,
-    link_type:  type,
-    link_id:    "???", // TODO!
+    ptype:      type,
+    pid:        "???", // TODO!
     db_search:  false,
     mode:       this.model.mode,
     permission: this.model.permission,
@@ -3196,8 +3216,7 @@ $.any.anyView.prototype.sortTable = function (event)
     this.model.dbSearch(mod_opt);
   } // if remote
   else {
-    // TODO! Local sort not implemented yet
-    console.log("sortTable: Local sort not implemented. ");
+    console.log("sortTable: Local sort not implemented. "); // TODO!
   }
 }; // sortTable
 
@@ -3274,6 +3293,7 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
 
 $.any.anyView.prototype.searchLinkClicked = function (event)
 {
+  // TODO! Check for options undefined
   this.options.grouping        = event.data.options.link_options.grouping;
   this.options.isEditable      = event.data.options.link_options.isEditable;
   this.options.showHeader      = event.data.options.link_options.showHeader;
@@ -3314,7 +3334,7 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
   };
-  this.id_stack = ["0"]; // TODO! May not work in all cases
+  this.id_stack = ["0"]; // TODO! May not work in all cases?
   this.options.data_level = 0;
   this.data_level = 0; // TODO! Why is this in 2 places?
   if (this.model.mode == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
@@ -3370,7 +3390,6 @@ $.any.anyView.prototype._processKeyup = function (event)
         else
         if (this.options.onEnterMoveFocus) {
           // TODO! Enter in a list input field should optionally move to next row and start editing it, unless onEnterInsertNew or onEnterCallDatabase are true.
-          // TODO! Also make TAB (optionally) move to next field.
         }
       }
       else
@@ -3400,9 +3419,9 @@ $.any.anyView.prototype.addListEntry = function (event)
   let id         = event.data.id;
   let pdata      = event.data.pdata;
   let pid        = event.data.pid;
-  let edit       = event.data.edit;
   let id_str     = event.data.id_str;
   let row_id_str = event.data.row_id_str;
+  let edit       = event.data.edit;
   let filter     = event.data.filter;
   let new_id     = event.data.new_id;
   let is_new     = event.data.is_new;
@@ -3515,10 +3534,9 @@ $.any.anyView.prototype._addListEntry = function (opt)
   let filter     = opt.filter;
 
   let indata = {};
-  if ((new_id || new_id===0) && !indata[new_id])  { // New row
+  if ((new_id || new_id===0) && !indata[new_id]) { // New row
     indata = {};
     indata[kind] = type;
-    //indata.data = {}; // TODO! Why?
   }
   if (indata) {
     indata.type = type;
@@ -3561,9 +3579,9 @@ $.any.anyView.prototype._addListEntry = function (opt)
          id:         new_id,
          pdata:      pdata,
          pid:        pid,
-         edit:       true,
          id_str:     id_str,
          row_id_str: row_id_str,
+         edit:       true,
        });
 }; // _addListEntry
 
@@ -3724,7 +3742,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
                     kind:         kind,
                     data:         the_item,
                     id:           the_id,
-                    id_str:       idx, // TODO!
+                    id_str:       idx, // TODO! Is this correct?
                     data_level:   0, // Reset data_level for the new view
                     indent_level: 0, // Reset indent_level for the new view
                     showHeader:       opt.showHeader       === false     ? false                : true,
@@ -3735,7 +3753,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
                     onEscEndEdit:     opt.onEscEndEdit     !== undefined ? opt.onEscEndEdit     : this.options.onEscEndEdit,
                   });
   if (!view || !view.options || !view.options.top_view) {
-    console.error("System error: View missing. "); // Should never happen TODO! i18n
+    console.error("System error: View missing. "); // TODO! i18n
     return false;
   }
   let top_view = this.options.top_view;
@@ -3786,7 +3804,6 @@ $.any.anyView.prototype._doShowItem = function (opt)
 
 $.any.anyView.prototype.closeItem = function (event)
 {
-  // TODO! Should check for changed values and give warning before closing
   if (this.options.top_view)
     this.options.top_view.refresh();
 }; // closeItem
@@ -3851,9 +3868,9 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
         pkind:      opt.pkind,
         pdata:      opt.pdata,
         pid:        opt.pid,
-        edit:       opt.edit,
         id_str:     opt.id_str,
         row_id_str: opt.row_id_str,
+        edit:       opt.edit,
       };
       new_params.data_div  = this.getOrCreateDataContainer({
                                     parent: this.element,
@@ -3878,9 +3895,9 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
              id:         opt.id,
              pdata:      opt.pdata,
              pid:        opt.pid,
-             edit:       opt.edit,
              id_str:     opt.id_str,
              row_id_str: opt.row_id_str,
+             edit:       opt.edit,
            });
     }
   }
@@ -3905,9 +3922,9 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
       id:         opt.id,
       pdata:      opt.pdata,
       pid:        opt.pid,
-      edit:       true,
       id_str:     opt.id_str,
       row_id_str: opt.row_id_str,
+      edit:       true,
       filter:     opt.filter,
       is_new:     opt.is_new,
       isEditable: opt.isEditable, // TODO! Not used?
@@ -4095,7 +4112,7 @@ $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,
             let pname = data[id][type_name];
             itemsel_dd.append($("<option "+sel+">").attr("value",parseInt(id)).text(pname));
             if (sel != "") {
-              $("#"+itemsel_id+"-button .ui-selectmenu-text").text(item[type_name]); // TODO! .ui-selectmenu-text no longer used
+              $("#"+itemsel_id+"-button").text(item[type_name]);
               did_select = "";
             }
           }
@@ -4173,8 +4190,6 @@ $.any.anyView.prototype.dbUpdate = function (event)
      id:       id,
      new_data: data_values,
   });
-  //if (data_values["parent_name"])
-  //  delete data_values["parent_name"]; // TODO! Why?
   if (kind == "item" && this.options.top_view && this.options.top_view.model) {
     // If a top_view exists, insert/update the data there too
     if (event.data.is_new) {
@@ -4261,9 +4276,9 @@ $.any.anyView.prototype.dbUpdate = function (event)
       pkind:      pkind,
       pdata:      pdata,
       pid:        pid,
-      edit:       false,
       id_str:     id_str,
       row_id_str: row_id_str,
+      edit:       false,
     };
     this.refreshListTableDataRow(params);
   }
@@ -4315,9 +4330,9 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
     return false;
   let options = {
    parent_view: this,
-   type:        event.data.link_type, // Switch types
+   type:        event.data.link_type,
    id:          null,
-   link_type:   event.data.type,      // Switch types
+   ptype:       event.data.type,
    header:      true,
    grouping:    null,
    simple:      true,
@@ -4331,7 +4346,6 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
 
 // Create a list of selectable items and display in a modal dialog.
 // Note: The 'this' context is here the calling model! Use options.parent_view for view methods!
-// TODO! When deleting the last entry in a list, the tab is not removed (if anyViewTabs is used)
 $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
 {
   let model = context ? context : this;
@@ -4355,13 +4369,16 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
     if (serverdata.data) {
       let parent_view = options.parent_view ? options.parent_view : null;
       if (parent_view) {
-        let list_type   = options.type;
+        let type        = model.type;
+        let data        = model.data;
+        let id          = model.id;
         let new_id_base = parent_view._createIdBase();
-        let ll_id       = new_id_base+"_"+list_type+"_link_list";
+        let link_type   = options.type;
+        let ll_id       = new_id_base+"_"+link_type+"_link_list";
         let ll_contents = $("<div id='"+ll_id+"'></div>");
         let select_list_view = parent_view.createView({
                                              parent: ll_contents,
-                                             type:   list_type,
+                                             type:   link_type,
                                              kind:   "list",
                                              data:   serverdata.data,
                                              //id:     null,
@@ -4378,62 +4395,53 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           select_list_view.options.isSelectable    = true; // Use the select filter, if available
           select_list_view.options.unselect        = new Set();
           select_list_view.options.select          = new Set();
-          let pmodel   = parent_view.model;
-          let pid      = pmodel.id;
-          let ptopdata = pmodel.data
-                         ? pmodel.data["+0"]
-                           ? pmodel.data["+0"]
-                           : pmodel.data[0]
-                             ? pmodel.data[0]
-                             : null
-                         : null;
-          let psubdata = ptopdata && ptopdata.data && ptopdata.data[pid]
-                         ? ptopdata.data[pid].data
-                         : null;
-          select_list_view.options.preselected = pmodel.dataSearch({ data: psubdata,
-                                                                     type: list_type });
+          select_list_view.options.preselected = model.dataSearch({ data: data,
+                                                                    type: link_type });
+          let the_view = parent_view._findViewOfType(link_type);
+          if (!the_view)
+            the_view = parent_view;
           if (select_list_view.options.preselected)
             parent_view._addPreSelections(select_list_view);
-          let par_view_id = parent_view.id_base+"_"+model.type+"_head_0_data";
+          let par_view_id = parent_view.id_base+"_"+type+"_head_0_data";
           let mod_opt = {
             parentId:   par_view_id,
             elementId:  "",
-            heading:    "Select "+list_type+"s to add / remove", // TODO! i18n
+            heading:    "Select "+link_type+"s to add / remove", // TODO! i18n
             contents:   select_list_view.element,
             width:      "25em", // TODO! css
             ok:         true,
             cancel:     true,
-            okFunction: parent_view.dbUpdateLinkList,
-            context:    parent_view,
-            // Sent to okFunction:
-            type:       model.type,
-            data:       model.data,
-            id:         model.id,
+            okFunction: the_view.dbUpdateLinkList,
+            context:    the_view,
+            // Used by okFunction:
+            data:       data,
+            type:       type,
+            kind:       "item",
+            id:         id,
+            link_data:  select_list_view.model.data,
             link_type:  select_list_view.model.type,
+            link_kind:  "list",
             link_id:    null,
-            name_key:   select_list_view.model.name_key,
             select:     select_list_view.options.select,
             unselect:   select_list_view.options.unselect,
+            name_key:   select_list_view.model.name_key,
             grouping:   model.grouping,
           };
           w3_modaldialog(mod_opt);
           select_list_view.refresh();
         }
+        if (parent_view.options.showToolbar) {
+          parent_view.options.item_opening = true; // To make top right close icon appear
+          parent_view.refreshToolbarBottom({
+                 parent: parent_view.element,
+                 type:   type,
+                 kind:   "item",
+                 data:   data,
+                 id:     id,
+                 edit:   false,
+              });
+        }
       } // if parent_view
-    }
-  }
-  if (options.parent_view) {
-    let view = options.parent_view;
-    if (view.options.showToolbar) {
-      view.options.item_opening = true; // To make top right close icon appear
-      view.refreshToolbarBottom({
-             parent: view.element,
-             type:   view.model.type,
-             kind:   view.model.kind,
-             data:   view.model.data,
-             id:     view.model.id,
-             edit:   false,
-          });
     }
   }
   return context;
@@ -4462,64 +4470,20 @@ $.any.anyView.prototype._findViewOfType = function (type)
   if (this.views) {
     // Find the view to refresh
     for (let x in this.views) {
-      if (this.views[x].model && this.views[x].model.type == type)
-        return this.views[x];
-      else {
-        v = this.views[x]._findViewOfType(type);
-        if (v && v.model && v.model.type == type)
-          return v;
+      if (this.views.hasOwnProperty(x)) {
+        let the_view = this.views[x];
+        if (the_view.model && the_view.model.type == type && the_view.kind != "head")
+          return the_view;
+        else {
+          v = the_view._findViewOfType(type);
+          if (v && v.model && v.model.type == type)
+            return v;
+        }
       }
     }
   }
   return v;
-};
-
-$.any.anyView.prototype.dbUpdateLinkList = function (opt)
-{
-  // Close dialog
-  w3_modaldialog_close(opt);
-
-  if (!this.model)
-    throw i18n.error.MODEL_MISSING;
-
-  let v = this._findViewOfType(opt.link_type);
-  if (!v)
-    v = this;
-
-  // Update database
-  if (this.options)
-    this.options.item_opening = true; // To make top right close icon appear
-  let type      = opt.ptype ? opt.ptype : opt.type;
-  let id        = opt.pid   ? opt.pid   : opt.id;
-  let link_type = opt.link_type;
-  let link_id   = opt.link_id;
-  let upd_opt = {
-        type:      type,
-        id:        id,
-        link_type: link_type,
-        link_id:   link_id,
-        select:    opt.select,
-        unselect:  opt.unselect,
-        name_key:  opt.name_key,
-        header:    true,                                                // TODO! Is this used?
-        grouping:  this.options ? this.options.grouping : opt.grouping, // TODO! Is this used?
-        auto_refresh: false,
-        onSuccess: function(context,serverdata,options)
-                   {
-                     v.model.dbUpdateLinkListSuccess(context,serverdata,options);
-                     if (options.link_id)
-                       v.refresh();
-                     else {
-                       let x = v.id_stack.pop();
-                       v.refresh();
-                       v.id_stack.push(x);
-                     }
-                   },
-      };
-  if (!v.model.dbUpdateLinkList(upd_opt))
-    return false;
-  return true;
-}; // dbUpdateLinkList
+}; // _findViewOfType
 
 $.any.anyView.prototype.dbRemoveDialog = function (event)
 {
@@ -4528,32 +4492,31 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   if (!event || !event.data)
     throw i18n.error.DATA_MISSING;
 
-  let data      = event.data.data;
   let type      = event.data.type;
   let kind      = event.data.kind;
+  let data      = event.data.data;
   let id        = event.data.id;
-  let ptype     = event.data.ptype;
-  let pkind     = event.data.pkind;
-  let pid       = event.data.pid;
+  let link_type = event.data.ptype;
+  let link_kind = event.data.pkind;
+  let link_data = event.data.pdata;
+  let link_id   = event.data.pid;
   let id_str    = event.data.row_id_str;
-  let link_id   = id;
-  let link_type = type;
-  if (!data || !data[link_id]) {
-    console.warn("Data not found ("+type+" id="+link_id+"). ");
+  if (!data || !data[id]) {
+    console.warn("Data not found ("+type+" id="+id+"). ");
     return null;
   }
-  if (this.options.confirmRemove && !data[link_id].is_new) {
+  let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
+  if (this.options.confirmRemove && !data[id].is_new) {
     let linkdata = this.model.dataSearch({ type:   type,
-                                           id:     link_id,
+                                           id:     id,
                                            parent: true,
                                         });
-    let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
-    let the_name = data[link_id][name_key] ? data[link_id][name_key] : "";
-    let msgstr   = i18n.message.removeByName.replace("%%","'"+the_name+"'");
+    let the_name = data[id][name_key] ? data[id][name_key] : "";
+    let msgstr   = i18n.message.removeByName.replace("%%",type+" '"+the_name+"'");
     if (kind == "list") {
       let lfname = linkdata && linkdata[this.model.name_key]
                    ? "from the "+linkdata[this.model.name_key]+" list"
-                   : "from this list"; // TODO! i18n
+                   : "from this "+link_type; // TODO! i18n
       msgstr += " "+lfname;
     }
     let msg = "<div class='any-confirm-remove-dialog' id='"+this.id_base+"_confirm_remove' style='padding:.8em;'>"+
@@ -4572,36 +4535,57 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         okFunction: this.dbUpdateLinkList,
         context:    this,
         // Sent to okFunction:
-        type:       ptype,
-        kind:       pkind,
-        id:         pid,
-        data:       data,
-        link_type:  link_type,
-        link_id:    link_id,
+        data:       link_data,
+        type:       link_type,
+        kind:       link_kind,
+        id:         link_id,
+        link_data:  data,
+        link_type:  type,
+        link_kind:  kind,
+        link_id:    id,
+        name_key:   name_key,
         select:     new Set(),
-        unselect:   new Set().add(link_id),
+        unselect:   new Set().add(id),
         id_str:     id_str,
       };
       w3_modaldialog(mod_opt);
-    }
-  }
+    } // if
+  } // if
   else {
     let opt = {
-        type:      type,
-        kind:      kind,
-        data:      data,
-        id:        id,
-        pid:       pid,
-        id_str:    id_str,
-        link_type: link_type,
-        link_id:   link_id,
+        data:      link_data,
+        type:      link_type,
+        kind:      link_kind,
+        id:        link_id,
+        link_data: data,
+        link_type: type,
+        link_kind: kind,
+        link_id:   id,
+        name_key:  name_key,
         select:    new Set(),
-        unselect:  new Set().add(link_id),
+        unselect:  new Set().add(id),
+        id_str:     id_str,
     };
     this.dbUpdateLinkList(opt);
-  }
+  } // else
   return this;
 }; // dbRemoveDialog
+
+$.any.anyView.prototype.dbUpdateLinkList = function (opt)
+{
+  // Close dialog
+  w3_modaldialog_close(opt);
+
+  // Make top right close icon appear
+  if (this.options)
+    this.options.item_opening = true;
+
+  // Update database
+  opt.context = this.model;
+  if (!this.model.dbUpdateLinkList(opt))
+    return false;
+  return true;
+}; // dbUpdateLinkList
 
 /**
  * Deletes an item from memory and database and refreshes view.

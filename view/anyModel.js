@@ -1123,7 +1123,7 @@ anyModel.prototype.dataUpdate = function (options)
  * @param {String}  options.type      The type of the item to which the list is linked to (e.g. "user").
  *                                    Optional. Default: `this.type`.
  * @param {integer} options.id        The id of the item to which the list is linked to (e.g. the user id "23").
- *                                    Optional. Default: `"link-"+type`.
+ *                                    Optional. Default: `this.id`.
  * @param {String}  options.link_type If `link_id` is specified, the type of an item in the data structure with
  *                                    id `link_id`.
  *                                    If `link_id` is not specified, the type of the items in the `select` and
@@ -1164,32 +1164,25 @@ anyModel.prototype.dataUpdateLinkList = function (options)
   }
   let the_data      = options.data     ? options.data     : this.data;
   let the_type      = options.type     ? options.type     : this.type;
-  let the_id        = options.id;
+  let the_id        = options.id       ? options.id       : this.id;
+  let the_link_data = options.link_data;
   let the_link_type = options.link_type;
+  let the_link_id   = options.link_id;
   let the_new_data  = options.new_data ? options.new_data : this.data;
-  let the_name_key  = options.name_key ? options.name_key : the_link_type+"_name";
 
   if (!the_data)
     return false;
-  if (!the_type) {
-    console.error("anyModel.dataUpdateLinkList: "+i18n.error.TYPE_MISSING);
+  if (!the_type || !the_link_type) {
+    let errstr = "";
+    if (!the_type)      errstr += i18n.error.TYPE_MISSING;
+    if (!the_link_type) errstr += i18n.error.LINK_TYPE_MISSING;
+    console.error("anyModel.dataUpdateLinkList: "+errstr);
     return false;
   }
-  if (the_data[0])
-    the_data = the_data[0].data;
-  else
-  if (the_data["+0"])
-    the_data = the_data["+0"].data;
-  if (the_data[the_id])
-    the_data = the_data[the_id].data;
-  else
-  if (the_data["+"+the_id])
-    the_data = the_data["+"+the_id].data;
-
-  if (options.link_id) {
-    // Remove the link data with id 'options.link_id' and return
-    this.dataDelete({ data: the_data,
-                      id:   options.link_id,
+  if (the_id && the_link_id) {
+    // Remove the link data with id 'options.id' and return
+    this.dataDelete({ data: the_link_data,
+                      id:   the_link_id,
                       type: the_link_type,
                    });
     return true;
@@ -1197,40 +1190,49 @@ anyModel.prototype.dataUpdateLinkList = function (options)
 
   if (options.unselect) {
     // Remove links in `unselect`
-    for (let id of options.unselect) {
+    for (let rem_id of options.unselect) {
       // Remove (delete) the link data with id 'id'
       if (!this.dataDelete({ data: the_data,
-                             id:   id,
+                             id:   rem_id,
                              type: the_link_type,
                           }))
-        console.warn("Could not remove "+the_link_type+" item with id "+id+" (not found in data). "); // TODO! i18n
+        console.warn("Could not remove "+the_type+" item with id "+rem_id+" (not found in data). "); // TODO! i18n
     } // for
-    if (the_data && the_data["link-"+the_link_type] && (!the_data["link-"+the_link_type].data || !Object.size(the_data["link-"+the_link_type].data)))
-      delete the_data["link-"+the_link_type];
+    if (the_data && the_data["link-"+the_type] && (!the_data["link-"+the_type].data || !Object.size(the_data["link-"+the_type].data)))
+      delete the_data["link-"+the_type];
   } // if
 
   // Insert or update link in `select`
   if (options.select) {
-    for (let id of options.select) {
+    for (let sel_id of options.select) {
       // Only insert item if it is not already in model
       if (!this.dataSearch({ data: the_data,
-                             id:   id,
+                             id:   sel_id,
                              type: the_link_type,
                           })) {
-        // See if we really got an item with id 'id' in the new data
+        // See if we really got an item with id 'sel_id' in the new data
         let item = this.dataSearch({ data: the_new_data,
-                                     id:   id,
+                                     id:   sel_id,
                                      type: the_link_type,
                                   });
         if (item) {
-          let ins_id = "link-"+the_link_type; // See if we have "link-" index (created by server)
-          let the_ins_type = the_link_type;
-          if (!the_data[ins_id])
-            the_data[ins_id] = {};
-          $.extend(true, the_data[ins_id], the_new_data[ins_id]);
+          // Find insertion point
+          let the_ins_data = this.dataSearch({ data: the_data,
+                                               id:   the_id,
+                                               type: the_type,
+                                            });
+          if (the_ins_data) {
+            if (!the_ins_data[the_id].data)
+              the_ins_data[the_id].data = {};
+            the_ins_data = the_ins_data[the_id].data;
+            let ins_id = "link-"+the_link_type; // See if we have "link-" index (created by server)
+            if (!the_ins_data[ins_id])
+              the_ins_data[ins_id] = {};
+            $.extend(true, the_ins_data[ins_id], the_new_data[ins_id]);
+          }
         }
         else
-          console.warn("Could not add "+the_link_type+" item with id "+id+" (not found in data). "); // TODO! i18n
+          console.warn("Could not add "+the_link_type+" item with id "+the_id+" (not found in data). "); // TODO! i18n
       } // if
       else {
         // Link item exists, update it with data in `the_new_data`
@@ -1456,7 +1458,7 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                                      Optional. Default: null.
  * @param {integer}  options.group_id   If specified, search only in group with this id.
  *                                      Optional. Default: undefined.
- * @param {integer}  options.link_type
+ * @param {integer}  options.ptype
  *
  * @param {boolean}  options.simple     If true, only values for _id and _name (e.g. "user_id" and "user_name")
  *                                      will be returned from the server.
@@ -1588,7 +1590,7 @@ anyModel.prototype._dbSearchLocal = async function (options)
  * @param {integer} options.type
  * @param {integer} options.id
  * @param {integer} options.group_id
- * @param {integer} options.link_type
+ * @param {integer} options.ptype
  * @param {boolean} options.simple
  * @param {string}  options.header
  * @param {string}  options.grouping
@@ -1602,9 +1604,9 @@ anyModel.prototype._dbSearchLocal = async function (options)
  */
 anyModel.prototype.dbSearchGetURL = function (options)
 {
-  let the_type      = options.type ? options.type   : this.type;
-  let the_id_key    = the_type     ? the_type+"_id" : this.id_key;
-  let the_link_type = options.link_type;
+  let the_type   = options.type ? options.type   : this.type;
+  let the_id_key = the_type     ? the_type+"_id" : this.id_key;
+  let the_ptype  = options.ptype;
   if (!the_type) {
     console.error("anyModel.dbSearchGetURL: "+i18n.error.TYPE_MISSING);
     return null;
@@ -1631,7 +1633,7 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += the_gid
                ? "&group_id="+the_gid // Search specific group
                : ""; // Search all groups
-  param_str += the_type == "group" && the_link_type ? "&group_type="+the_link_type : "";
+  param_str += the_type == "group" && the_ptype ? "&group_type="+the_ptype : "";
   param_str += options.header === true  ||
                options.header === false ||
                typeof options.header == "string"    ? "&header="    +options.header : "";
@@ -2089,7 +2091,7 @@ anyModel.prototype.dbUpdateGetURL = function (options)
 
   // Link elements?
   param_str += options.ptype && options.pid
-               ? "&link_type="+options.ptype+"&link_id="+options.pid
+               ? "&ptype="+options.ptype+"&pid="+options.pid
                : "";
 
   return this._getDataSourceName() + param_str;
@@ -2296,34 +2298,41 @@ anyModel.prototype._dbUpdateLinkListLocal = async function (options)
  */
 anyModel.prototype.dbUpdateLinkListGetURL = function (options)
 {
-  let the_type      = options.type ? options.type : this.type;
-  let the_link_type = options.link_type;
+  let the_type      = options.type
+                      ? options.type
+                      : this.type;
   let the_id        = Number.isInteger(parseInt(options.id)) && options.id >= 0
                       ? parseInt(options.id)
                       : options.id
                         ? options.id
-                        : Number.isInteger(parseInt(this.id))
-                          ? parseInt(this.id)
-                          : this.id;
-  if (!the_type) {
-    console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.TYPE_MISSING);
+                        : Number.isInteger(parseInt(this.id)) && this.id >= 0
+                          ? this.id
+                          : null;
+  let the_link_type = options.link_type;
+  let the_link_id   = Number.isInteger(parseInt(options.link_id)) && options.link_id >= 0
+                      ? parseInt(options.link_id)
+                      : options.link_id
+                        ? options.link_id
+                        : null;
+  if (!the_type || !the_link_type) {
+    let errstr = "";
+    if (!the_type)      errstr += i18n.error.TYPE_MISSING;
+    if (!the_link_type) errstr += i18n.error.LINK_TYPE_MISSING;
+    console.error("anyModel.dbUpdateLinkListGetURL: "+errstr);
     return null;
   }
-  if (!the_link_type) {
-    console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.LINK_TYPE_MISSING);
-    return null;
-  }
-  if (typeof options.id !== "string" && !the_id && the_id !== 0) {
+  if (!the_id || (typeof the_id !== "string" && !isInt(the_id))) {
     console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.ID_ILLEGAL);
     return null;
   }
+  let the_id_key = the_type ? the_type+"_id" : this.id_key;
   let param_str = "?echo=y"+
                   "&cmd=upd"+
                   "&type="+the_type+
-                  "&"+the_type+"_id"+"="+the_id+
+                  "&"+the_id_key+"="+the_id+
                   "&link_type="+the_link_type;
-  if (options.link_id)
-    param_str += "&rem="+options.link_id;
+  if (the_link_id)
+    param_str += "&rem="+the_link_id;
   else {
     let has_add_or_rem = false;
     if (options.select) {
@@ -2391,14 +2400,14 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
  * @method anyModel.dbUpdateLink
  * @param {Object} options An object which may contain these elements:
  *
- * @param {String}   options.type       The type of items in the list.
- *                                      Optional. Default: `this.type`.
- * @param {String}   options.id         The id of the item.
- *                                      Mandatory.
- * @param {Object}   options.link_type  The type of the item to which the list "belongs" (is linked to).
- *                                      Optional. Default: `this.type`.
- * @param {String}   options.link_id    The id of the item to which the list "belongs" (is linked to).
- *                                      Mandatory.
+ * @param {String}   options.type      The type of items in the list.
+ *                                     Optional. Default: `this.type`.
+ * @param {String}   options.id        The id of the item.
+ *                                     Mandatory.
+ * @param {Object}   options.link_type The type of the item to which the list "belongs" (is linked to).
+ *                                     Optional. Default: `this.type`.
+ * @param {String}   options.link_id   The id of the item to which the list "belongs" (is linked to).
+ *                                     Mandatory.
  * @param {Array}    options.names
  * @param {Array}    options.values
  * @param {Function} options.onSuccess
@@ -2515,8 +2524,6 @@ anyModel.prototype.dbUpdateLinkGetURL = function (options)
   if (the_link_type)
     param_str += "&link_type="+the_link_type;
   param_str += "&link_id="+options.link_id;
-  //let nam = [...options.names];  // TODO! Whats this for?
-  //let val = [...options.values]; // TODO! Whats this for?
   param_str += options.db_search ? "&sea=y"                      : "";
   param_str += options.header    ? "&header="  +options.header   : "";
   param_str += options.grouping  ? "&grouping="+options.grouping : "";

@@ -155,11 +155,9 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
   let tab_panel = this.getOrCreateTabsContainer(parent,ptype,pkind,this.data_level);
 
   // Add a new header tab button in tab panel if it doesnt already exists
-  let id_base = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str;
-  let tab_btn_id    = id_base+"_data_tab_btn";
-  let tab_header_id = id_base+"_header";
-  let tab_data_id   = id_base+"_data";
-  let first = false;
+  let id_base    = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str;
+  let tab_btn_id = id_base+"_data_tab_btn";
+  let first      = false;
   if (!$("#"+tab_btn_id).length) {
     // Create tab button
     let d = data && data[id] ? data[id] : data && data["+"+id] ? data["+"+id] : null;
