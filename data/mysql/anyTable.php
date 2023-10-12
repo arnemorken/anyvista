@@ -239,11 +239,6 @@ class anyTable extends dbTable
         $type = $defsOrType["type"];
       else
         $type = Parameters::get("type");
-      if (!$type || $type == "")
-        if ($fields && $fields[0])
-          $type = $fields[0];
-        else
-          $type = null;
       $this->mType = $type;
 
       // Set variables from table defs
@@ -288,11 +283,6 @@ class anyTable extends dbTable
         $type = $defsOrType;
       else
         $type = Parameters::get("type");
-      if (!$type || $type == "")
-        if ($fields && $fields[0])
-          $type = $fields[0];
-        else
-          $type = null;
       $this->mType = $type;
 
       // Set minimal working values
