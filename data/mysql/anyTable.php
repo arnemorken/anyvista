@@ -1127,7 +1127,7 @@ class anyTable extends dbTable
     if ($has_linktable) {
       $lj .= "LEFT JOIN ".$linktable.  " ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ";
       if ($this->hasParentId() && $this->mLinkId == null)
-        $lj .= "OR ".$this->mTableName.".parent_id=temp.".$this->mIdKeyTable." ";
+        $lj .= "OR ".$linktable.".".$this->mIdKeyTable."=temp.".$this->mIdKeyTable." ";
       if (!isset($this->mLinkType) && $link_type == "user" && $cur_uid)
         $lj .= "AND CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$cur_uid." AS INT) "; // Only return results for current user
       if ($has_typetable) {
@@ -1632,7 +1632,7 @@ class anyTable extends dbTable
         $group_data["group"]["unknown"]["group_id"]   = "unknown";
         $group_data["group"]["unknown"]["group_name"] = "Unknown"; // TODO! i18n
         $group_data["group"]["unknown"]["group_description"] = ucfirst($this->mType)."s belonging to non-".$this->mType." group&nbsp;&nbsp;".
-        						       '<i style="color:red" class="fa fad fa-exclamation-triangle"></i>'; // TODO! i18n
+                                                               '<i style="color:red" class="fa fad fa-exclamation-triangle"></i>'; // TODO! i18n and CSS
       }
       $this->dbAttachToGroups($group_data["group"],$data_tree);
       $group_data["group"]["grouping"] = true;
@@ -2229,13 +2229,14 @@ class anyTable extends dbTable
         } // foreach
       }
       if ($inslist !== null) {
-        // Add elements to the item's list (delete, then insert to avoid error if element already exists in list)
+        // Add elements to the item's list
         foreach ($inslist as $insval) {
           if ($insval) {
+            // Dont add if element already exists in list
             if ($this->dbTableHasLink($link_table,$id_key_link,$insval,$id_key,$id))
               $this->setMessage("Link already exists. ",true); // TODO! i18n
             else {
-              // Link does not exist, we can insert it
+              // Link does not exist, we can add it
               $stmt = "INSERT INTO ".$link_table." (".
                       $id_key_link.",".$id_key.
                       ") VALUES (".
