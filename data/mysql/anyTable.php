@@ -248,12 +248,9 @@ class anyTable extends dbTable
       $this->mTableNameUserLink   = $defsOrType["tableNameUserLink"];
       $this->mIdKey               = $defsOrType["idKey"]
                                     ? $defsOrType["idKey"]
-                                    : ( Parameters::get($type."_id")
-                                        ? Parameters::get($type."_id")
-                                        : ( $fields && $fields[0]
-                                            ? $fields[0]
-                                            : $type."_id"
-                                          )
+                                    : ( $fields && $fields[0]
+                                        ? $fields[0]
+                                        : $type."_id"
                                       );
       $this->mIdKeyTable          = $defsOrType["idKeyTable"]
                                     ? $defsOrType["idKeyTable"]
@@ -297,12 +294,9 @@ class anyTable extends dbTable
       sort($ltn);
       $ltn = "any_".implode("_",$ltn);
       $this->mTableNameUserLink  = $ltn;
-      $this->mIdKey              = Parameters::get($type."_id")
-                                   ? Parameters::get($type."_id")
-                                   : ( $fields && $fields[0]
-                                       ? $fields[0]
-                                       : $type."_id"
-                                     );
+      $this->mIdKey              = $fields && $fields[0]
+                                   ? $fields[0]
+                                   : $type."_id";
       $this->mIdKeyTable         = $this->mIdKey;
       $this->mIdKeyMetaTable     = null; // No meta table for auto-generated type/table
       $this->mNameKey            = $this->mType."_name";

@@ -1606,8 +1606,8 @@ anyModel.prototype._dbSearchLocal = async function (options)
  */
 anyModel.prototype.dbSearchGetURL = function (options)
 {
-  let the_type   = options.type ? options.type   : this.type;
-  let the_id_key = the_type     ? the_type+"_id" : this.id_key;
+  let the_type   = options.type                              ? options.type   : this.type;
+  let the_id_key = options.type && options.type != this.type ? the_type+"_id" : this.id_key;
   let the_ptype  = options.ptype;
   if (!the_type) {
     console.error("anyModel.dbSearchGetURL: "+i18n.error.TYPE_MISSING);
@@ -1814,8 +1814,8 @@ anyModel.prototype._dbSearchNextIdLocal = async function (options)
  */
 anyModel.prototype.dbSearchNextIdGetURL = function (options)
 {
-  let the_type   = options.type ? options.type   : this.type;
-  let the_id_key = the_type     ? the_type+"_id" : this.id_key;
+  let the_type   = options.type                              ? options.type   : this.type;
+  let the_id_key = options.type && options.type != this.type ? the_type+"_id" : this.id_key;
   if (!the_type) {
     console.error("anyModel.dbSearchNextIdGetURL: "+i18n.error.TYPE_MISSING);
     return null;
@@ -2048,8 +2048,8 @@ anyModel.prototype._dbUpdateLocal = async function (options,item_to_send)
  */
 anyModel.prototype.dbUpdateGetURL = function (options)
 {
-  let the_type   = options.type ? options.type   : this.type;
-  let the_id_key = the_type     ? the_type+"_id" : this.id_key;
+  let the_type   = options.type                              ? options.type   : this.type;
+  let the_id_key = options.type && options.type != this.type ? the_type+"_id" : this.id_key;
   if (!the_type) {
     console.error("anyModel.dbUpdateGetURL: "+i18n.error.TYPE_MISSING);
     return null;
@@ -2327,7 +2327,7 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
     console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.ID_ILLEGAL);
     return null;
   }
-  let the_id_key = the_type ? the_type+"_id" : this.id_key;
+  let the_id_key = options.type && options.type != this.type ? the_type+"_id" : this.id_key;
   let param_str = "?echo=y"+
                   "&cmd=upd"+
                   "&type="+the_type+
@@ -2668,8 +2668,8 @@ anyModel.prototype._dbDeleteLocal = async function (options)
  */
 anyModel.prototype.dbDeleteGetURL = function (options)
 {
-  let the_type   = options.type ? options.type   : this.type;
-  let the_id_key = the_type     ? the_type+"_id" : this.id_key;
+  let the_type   = options.type                              ? options.type   : this.type;
+  let the_id_key = options.type && options.type != this.type ? the_type+"_id" : this.id_key;
   let the_id     = Number.isInteger(parseInt(options.id)) && options.id >= 0
                    ? parseInt(options.id)
                    : options.id
