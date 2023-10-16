@@ -537,7 +537,7 @@ $.any.anyView.prototype.refresh = function (params)
 
           // Create new view whenever we encounter a new type or a new kind
           if ((curr_type != "" && prev_type != curr_type) ||
-              (prev_kind != "" && prev_kind != curr_kind)) {
+              (curr_kind != "" && prev_kind != curr_kind)) {
             // If the new type/kind is contained within a list, create a new row to contain a new parent container
             if (prev_kind == "list")
               the_parent = view._addContainerRow(parent,prev_type,prev_kind,curr_type,curr_kind,idc,id_str);
