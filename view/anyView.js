@@ -743,7 +743,8 @@ $.any.anyView.prototype.refreshOne = function (params)
                           doNotEmpty: false,
                         });
   params.grandparent = parent; // TODO! Fix for anyViewTabs remember-current-tab problem
-  params.parent = header_div;
+  if (header_div.length)
+    params.parent = header_div;
   this.refreshHeader(params);
 
   // Refresh data
@@ -908,7 +909,7 @@ $.any.anyView.prototype.getOrCreateHeaderContainer = function (params)
       header_div.empty();
   }
   else
-  if (haveData) {
+  if (haveData && kind == "head") {
     // Create new header container if we have data
     let class_id = "any-header any-"+kind+"-header any-header-"+this.data_level;
     let pl       = this.options.indent_tables ? this.options.indent_level * this.options.indent_amount : 0;
