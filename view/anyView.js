@@ -3334,7 +3334,8 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
   };
-  this.id_stack = ["0"]; // TODO! May not work in all cases?
+  //this.id_stack = JSON.parse(JSON.stringify(pager.options.div_info.id_str));
+  this.id_stack.pop();
   this.options.data_level = 0;
   this.data_level = 0; // TODO! Why is this in 2 places?
   if (this.model.mode == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
