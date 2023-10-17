@@ -513,20 +513,20 @@ $.any.anyView.prototype.refresh = function (params)
       // Display data: Loop over all entries and refresh views
       if (kind == "head")
         ++this.data_level;
-      let view       = this;
+      let row_no     = 0;
       let prev_type  = type;
       let prev_kind  = kind;
       let the_parent = parent;
-      let row_no     = 0;
-      for (let idc in data) {
-        if (data.hasOwnProperty(idc) && idc != "id" && !idc.startsWith("grouping")) {
+      let view       = this;
+      for (let id in data) {
+        if (data.hasOwnProperty(id) && id != "id" && !id.startsWith("grouping")) {
           if (view) {
             // Find the type and kind of the current data item (default is the previous type/kind)
-            let curr_type = view._findType(data,idc,prev_type);
-            let curr_kind = view._findKind(data,idc,prev_kind);
+            let curr_type = view._findType(data,id,prev_type);
+            let curr_kind = view._findKind(data,id,prev_kind);
 
             // Create the current id_str
-            let idx = Number.isInteger(parseInt(idc)) ? ""+parseInt(idc) : idc;
+            let idx = Number.isInteger(parseInt(id)) ? ""+parseInt(id) : id;
             if (curr_kind == "head" || curr_kind == "item")
               this.id_stack.push(idx);
             let id_str = this.id_stack.join('_');
@@ -536,13 +536,13 @@ $.any.anyView.prototype.refresh = function (params)
                 (curr_kind != "" && prev_kind != curr_kind)) {
               // If the new type/kind is contained within a list, create a new row to contain a new parent container
               if (prev_kind == "list")
-                the_parent = view._addContainerRow(parent,prev_type,prev_kind,curr_type,curr_kind,idc,id_str);
+                the_parent = view._addContainerRow(parent,prev_type,prev_kind,curr_type,curr_kind,id_str);
               view = this.createView({
                        parent: the_parent,
                        type:   curr_type,
                        kind:   curr_kind,
                        data:   data,
-                       id:     idc, // Used by model
+                       id:     id, // Used by model
                        model:  params && params.model ? params.model : null, // The calling method may specify the model explicitely
                        id_str: id_str,
                      });
@@ -574,7 +574,7 @@ $.any.anyView.prototype.refresh = function (params)
                        type:     curr_type,
                        kind:     curr_kind,
                        data:     data,
-                       id:       idc,
+                       id:       id,
                        par_type: par_type,
                        par_kind: par_kind,
                        par_data: par_data,
@@ -585,10 +585,10 @@ $.any.anyView.prototype.refresh = function (params)
                   --row_no;
               }
             } // if view
-            prev_type = curr_type;
-            prev_kind = curr_kind;
             if (curr_kind == "head" || curr_kind == "item")
               this.id_stack.pop();
+            prev_type = curr_type;
+            prev_kind = curr_kind;
           } // if view
         } // if
       } // for
@@ -672,7 +672,7 @@ $.any.anyView.prototype.clearBeforeRefresh = function ()
   this.current_edit = null;
 }; // clearBeforeRefresh
 
-$.any.anyView.prototype._addContainerRow = function (parent,prev_type,prev_kind,curr_type,curr_kind,idc,id_str)
+$.any.anyView.prototype._addContainerRow = function (parent,prev_type,prev_kind,curr_type,curr_kind,id_str)
 {
   let the_parent = parent;
   let filter   = this.getFilter(prev_type,prev_kind);
