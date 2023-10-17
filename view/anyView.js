@@ -509,96 +509,96 @@ $.any.anyView.prototype.refresh = function (params)
     this.refreshCloseItemButton(params);
 
   if (data) {
-    // Display data: Loop over all entries and refresh views
-    if (kind == "head")
-      ++this.data_level;
-    let view       = this;
-    let prev_type  = type;
-    let prev_kind  = kind;
-    let the_parent = parent;
-    let row_no     = 0;
-    if (Object.size(data) == 0) {
+    if (Object.size(data) != 0) {
+      // Display data: Loop over all entries and refresh views
+      if (kind == "head")
+        ++this.data_level;
+      let view       = this;
+      let prev_type  = type;
+      let prev_kind  = kind;
+      let the_parent = parent;
+      let row_no     = 0;
+      for (let idc in data) {
+        if (data.hasOwnProperty(idc) && idc != "id" && !idc.startsWith("grouping")) {
+          if (view) {
+            // Find the type and kind of the current data item (default is the previous type/kind)
+            let curr_type = view._findType(data,idc,prev_type);
+            let curr_kind = view._findKind(data,idc,prev_kind);
+
+            // Create the current id_str
+            let idx = Number.isInteger(parseInt(idc)) ? ""+parseInt(idc) : idc;
+            if (curr_kind == "head" || curr_kind == "item")
+              this.id_stack.push(idx);
+            let id_str = this.id_stack.join('_');
+
+            // Create new view whenever we encounter a new type or a new kind
+            if ((curr_type != "" && prev_type != curr_type) ||
+                (curr_kind != "" && prev_kind != curr_kind)) {
+              // If the new type/kind is contained within a list, create a new row to contain a new parent container
+              if (prev_kind == "list")
+                the_parent = view._addContainerRow(parent,prev_type,prev_kind,curr_type,curr_kind,idc,id_str);
+              view = this.createView({
+                       parent: the_parent,
+                       type:   curr_type,
+                       kind:   curr_kind,
+                       data:   data,
+                       id:     idc, // Used by model
+                       model:  params && params.model ? params.model : null, // The calling method may specify the model explicitely
+                       id_str: id_str,
+                     });
+              if (view) {
+                view.id_stack = JSON.parse(JSON.stringify(this.id_stack));
+                this.views[id_str] = view;
+              }
+            }
+            if (view) {
+              /*
+              // Refresh a header, a single list row or a single item
+              if (row_no == 0 && this.options.indent_level == 0 && curr_kind != "head") {
+                let id = view.element.attr("id");
+                $("#"+id).empty();
+              }
+              */
+              ++row_no;
+              if (this.options && (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num))) {
+                if (!par_type || !par_data || !par_id) {
+                  let it = this._findParentItemModel();
+                  if (it && it.id) {
+                    par_type = it.type;
+                    par_data = it.data;
+                    par_id   = it.id;
+                  }
+                }
+                view.refreshOne({
+                       parent:   the_parent,
+                       type:     curr_type,
+                       kind:     curr_kind,
+                       data:     data,
+                       id:       idc,
+                       par_type: par_type,
+                       par_kind: par_kind,
+                       par_data: par_data,
+                       par_id:   par_id,
+                       edit:     edit,
+                     });
+                if (curr_kind == "list" && !view.rows_changed)
+                  --row_no;
+              }
+            } // if view
+            prev_type = curr_type;
+            prev_kind = curr_kind;
+            if (curr_kind == "head" || curr_kind == "item")
+              this.id_stack.pop();
+          } // if view
+        } // if
+      } // for
+      if (kind == "head")
+        --this.data_level;
+    }
+    else {
       let elm = $("#"+this.element[0].id);
       elm.remove();
     }
-    else
-    for (let idc in data) {
-      if (data.hasOwnProperty(idc) && idc != "id" && !idc.startsWith("grouping")) {
-        if (view) {
-          // Find the type and kind of the current data item (default is the previous type/kind)
-          let curr_type = view._findType(data,idc,prev_type);
-          let curr_kind = view._findKind(data,idc,prev_kind);
-
-          // Create the current id_str
-          let idx = Number.isInteger(parseInt(idc)) ? ""+parseInt(idc) : idc;
-          if (curr_kind == "head" || curr_kind == "item")
-            this.id_stack.push(idx);
-          let id_str = this.id_stack.join('_');
-
-          // Create new view whenever we encounter a new type or a new kind
-          if ((curr_type != "" && prev_type != curr_type) ||
-              (curr_kind != "" && prev_kind != curr_kind)) {
-            // If the new type/kind is contained within a list, create a new row to contain a new parent container
-            if (prev_kind == "list")
-              the_parent = view._addContainerRow(parent,prev_type,prev_kind,curr_type,curr_kind,idc,id_str);
-            view = this.createView({
-                     parent: the_parent,
-                     type:   curr_type,
-                     kind:   curr_kind,
-                     data:   data,
-                     id:     idc, // Used by model
-                     model:  params && params.model ? params.model : null, // The calling method may specify the model explicitely
-                     id_str: id_str,
-                   });
-            if (view) {
-              view.id_stack = JSON.parse(JSON.stringify(this.id_stack));
-              this.views[id_str] = view;
-            }
-          }
-          if (view) {
-            /*
-            // Refresh a header, a single list row or a single item
-            if (row_no == 0 && this.options.indent_level == 0 && curr_kind != "head") {
-              let id = view.element.attr("id");
-              $("#"+id).empty();
-            }
-            */
-            ++row_no;
-            if (this.options && (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num))) {
-              if (!par_type || !par_data || !par_id) {
-                let it = this._findParentItemModel();
-                if (it && it.id) {
-                  par_type = it.type;
-                  par_data = it.data;
-                  par_id   = it.id;
-                }
-              }
-              view.refreshOne({
-                     parent:   the_parent,
-                     type:     curr_type,
-                     kind:     curr_kind,
-                     data:     data,
-                     id:       idc,
-                     par_type: par_type,
-                     par_kind: par_kind,
-                     par_data: par_data,
-                     par_id:   par_id,
-                     edit:     edit,
-                   });
-              if (curr_kind == "list" && !view.rows_changed)
-                --row_no;
-            }
-          } // if view
-          prev_type = curr_type;
-          prev_kind = curr_kind;
-          if (curr_kind == "head" || curr_kind == "item")
-            this.id_stack.pop();
-        } // if view
-      } // if
-    } // for
-
-    if (kind == "head")
-      --this.data_level;
   } // if data
   else {
     // Arrive here if no data
