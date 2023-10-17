@@ -524,18 +524,23 @@ $.any.anyView.prototype.refresh = function (params)
             // Find the type and kind of the current data item (default is the previous type/kind)
             let curr_type = view._findType(data,id,prev_type);
             let curr_kind = view._findKind(data,id,prev_kind);
-
-            // Create the current id_str
-            let idx = Number.isInteger(parseInt(id)) ? ""+parseInt(id) : id;
-            if (curr_kind == "head" || curr_kind == "item")
+            // See if we need to add to id_stack
+            if (curr_kind == "head" || curr_kind == "item") {
+              let idx = Number.isInteger(parseInt(id)) ? ""+parseInt(id) : id;
               this.id_stack.push(idx);
-            let id_str = this.id_stack.join('_');
-
+            }
+            else
+            if (curr_kind == "list" && prev_kind == "list" && prev_type != curr_type) {
+              let idx = Number.isInteger(parseInt(par_id)) ? ""+parseInt(par_id) : par_id;
+              this.id_stack.push(idx);
+            }
             // Create new view whenever we encounter a new type or a new kind
             if ((curr_type != "" && prev_type != curr_type) ||
                 (curr_kind != "" && prev_kind != curr_kind)) {
+              // Create the current id_str
+              let id_str = this.id_stack.join('_');
               // If the new type/kind is contained within a list, create a new row to contain a new parent container
-              if (prev_kind == "list")
+              if (prev_kind == "list" && prev_type != curr_type)
                 the_parent = view._addContainerRow(parent,prev_type,prev_kind,curr_type,curr_kind,id_str);
               view = this.createView({
                        parent: the_parent,
@@ -586,6 +591,9 @@ $.any.anyView.prototype.refresh = function (params)
               }
             } // if view
             if (curr_kind == "head" || curr_kind == "item")
+              this.id_stack.pop();
+            else
+            if (curr_kind == "list" && prev_kind == "list" && prev_type != curr_type)
               this.id_stack.pop();
             prev_type = curr_type;
             prev_kind = curr_kind;
@@ -672,29 +680,31 @@ $.any.anyView.prototype.clearBeforeRefresh = function ()
   this.current_edit = null;
 }; // clearBeforeRefresh
 
-$.any.anyView.prototype._addContainerRow = function (parent,prev_type,prev_kind,curr_type,curr_kind,id_str)
+$.any.anyView.prototype._addContainerRow = function (parent,par_type,par_kind,curr_type,curr_kind,id_str)
 {
   let the_parent = parent;
-  let filter   = this.getFilter(prev_type,prev_kind);
+  let filter   = this.getFilter(par_type,par_kind);
   let num_cols = filter ? Object.size(filter) : 5;
   let row_id   = this.id_base+"_"+curr_type+"_"+curr_kind+"_"+id_str+"_tr";
   let new_tr   = $("<tr id='"+row_id+"'>"+
                    "<td colspan='"+num_cols+"' style='padding-left:"+this.options.indent_amount+"px;' class='any-td any-list-td'></td>"+
                    "</tr>");
-  let tbody    = $("#"+this.id_base+"_"+prev_type+"_"+prev_kind+"_"+id_str+"_tbody");
-  if (tbody.length)
+  let tbody    = $("#"+this.id_base+"_"+par_type+"_"+par_kind+"_"+id_str+"_tbody");
+  if (tbody.length) {
     tbody.append(new_tr);
+    the_parent = tbody.find("#"+row_id).find("td");
+  }
   else {
-    let tr = $("#"+this.id_base+"_"+prev_type+"_"+prev_kind+"_"+id_str+"_tr");
+    let tr = $("#"+this.id_base+"_"+par_type+"_"+par_kind+"_"+id_str+"_tr");
     if (tr.length) {
       new_tr.insertAfter(tr);
       the_parent = new_tr.find("td");
-      if (!the_parent.length)
-        the_parent = parent;
     }
     else
       $("<div id='"+row_id+"'></div>").insertAfter(parent);
   }
+  if (!the_parent.length)
+    the_parent = parent;
   return the_parent;
 }; // _addContainerRow
 
@@ -773,18 +783,16 @@ $.any.anyView.prototype.refreshOne = function (params)
       }
       if (kind == "list")
         ++this.options.indent_level;
-      let subtype = subdata.head ? subdata.head : subdata.list ? subdata.list : subdata.item;
-      let subkind = subdata.head ? "head"       : subdata.list ? "list"       : "item";
       subdata = subdata.data;
       this.refresh({
              parent:         params.data_div,
-             type:           subtype,
-             kind:           subkind,
+             type:           type,
+             kind:           kind,
              data:           subdata,
-             par_type:       kind == "item" || par_kind != "item" ? type : par_type,
-             par_kind:       kind == "item" || par_kind != "item" ? kind : par_kind,
-             par_data:       kind == "item" || par_kind != "item" ? data : par_data,
-             par_id:         kind == "item" || par_kind != "item" ? id   : par_id,
+             par_type:       type,
+             par_kind:       kind,
+             par_data:       data,
+             par_id:         id,
              edit:           edit,
              dont_reset_rec: true,
            });
