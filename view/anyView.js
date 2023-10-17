@@ -743,7 +743,7 @@ $.any.anyView.prototype.refreshOne = function (params)
                           doNotEmpty: false,
                         });
   params.grandparent = parent; // TODO! Fix for anyViewTabs remember-current-tab problem
-  if (header_div.length)
+  if (header_div && header_div.length)
     params.parent = header_div;
   this.refreshHeader(params);
 
