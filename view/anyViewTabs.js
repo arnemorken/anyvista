@@ -150,9 +150,9 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
   let row_id_str   = params.row_id_str;
 
   // Get or create a container for the header tab buttons
-  let ptype = this._findType(params.pdata,params.pid,type);
-  let pkind = this._findKind(params.pdata,params.pid,kind);
-  let tab_panel = this.getOrCreateTabsContainer(parent,ptype,pkind,this.data_level);
+  let par_type = this._findType(params.par_data,params.par_id,type);
+  let par_kind = this._findKind(params.par_data,params.par_id,kind);
+  let tab_panel = this.getOrCreateTabsContainer(parent,par_type,par_kind,this.data_level);
 
   // Add a new header tab button in tab panel if it doesnt already exists
   let id_base    = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str;

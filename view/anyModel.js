@@ -1460,7 +1460,7 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                                      Optional. Default: null.
  * @param {integer}  options.group_id   If specified, search only in group with this id.
  *                                      Optional. Default: undefined.
- * @param {integer}  options.ptype
+ * @param {integer}  options.par_type
  *
  * @param {boolean}  options.simple     If true, only values for _id and _name (e.g. "user_id" and "user_name")
  *                                      will be returned from the server.
@@ -1592,7 +1592,7 @@ anyModel.prototype._dbSearchLocal = async function (options)
  * @param {integer} options.type
  * @param {integer} options.id
  * @param {integer} options.group_id
- * @param {integer} options.ptype
+ * @param {integer} options.par_type
  * @param {boolean} options.simple
  * @param {string}  options.header
  * @param {string}  options.grouping
@@ -1608,7 +1608,7 @@ anyModel.prototype.dbSearchGetURL = function (options)
 {
   let the_type   = options.type                              ? options.type   : this.type;
   let the_id_key = options.type && options.type != this.type ? the_type+"_id" : this.id_key;
-  let the_ptype  = options.ptype;
+  let the_par_type = options.par_type;
   if (!the_type) {
     console.error("anyModel.dbSearchGetURL: "+i18n.error.TYPE_MISSING);
     return null;
@@ -1635,17 +1635,17 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += the_gid
                ? "&group_id="+the_gid // Search specific group
                : ""; // Search all groups
-  param_str += the_type == "group" && the_ptype ? "&group_type="+the_ptype : "";
+  param_str += the_type == "group" && the_par_type ? "&group_type="+the_par_type : "";
   param_str += options.header === true  ||
                options.header === false ||
-               typeof options.header == "string"    ? "&header="    +options.header : "";
-  param_str += options.grouping                     ? "&grouping="  +options.grouping : "";
-  param_str += options.simple                       ? "&simple="    +options.simple : "";
-  param_str += options.from || options.from === 0   ? "&from="      +options.from : "";
-  param_str += options.num                          ? "&num="       +options.num : "";
-  param_str += options.order                        ? "&order="     +options.order : "";
-  param_str += options.direction                    ? "&dir="       +options.direction : "";
-  param_str += options.db_search_term               ? "&term="      +options.db_search_term : "";
+               typeof options.header == "string"   ? "&header="    +options.header : "";
+  param_str += options.grouping                    ? "&grouping="  +options.grouping : "";
+  param_str += options.simple                      ? "&simple="    +options.simple : "";
+  param_str += options.from || options.from === 0  ? "&from="      +options.from : "";
+  param_str += options.num                         ? "&num="       +options.num : "";
+  param_str += options.order                       ? "&order="     +options.order : "";
+  param_str += options.direction                   ? "&dir="       +options.direction : "";
+  param_str += options.db_search_term              ? "&term="      +options.db_search_term : "";
   if (options.db_search_term)
     this.db_last_term = options.db_search_term;
   return this._getDataSourceName() + param_str;
@@ -2092,8 +2092,8 @@ anyModel.prototype.dbUpdateGetURL = function (options)
                : "&cmd=upd";
 
   // Link elements?
-  param_str += options.ptype && options.pid
-               ? "&ptype="+options.ptype+"&pid="+options.pid
+  param_str += options.par_type && options.par_id
+               ? "&ptype="+options.par_type+"&pid="+options.par_id // TODO! Is this used on server?
                : "";
 
   return this._getDataSourceName() + param_str;
