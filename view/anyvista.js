@@ -1034,7 +1034,6 @@
           serverdata = serverdata.JSON_CODE;
         var model = new taskModel({ data:       serverdata ? serverdata.data : null,
                                     permission: serverdata ? serverdata.permission : null,
-                                    types:      serverdata ? serverdata.types : null,
                                     mode:       "remote",
                                  });
         var data_id = "<?php echo Parameters::get("task_id");?>";

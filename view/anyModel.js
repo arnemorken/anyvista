@@ -56,8 +56,6 @@
  *                                          Default: "[type]_id" if type is set, "" otherwise.
  * @param {String}   options.name_key       The model's base name key, e.g. "user_name".
  *                                          Default: "[type]_name" if type is set, "" otherwise.
- * @param {Object}   options.types          The types the model might interact (link) with, e.g
- *                                          ["event","document"].
  *                                          Default: null.
  * @param {String}   options.mode           Indicates whether db* operations should be performed by
  *                                          a locally defined method ("local") or call a database
@@ -162,14 +160,6 @@ var anyModel = function (options)
   * @default    "[type]_name" if type is set, "" otherwise.
   */
   this.name_key = this.name_key ? this.name_key : this.type ? this.type+"_name" : "";
-
-  /**
-  * The model's types.
-  *
-  * @type       {Array}
-  * @default    null
-  */
-  this.types = null;
 
   /**
   * The model's mode, e.g. `"local"` or `remote"`.
@@ -363,7 +353,6 @@ anyModel.prototype._dataInitDefault = function ()
 {
   this.data            = null;
   this.id              = null;
-  this.types           = null;
   this.mode            = typeof gMode !== 'undefined' ? gMode : "local";
   this.db_connection   = null;
   this.table_factory   = null;
@@ -401,7 +390,6 @@ anyModel.prototype._dataInitDefault = function ()
  * @param {String}  options.id             Item id, if the top level data represents an item, e.g. "42". Optional.
  * @param {String}  options.id_key         Id key, e.g. "user_id". Optional. Default: "[type]_id".
  * @param {String}  options.name_key       Name key, e.g. "user_name". Optional. Default: "[type]_name".
- * @param {Object}  options.types          The types the model might interact (link) with. Optional.
  * @param {String}  options.mode           "local" or "remote". Optional.
  * @param {Object}  options.db_connection  The database connection. Only valid in `"local"` mode. Optional.
  * @param {Object}  options.table_factory  The table factory class. Only valid in `"local"` mode. Optional.
@@ -451,7 +439,6 @@ anyModel.prototype.dataInit = function (options)
     if (options.name_key)                              { this.name_key       = options.name_key; }
     else
     if (!this.name_key && this.type)                   { this.name_key       = this.type+"_name"; }
-    if (options.types)                                 { this.types          = options.types; }
     if (options.mode)                                  { this.mode           = options.mode; }
     if (options.db_connection)                         { this.db_connection  = options.db_connection; }
     if (options.table_factory)                         { this.table_factory  = options.table_factory; }

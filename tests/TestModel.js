@@ -118,7 +118,6 @@ function testModel()
               dm1.id                         === null &&
               dm1.id_key                     === "" &&
               dm1.name_key                   === "" &&
-              dm1.types                      === null &&
               dm1.mode                       === gDBMode &&
               dm1.db_search                  === false &&
               dm1.db_search_term             === "" &&

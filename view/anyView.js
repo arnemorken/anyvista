@@ -1933,7 +1933,6 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,kind,data,id,id
     edit:       edit,
     filter:     filter,
     filter_id:  filter_id,
-    types:      this.model.types,
     options:    this.options,
   };
   // Bind a method that is called while clicking on the text link, file view or file name (in non-edit mode)
@@ -2393,7 +2392,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
 {
   if (!opt || !this.options)
     return null;
-  if (!this.model.types || !this.options.linkIcons)
+  if (!this.options.linkIcons)
     return;
 
   let parent  = opt.parent;
@@ -2623,7 +2622,6 @@ $.any.anyView.prototype.getCreateModelOptions = function(data,id,type)
     db_fields:    this.model.db_fields,
     db_last_term: this.model.db_last_term,
     permission:   this.model.permission,
-    types:        this.model.types,
   };
 }; // getCreateModelOptions
 
