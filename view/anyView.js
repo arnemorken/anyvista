@@ -542,15 +542,23 @@ $.any.anyView.prototype.refresh = function (params)
               // If the new type/kind is contained within a list, create a new row to contain a new parent container
               if (prev_kind == "list" && prev_type != curr_type)
                 the_parent = view._addContainerRow(parent,prev_type,prev_kind,curr_type,curr_kind,id_str);
+              let model = params && params.model
+                          ? params.model // The calling method may specify the model explicitely
+                          : this.createModel({
+                                   type: curr_type,
+                                   kind: curr_kind,
+                                   data: data,
+                                   id:   id,
+                                 });
               view = this.createView({
-                       parent: the_parent,
-                       type:   curr_type,
-                       kind:   curr_kind,
-                       data:   data,
-                       id:     id, // Used by model
-                       model:  params && params.model ? params.model : null, // The calling method may specify the model explicitely
-                       id_str: id_str,
-                     });
+                            model:  model,
+                            parent: the_parent,
+                            type:   curr_type,
+                            kind:   curr_kind,
+                            data:   data,
+                            id:     id,
+                            id_str: id_str,
+                          });
               if (view) {
                 view.id_stack = JSON.parse(JSON.stringify(this.id_stack));
                 this.views[id_str] = view;
@@ -2521,6 +2529,48 @@ $.any.anyView.prototype.showLinkMenu = function (event)
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Create and return a new model.
+ *
+ * @method anyView.createModel
+ * @return model
+ */
+$.any.anyView.prototype.createModel = function (params)
+{
+  let type      = params && params.type                          ? params.type      : null;
+  let kind      = params && params.kind                          ? params.kind      : null;
+  let data      = params && params.data                          ? params.data      : null;
+  let id        = params && (params.id || params.id === 0)       ? params.id        : "";
+  let modelName = params && typeof params.modelName === "string" ? params.modelName : null;
+
+  if (!data)
+    return null;
+  type = type ? type : this._findType(data,id,null);
+  kind = kind ? kind : this._findKind(data,id,null);
+  if (!type || !kind)
+    return null;
+
+  // Create a new model if we dont already have one or if the caller asks for it
+  let model = null;
+  let m_str = modelName
+              ? modelName     // Use supplied model name
+              : type+"Model"; // Use default model name derived from type
+  if (!window[m_str]) {
+    console.warn("Model class "+m_str+" not found, using anyModel. "); // TODO! i18n
+    m_str = "anyModel"; // Use fallback model name
+  }
+  try {
+    let model_opt = this.getCreateModelOptions(type,data,kind=="item"?id:null);
+    model = new window[m_str](model_opt);
+    model.parent = this.model; // TODO! Not always correct.
+  }
+  catch (err) {
+    console.error("Couldn't create model "+m_str+": "+err);
+    return null;
+  }
+  return model;
+}; // createModel
+
+/**
  * Create a new model in a new view and return the view.
  *
  * @method anyView.getCreateView
@@ -2542,38 +2592,13 @@ $.any.anyView.prototype.createView = function (params)
     parent = this.element;
   if (!parent)
     return null;
-  if (!data)
+  if (!model)
     return null;
   type = type ? type : this._findType(data,id,null);
   kind = kind ? kind : this._findKind(data,id,null);
   if (!type || !kind)
     return null;
 
-  // Create a new model if we dont already have one or if the caller asks for it
-  if (!model || typeof model === "string") {
-    let m_str = model
-                ? model         // Use supplied model name
-                : type+"Model"; // Use default model name derived from type
-    if (!window[m_str]) {
-      let def_str = "anyModel"; // Use fallback model name
-      console.warn("Model class "+m_str+" not found, using "+def_str+". "); // TODO! i18n
-      m_str = def_str;
-    }
-    try {
-      let model_opt = this.getCreateModelOptions(data,kind=="item"?id:null,type);
-      model = new window[m_str](model_opt);
-      model.parent = this.model;
-    }
-    catch (err) {
-      console.error("Couldn't create model "+m_str+": "+err);
-      return null;
-    }
-  }
-  else
-  if (typeof model != "object") {
-    console.error("Model is "+(typeof model)+", not object. ");
-    return null;
-  }
   // Create the view
   let v_str = "";
   let view = null;
@@ -2612,11 +2637,11 @@ $.any.anyView.prototype.createView = function (params)
  * @method anyView.getCreateModelOptions
  * @return opt
  */
-$.any.anyView.prototype.getCreateModelOptions = function(data,id,type)
+$.any.anyView.prototype.getCreateModelOptions = function(type,data,id)
 {
   return {
-    data:         data,
     type:         type,
+    data:         data,
     id:           id,
     mode:         this.model.mode,
     db_fields:    this.model.db_fields,
@@ -3254,15 +3279,22 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
     let ll_id       = new_id_base+"_"+list_type+"_search_list";
     let ll_contents = $("<div id='"+ll_id+"'></div>");
 
+    let model = this.createModel({
+                       type:     list_type,
+                       kind:     "list",
+                       data:     self.model.data,
+                       id:       null,
+                     });
     let search_view = self.createView({
-                             parent:       ll_contents,
-                             data:         self.model.data,
-                             data_level:   0,
-                             indent_level: 0,
-                             id:           null,
-                             //id_str:       "", // TODO!
+                             model:        model,
                              type:         list_type,
                              kind:         "list",
+                             data:         self.model.data,
+                             id:           null,
+                             parent:       ll_contents,
+                             data_level:   0,
+                             indent_level: 0,
+                             //id_str:       "", // TODO!
                           });
     if (search_view) {
       if (search_view.model && self.model)
@@ -3743,13 +3775,19 @@ $.any.anyView.prototype._doShowItem = function (opt)
 
   // Create and prepare a new display area
   let idx = Number.isInteger(parseInt(the_id)) ? ""+parseInt(the_id) : the_id;
+  let model = this.createModel({
+                 type:     type,
+                 kind:     kind,
+                 data:     the_item,
+                 id:       the_id,
+               });
   let view = this.createView({
-                    parent:       this.element,
-                    model:        null, // Create a new model
+                    model:        model,
                     type:         type,
                     kind:         kind,
                     data:         the_item,
                     id:           the_id,
+                    parent:       this.element,
                     id_str:       idx, // TODO! Is this correct?
                     data_level:   0, // Reset data_level for the new view
                     indent_level: 0, // Reset indent_level for the new view
@@ -4384,12 +4422,17 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
         let link_type   = options.type;
         let ll_id       = new_id_base+"_"+link_type+"_link_list";
         let ll_contents = $("<div id='"+ll_id+"'></div>");
+        let ll_model = parent_view.createModel({
+                                     type:     link_type,
+                                     kind:     "list",
+                                     data:     serverdata.data,
+                                   });
         let select_list_view = parent_view.createView({
-                                             parent: ll_contents,
+                                             model:  ll_model,
+                                             id:     null,
                                              type:   link_type,
                                              kind:   "list",
-                                             data:   serverdata.data,
-                                             //id:     null,
+                                             parent: ll_contents,
                                              id_str: "", // TODO!
                                              data_level:   0,
                                              indent_level: 0,
