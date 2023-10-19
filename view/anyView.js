@@ -2550,16 +2550,16 @@ $.any.anyView.prototype.createModel = function (params)
     return null;
 
   // Create a new model if we dont already have one or if the caller asks for it
+  let model_opt = this.getCreateModelOptions(type,data,kind=="item"?id:null);
   let model = null;
   let m_str = modelName
               ? modelName     // Use supplied model name
               : type+"Model"; // Use default model name derived from type
-  if (!window[m_str]) {
-    console.warn("Model class "+m_str+" not found, using anyModel. "); // TODO! i18n
-    m_str = "anyModel"; // Use fallback model name
-  }
   try {
-    let model_opt = this.getCreateModelOptions(type,data,kind=="item"?id:null);
+    if (!window[m_str]) {
+      console.warn("Model class "+m_str+" not found, using anyModel. "); // TODO! i18n
+      m_str = "anyModel"; // Use fallback model name
+    }
     model = new window[m_str](model_opt);
     model.parent = this.model; // TODO! Not always correct.
   }
@@ -2578,53 +2578,48 @@ $.any.anyView.prototype.createModel = function (params)
  */
 $.any.anyView.prototype.createView = function (params)
 {
+  let model        = params && params.model                                       ? params.model        : null;
+  let type         = model                                                        ? model.type          : null;
+  let kind         = model                                                        ? model.kind          : null;
+  let data         = model                                                        ? model.data          : null;
+  let id           = model                                                        ? model.id            : "";
   let parent       = params && params.parent                                      ? params.parent       : null;
-  let type         = params && params.type                                        ? params.type         : null;
-  let kind         = params && params.kind                                        ? params.kind         : null;
-  let data         = params && params.data                                        ? params.data         : null;
-  let id           = params && (params.id || params.id === 0)                     ? params.id           : "";
   let data_level   = params && (params.data_level   || params.data_level   === 0) ? params.data_level   : this.data_level   ? this.data_level   : 0;
   let indent_level = params && (params.indent_level || params.indent_level === 0) ? params.indent_level : this.indent_level ? this.indent_level : 0;
-  let model        = params && (params.model || params.model===null)              ? params.model        : null;
   let id_str       = params && params.id_str                                      ? params.id_str       : "";
 
-  if (!parent)
-    parent = this.element;
-  if (!parent)
-    return null;
   if (!model)
     return null;
   type = type ? type : this._findType(data,id,null);
   kind = kind ? kind : this._findKind(data,id,null);
   if (!type || !kind)
     return null;
+  if (!parent)
+    parent = this.element;
+  if (!parent)
+    return null;
 
   // Create the view
-  let v_str = "";
-  let view = null;
+  let view_opt = this.getCreateViewOptions(model,parent,type,kind,id_str,data_level,indent_level,params);
+  if (params && params.showHeader === false)
+    view_opt.showHeader = false;
+  let view  = null;
+  let v_str = view_opt.grouping
+              ? type+"View"+view_opt.grouping.capitalize()
+              : type+"View"; // Use default view name derived from type
   try {
-    let view_opt = this.getCreateViewOptions(model,parent,type,kind,id_str,data_level,indent_level,params);
-    if (params && params.showHeader === false)
-      view_opt.showHeader = false;
-    v_str = view_opt.grouping
-            ? type+"View"+view_opt.grouping.capitalize()
-            : type+"View";
     if (!window[v_str]) {
-      let def_str = "anyView";// Use fallback view name
-      console.warn("View class "+v_str+" not found, using "+def_str+". "); // TODO! i18n
-      v_str = def_str;
+      console.warn("View class "+v_str+" not found, using anyView. "); // TODO! i18n
+      v_str = "anyView"; // Use fallback view name
     }
     view = new window[v_str](view_opt);
-    if (!Object.keys(view).length) {
-      console.error("Couldn't create view "+v_str+" with id "+view_opt.id);
-      view = null;
-    }
-    else
-      view.kind = kind;
+    if (!Object.keys(view).length)
+      throw i18n.error.COULD_NOT_CREATE_VIEW+" "+v_str;
+    view.kind = kind; // Kind of view (head,list or item)
   }
   catch (err) {
-    let errstr = "Couldn't create view "+v_str+": "+err; // TODO! i18n
-    this.model.error = "System error: See console log for details. ";
+    let errstr = err+" with id "+view_opt.id; // TODO! i18n
+    this.model.error = i18n.error.SYSTEM_ERROR+"See console log for details. ";
     console.error(errstr);
     return null;
   }
@@ -3287,10 +3282,6 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
                      });
     let search_view = self.createView({
                              model:        model,
-                             type:         list_type,
-                             kind:         "list",
-                             data:         self.model.data,
-                             id:           null,
                              parent:       ll_contents,
                              data_level:   0,
                              indent_level: 0,
@@ -3775,18 +3766,15 @@ $.any.anyView.prototype._doShowItem = function (opt)
 
   // Create and prepare a new display area
   let idx = Number.isInteger(parseInt(the_id)) ? ""+parseInt(the_id) : the_id;
+
   let model = this.createModel({
-                 type:     type,
-                 kind:     kind,
-                 data:     the_item,
-                 id:       the_id,
-               });
+                     type: type,
+                     kind: kind,
+                     data: the_item,
+                     id:   the_id,
+                   });
   let view = this.createView({
                     model:        model,
-                    type:         type,
-                    kind:         kind,
-                    data:         the_item,
-                    id:           the_id,
                     parent:       this.element,
                     id_str:       idx, // TODO! Is this correct?
                     data_level:   0, // Reset data_level for the new view
@@ -4423,19 +4411,16 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
         let ll_id       = new_id_base+"_"+link_type+"_link_list";
         let ll_contents = $("<div id='"+ll_id+"'></div>");
         let ll_model = parent_view.createModel({
-                                     type:     link_type,
-                                     kind:     "list",
-                                     data:     serverdata.data,
+                                     type: link_type,
+                                     kind: "list",
+                                     data: serverdata.data,
                                    });
         let select_list_view = parent_view.createView({
-                                             model:  ll_model,
-                                             id:     null,
-                                             type:   link_type,
-                                             kind:   "list",
-                                             parent: ll_contents,
-                                             id_str: "", // TODO!
+                                             model:        ll_model,
+                                             parent:       ll_contents,
                                              data_level:   0,
                                              indent_level: 0,
+                                             id_str:       "", // TODO!
                                            });
         if (select_list_view && select_list_view.options) {
           select_list_view.id_base = new_id_base;
