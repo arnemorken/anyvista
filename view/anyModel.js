@@ -598,7 +598,8 @@ anyModel.prototype._getDataSourceName = function ()
  *      mymodel.dataSearch({type:"user",id:"38"});
 */
 // TODO! Not tested with non-numerical indexes
-anyModel.prototype.dataSearch = function (options,_prev_type,parent_data,parent_id)
+anyModel.prototype.dataSearch = function (options,
+                                          _prev_type,_parent_data,_parent_id)
 {
   if (!options || typeof options != "object") {
     console.error("anyModel.dataSearch: "+i18n.error.OPTIONS_MISSING);
@@ -641,9 +642,9 @@ anyModel.prototype.dataSearch = function (options,_prev_type,parent_data,parent_
                        : _prev_type
                  : _prev_type;
   if ((id || id === 0) && data_ptr && (dp_type == type || (!dp_type && (data_ptr[name_key] || data_ptr[name_key] === "")))) {
-    if (parent_data && parent_data[parent_id]) {
-      parent_data[parent_id].id = parent_id; // Hack
-      return parent_data[parent_id];
+    if (_parent_data && _parent_data[_parent_id]) {
+      _parent_data[_parent_id].id = _parent_id; // Hack
+      return _parent_data[_parent_id];
     }
     return data;
   }
