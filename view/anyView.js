@@ -511,13 +511,13 @@ $.any.anyView.prototype.refresh = function (params)
   if (data) {
     if (Object.size(data) != 0) {
       // Display data: Loop over all entries and refresh views
-      if (kind == "head")
-        ++this.data_level;
       let row_no     = 0;
       let prev_type  = type;
       let prev_kind  = kind;
       let the_parent = parent;
       let view       = this;
+      if (kind == "head")
+        ++this.data_level;
       for (let id in data) {
         if (data.hasOwnProperty(id) && id != "id" && !id.startsWith("grouping")) {
           if (view) {
@@ -545,19 +545,18 @@ $.any.anyView.prototype.refresh = function (params)
               let model = params && params.model
                           ? params.model // The calling method may specify the model explicitely
                           : this.createModel({
-                                   type: curr_type,
-                                   kind: curr_kind,
-                                   data: data,
-                                   id:   id,
+                                   type:     curr_type,
+                                   data:     data,
+                                   id:       curr_kind=="item" ? id : "",
+                                   par_type: par_type,
+                                   par_data: par_data,
+                                   par_id:   par_id,
                                  });
               view = this.createView({
-                            model:  model,
-                            parent: the_parent,
-                            type:   curr_type,
-                            kind:   curr_kind,
-                            data:   data,
-                            id:     id,
-                            id_str: id_str,
+                            model:    model,
+                            parent:   the_parent,
+                            id_str:   id_str,
+                            par_kind: par_kind,
                           });
               if (view) {
                 view.id_stack = JSON.parse(JSON.stringify(this.id_stack));
@@ -2537,7 +2536,6 @@ $.any.anyView.prototype.showLinkMenu = function (event)
 $.any.anyView.prototype.createModel = function (params)
 {
   let type      = params && params.type                          ? params.type      : null;
-  let kind      = params && params.kind                          ? params.kind      : null;
   let data      = params && params.data                          ? params.data      : null;
   let id        = params && (params.id || params.id === 0)       ? params.id        : "";
   let modelName = params && typeof params.modelName === "string" ? params.modelName : null;
@@ -2545,12 +2543,11 @@ $.any.anyView.prototype.createModel = function (params)
   if (!data)
     return null;
   type = type ? type : this._findType(data,id,null);
-  kind = kind ? kind : this._findKind(data,id,null);
-  if (!type || !kind)
+  if (!type)
     return null;
 
   // Create a new model if we dont already have one or if the caller asks for it
-  let model_opt = this.getCreateModelOptions(type,data,kind=="item"?id:null);
+  let model_opt = this.getCreateModelOptions(type,data,id);
   let model = null;
   let m_str = modelName
               ? modelName     // Use supplied model name
@@ -2561,7 +2558,6 @@ $.any.anyView.prototype.createModel = function (params)
       m_str = "anyModel"; // Use fallback model name
     }
     model = new window[m_str](model_opt);
-    model.parent = this.model; // TODO! Not always correct.
   }
   catch (err) {
     console.error("Couldn't create model "+m_str+": "+err);
@@ -2569,6 +2565,26 @@ $.any.anyView.prototype.createModel = function (params)
   }
   return model;
 }; // createModel
+
+/**
+ * Get the model options for a new view.
+ *
+ * @method anyView.getCreateModelOptions
+ * @return opt
+ */
+$.any.anyView.prototype.getCreateModelOptions = function(type,data,id)
+{
+  return {
+    type:         type,
+    data:         data,
+    id:           id,
+    parent:       this.model, // TODO! Not always correct.
+    mode:         this.model.mode,
+    db_fields:    this.model.db_fields,
+    db_last_term: this.model.db_last_term,
+    permission:   this.model.permission,
+  };
+}; // getCreateModelOptions
 
 /**
  * Create a new model in a new view and return the view.
@@ -2625,25 +2641,6 @@ $.any.anyView.prototype.createView = function (params)
   }
   return view;
 }; // createView
-
-/**
- * Get the model options for a new view.
- *
- * @method anyView.getCreateModelOptions
- * @return opt
- */
-$.any.anyView.prototype.getCreateModelOptions = function(type,data,id)
-{
-  return {
-    type:         type,
-    data:         data,
-    id:           id,
-    mode:         this.model.mode,
-    db_fields:    this.model.db_fields,
-    db_last_term: this.model.db_last_term,
-    permission:   this.model.permission,
-  };
-}; // getCreateModelOptions
 
 /**
  * Get the view options for a new view.
@@ -3276,7 +3273,6 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
 
     let model = this.createModel({
                        type:     list_type,
-                       kind:     "list",
                        data:     self.model.data,
                        id:       null,
                      });
@@ -3769,7 +3765,6 @@ $.any.anyView.prototype._doShowItem = function (opt)
 
   let model = this.createModel({
                      type: type,
-                     kind: kind,
                      data: the_item,
                      id:   the_id,
                    });
@@ -4412,7 +4407,6 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
         let ll_contents = $("<div id='"+ll_id+"'></div>");
         let ll_model = parent_view.createModel({
                                      type: link_type,
-                                     kind: "list",
                                      data: serverdata.data,
                                    });
         let select_list_view = parent_view.createView({
@@ -4500,6 +4494,7 @@ $.any.anyView.prototype._addPreSelections = function (select_list_view)
   }
 }; // _addPreSelections
 
+// This method is used by dbUpdateLinkListDialog()
 $.any.anyView.prototype._findViewOfType = function (type)
 {
   let v = null;
