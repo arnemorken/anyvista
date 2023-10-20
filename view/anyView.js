@@ -1480,7 +1480,7 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
                ? this.options.filters[type][kind]
                : null;
   if (!filter) {
-    if (kind == "list")
+    if (kind == "list" && this.options.filters[type])
       filter = this.options.filters[type]["list"];
     if (!filter) {
       this.model.message = i18n.error.FILTER_NOT_FOUND.replace("%%", type+" "+kind+"");
