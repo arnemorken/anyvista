@@ -17,36 +17,39 @@
   require_once dirname(__FILE__)."/../group/client.php";
   require_once dirname(__FILE__)."/../user/client.php";
   require_once gDataSource;
-  $gViewArea = "any_content";
   Parameters::set("type","user");
   Parameters::set("from","0");
   Parameters::set("num","20");
   $the_data = anyGetData();
+  $gViewArea = "any_content";
 ?>
 <div id="<?php print $gViewArea;?>"/>
 
 <script>
-var serverdata = <?php echo $the_data;?>;
+var view_area     = "<?php print $gViewArea;?>";
+var data_id       = "<?php echo Parameters::get("user_id");?>";
+var serverdata    = <?php echo $the_data;?>;
 if (serverdata && serverdata.JSON_CODE)
   serverdata = serverdata.JSON_CODE;
-var model = new userModel({ mode:         "remote",
-                            data:         serverdata ? serverdata.data : null,
-                            message:      serverdata ? serverdata.message: null,
-                            error_server: serverdata ? serverdata.error: null,
-                            permission:   serverdata ? serverdata.permission : null,
-                            types:        serverdata ? serverdata.types : null,
-                         });
-var data_id      = "<?php echo Parameters::get("user_id");?>";
-var is_admin     = model.permission && model.permission.is_admin;
-var is_logged_in = model.permission && model.permission.is_logged_in && parseInt(model.permission.current_user_id) > 0;
-var is_new       = (data_id == "new" || parseInt(data_id) == -1) && (!is_logged_in || is_admin);
-var is_me        = model.permission && parseInt(model.permission.current_user_id) == parseInt(data_id);
-var view = new userViewTabs({ id:          "<?php print $gViewArea;?>",
-                              model:       model,
-                              isEditable:  is_admin || is_new || is_me,
-                              isDeletable: is_admin || is_new || is_me,
-                              isRemovable: false,
-                              edit:        is_new,
-                           });
+var is_admin      = serverdata.permission && serverdata.permission.is_admin;
+var is_logged_in  = serverdata.permission && serverdata.permission.is_logged_in && parseInt(serverdata.permission.current_user_id) > 0;
+var is_new        = (data_id == "new" || parseInt(data_id) == -1) && (!is_logged_in || is_admin);
+var is_me         = serverdata.permission && parseInt(serverdata.permission.current_user_id) == parseInt(data_id);
+var model_options = { mode:         "remote",
+                      data:         serverdata ? serverdata.data       : null,
+                      message:      serverdata ? serverdata.message    : null,
+                      error_server: serverdata ? serverdata.error      : null,
+                      permission:   serverdata ? serverdata.permission : null,
+                      types:        serverdata ? serverdata.types      : null,
+                    };
+var model         = new groupModel(model_options); // Groups of users
+var view_options  = { id:          view_area,
+                      model:       model,
+                      isEditable:  is_admin || is_new || is_me,
+                      isDeletable: is_admin || is_new || is_me,
+                      isRemovable: false,
+                      edit:        is_new,
+                    };
+var view          = new userViewTabs(view_options);
 view.refresh();
 </script>

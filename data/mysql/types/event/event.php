@@ -47,7 +47,7 @@ var model_options = { mode:         "remote",
                       permission:   serverdata ? serverdata.permission : null,
                       types:        serverdata ? serverdata.types      : null,
                     };
-var model         = new eventModel(model_options);
+var model         = new groupModel(model_options); // Groups of events
 var view_options  = { id:               view_area,
                       model:            model,
                       showSearcher:     20,

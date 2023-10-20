@@ -17,40 +17,41 @@
   require_once dirname(__FILE__)."/../group/client.php";
   require_once dirname(__FILE__)."/../user/client.php";
   require_once gDataSource;
-  $gViewArea = "any_content";
   Parameters::set("type","document");
   Parameters::set("from","0");
   Parameters::set("num","20");
   $the_data = anyGetData();
+  $gViewArea = "any_content";
 ?>
 <div id="<?php print $gViewArea;?>"/>
 
 <script>
-var serverdata = <?php echo $the_data;?>;
+var view_area     = "<?php print $gViewArea;?>";
+var data_id       = "<?php echo Parameters::get("document_id");?>";
+var serverdata    = <?php echo $the_data;?>;
 if (serverdata && serverdata.JSON_CODE)
   serverdata = serverdata.JSON_CODE;
-var model = new documentModel({ mode:         "remote",
-                                data:         serverdata ? serverdata.data : null,
-                                message:      serverdata ? serverdata.message: null,
-                                error_server: serverdata ? serverdata.error: null,
-                                permission:   serverdata ? serverdata.permission : null,
-                                types:        serverdata ? serverdata.types : null,
-                             });
-var data_id      = "<?php echo Parameters::get("document_id");?>";
-var is_admin     = model.permission && model.permission.is_admin;
-var is_logged_in = model.permission && model.permission.is_logged_in && parseInt(model.permission.current_user_id) > 0;
-var is_new       = (data_id == "new" || parseInt(data_id) == -1);
-
-var hide_result  = !is_logged_in || "<?php echo Parameters::get("hide_result_column");?>";
-
-var view = new documentViewTabs({ id:            "<?php print $gViewArea;?>",
-                                  model:         model,
-                                  isEditable:    true,
-                                  isDeletable:   true, //is_admin || is_new,
-                                  isRemovable:   false,
-                                  edit:          is_new,
-                                  showButtonAdd: false,
-                                  hide_result:   hide_result,
-                               });
+var is_admin      = serverdata.permission && serverdata.permission.is_admin;
+var is_logged_in  = serverdata.permission && serverdata.permission.is_logged_in && parseInt(serverdata.permission.current_user_id) > 0;
+var is_new        = (data_id == "new" || parseInt(data_id) == -1);
+var hide_result   = !is_logged_in || "<?php echo Parameters::get("hide_result_column");?>";
+var model_options = { mode:         "remote",
+                      data:         serverdata ? serverdata.data       : null,
+                      message:      serverdata ? serverdata.message    : null,
+                      error_server: serverdata ? serverdata.error      : null,
+                      permission:   serverdata ? serverdata.permission : null,
+                      types:        serverdata ? serverdata.types      : null,
+                    };
+var model         = new groupModel(model_options); // Groups of documents
+var view_options  = { id:            view_area,
+                      model:         model,
+                      isEditable:    true,
+                      isDeletable:   true, //is_admin || is_new,
+                      isRemovable:   false,
+                      showButtonAdd: false,
+                      edit:          is_new,
+                      hide_result:   hide_result,
+                    };
+var view          = new documentViewTabs(view_options);
 view.refresh();
 </script>
