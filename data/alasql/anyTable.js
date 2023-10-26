@@ -386,7 +386,7 @@ anyTable.prototype.findListOrderBy = function()
 //
 // Get the data from query result (rows) to data array.
 //
-anyTable.prototype.getRowData = function(rows,data,type,kind)
+anyTable.prototype.getRowData = function(rows,data,type,mode)
 {
   if (!data) {
     if (!this.data)
@@ -407,17 +407,17 @@ anyTable.prototype.getRowData = function(rows,data,type,kind)
                 : null;
     if (!idx && idx !== 0)
       continue;
-    if ((kind == "list" || kind == "head")) {
+    if ((mode == "list" || mode == "head")) {
       if (!data[gidx])
         data[gidx] = {};
       data[gidx][idx]       = rows[i];
-      data[gidx][idx][kind] = type;
+      data[gidx][idx][mode] = type;
     }
     else {
       if (!data[idx])
         data[idx] = {};
       data[idx]       = rows[i];
-      data[idx][kind] = type;
+      data[idx][mode] = type;
     }
   }
   //console.log("getRowData,data:"); console.log(data);

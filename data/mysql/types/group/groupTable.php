@@ -200,10 +200,10 @@ class groupTable extends anyTable
           }
         }
         if ($type == "group" && $group_id == null)
-          $kind = "list";
+          $mode = "list";
         else
-          $kind = "head";
-        $data["group"][$idx][$kind] = "group";
+          $mode = "head";
+        $data["group"][$idx][$mode] = "group";
       }
     } // if
     //vlog("dbSearchGroupInfo,data:",$data);

@@ -49,7 +49,7 @@ var view_options  = { id:          view_area,
                       isDeletable: true, //is_admin || is_new,
                       isRemovable: false,
                       edit:        is_new,
-                      defaultKind: "list",
+                      defaultMode: "list",
                     };
 var view          = new groupViewTabs(view_options);
 view.refresh();

@@ -1250,7 +1250,7 @@ class anyTable extends dbTable
   //////////////////////////////// Metadata search ////////////////////////////////
 
   // Get the meta data
-  protected function dbSearchMeta(&$data,$kind)
+  protected function dbSearchMeta(&$data,$mode)
   {
     if (!$this->tableExists($this->mTableNameMeta)) {
       //$this->mMessage .= "No meta table for '$this->mType' type. ";
@@ -1295,7 +1295,7 @@ class anyTable extends dbTable
       return false;
 
     // Get the data
-    return $this->getRowMetaData($data,$kind);
+    return $this->getRowMetaData($data,$mode);
   } // dbSearchMeta
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1305,10 +1305,10 @@ class anyTable extends dbTable
   //
   // Get the data from query result to array
   //
-  protected function getRowData(&$data,$kind)
+  protected function getRowData(&$data,$mode)
   {
     $this->mLastNumRows = 0; // Used to break (theoretical) infinite recursion
-    $filter = $kind == "list"
+    $filter = $mode == "list"
               ? $this->mFilters["list"]
               : $this->mFilters["item"];
     //elog("getRowData,filter:".var_export($filter,true));
@@ -1333,17 +1333,17 @@ class anyTable extends dbTable
       // Force idx to be a string in order to maintain ordering when sending JSON data to a json client
       $idx = isInteger($idx) ? "+".$idx : $idx;
 
-      if ($kind == "list" || $kind == "head")
-        $data[$gidx][$idx][$kind] = $this->mType; // TODO! Shouldnt it be data[gidx]["data"][idx] ?
-      else // kind == "item"
-        $data[$idx][$kind] = $this->mType;
+      if ($mode == "list" || $mode == "head")
+        $data[$gidx][$idx][$mode] = $this->mType; // TODO! Shouldnt it be data[gidx]["data"][idx] ?
+      else // mode == "item"
+        $data[$idx][$mode] = $this->mType;
 
       // Main table
       if (isset($this->mTableFields)) {
         for ($t=0; $t<count($this->mTableFields); $t++) {
           $field = $this->mTableFields[$t];
           if (!$this->mSimpleList || $field == $this->mIdKeyTable || $field == $this->mNameKey || $field == "parent_id")
-            $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$kind);
+            $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$mode);
         } // for
       }
 
@@ -1352,7 +1352,7 @@ class anyTable extends dbTable
         for ($t=0; $t<count($this->mTableFieldsMeta); $t++) {
           $field = $this->mTableFieldsMeta[$t];
           if (!$this->mSimpleList || $field == $this->mIdKey || $field == $this->mNameKey || $field == "parent_id")
-            $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$kind);
+            $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$mode);
         } // for
       }
 
@@ -1363,7 +1363,7 @@ class anyTable extends dbTable
             for ($t=0; $t<count($this->mTableFieldsLeftJoin[$link_type]); $t++) {
               $field = $this->mTableFieldsLeftJoin[$link_type][$t];
               if (!$this->mSimpleList || $field == $this->mIdKey || $field == $this->mNameKey || $field == "parent_id")
-                $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$kind);
+                $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$mode);
             } // for
           }
         } // foreach
@@ -1376,7 +1376,7 @@ class anyTable extends dbTable
     return true;
   } // getRowData
 
-  protected function getCellData($tablefield,$nextrow,&$data,$idx,$gidx,$filter,$kind)
+  protected function getCellData($tablefield,$nextrow,&$data,$idx,$gidx,$filter,$mode)
   {
     if ($nextrow != null) {
       if ($tablefield == $this->mIdKeyTable)
@@ -1392,7 +1392,7 @@ class anyTable extends dbTable
         else
           $val = null;
         if ($val != null && $val != "") {
-          if ($kind == "list" || $kind == "head")
+          if ($mode == "list" || $mode == "head")
             $data[$gidx][$idx][$field] = $val;
           else
             $data[$idx][$field] = $val;
@@ -1463,11 +1463,11 @@ class anyTable extends dbTable
   //
   // Get the meta data from table row(s) to array
   //
-  protected function getRowMetaData(&$data,$kind)
+  protected function getRowMetaData(&$data,$mode)
   {
     if (!$this->tableExists($this->mTableNameMeta))
       return false;
-    $filter = $kind == "list" ? $this->mFilters["list"] : $this->mFilters["item"];
+    $filter = $mode == "list" ? $this->mFilters["list"] : $this->mFilters["item"];
     while (($nextrow = $this->getNext(true)) !== null) {
       //elog("getRowMetaData,nextrow:".var_export($nextrow,true));
       if (!$this->mIdKeyMetaTable || !isset($nextrow[$this->mIdKeyMetaTable]))

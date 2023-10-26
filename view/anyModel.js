@@ -707,7 +707,7 @@ anyModel.prototype.dataSearch = function (options,
               break;
             }
           }
-          else // head kind
+          else // head
           if (options.parent) {
             itemlist.push(data[idc]);
             break;

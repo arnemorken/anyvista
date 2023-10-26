@@ -52,9 +52,9 @@ var anyViewTabsWidget = $.widget("any.anyViewTabs", $.any.anyView, {
  * @method anyViewTabs.getCreateViewOptions
  * @return opt
  */
-$.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,type,kind,id_str,data_level,indent_level,params)
+$.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,type,mode,id_str,data_level,indent_level,params)
 {
-  let opt = $.any.anyView.prototype.getCreateViewOptions.call(this,model,parent,type,kind,id_str,data_level,indent_level,params);
+  let opt = $.any.anyView.prototype.getCreateViewOptions.call(this,model,parent,type,mode,id_str,data_level,indent_level,params);
   opt.first_id_base   = this.first_id_base;
   opt.current_id_base = this.grandparent ? this.grandparent.current_id_base : this.current_id_base;
   opt.grouping        = this.options.grouping || this.options.grouping === "" ? this.options.grouping : "tabs";
@@ -67,20 +67,20 @@ $.any.anyViewTabs.prototype.getCreateViewOptions = function(model,parent,type,ki
  * @method anyViewTabs.getOrCreateTabsContainer
  * @return tabs_div
  */
-$.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,kind,data_level)
+$.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,mode,data_level)
 {
   if (!parent)
     return null;
 
-  let tabs_id  = this.getIdBase()+"_"+type+"_"+kind+"_"+data_level+"_tabs";
+  let tabs_id  = this.getIdBase()+"_"+type+"_"+mode+"_"+data_level+"_tabs";
   let tabs_div = $("#"+tabs_id);
   if (!tabs_div.length) {
     let class_id = "any-datatabs-container w3-bar w3-dark-grey";
-    let lev_tab  = this.options.indent_level + (kind && kind != "head" ? 1 : 0);
+    let lev_tab  = this.options.indent_level + (mode && mode != "head" ? 1 : 0);
     let pl       = this.options.indent_tables ? lev_tab * this.options.indent_amount : 0;
     let pl_str   = pl > 0 ? "style='margin-left:"+pl+"px;'" : "";
     tabs_div     = $("<div id='"+tabs_id+"' class='"+class_id+"' "+pl_str+"></div>");
-    if (kind != "item")
+    if (mode != "item")
       parent.parent().prepend(tabs_div);
     else
       parent.parent().append(tabs_div);
@@ -110,16 +110,16 @@ $.any.anyViewTabs.prototype.refreshHeader = function (params,skipName)
   if (this.options.grouping == "tabs" && params.data.grouping) {
     // Get the correct filter
     let type = params.type;
-    let kind = params.kind;
+    let mode = params.mode;
     if (!this.options.filters) {
-      this.model.error = type.capitalize()+" "+kind+" "+i18n.error.FILTERS_MISSING;
+      this.model.error = type.capitalize()+" "+mode+" "+i18n.error.FILTERS_MISSING;
       console.error(this.model.error);
       return null;
     }
-    let fkind  = this.options.filters[type] && !this.options.filters[type]["head"] ? "list" : kind;
-    let filter = this.options.filters[type] &&  this.options.filters[type][fkind]  ? this.options.filters[type][fkind]: null;
+    let fmode  = this.options.filters[type] && !this.options.filters[type]["head"] ? "list" : mode;
+    let filter = this.options.filters[type] &&  this.options.filters[type][fmode]  ? this.options.filters[type][fmode]: null;
     if (!filter) {
-      this.model.error = i18n.error.FILTER_NOT_FOUND.replace("%%", type+" "+fkind+"");
+      this.model.error = i18n.error.FILTER_NOT_FOUND.replace("%%", type+" "+fmode+"");
       console.error(this.model.error);
       return null;
     }
@@ -144,18 +144,18 @@ $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
   let parent       = params.parent; // NOTE! Different parent than in anyView.refreshHeader!
   this.grandparent = params.grandparent; // To remember current tab
   let type         = params.type;
-  let kind         = params.kind;
+  let mode         = params.mode;
   let data         = params.data;
   let id           = params.id;
   let row_id_str   = params.row_id_str;
 
   // Get or create a container for the header tab buttons
   let par_type = this._findType(params.par_data,params.par_id,type);
-  let par_kind = this._findKind(params.par_data,params.par_id,kind);
-  let tab_panel = this.getOrCreateTabsContainer(parent,par_type,par_kind,this.data_level);
+  let par_mode = this._findMode(params.par_data,params.par_id,mode);
+  let tab_panel = this.getOrCreateTabsContainer(parent,par_type,par_mode,this.data_level);
 
   // Add a new header tab button in tab panel if it doesnt already exists
-  let id_base    = this.getIdBase()+"_"+type+"_"+kind+"_"+row_id_str;
+  let id_base    = this.getIdBase()+"_"+type+"_"+mode+"_"+row_id_str;
   let tab_btn_id = id_base+"_data_tab_btn";
   let first      = false;
   if (!$("#"+tab_btn_id).length) {

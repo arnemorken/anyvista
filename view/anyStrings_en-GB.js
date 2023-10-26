@@ -43,7 +43,6 @@ var i18n = {
     DATA_MISSING:          "Data missing. ",
     TYPE_MISSING:          "Type missing. ",
     LINK_TYPE_MISSING:     "Link type missing. ",
-    TYPEKIND_MISSING:      "Missing type or kind for data with id ",
     ID_KEY_MISSING:        "Id key missing. ",
     NAME_KEY_MISSING:      "Name key missing. ",
     ID_MISSING:            "Id missing. ",

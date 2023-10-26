@@ -43,7 +43,6 @@ var i18n = {
     DATA_MISSING:          "Mangler data. ",
     TYPE_MISSING:          "Mangler type. ",
     LINK_TYPE_MISSING:     "Mangler lenke type. ",
-    TYPEKIND_MISSING:      "Mangler type eller kind for data med id ",
     ID_KEY_MISSING:        "Mangler id key. ",
     NAME_KEY_MISSING:      "Mangler name key. ",
     ID_MISSING:            "Mangler id. ",

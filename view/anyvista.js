@@ -132,11 +132,11 @@
     available id will not work. If used with a database backend, it corresponds to an individual
     row in a database table.
 
-  - A entry specifiying a kind/type combination, where <b>kind</b> may be one of `"head"`, `"list"`
+  - A entry specifiying a type/mode combination, where <b>mode</b> may be one of `"head"`, `"list"`
     or `"item"` and <b>type</b> is a user-specified type, for example `"group"`, `"event"`, `"user"`
-    or `"document"`. kind is used to indicate how the data of a given type should be displayed.
+    or `"document"`. mode is used to indicate how the data of a given type should be displayed.
     If this entry is not specified, the last preceding entry in the data structure is assumed.
-    If there is no preceding entry, `"list"` is the default value assumed for kind and the
+    If there is no preceding entry, `"list"` is the default value assumed for mode and the
     current model's type is the default value assumed for type, and if the model has no type,
     type will be set to the empty string. If used with a database backend, type corresponds
     to a specific database table.<br/>
@@ -318,7 +318,7 @@
   <a name="client_mv_api_view_filter"></a>
   <h3>View filter</h3>
 
-  The view filter determines the kind of data in the `data` stucture, whether the data will be
+  The view filter determines the mode of data in the `data` stucture, whether the data will be
   displayed, and how.
 
   The filter object contains key / value pairs:
@@ -352,7 +352,7 @@
   <li>"number":    A number (allows only digits and .)</li>
   <li>"label":     A non-editable and non-clickable label.</li>
   <li>"date":      A (potentially editable) date selector.</li>
-  <li>"function":  The name of a method in the View class receiving the parameters `type`, `kind`, `id`
+  <li>"function":  The name of a method in the View class receiving the parameters `type`, `mode`, `id`
                    and `data`, and returning html code to be displayed.</li>
   <li>"image":     An image. Must have an `IMAGE` entry in the filter describing the relative path to the
                    image <i>or</i> a `FUNCTION` entry naming a method in the View class returning a
@@ -871,7 +871,7 @@
             let err = "";
             if (!opt.id && opt.id != 0)
               err += "Task id missing. ";
-            let elem_id_base = view.getIdBase()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
+            let elem_id_base = view.getIdBase()+"_"+opt.type+"_"+opt.mode+"_"+opt.id_str;
             let nameid1 = elem_id_base+"_task_name .itemEdit";
             let nameid2 = elem_id_base+"_task_name .itemUnedit";
             if (($("#"+nameid1).length != 0 && !$("#"+nameid1).val()) &&
