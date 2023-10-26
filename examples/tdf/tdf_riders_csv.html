@@ -157,7 +157,7 @@ function csv2table()
       // Create data model
       //
       let data_model = new anyModel({type:      "rider",
-                                     mode:      "remote",
+                                     source:    "remote",
                                      db_search: false});
       //
       // Create table
@@ -239,7 +239,7 @@ function table2display()
     // Create data model
     //
     let data_model = new anyModel({type:      "rider",
-                                   mode:      "remote",
+                                   source:    "remote",
                                    db_fields: ["r_id","rank","rider_name","rider_no",
                                               "times","gap","team","year","distance","num_stages","total_sec",
                                               "gap_sec","result_type"],
@@ -309,7 +309,7 @@ function csv2display()
       // Create data model
       //
       let data_model = new anyModel({type:      "rider",
-                                     mode:      "local",
+                                     source:    "local",
                                      db_search: false});
       //
       // Create data view

@@ -3038,7 +3038,7 @@ $.any.anyView.prototype.getListModelOptions = function (type,list_type,data)
     par_type:   type,
     par_id:     "???", // TODO!
     db_search:  false,
-    mode:       this.model.mode,
+    source:     this.model.source,
     permission: this.model.permission,
   };
 }; // getListModelOptions
@@ -3231,7 +3231,7 @@ $.any.anyView.prototype.sortTable = function (event)
     order:     order,
     direction: this.options.sortDirection,
   };
-  if (this.model.mode == "remote") {
+  if (this.model.source == "remote") {
     // Remote search, let the database do the sorting.
     // Will (normally) call refresh via onModelChange
     this.options.indent_level = -1;
@@ -3364,7 +3364,7 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
   this.id_stack.pop();
   this.options.data_level = 0;
   this.data_level = 0; // TODO! Why is this in 2 places?
-  if (this.model.mode == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
+  if (this.model.source == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
     this.options.ref_rec = 0;
     mod_opt.from -= 1; // from is 0-based on server
     if (this.model.db_last_term && this.model.db_last_term != "")
@@ -3473,7 +3473,7 @@ $.any.anyView.prototype.addListEntry = function (event)
                               parent: true,
                             }); // Find the place to add the new item
   if (is_new) {
-    if (this.model.mode != "remote") {
+    if (this.model.source != "remote") {
       let new_id = this.model.dataSearchNextId(null,type);
       if (new_id >= 0) {
         this._addListEntry({
@@ -3628,7 +3628,7 @@ $.any.anyView.prototype.showItem = function (event)
   let is_new = event.data.is_new;
   if (is_new || id == "new" || id == -1 || (!id && id !== 0)) {
     // Find id for a new item if one is not specified
-    if (this.model.mode == "local") {
+    if (this.model.source == "local") {
       if ((!id && id !== 0) || id < 0)
         id = this.model.dataSearchNextId(this.model.data,type);
       if ((!id && id !== 0) || id < 0) {
@@ -3805,7 +3805,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
     spdiv.append($('<div style="padding:10px;"><i class="fas fa-solid fa-spinner fa-spin"></i></div>'));
 
   // Display the item data
-  if (view.model.mode == "remote" && !is_new) {
+  if (view.model.source == "remote" && !is_new) {
     // Remote search: Will (normally) call refresh via onModelChange
     view.showMessages("",true);
     view.model.dbSearch({
@@ -4091,7 +4091,7 @@ $.any.anyView.prototype.dbSearchParents = function (type,kind,id,val,edit,par_id
   };
   if (edit) {
     this.showMessages("",true);
-    return this.model.dbSearch(options); // TODO! What if mode == "local"?
+    return this.model.dbSearch(options); // TODO! What if source == "local"?
   }
   else {
     options.id = id;
@@ -4259,7 +4259,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
         }
       }
     }
-    /* TODO! Neccessary for mode == "remote"?
+    /* TODO! Neccessary for source == "remote"?
     // Make sure the items original model is also updated
     if (this.options.view && this.options.view != this) { // TODO! no view here
       if (!event.data.is_new)
@@ -4281,7 +4281,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
     }
     */
   }
-  // Update view TODO! Neccessary for mode == "remote"?
+  // Update view TODO! Neccessary for source == "remote"?
   let item = this.model.dataSearch({
                           type: type,
                           id:   id,
@@ -4325,7 +4325,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
   }
 
   // Update database
-  if (this.model.mode == "remote") {
+  if (this.model.source == "remote") {
     if (par_id && par_data[par_id] && (par_data[par_id].head == "group" || par_data[par_id].item == "group" || par_data[par_id].list == "group"))
       event.data.group_id = par_id;
     return this.model.dbUpdate(event.data);
@@ -4370,7 +4370,7 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
    onSuccess:   this.dbUpdateLinkListDialog, // Call the view success handler
   };
   this.showMessages("",true);
-  return this.model.dbSearch(options); // TODO! What if mode == "local"?
+  return this.model.dbSearch(options); // TODO! What if source == "local"?
 }; // dbSearchLinks
 
 // Create a list of selectable items and display in a modal dialog.
@@ -4729,7 +4729,7 @@ $.any.anyView.prototype.dbDelete = function (opt)
 
   // Delete from database, but only if the item is not new (i.e. exists in db).
   if (!is_new)
-    this.model.dbDelete(opt); // TODO! What if mode == "local"?
+    this.model.dbDelete(opt); // TODO! What if source == "local"?
 
   return true;
 }; // dbDelete

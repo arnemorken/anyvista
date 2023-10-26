@@ -27,7 +27,7 @@
  * the `id` property should be set to the id of the item and either `this.data[id]` or
  * `this.data[hdr_id].data[id]` should exist (where hdr_id is the id of a single `head` entry).
  * <p/>
- * If used in connection with a server side database, `mode` should be set to "remote" (see below),
+ * If used in connection with a server side database, `source` should be set to "remote" (see below),
  * otherwise it defaults to "local". `type` corresponds to a database table and `id_key` to an id
  * column in that table.
  * <p/>
@@ -56,14 +56,19 @@
  *                                          Default: "[type]_id" if type is set, "" otherwise.
  * @param {String}   options.name_key       The model's base name key, e.g. "user_name".
  *                                          Default: "[type]_name" if type is set, "" otherwise.
+ * @param {anyModel} options.parent         The model's "parent" model, if any.
  *                                          Default: null.
- * @param {String}   options.mode           Indicates whether db* operations should be performed by
+ * @param {String}   options.link_id        Links to to an item in the parent model (if any).
+ *                                          Default: null.
+ * @param {String}   options.source         Indicates whether db* operations should be performed by
  *                                          a locally defined method ("local") or call a database
  *                                          method on a remote server ("remote").
  *                                          Default: "local".
- * @param {Object}   options.db_connection  The database connection. Only valid in `"local"` mode.
+ * @param {Object}   options.db_connection  The database connection. Only valid when `source` is "local",
+ *                                          in which case a client side AlaSQL database will be used.
  *                                          Default: null.
- * @param {Object}   options.table_factory  The table factory class. Only valid in `"local"` mode.
+ * @param {Object}   options.table_factory  The table factory class. Only valid when `source` is `"local"`,
+ *                                          in which case a client side AlaSQL database will be used.
  *                                          Default: null.
  * @param {Array}    options.db_fields      An array of strings to be sent to the server, indicating
  *                                          which columns ofthe table should be used in a search or
@@ -162,15 +167,33 @@ var anyModel = function (options)
   this.name_key = this.name_key ? this.name_key : this.type ? this.type+"_name" : "";
 
   /**
-  * The model's mode, e.g. `"local"` or `remote"`.
+  * The model's "parent" model, if any.
   *
-  * @type       {String}
-  * @default    gMode (global var. defined in anyDefs.js)
+  * @type       {anyModel}
+  * @default    null
   */
-  this.mode = typeof gMode !== 'undefined' ? gMode : "local";
+  this.parent = null;
 
   /**
-  * The database connection. Only valid in `"local"` mode.
+  * If this model is linked to an item in the parent model, `link_id` can
+  * be used to address the data as: `this.parent.data[this.link_id]`.
+  *
+  * @type       {String}
+  * @default    null
+  */
+  this.link_id = null;
+
+  /**
+  * The model's source, e.g. `"local"` or `remote"`.
+  *
+  * @type       {String}
+  * @default    gSource (global var. defined in anyDefs.js)
+  */
+  this.source = typeof gSource !== 'undefined' ? gSource : "local";
+
+  /**
+  * The database connection. Only valid when `source` is "local",
+  * in which case a client side AlaSQL database will be used.
   *
   * @type       {String}
   * @default    null
@@ -178,7 +201,8 @@ var anyModel = function (options)
   this.db_connection = null;
 
   /**
-  * The table factory class. Only valid in `"local"` mode.
+  * The table factory class. Only valid when `source` is "local",
+  * in which case a client side AlaSQL database will be used.
   *
   * @type       {String}
   * @default    null
@@ -299,9 +323,9 @@ var anyModel = function (options)
   this._dataInitDefault();
   this.dataInit(options);
 
-  // If mode is "local", we may need a connection to the database and a table factory
+  // If `this.source` is "local", we may need a connection to the database and a table factory
   // TODO! Is this the best place to do it?
-  if (this.mode == "local") {
+  if (this.source == "local") {
     let dbname = "test_anydbase";
     let params = {
       dbtype:    "INDEXEDDB", // "LOCALSTORAGE"
@@ -353,7 +377,9 @@ anyModel.prototype._dataInitDefault = function ()
 {
   this.data            = null;
   this.id              = null;
-  this.mode            = typeof gMode !== 'undefined' ? gMode : "local";
+  this.parent          = null;
+  this.link_id         = null;
+  this.source          = typeof gSource !== 'undefined' ? gSource : "local";
   this.db_connection   = null;
   this.table_factory   = null;
   this.db_fields       = null;
@@ -390,9 +416,11 @@ anyModel.prototype._dataInitDefault = function ()
  * @param {String}  options.id             Item id, if the top level data represents an item, e.g. "42". Optional.
  * @param {String}  options.id_key         Id key, e.g. "user_id". Optional. Default: "[type]_id".
  * @param {String}  options.name_key       Name key, e.g. "user_name". Optional. Default: "[type]_name".
- * @param {String}  options.mode           "local" or "remote". Optional.
- * @param {Object}  options.db_connection  The database connection. Only valid in `"local"` mode. Optional.
- * @param {Object}  options.table_factory  The table factory class. Only valid in `"local"` mode. Optional.
+ * @param {String}  options.parent         The model's "parent" model, if any. Optional.
+ * @param {String}  options.link_id        Links to to an item in the parent model (if any). Optional.
+ * @param {String}  options.source         "local" or "remote". Optional.
+ * @param {Object}  options.db_connection  The database connection. Only valid when `source` is "local". Optional.
+ * @param {Object}  options.table_factory  The table factory class. Only valid when `source` is "local". Optional.
  * @param {Array}   options.db_fields      An array of strings to be sent to the server, indicating which columns
  *                                         of the table should be used in a search or update/insert. Optional.
  * @param {boolean} options.db_search      Whether to call the search method. Optional.
@@ -439,7 +467,9 @@ anyModel.prototype.dataInit = function (options)
     if (options.name_key)                              { this.name_key       = options.name_key; }
     else
     if (!this.name_key && this.type)                   { this.name_key       = this.type+"_name"; }
-    if (options.mode)                                  { this.mode           = options.mode; }
+    if (options.parent)                                { this.parent         = options.parent; }
+    if (options.link_id)                               { this.link_id        = options.link_id; }
+    if (options.source)                                { this.source         = options.source; }
     if (options.db_connection)                         { this.db_connection  = options.db_connection; }
     if (options.table_factory)                         { this.table_factory  = options.table_factory; }
     if (options.db_fields)                             { this.db_fields      = options.db_fields; }
@@ -454,7 +484,7 @@ anyModel.prototype.dataInit = function (options)
     if (options.message)                               { this.message        = options.message; }
     if (options.error)                                 { this.error          = options.error; }
     if (options.error) {
-      if (this.mode == "remote") {
+      if (this.source == "remote") {
         this.error_server = options.error;
         this.error        = i18n.error.SERVER_ERROR;
       }
@@ -1338,7 +1368,7 @@ anyModel.prototype.dbCreate = function (options)
   this.error        = "";
   this.error_server = "";
   let self = this;
-  if (this.mode == "remote") { // Remote server call (MySQL server)
+  if (this.source == "remote") { // Remote server call (MySQL server)
     let url = this._getDataSourceName()+
               "?echo=y"+
               "&cmd=cre"+
@@ -1501,7 +1531,7 @@ anyModel.prototype.dbSearch = function (options)
   this.error         = "";
   this.error_server  = "";
   let self = this;
-  if (this.mode == "remote") { // Remote server call
+  if (this.source == "remote") { // Remote server call
     $.ajaxSetup({ timeout: db_timeout_sec*1000 });
     if (options.sync)
       $.ajaxSetup({ async: false });
@@ -1722,7 +1752,7 @@ anyModel.prototype.dbSearchNextId = function (options)
   this.error        = "";
   this.error_server = "";
   let self = this;
-  if (this.mode == "remote") { // Remote server call
+  if (this.source == "remote") { // Remote server call
     $.ajaxSetup({ timeout: db_timeout_sec*1000 });
     if (options.sync)
       $.ajaxSetup({ async: false });
@@ -1944,7 +1974,7 @@ anyModel.prototype.dbUpdate = async function (options)
   this.error        = "";
   this.error_server = "";
   let self = this;
-  if (this.mode == "remote") { // Remote server call
+  if (this.source == "remote") { // Remote server call
     $.ajaxSetup({ timeout: db_timeout_sec*1000 });
     if (options.sync)
       $.ajaxSetup({ async: false });
@@ -2221,7 +2251,7 @@ anyModel.prototype.dbUpdateLinkList = function (options)
   this.error        = "";
   this.error_server = "";
   let self = this;
-  if (this.mode == "remote") { // Remote server call
+  if (this.source == "remote") { // Remote server call
     $.ajaxSetup({ timeout: db_timeout_sec*1000 });
     if (options.sync)
       $.ajaxSetup({ async: false });
@@ -2420,7 +2450,7 @@ anyModel.prototype.dbUpdateLink = function (options)
   this.error        = "";
   this.error_server = "";
   let self = this;
-  if (this.mode == "remote") { // Remote server call
+  if (this.source == "remote") { // Remote server call
     $.ajaxSetup({ timeout: db_timeout_sec*1000 });
     if (options.sync)
       $.ajaxSetup({ async: false });
@@ -2588,7 +2618,7 @@ anyModel.prototype.dbDelete = function (options)
   this.error        = "";
   this.error_server = "";
   let self = this;
-  if (this.mode == "remote") { // Remote server call
+  if (this.source == "remote") { // Remote server call
     $.ajaxSetup({ timeout: db_timeout_sec*1000 });
     if (options.sync)
       $.ajaxSetup({ async: false });

@@ -632,7 +632,7 @@
 
   Sample listing of the `anyDefs.js` file:
 
-        var gMode          = "remote";
+        var gSource        = "remote";
         var gServer        = "//localhost/";
         var gHomeFolder    = "projects/testserver/wp-content/plugins/anyvista/";
         var gThirdpartyPHP = "projects/testserver/php/";
@@ -724,7 +724,7 @@
   The location of a script, relative to `gHomeFolder`, that delivers data on the correct JSON
   format. Default value is `data/mysql/anyGetData.php`, which is the default script that gets data
   from the PHP backend. It is used by the db* methods of the `anyModel` client side class when the
-  `this.mode` variable is set to `remote`. If a script is not specified in `gDataScript`, the data
+  `this.source` variable is set to `remote`. If a script is not specified in `gDataScript`, the data
   must be delivered to anyVista by some other method. Refer to the included examples.
 
   `gUploadFolder`:
@@ -1034,7 +1034,7 @@
           serverdata = serverdata.JSON_CODE;
         var model = new taskModel({ data:       serverdata ? serverdata.data : null,
                                     permission: serverdata ? serverdata.permission : null,
-                                    mode:       "remote",
+                                    source:     "remote",
                                  });
         var data_id = "<?php echo Parameters::get("task_id");?>";
         var is_new  = (data_id == "new" || parseInt(data_id) == -1);

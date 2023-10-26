@@ -36,7 +36,7 @@ var i18n = {
     SERVER_ERROR:          "Serverfeil. Se konsoll loggen for detaljer. ",
     DATASOURCE_MISSING:    "Mangler lokal datakilde. ",
     CALLBACK_MISSING:      "Mangler callback funksjon eller kontekst. ",
-    SUCCCESS_CB_MISSING:   "Mangler suksess callback for local modus. ",
+    SUCCCESS_CB_MISSING:   "Mangler suksess callback for lokal datakilde. ",
     VIEW_AREA_MISSING:     "Mangler view område. ",
     MODEL_MISSING:         "Mangler modell. ",
     OPTIONS_MISSING:       "Mangler options. ",

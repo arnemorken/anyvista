@@ -339,9 +339,9 @@ myItemLinkClicked = function (event)
   return this.showItem(event);
 };
 
-var data_model = new anyModel({ data: my_data,
-                                type: "event",
-                                mode: "remote",
+var data_model = new anyModel({ data:   my_data,
+                                type:   "event",
+                                source: "remote",
                              });
 var data_view  = new anyView({ id:               "any_content",
                                filters:          all_filters,

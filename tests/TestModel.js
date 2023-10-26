@@ -13,14 +13,14 @@
 // QUnit tests for Data module
 ///////////////////////////////////////////////////////
 
-let millisec = 3500;
-let gDbase   = null;
-let gFactory = null;
-let gDBMode  = "local";
+let millisec  = 3500;
+let gDbase    = null;
+let gFactory  = null;
+let gDBSource = "local";
 
 function doTest(thing)
 {
-  if (gDBMode == "local") {
+  if (gDBSource == "local") {
     // Set up test database and call tests in connectSuccess
     let options = {
       dbtype:    "INDEXEDDB", // "LOCALSTORAGE"
@@ -70,11 +70,11 @@ async function connectSuccess(options)
 
 /*
   // Delete users with id 79 and 34, to satisify dbUpdate insert test (see below)
-  let tempdm = new anyModel({type:"user",db_search:false,mode:gDBMode});
-  let id1 = gDBMode == "remote" ? 79 : "79";
-  let id2 = gDBMode == "remote" ? 34 : "34";
+  let tempdm = new anyModel({type:"user",db_search:false,source:gDBSource});
+  let id1 = gDBSource == "remote" ? 79 : "79";
+  let id2 = gDBSource == "remote" ? 34 : "34";
   tempdm.dbDelete({sync:true,id:id1});
-  tempdm = new anyModel({type:"user",db_search:false,mode:gDBMode});
+  tempdm = new anyModel({type:"user",db_search:false,source:gDBSource});
   tempdm.dbDelete({sync:true,id:id2});
   // Insert user with id 55, to satisfy dbDelete test (see below)
   tempdm.dbUpdate({sync:true,
@@ -112,13 +112,13 @@ function testModel()
 
   test('constructor and dataInit', function() {
 
-    let dm1 = new anyModel({mode:gDBMode});
+    let dm1 = new anyModel({source:gDBSource});
     deepEqual(dm1.data                       === null &&
               dm1.type                       === "" &&
               dm1.id                         === null &&
               dm1.id_key                     === "" &&
               dm1.name_key                   === "" &&
-              dm1.mode                       === gDBMode &&
+              dm1.source                     === gDBSource &&
               dm1.db_search                  === false &&
               dm1.db_search_term             === "" &&
               dm1.auto_search                === true &&
@@ -144,7 +144,7 @@ function testModel()
                 type:             "fooobj",
                 id_key:           "fooobj_id",
                 name_key:         "fooobj_name",
-                mode:             gDBMode,
+                source:           gDBSource,
                 db_search:        false,
                 db_search_term:   "something",
                 auto_search:      true,
@@ -157,13 +157,13 @@ function testModel()
               dm1.type             === "fooobj" &&
               dm1.id_key           === "fooobj_id" &&
               dm1.name_key         === "fooobj_name" &&
-              dm1.mode             === gDBMode &&
+              dm1.source           === gDBSource &&
               dm1.db_search        === false &&
               dm1.db_search_term   === "something" &&
               dm1.auto_search      === true &&
               dm1.auto_callback    === false &&
               dm1.message          === "a msg" &&
-              dm1.error            === (gDBMode == "remote" ? i18n.error.SERVER_ERROR : "an err") &&
+              dm1.error            === (gDBSource == "remote" ? i18n.error.SERVER_ERROR : "an err") &&
               dm1.db_timeout_sec   === 8,
               true, "Constructor sets correct values when options is given.");
 
@@ -172,7 +172,7 @@ function testModel()
                 type:             "barobj",
                 id_key:           "barobj_id",
                 name_key:         "barobj_name",
-                mode:             gDBMode,
+                source:           gDBSource,
                 db_search:        false,
                 db_search_term:   "Some thing",
                 auto_search:      true,
@@ -182,12 +182,12 @@ function testModel()
               };
     deepEqual(dm2.dataInit(opt),
               opt, "dataInit #1: return input options");
-    let errmsg = dm2.mode == "remote" ? i18n.error.SERVER_ERROR : "The error";
+    let errmsg = dm2.source == "remote" ? i18n.error.SERVER_ERROR : "The error";
     deepEqual(dm2.data.val         === "dataobj" &&
               dm2.type             === "barobj" &&
               dm2.id_key           === "barobj_id" &&
               dm2.name_key         === "barobj_name" &&
-              dm2.mode             === gDBMode &&
+              dm2.source           === gDBSource &&
               dm2.db_search        === false &&
               dm2.db_search_term   === "Some thing" &&
               dm2.auto_search      === true &&
@@ -210,9 +210,9 @@ function testModel()
 
   test('_getDataSourceName', function() {
 
-    let dm1 = new anyModel({type:"foo",mode:gDBMode});
+    let dm1 = new anyModel({type:"foo",source:gDBSource});
     let dsn = dm1._getDataSourceName();
-    let res = gDBMode == "remote" ? any_defs.dataScript : "";
+    let res = gDBSource == "remote" ? any_defs.dataScript : "";
     deepEqual(dsn === res,
               true, "_getDataSourceName ok");
   });
@@ -224,7 +224,7 @@ function testModel()
 
   test('Model.dataSearch on model created with missing mandatory input', 1, function() {
 
-    let dm = new anyModel({mode:gDBMode});
+    let dm = new anyModel({source:gDBSource});
     deepEqual(dm.dataSearch()                               === null &&
               dm.dataSearch({})                             === null &&
               dm.dataSearch({type:"bar",id:null,data:null}) === null &&
@@ -370,7 +370,7 @@ function testModel()
 
   test('dataSearchNextId and dataSearchMaxId', function() {
 
-    let dm1 = new anyModel({type:"foo",mode:gDBMode});
+    let dm1 = new anyModel({type:"foo",source:gDBSource});
     var data1 = {
       6: {
         head: "group",
@@ -906,12 +906,12 @@ function testModel()
   ///////////////////// dbSearch tests /////////////////////
 
   let myid   = "11";
-  let idchk  = gDBMode == "local" ? "11" : "+11";
+  let idchk  = gDBSource == "local" ? "11" : "+11";
   let uname  = "The faz user"; // "user 1"
   let ulogin = "fazuser";      // "loginA"
 
   asyncTest('dbSearch normal case - item, with header', 4, function() {
-    let dm = new anyModel({ type:"user",db_search:false,mode:gDBMode} );
+    let dm = new anyModel({ type:"user",db_search:false,source:gDBSource} );
     let res = dm.dbSearch({ id:myid,header:true,
                  onSuccess:
                  function(context,serverdata,options)
@@ -935,7 +935,7 @@ function testModel()
   });
 
   asyncTest('dbSearch normal case - item, without header', 4, function() {
-    let dm = new anyModel({ type:"user",db_search:false,mode:gDBMode} );
+    let dm = new anyModel({ type:"user",db_search:false,source:gDBSource} );
     let res = dm.dbSearch({ id:myid,
                             onSuccess:
                             function(context,serverdata,options)
@@ -960,7 +960,7 @@ function testModel()
   });
 
   asyncTest('dbSearch normal case - list', 4, function() {
-    let dm = new anyModel({ type:"user",db_search:false,mode:gDBMode} );
+    let dm = new anyModel({ type:"user",db_search:false,source:gDBSource} );
     let res = dm.dbSearch({ type:"user",
                             onSuccess:
                             function(context,serverdata,options)
@@ -985,7 +985,7 @@ function testModel()
   });
 
   asyncTest('dbSearch with non-existing model type and id_key', 3, function() {
-    let dm = new anyModel({type:"foobar",id_key:"foobar_name",db_search:false,mode:gDBMode});
+    let dm = new anyModel({type:"foobar",id_key:"foobar_name",db_search:false,source:gDBSource});
     let res = dm.dbSearch({id:"3",
                             onSuccess:
                             function(context,serverdata,options)
@@ -1004,7 +1004,7 @@ function testModel()
   });
 
   asyncTest('dbSearch with existing model type but non-existing id_key', 3, function() {
-    let dm = new anyModel({type:"user",id_key:"foo",db_search:false,mode:gDBMode});
+    let dm = new anyModel({type:"user",id_key:"foo",db_search:false,source:gDBSource});
     let res = dm.dbSearch({ id:myid,
                             onSuccess:
                             function(context,serverdata,options)
@@ -1023,7 +1023,7 @@ function testModel()
   });
 
   asyncTest('dbSearch with non-existing model type but existing type in search options', 3, function() {
-    let dm = new anyModel({ type:"foo",db_search:false,mode:gDBMode});
+    let dm = new anyModel({ type:"foo",db_search:false,source:gDBSource});
     let res = dm.dbSearch({ type:"user",id:myid,
                             onSuccess:
                             function(context,serverdata,options)
@@ -1042,7 +1042,7 @@ function testModel()
   });
 
   asyncTest('dbSearch for next id through dbSearch with id==max', 4, function() {
-    let dm = new anyModel({ type:"user",db_search:false,mode:gDBMode});
+    let dm = new anyModel({ type:"user",db_search:false,source:gDBSource});
     let res = dm.dbSearch({ type:"user",id:"max",
                             onSuccess:
                             function(context,serverdata,options)
@@ -1063,7 +1063,7 @@ function testModel()
   });
 
   asyncTest('dbSearch for next id through dbSearchNextId', 4, function() {
-    let dm = new anyModel({ type:"user",db_search:false,mode:gDBMode});
+    let dm = new anyModel({ type:"user",db_search:false,source:gDBSource});
     let res = dm.dbSearchNextId({ type:"user",id:"max",
                                   onSuccess:
                                   function(context,serverdata,options)
@@ -1093,7 +1093,7 @@ function testModel()
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      [myid]:{list:"user",user_name:"The faz user",
                                          dirty:{list:"user",user_name:"The faz user"}}}}};
-    let dm = new anyModel({type:"user",db_search:false,mode:gDBMode,data:data});
+    let dm = new anyModel({type:"user",db_search:false,source:gDBSource,data:data});
     let res = await dm.dbUpdate({ type:"user",id:myid,
                        onSuccess:
                        function(context,serverdata,options)
@@ -1105,7 +1105,7 @@ function testModel()
                                      item[myid].dirty === undefined,
                                      true, "dbUpdate({type:'user',id:"+myid+"}) returns with correct data in memory:"+
                                            item[myid].user_name+","+item[myid].dirty);
-                           let dm2 = new anyModel({type:"user",db_search:false,mode:gDBMode,data:null});
+                           let dm2 = new anyModel({type:"user",db_search:false,source:gDBSource,data:null});
                            dm2.dbSearch({type:"user",id:myid});
                            setTimeout(function() {
                              deepEqual(dm2.data && parseInt(dm2.data["+0"].data[idchk].user_id) === parseInt(myid),
@@ -1123,7 +1123,7 @@ function testModel()
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      50:{list:"event",event_name:"The faz event",
                                          dirty:{list:"event",event_name:"The faz event"}}}}};
-    let dm = new anyModel({type:"event",db_search:false,mode:gDBMode,data:data});
+    let dm = new anyModel({type:"event",db_search:false,source:gDBSource,data:data});
     let res = await dm.dbUpdate({
                        onSuccess:
                        function(context,serverdata,options)
@@ -1134,7 +1134,7 @@ function testModel()
                                    item[50].dirty !== undefined,
                                    true, "dbUpdate({type:'event',id:50}) with empty input returns returns unchanged memory data:"+
                                          item[50].event_name+","+item[50].dirty);
-                         let dm2 = new anyModel({type:"event",db_search:false,mode:gDBMode,data:null});
+                         let dm2 = new anyModel({type:"event",db_search:false,source:gDBSource,data:null});
                          dm2.dbSearch({type:"baz",id:50,
                              onSuccess:
                              function(context,serverdata,options)
@@ -1154,13 +1154,13 @@ function testModel()
   });
 
   asyncTest('dbUpdate - item: id exists in model, but not in database', 3, async function() {
-    let tempdm = new anyModel({type:"event",db_search:false,mode:gDBMode});
+    let tempdm = new anyModel({type:"event",db_search:false,source:gDBSource});
     await tempdm.dbDelete({sync:true,id:"666"});
     let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      666:{list:"event",event_name:"The faz event",
                                          dirty:{list:"event",event_name:"The faz event"}}}}};
-    let dm = new anyModel({type:"event",db_search:false,mode:gDBMode,data:data});
+    let dm = new anyModel({type:"event",db_search:false,source:gDBSource,data:data});
     let res = await dm.dbUpdate({ type:"event",id:666,
                        onSuccess:
                        function(context,serverdata,options)
@@ -1172,7 +1172,7 @@ function testModel()
                                    item[666].dirty != undefined,
                                    true, "dbUpdate({type:'event',id:666}) returns with correct data in memory:"+
                                          item[666].event_name+","+item[666].dirty);
-                         let dm2 = new anyModel({type:"event",db_search:false,mode:gDBMode});
+                         let dm2 = new anyModel({type:"event",db_search:false,source:gDBSource});
                          dm2.dbSearch({type:"event",id:666,
                              onSuccess:
                              function(context,serverdata,options)
@@ -1196,7 +1196,7 @@ function testModel()
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      50:{list:"event",event_name:"The faz event",
                                          dirty:{list:"event",event_name:"The faz event"}}}}};
-    let dm = new anyModel({type:"bar",db_search:false,mode:gDBMode,data:data});
+    let dm = new anyModel({type:"bar",db_search:false,source:gDBSource,data:data});
     let res = dm.dbUpdate({ type:"event",id:6346,
                  onSuccess:
                  function(context,serverdata,options)
@@ -1208,7 +1208,7 @@ function testModel()
     let item = dm.dataSearch({type:"event",id:6346});
     deepEqual(item===null,true,
               "dbUpdate({type:'event',id:6346}) item with nonexisting id returns returns null from dataSearch");
-    let dm2 = new anyModel({type:"event",db_search:false,mode:gDBMode,data:null});
+    let dm2 = new anyModel({type:"event",db_search:false,source:gDBSource,data:null});
     dm2.dbSearch({type:"event",id:6346,
         onSuccess:
         function(context,serverdata,options)
@@ -1221,8 +1221,8 @@ function testModel()
   });
 
   asyncTest('dbUpdate - item with different model.type (user with id 14 must exist in db)', 3, async function() {
-    let idchk14 = gDBMode == "local" ? "14" : "+14";
-    let tempdm = new anyModel({type:"user",db_search:false,mode:gDBMode});
+    let idchk14 = gDBSource == "local" ? "14" : "+14";
+    let tempdm = new anyModel({type:"user",db_search:false,source:gDBSource});
     await tempdm.dbUpdate({ sync:true,
                             is_new:true,
                             id:14,
@@ -1232,7 +1232,7 @@ function testModel()
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      14:{list:"user",user_name:"The faz user",
                                          dirty:{list:"user",user_name:"The faz user"}}}}};
-    let dm = new anyModel({type:"baz",db_search:false,mode:gDBMode,data:data});
+    let dm = new anyModel({type:"baz",db_search:false,source:gDBSource,data:data});
     let res = await dm.dbUpdate({ type:"user",id:14,
                        onSuccess:
                        function(context,serverdata,options)
@@ -1245,7 +1245,7 @@ function testModel()
                                      item[14].user_name === "The faz user" &&
                                      item[14].dirty === undefined,
                                      true, "dbUpdate({type:'user',id:14}) with different model type returns with correct data in memory:"+str);
-                           let dm2 = new anyModel({type:"user",db_search:false,mode:gDBMode});
+                           let dm2 = new anyModel({type:"user",db_search:false,source:gDBSource});
                            await dm2.dbSearch({type:"user",id:14});
                            setTimeout(function() {
                              str = dm2.data ? dm2.data["+0"].data[idchk14].user_name : null;
@@ -1265,7 +1265,7 @@ function testModel()
                                      12:{list:"faz",foo_name:"The faz foo"},
                                       2:{list:"baz",user_name:"The faz user",
                                          dirty:{list:"user",user_name:"The faz user"}}}}};
-    let dm = new anyModel({type:"user",db_search:false,mode:gDBMode,data:data});
+    let dm = new anyModel({type:"user",db_search:false,source:gDBSource,data:data});
     let res = dm.dbUpdate({ type:"biz",id:2,
                  onSuccess:
                  function(context,serverdata,options)
@@ -1279,7 +1279,7 @@ function testModel()
               item[2].dirty !== undefined,
               true, "dbUpdate({type:'baz',id:2}) with input type that does not match model type returns returns unchanged memory data:"+
                     item[2].user_name+","+item[2].dirty);
-    let dm2 = new anyModel({type:"biz",db_search:false,mode:gDBMode,data:null});
+    let dm2 = new anyModel({type:"biz",db_search:false,source:gDBSource,data:null});
     dm2.dbSearch({type:"baz",id:2,
         onSuccess:
         function(context,serverdata,options)
@@ -1293,12 +1293,12 @@ function testModel()
   });
 
   asyncTest('dbUpdate insert data that is in memory. User id 79 must not exist in user table.', 3, async function() {
-    let tempdm = new anyModel({type:"user",db_search:false,mode:gDBMode});
+    let tempdm = new anyModel({type:"user",db_search:false,source:gDBSource});
     await tempdm.dbDelete({sync:true,id:79});
     let usrname = "user"+Math.floor(Math.random()*100000);
     let data = {77:{list:"user",user_name:"us77"},
                 79:{list:"user",user_name:"us79",user_login:usrname,user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
-    let dm = new anyModel({type:"user",db_search:false,mode:gDBMode,data:data});
+    let dm = new anyModel({type:"user",db_search:false,source:gDBSource,data:data});
     // insert
     let res = await dm.dbUpdate({ id:79,is_new:true,
                        onSuccess:
@@ -1319,7 +1319,7 @@ function testModel()
 
   asyncTest('dbUpdate insert data that is not in memory', 2, async function() {
     let data22 = {22:{list:"user",user_name:"us22"}};
-    let dm = new anyModel({type:"user",db_search:false,mode:gDBMode,data:data22});
+    let dm = new anyModel({type:"user",db_search:false,source:gDBSource,data:data22});
     // insert
     let data23 = {23:{list:"user",user_name:"us23",user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
     let res = await dm.dbUpdate({id:23,new_data:data23,is_new:true,
@@ -1345,7 +1345,7 @@ function testModel()
   // TODO
 
   asyncTest('dbUpdateLinkList add a user-event link (event-user link 20900-23 must exist in event_user table)', 2, async function() {
-    let dm = new anyModel({type:"user",id:23,db_search:false,mode:gDBMode,data:null});
+    let dm = new anyModel({type:"user",id:23,db_search:false,source:gDBSource,data:null});
     let res = await dm.dbUpdateLinkList({ link_type:"event",select:[98,99,10894],unselect:[20900],
                                           onSuccess:
                                           function(context,serverdata,options)
@@ -1373,12 +1373,12 @@ function testModel()
 
   asyncTest('dbDelete: normal case (event with id 9977 must exist in db event table)', 3, function() {
 
-    let tempdm = new anyModel({type:"event",db_search:false,mode:gDBMode});
+    let tempdm = new anyModel({type:"event",db_search:false,source:gDBSource});
     tempdm.dbUpdate({sync:true,is_new:true,id:9977,new_data:{9977:{item:"event",event_name:"EVT A"}},
            onSuccess:
            function(context,serverdata,options)
            {
-             let dm = new anyModel({type:"event",db_search:false,mode:gDBMode,data:null});
+             let dm = new anyModel({type:"event",db_search:false,source:gDBSource,data:null});
              let res = dm.dbDelete({ type:"event",id:9977,
                           onSuccess:
                           function(context,serverdata,options)
@@ -1397,7 +1397,7 @@ function testModel()
   });
 
   asyncTest('dbDelete: deleting non-existing id (user with id 56 must NOT exist in db user table)', 3, async function() {
-    let dm = new anyModel({type:"user",db_search:false,mode:gDBMode,data:null});
+    let dm = new anyModel({type:"user",db_search:false,source:gDBSource,data:null});
     let res = await dm.dbDelete({ type:"user",id:56,
                        onSuccess:
                        function(context,serverdata,options)
@@ -1416,7 +1416,7 @@ function testModel()
   });
 
   test('dbDelete: model with no type or id_key', 1, async function() {
-    let dm = new anyModel({db_search:false,mode:gDBMode});
+    let dm = new anyModel({db_search:false,source:gDBSource});
     let res = await dm.dbDelete({ onSuccess:
                           function(context,serverdata,options)
                           {
@@ -1428,7 +1428,7 @@ function testModel()
   });
 
   asyncTest('dbDelete: model with type not in database', 3, async function() {
-    let dm = new anyModel({type:"foox",db_search:false,mode:gDBMode,data:null});
+    let dm = new anyModel({type:"foox",db_search:false,source:gDBSource,data:null});
     let res = await dm.dbDelete({ id:99,
                                   onSuccess:
                                   function(context,serverdata,options)
@@ -1447,7 +1447,7 @@ function testModel()
   });
 
   asyncTest('dbDelete: model with existing type, calling delete with existing id but non-existing type', 3, async function() {
-    let dm = new anyModel({type:"user",db_search:false,mode:gDBMode,data:null});
+    let dm = new anyModel({type:"user",db_search:false,source:gDBSource,data:null});
     let res = await dm.dbDelete({ type:"foox",id:50,
                                   onSuccess:
                                   function(context,serverdata,options)
@@ -1469,7 +1469,7 @@ function testModel()
     let data = {99:{list:"bar",data:{11:{list:"foox",foz_name:"The foox foz"},
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      66:{list:"user",user_name:"The faz user"}}}};
-    let dm = new anyModel({type:"foox",db_search:false,mode:gDBMode,data:data});
+    let dm = new anyModel({type:"foox",db_search:false,source:gDBSource,data:data});
     let res = await dm.dbDelete({ id:66,
                                   onSuccess:
                                   function(context,serverdata,options)
@@ -1491,7 +1491,7 @@ function testModel()
     let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      67:{list:"user",user_name:"delme"}}}};
-    let dm = new anyModel({type:"user",db_search:false,mode:gDBMode,data:data});
+    let dm = new anyModel({type:"user",db_search:false,source:gDBSource,data:data});
     let res = await dm.dbDelete({ type:"user",id:67,
                                   onSuccess:
                                   function(context,serverdata,options)
@@ -1512,7 +1512,7 @@ function testModel()
   // insert, update, search and delete tests
   asyncTest('dbUpdate and dbDelete: Insert, update, search, view and delete user. User id 34 must not exist in user table. ', 15, async function() {
     let data33 = {33:{list:"user",user_name:"us33",user_login:"us33",user_pass:"qqq",user_pass_again:"qqq"}};
-    let dm = new anyModel({type:"user",db_search:false,mode:gDBMode,data:data33});
+    let dm = new anyModel({type:"user",db_search:false,source:gDBSource,data:data33});
     // insert
     let data34 = {34:{list:"user",user_name:"us34",user_login:"us34",user_pass:"qqq",user_pass_again:"qqq",is_new:true}};
     let res = await dm.dbUpdate({ id:34,new_data:data34,is_new:true,

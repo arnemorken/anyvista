@@ -63,7 +63,7 @@ eventModel.prototype.dbSetAttended = function (options)
              "&link_id="  +options.link_id;
   }
   param_str += lf_str;
-  if (this.mode == "remote") { // Remote server call
+  if (this.source == "remote") { // Remote server call
     let url  = this._getDataSourceName() + param_str;
     let self = this;
     jQuery.getJSON(url)

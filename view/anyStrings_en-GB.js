@@ -36,7 +36,7 @@ var i18n = {
     SERVER_ERROR:          "Server error. See console log for details. ",
     DATASOURCE_MISSING:    "No local data source. ",
     CALLBACK_MISSING:      "Callback function or context missing. ",
-    SUCCCESS_CB_MISSING:   "Success callback missing for local mode. ",
+    SUCCCESS_CB_MISSING:   "Success callback missing for local data source. ",
     VIEW_AREA_MISSING:     "View area missing. ",
     MODEL_MISSING:         "Model missing. ",
     OPTIONS_MISSING:       "Options missing. ",

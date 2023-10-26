@@ -10,7 +10,7 @@
 //
 // User-editable "constants" that define some basic properties of the anyVista API.
 //
-var gMode          = "remote";
+var gSource        = "remote";
 var gServer        = "//localhost/";
 var gHomeFolder    = "Prosjekter/testserver/wp-content/plugins/anyvista/";
 var gThirdpartyPHP = "Prosjekter/testserver/php/";
