@@ -446,23 +446,26 @@ $.any.anyView.prototype.empty = function (params)
  *                                  Default: `this.element`.
  * @param {Object}  params.model    A model containing the data to display.
  *                                  Default: `this.model`.
+ * @param {Object}  params.data     The data to display / display from.
+ *                                  Ignored if `model` is given.
+ *                                  Default: `this.model.data` if `this.model` is set, null otherwise.
  * @param {string}  params.type     The type of the data to display.
  *                                  Ignored if `model` is given.
  *                                  Default: "".
- * @param {string}  params.mode     The mode in which to display data (list, item or head).
- *                                  Ignored if `model` is given.
- *                                  Default: "".
- * @param {Object}  params.data     The data to display / display from.
- *                                  Ignored if `model` is given.
- *                                  Default: `this.model.data` if set, null otherwise.
- * @param {string}  params.par_type The type of the data on the level above.
- *                                  Default: "".
- * @param {string}  params.par_mode The mode of the data on the level above.
+ * @param {string}  params.mode     The mode in which to display data ("list", "item" or "head").
  *                                  Default: "".
  * @param {Object}  params.par_data The data on the level above `data`.
+ *                                  Ignored if `model` is given, in which case `model.parent.data` is used.
  *                                  Default: null.
  * @param {string}  params.par_id   The id in `par_data` where `data` may be found (`par_data[par_id] == data`).
+ *                                  Ignored if `model` is given, in which case `model.parent.id` is used.
  *                                  Default: null.
+ * @param {string}  params.par_type The type of the data on the level above.
+ *                                  Ignored if `model` is given, in which case `model.parent.type` is used.
+ *                                  Default: "".
+ * @param {string}  params.par_mode The mode of the data on the level above, or of `model.parent`, if `model`
+ *                                  is given.
+ *                                  Default: "".
  * @param {boolean} params.edit     If true, the item should be displayed as editable.
  *                                  Default: false.
  * @param {integer} params.from     Pagination start.
@@ -481,44 +484,39 @@ $.any.anyView.prototype.refresh = function (params)
       this.options = {};
     this.options.ref_rec = 0; // Reset on every call to refresh
   }
-  let parent   = params && params.parent   ? params.parent   : this.element;
-  let model    = params && params.model    ? params.model    : this.model;
-  let type     = params && params.type     ? params.type     : "";
-  let mode     = params && params.mode     ? params.mode     : "";
-  let data     = params && params.data     ? params.data     : model && model.data ? model.data : null;
-  let par_type = params && params.par_type ? params.par_type : "";
-  let par_mode = params && params.par_mode ? params.par_mode : "";
-  let par_data = params && params.par_data ? params.par_data : null;
-  let par_id   = params && params.par_id   ? params.par_id   : "";
-  let edit     = params && params.edit     ? params.edit     : false;
-  let from     = params && params.from     ? params.from     : 1;
-  let num      = params && params.num      ? params.num      : this.options.itemsPerPage;
+  let parent   = params && params.parent             ? params.parent   : this.element;
+  let model    = params && params.model              ? params.model    : null;
+  let data     = params && params.data     && !model ? params.data     : model ? model.data : this.model ? this.model.data : null;
+  let type     = params && params.type     && !model ? params.type     : model ? model.type : this.model ? this.model.type : "";
+  let mode     = params && params.mode               ? params.mode     : "";
+  let par_data = params && params.par_data && !model ? params.par_data : model && model.parent ? model.parent.data : this.model && this.model.parent ? this.model.parent.data : null;
+  let par_id   = params && params.par_id   && !model ? params.par_id   : model && model.parent ? model.parent.id   : this.model && this.model.parent ? this.model.parent.id   : "";
+  let par_type = params && params.par_type && !model ? params.par_type : model && model.parent ? model.parent.type : this.model && this.model.parent ? this.model.parent.type : "";
+  let par_mode = params && params.par_mode           ? params.par_mode : "";
+  let edit     = params && params.edit               ? params.edit     : false;
+  let from     = params && params.from               ? params.from     : 1;
+  let num      = params && params.num                ? params.num      : this.options.itemsPerPage;
 
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
 
-  if (!params || !params.data)
-    this.clearBeforeRefresh(); // Top level display of the model, so clear everything first
+  // See if we should clear the view area before displaying
+  if (params && params.clear)
+    this.clearBeforeRefresh();
 
-  if (this.must_empty) {
-    // Someone thinks we should remove data from the must_empty element.
-    this.must_empty.empty();
-    this.must_empty = null;
-  }
+  // See if we need a top close button (for item mode)
+  if (this.options.item_opening && this.id_stack.length == 1)
+    this.refreshCloseItemButton(params);
+
+  // Find the filters to use if we don't have them already
+  if (!this.options.filters || !this.options.filters[type])
+    this.options.filters = this._getOrCreateFilters(model ? model : this.model);
 
   if (this.preRefresh)
     this.preRefresh(params);
 
-  // Find the filters to use
-  this.options.filters = this._getOrCreateFilters(model);
-
-  // Refresh top close button for item
-  if (!this.options.isSelectable && this.options.item_opening && this.id_stack.length > 0)
-    this.refreshCloseItemButton(params);
-
   if (data) {
     if (Object.size(data) != 0) {
-      // Display data: Loop over all entries and refresh views
       let row_no     = 0;
       let prev_type  = type;
       let prev_mode  = mode;
@@ -526,6 +524,7 @@ $.any.anyView.prototype.refresh = function (params)
       let view       = this;
       if (mode == "head")
         ++this.data_level;
+      // Display data: Loop over all entries and refresh views
       for (let id in data) {
         if (data.hasOwnProperty(id) && id != "id" && !id.startsWith("grouping")) {
           if (view) {
@@ -551,12 +550,12 @@ $.any.anyView.prototype.refresh = function (params)
               if (prev_mode == "list" && prev_type != curr_type)
                 the_parent = view._addContainerRow(parent,prev_type,prev_mode,curr_type,curr_mode,id_str);
               model = this.createModel({
-                             type:     curr_type,
                              data:     data,
                              id:       curr_mode=="item" ? id : "",
-                             par_type: par_type,
+                             type:     curr_type,
                              par_data: par_data,
                              par_id:   par_id,
+                             par_type: par_type,
                            });
               view  = this.createView({
                              model:    model,
@@ -589,14 +588,14 @@ $.any.anyView.prototype.refresh = function (params)
                 }
                 view.refreshOne({
                        parent:   the_parent,
-                       type:     curr_type,
-                       mode:     curr_mode,
                        data:     data,
                        id:       id,
-                       par_type: par_type,
-                       par_mode: par_mode,
+                       type:     curr_type,
+                       mode:     curr_mode,
                        par_data: par_data,
                        par_id:   par_id,
+                       par_type: par_type,
+                       par_mode: par_mode,
                        edit:     edit,
                      });
                 if (curr_mode == "list" && !view.rows_changed)
@@ -645,6 +644,8 @@ $.any.anyView.prototype.refresh = function (params)
     parent.children().remove();
 
   // Refresh bottom toolbar
+  if (!model)
+    model = this.model;
   if (this.options && this.options.showToolbar && this.options.data_level == 0) {
     if (!this.options.isSelectable && model && model.type && this.data_level==0 && this.id_stack.length == 0 &&
         (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
@@ -2410,8 +2411,6 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
 
   let parent  = opt.parent;
   let id_str  = opt.row_id_str;
-
-  opt.top_view = parent.parent();
   let tit_str = i18n.button.buttonAddLink+"...";
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
   let btn_id  = this.id_base+"_"+opt.type+"_add_icon";
@@ -2433,6 +2432,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
             : this.option("context")
               ? this.option("context")
               : this;
+  opt.top_view = this.options.top_view; //parent.parent();
   btn.off("click").on("click", opt, $.proxy(fun,con));
 
   let menu_id = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+id_str+"_link_dropdown";
@@ -3229,7 +3229,6 @@ $.any.anyView.prototype.sortTable = function (event)
         num  = this.options.itemsPerPage;
       }
     }
-    this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty this view (to avoid flashing)
   }
   let mod_opt = {
     context:   this.model,
@@ -3352,7 +3351,6 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     console.error("System error: Pager or pager options missing for pageNumClicked. "); // TODO! i18n
     return;
   }
-  this.must_empty = $("#"+this.options.id); // Tell refresh loop to empty (to avoid flashing)
   this.options.currentPage = pager.currentPage();
   let from = pager.options.itemsPerPage *(pager.currentPage() - 1) + 1;
   let num  = pager.options.itemsPerPage;
@@ -3651,7 +3649,7 @@ $.any.anyView.prototype.showItem = function (event)
     else { // remote
       if ((!id && id !== 0) || id < 0) {
         let f = []; f[0] = this.model.id_key;
-        this.showMessages({message:"Wait... "},true); // TODO! i18n
+        this.showMessages(null,true); // TODO! i18n
         this.model.dbSearchNextId({
                      type:      type,
                      is_new:    is_new,
@@ -3794,12 +3792,9 @@ $.any.anyView.prototype._doShowItem = function (opt)
     return false;
   }
   let top_view = this.options.top_view;
-  if (top_view) {
-    if (top_view.element && top_view.element.length) {
-      top_view.element.empty();
-      view.element = top_view.element;
-    }
-  }
+  if (top_view && top_view.element && top_view.element.length)
+    view.element = top_view.element;
+
   // Set the state of the new view
   view.options.item_opening = true; // To make top right close icon appear
   if (is_new) {
@@ -3807,11 +3802,6 @@ $.any.anyView.prototype._doShowItem = function (opt)
     view.options.isDeletable = false;
     view.options.isRemovable = false;
   }
-  // Spinner
-  let spdiv = view.element;
-  if (spdiv && spdiv != "")
-    spdiv.append($('<div style="padding:10px;"><i class="fas fa-solid fa-spinner fa-spin"></i></div>'));
-
   // Display the item data
   if (view.model.source == "remote" && !is_new) {
     // Remote search: Will (normally) call refresh via onModelChange
@@ -3829,11 +3819,12 @@ $.any.anyView.prototype._doShowItem = function (opt)
     if (is_new && opt.showHeader)
       the_id = "+0";
     view.refresh({
-           type:     type,
-           mode:     "item",
-           data:     the_item,
-           id:       the_id,
-           edit:     is_new,
+           type:  type,
+           mode:  "item",
+           data:  the_item,
+           id:    the_id,
+           edit:  is_new,
+           clear: true,
          });
   } // else
   return true;
@@ -3842,7 +3833,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
 $.any.anyView.prototype.closeItem = function (event)
 {
   if (this.options.top_view)
-    this.options.top_view.refresh();
+    this.options.top_view.refresh({clear:true});
 }; // closeItem
 
 $.any.anyView.prototype.toggleEdit = function (event)
