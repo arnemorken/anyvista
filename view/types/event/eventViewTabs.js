@@ -52,7 +52,7 @@ $.widget("any.eventViewTabs", $.any.anyViewTabs, {
       ev.data = { data: null,
                   id:   null,
                   type: "event",
-                  kind: "item",
+                  mode: "item",
                 };
       this.showItem(ev);
     }
@@ -84,7 +84,7 @@ $.any.eventViewTabs.prototype.createExtra = function ()
 $.any.eventViewTabs.prototype.bindCell = function (options,view)
 {
   // Set attended
-  let it_id = this.getIdBase()+"_"+options.type+"_"+options.kind+"_"+options.id_str+"_user_attended"
+  let it_id = this.getIdBase()+"_"+options.type+"_"+options.mode+"_"+options.id_str+"_user_attended"
   let btn = $("#"+it_id);
   if (btn.length) {
     btn.off("click");
@@ -94,7 +94,7 @@ $.any.eventViewTabs.prototype.bindCell = function (options,view)
   let sdate = Date.parse(options.event_date_end);
   let today = Date.now();
   if (sdate < today) {
-    let it_id = this.getIdBase()+"_"+options.type+"_"+options.kind+"_"+options.id_str+"_removeItem_icon"
+    let it_id = this.getIdBase()+"_"+options.type+"_"+options.mode+"_"+options.id_str+"_removeItem_icon"
     let btn = $("#"+it_id);
     if (btn.length)
       btn.hide();
@@ -103,7 +103,7 @@ $.any.eventViewTabs.prototype.bindCell = function (options,view)
 }; // bindCell
 */
 
-$.any.eventViewTabs.prototype.getPlaces = function (type,kind,id,val,edit)
+$.any.eventViewTabs.prototype.getPlaces = function (type,mode,id,val,edit)
 {
   let obj = {"": "[Velg sted]", "0":"Oslo", "1":"Bergen", "2":"Bergsdalen"}; // TODO: Get this from database event settings
   if (edit)
@@ -111,7 +111,7 @@ $.any.eventViewTabs.prototype.getPlaces = function (type,kind,id,val,edit)
   return obj[val];
 };
 
-$.any.eventViewTabs.prototype.getArrangers = function (type,kind,id,val,edit)
+$.any.eventViewTabs.prototype.getArrangers = function (type,mode,id,val,edit)
 {
   let obj = {"0":"UCI", "1":"NCF"}; // TODO: Get this from database event settings
   if (edit)
@@ -119,7 +119,7 @@ $.any.eventViewTabs.prototype.getArrangers = function (type,kind,id,val,edit)
   return obj[val];
 };
 
-$.any.eventViewTabs.prototype.getInstructors = function (type,kind,id,val,edit)
+$.any.eventViewTabs.prototype.getInstructors = function (type,mode,id,val,edit)
 {
   let obj = {"0":"John", "1":"Jane"}; // TODO: Get this from database event settings
   if (edit)

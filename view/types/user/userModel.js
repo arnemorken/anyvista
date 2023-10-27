@@ -25,7 +25,7 @@ userModel.prototype = new anyModel(null);
 userModel.prototype.constructor = userModel;
 
 // Example method
-userModel.prototype.dataSetAttended = function (type,kind,id,val)
+userModel.prototype.dataSetAttended = function (type,mode,id,val)
 {
   let item = (id || id === 0) ? this.dataSearch({type:type,id:id}) : null;
   if (!item)

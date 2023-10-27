@@ -46,7 +46,7 @@ $.widget("any.groupViewTabs", $.any.anyViewTabs, {
       ev.data = { data: null,
                   id:   null,
                   type: "group",
-                  kind: "item",
+                  mode: "item",
                 };
       this.showItem(ev);
     }

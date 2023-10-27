@@ -23,7 +23,7 @@ eventValidator.prototype.validateUpdate = function (opt,view)
   if (!opt.id && opt.id !== null)
     err += "Id missing. ";
 
-  let elem_id_base = view.getIdBase()+"_"+opt.type+"_"+opt.kind+"_"+opt.id_str;
+  let elem_id_base = view.getIdBase()+"_"+opt.type+"_"+opt.mode+"_"+opt.id_str;
 
   let nameid1 = elem_id_base+"_event_name .itemEdit";
   let nameid2 = elem_id_base+"_event_name .itemUnedit";

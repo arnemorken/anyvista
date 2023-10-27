@@ -43,7 +43,7 @@ $.widget("any.userViewTabs", $.any.anyViewTabs, {
       ev.data = { data: null,
                   id:   null,
                   type: "user",
-                  kind: "item",
+                  mode: "item",
                 };
       this.showItem(ev);
     }
