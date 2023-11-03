@@ -2411,7 +2411,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
 
   let parent  = opt.parent;
   let id_str  = opt.row_id_str;
-  let tit_str = i18n.button.buttonAddLink+"...";
+  let tit_str = i18n.button.buttonAdd+"/"+i18n.button.buttonRemove;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
   let btn_id  = this.id_base+"_"+opt.type+"_add_icon";
   if ($("#"+btn_id).length)

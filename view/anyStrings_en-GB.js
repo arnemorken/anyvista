@@ -14,13 +14,13 @@ var i18n = {
     buttonEdit:           "Edit",
     buttonUpdate:         "Save",
     buttonDelete:         "Delete",
+    buttonAdd:            "Add",
     buttonAddToList:      "Add %% to list",
     buttonRemove:         "Remove",
     buttonRemoveFromList: "Remove %% from list",
     buttonCancel:         "Cancel",
     buttonClose:          "Close",
     buttonSelect:         "Select",
-    buttonAddLink:        "Add",
   },
 
   message: {

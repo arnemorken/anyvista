@@ -14,13 +14,13 @@ var i18n = {
     buttonEdit:           "Rediger",
     buttonUpdate:         "Lagre",
     buttonDelete:         "Slett",
+    buttonAdd:            "Legg til",
     buttonAddToList:      "Legg til %% i liste",
     buttonRemove:         "Fjern",
     buttonRemoveFromList: "Fjern %% fra liste",
     buttonCancel:         "Avbryt",
     buttonClose:          "Lukk",
     buttonSelect:         "Velg",
-    buttonAddLink:        "Legg til",
   },
 
   message: {
