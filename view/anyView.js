@@ -4487,7 +4487,7 @@ $.any.anyView.prototype._addPreSelections = function (select_list_view)
       let sel_id = d[model.id_key];
       if ((sel_id || sel_id === 0) && d.list == model.type)
         select.add(parseInt(sel_id));
-      if (d.data && sel_id != this.model.id && parseInt(sel_id) != parseInt(this.model.id))
+      if (d.data && this.model.id && sel_id != this.model.id && parseInt(sel_id) != parseInt(this.model.id))
         this._addPreSelections(select_list_view);
     }
   }
