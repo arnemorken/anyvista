@@ -3737,14 +3737,17 @@ $.any.anyView.prototype._doShowItem = function (opt)
     item_name = i18n.message.newType.replace("%%",type); // Edit new
 
   // Create a new item
+  let topidx = "+0";
+  if (the_id || the_id === 0)
+    topidx = the_id;
   let the_item = {
-    "+0": { // Header
+    [topidx]: { // Header
       head: type,
       [name_key]: item_name,
       data: {},
     },
   };
-  let the_item_data = the_item["+0"].data;
+  let the_item_data = the_item[topidx].data;
   if (!opt.showHeader && !is_new)
     the_item = the_item_data;
   if (is_new) {
@@ -3819,7 +3822,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
   else {
     // Local refresh: Display the empty data structure just created
     if (is_new && opt.showHeader)
-      the_id = "+0";
+      the_id = topidx;
     view.refresh({
            type:  type,
            mode:  "item",
@@ -4134,7 +4137,10 @@ $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,
         let itemsel_id = view.id_base+"_"+options.type+"_"+mode+"_"+id_str+"_parent_id .itemSelect";
         let itemsel_dd = $("#"+itemsel_id);
         let did_select = "selected='true'";
-        data = data["0"] ? data["0"].data : data["+0"] ? data["+0"].data : data;
+        let topidx = "+0";
+        if (the_id || the_id === 0)
+          topidx = the_id;
+        data = data[topidx] ? data[topidx].data : data;
         data = data[options.type] ? data[options.type].data : data;
         $.each(data,function (id,item) {
           if (parseInt(id) != the_id) {
@@ -4247,13 +4253,16 @@ $.any.anyView.prototype.dbUpdate = function (event)
   if (id || id === 0) { // TODO!
     if (mode == "item") {
       // Update header for item view
+      let topidx = "+0";
+      if (id || id === 0)
+        topidx = id;
       let head_item = this.options.view.model.dataSearch({
                                                 type: type,
-                                                id:   "+0",
+                                                id:   topidx,
                                               });
-      if (head_item && head_item["+0"]) {
+      if (head_item && head_item[topidx]) {
         if (data_values[this.model.name_key]) {
-          head_item["+0"][this.options.view.model.name_key] = data_values[this.model.name_key];
+          head_item[topidx][this.options.view.model.name_key] = data_values[this.model.name_key];
           this.options.view.options.item_opening = true;
           this.options.view.id_stack = [];
           this.options.view.refresh(); // TODO! Refreshes entire view, but only need to refresh header
@@ -4433,7 +4442,10 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             the_view = parent_view;
           if (select_list_view.options.preselected)
             parent_view._addPreSelections(select_list_view);
-          let par_view_id = parent_view.id_base+"_"+type+"_head_0_data";
+          let idstr = id || id === 0
+                      ? Number.isInteger(parseInt(id)) ? parseInt(id) : id
+                      : options.id_str;
+          let par_view_id = parent_view.id_base+"_"+type+"_"+parent_view.mode+"_"+idstr+"_data";
           let mod_opt = {
             parentId:   par_view_id,
             elementId:  "",
