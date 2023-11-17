@@ -608,6 +608,24 @@ $.any.anyView.prototype.refresh = function (params)
                   --row_no;
               }
             } // if view
+            if (new_view) {
+              // Refresh bottom toolbar for this view
+              let p_id = view.element.attr("id");
+              let p    = $("#"+p_id);
+              view.refreshToolbarForView({
+                     parent:   p,
+                     type:     curr_type,
+                     mode:     curr_mode,
+                     data:     data,
+                     par_type: par_type,
+                     par_mode: par_mode,
+                     par_data: par_data,
+                     par_id:   par_id,
+                     id_str:   new_id_str,
+                   });
+              new_view   = false;
+              new_id_str = "";
+            }
             if (curr_mode == "head" || curr_mode == "item")
               this.id_stack.pop();
             else
@@ -652,17 +670,21 @@ $.any.anyView.prototype.refresh = function (params)
   // Refresh bottom toolbar
   if (!model)
     model = this.model;
-  if (this.options && this.options.showToolbar && this.options.data_level == 0) {
-    if (!this.options.isSelectable && model && model.type && this.data_level==0 && this.id_stack.length == 0 &&
-        (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLink)) {
-      this.refreshToolbarBottom({
-             parent: parent,
-             type:   model.type,
-             mode:   model.mode,
-             data:   data,
-             id:     model.id,
-           });
-    }
+  if (this.options && this.options.showToolbar && !this.options.isSelectable &&
+      this.options.data_level == 0 && this.id_stack.length == 0 &&
+      (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLinkItem || this.options.showButtonAddLinkGroup)) {
+    this.refreshToolbarBottom({
+           parent:   parent,
+           type:     type,
+           mode:     mode,
+           data:     data,
+           id:       this.model.id,
+           par_type: par_type,
+           par_mode: par_mode,
+           par_data: par_data,
+           par_id:   par_id,
+           id_str:   "",
+         });
   }
 
   if (this.postRefresh)
@@ -832,31 +854,114 @@ $.any.anyView.prototype.refreshOne = function (params)
 }; // refreshOne
 
 //
-// Display a toolbar for messages and a "new item" button
+// Display a toolbar for a new view (not used yet).
 //
-$.any.anyView.prototype.refreshToolbarBottom = function (params)
+$.any.anyView.prototype.refreshToolbarForView = function (params)
 {
   if (!params || !this.options)
     return null;
 
-  let parent = params.parent;
-  let type   = params.type;
-  let mode   = params.mode;
-  let data   = params.data;
-  let id     = params.id;
+  let parent   = params.parent;
+  let type     = params.type;
+  let mode     = params.mode;
+  let data     = params.data;
+  let id       = params.id;
+  let id_str   = params.id_str;
+  let par_type = params.par_type;
+  let par_mode = params.par_mode;
+  let par_data = params.par_data;
+  let par_id   = params.par_id;
 
-  if (!parent || !type)
-    return null;
-  if (!this.options.showMessages && !this.options.showButtonNew && !this.options.showButtonAddLink)
+  if (!parent || !type ||
+      par_type !== "group" || par_id === "nogroup" || par_id === "unknown" ||
+      (type == "group" && par_type == "group"))
     return null;
 
   // Create container
-  let div_id   = this.id_base+"_"+type+"_toolbar";
+  let div_id   = this.id_base+"_"+type+"_"+mode+"_"+id_str+"_toolbar_view";
   let class_id = "any-toolbar-bottom any-toolbar any-toolbar-"+this.data_level;
   if ($("#"+div_id).length)
     $("#"+div_id).remove();
   let bardiv   = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
   parent.append(bardiv);
+
+  this.refreshAddLinkButton({
+         parent: bardiv,
+         type:   type,
+         mode:   mode,
+         data:   data,
+         par_type: par_type,
+         par_mode: par_mode,
+         par_data: par_data,
+         par_id:   par_id,
+         id_str: id_str,
+         edit:   true,
+       });
+
+  console.log("Add/remove "+type+"s to/from '"+par_data[par_id].group_name+"'");
+
+  return null;
+}; // refreshToolbarForView
+
+//
+// Display a toolbar for messages and "new item" button.
+// Also, if viewing a list-for-item, display an "add-to-group" button and/or an "add-to-item" button.
+//
+$.any.anyView.prototype.refreshToolbarBottom = function (params)
+{
+  //console.log(params)
+  //console.log(this.model.type)
+  //console.log(this.options.newType)
+
+  if (!params || !this.options)
+    return null;
+
+  let parent   = params.parent;
+  let type     = params.type;
+  let mode     = params.mode;
+  let data     = params.data;
+  let id       = params.id;
+  let par_type = params.par_type;
+  let par_mode = params.par_mode;
+  let par_data = params.par_data;
+  let par_id   = params.par_id;
+
+  if (!parent || !type)
+    return null;
+
+  if (!this.options.newType)
+    this.options.newType = this.model.type;
+
+  // Create container
+  let div_id   = this.id_base+"_"+type+"_toolbar_bottom";
+  let class_id = "any-toolbar-bottom any-toolbar any-toolbar-"+this.data_level;
+  if ($("#"+div_id).length)
+    $("#"+div_id).remove();
+  let bardiv   = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
+  parent.append(bardiv);
+
+  if ((this.options.showButtonAddLinkItem || this.options.showButtonAddLinkGroup) && data && id && data[id] &&
+     (data[id].item || data[id].head && data[id].data && data[id].data[id] && data[id].data[id].item)) {
+    // Create an "add link" button
+    let item_key = type + "_name"; // TODO!
+    let str = type == "group"
+              ? "group '"+data[id].group_name+"'"
+              : " "+data[id][item_key];
+    //console.log("Add "+type+"s to "+str);
+    this.refreshAddLinkButton({
+           parent: bardiv,
+           type:   type,
+           mode:   "item",
+           data:   data,
+           id:     id,
+           par_type: par_type,
+           par_mode: par_mode,
+           par_data: par_data,
+           par_id:   par_id,
+           id_str: Number.isInteger(parseInt(id)) ? parseInt(id) : id,
+           edit:   true,
+         });
+  }
 
   if (this.options.showMessages) {
     // Create a message area
@@ -867,27 +972,16 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
          });
     this.showMessages();
   }
-  if (this.options.showButtonNew) {
+  if (this.options.showButtonNew && this.options.newType) {
     // Create a "new item"  button
+    //console.log("New "+this.options.newType);
     this.refreshNewItemButton({
            parent: bardiv,
-           type:   type,
+           type:   this.options.newType,
            mode:   "item",
            data:   data,
            id:     id, // Find a new id
            is_new: true,
-         });
-  }
-  if (this.options.showButtonAddLink && this.model.id) {
-    // Create an "add link" button
-    this.refreshAddLinkButton({
-           parent: bardiv,
-           type:   type,
-           mode:   "item",
-           data:   data,
-           id:     id,
-           id_str: Number.isInteger(parseInt(id)) ? parseInt(id) : id,
-           edit:   true,
          });
   }
   return bardiv;
@@ -4481,14 +4575,14 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
         }
         if (parent_view.options.showToolbar) {
           parent_view.options.item_opening = true; // To make top right close icon appear
-          parent_view.refreshToolbarBottom({
-                 parent: parent_view.element,
-                 type:   type,
-                 mode:   "item",
-                 data:   data,
-                 id:     id,
-                 edit:   false,
-              });
+          parent_view.refreshToolbarForView({
+            parent: parent_view.element,
+            type:   type,
+            mode:   "item",
+            data:   data,
+            id:     id,
+            edit:   false,
+          });
         }
       } // if parent_view
     }
