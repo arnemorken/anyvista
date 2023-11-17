@@ -3476,8 +3476,9 @@ $.any.anyView.prototype.searchLinkClicked = function (event)
 
 $.any.anyView.prototype.searchSuccessOk = function (opt)
 {
-  // Close dialog
-  w3_modaldialog_close(opt);
+  // Close dialog and stop spinner
+  w3_modaldialog_close(opt.parentId,opt.elementId);
+  this.showMessages("",false);
 }; // searchSuccessOk
 
 // Refresh when a paginator is activated
@@ -4748,8 +4749,9 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
 
 $.any.anyView.prototype.dbUpdateLinkList = function (opt)
 {
-  // Close dialog
-  w3_modaldialog_close(opt);
+  // Close dialog and stop spinner
+  w3_modaldialog_close(opt.parentId,opt.elementId);
+  this.showMessages("",false);
 
   // Make top right close icon appear
   if (this.options)
@@ -4835,8 +4837,9 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
 
 $.any.anyView.prototype.dbDelete = function (opt)
 {
-  // Close dialog
-  w3_modaldialog_close(opt);
+  // Close dialog and stop spinner
+  w3_modaldialog_close(opt.parentId,opt.elementId);
+  this.showMessages("",false);
 
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
