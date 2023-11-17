@@ -22,65 +22,66 @@
  * @constructs anyView
  * @param {Object} options An object which may contain these elements:
  *
- * @param {Object}  options.model                 The model with data to be displayed. Default: null.
- * @param {Object}  options.filters               The filters define how the data will be displayed. Default: null.
- * @param {String}  options.id                    The jQuery id of a container element in which to display the view. Default: null.
- * @param {boolean} options.isSelectable          An icon for selecting a list row will be displayed. Ignored for items. If isSelectable is set,
- *                                                isAddable, isRemovable, isEditable and isDeletable will be ignored. Default: false.
- * @param {boolean} options.isAddable             An icon for adding new rows may be displayed. Ignored if isSelectable is set. Default: false.
- * @param {boolean} options.isRemovable           An icon for removing will be displayed. Ignored if isSelectable is set. Default: false.
- * @param {boolean} options.isEditable            Icons for edit, update and cancel will be displayed. Ignored if isSelectable is set. Default: false.
- * @param {boolean} options.isDeletable           An icon for deleting will be displayed. Ignored if isSelectable is set. Default: false.
- * @param {boolean} options.isSortable            List tables will be sortable by clicking on column headers. An icon indicating
- *                                                the direction of the sort wil be displayed. Default: true.
- * @param {boolean} options.confirmRemove         A remove confirmation dialog will be displayed. Default: true.
- * @param {boolean} options.confirmDelete         A delete confirmation dialog will be displayed. Default: true.
- * @param {boolean} options.showHeader            If false, data headers will not be shown. Default: true.
- * @param {boolean} options.showTableHeader       If false, list tables headers will not be shown. Default: true.
- * @param {boolean} options.showTableFooter       If false, list tables footers will not be shown. Default: true.
- * @param {boolean} options.showTableIngress      If false, a description for list tables will not be shown. Default: true.
- * @param {boolean} options.showSearcher          If true, a search field for list tables will be shown. Default: false.
- * @param {boolean} options.showPaginator         If false, a paginator buttons for list tables will not be shown. Default: true.
- * @param {boolean} options.showToolbar           If true, will show a toolbar at the bottom. Default: true.
- * @param {boolean} options.showMessages          If true, will show a message field in a toolbar. Default: false.
- * @param {boolean} options.showServerErrors      If true, errors from a server will be shown directly. Default: false.
- * @param {boolean} options.showEmptyRows         If true, empty rows will be shown in non-edit mode. Default: false.
- * @param {boolean} options.showButtonNew         If true, a button for creating a new item may be shown. Default: false.
- * @param {integer} options.showButtonAdd         If isAddable is true, a button for adding new rows may be shown in list table headers. Possible values:
- *                                                0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 0.
- * @param {boolean} options.showButtonRemove      If isRemovable is true, a remove button may be shown. Possible values:
- *                                                0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
- * @param {boolean} options.showButtonEdit        If isEditable is true, an edit button may be shown. Possible values:
- *                                                0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
- * @param {boolean} options.showButtonUpdate      If isEditable is true, an update button may be shown in edit-mode. Possible values:
- *                                                0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
- * @param {boolean} options.showButtonDelete      If isEditable is true, a delete button may be shown in edit-mode. Possible values:
- *                                                0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
- * @param {boolean} options.showButtonCancel      If isEditable is true, a cancel button may be shown in edit-mode. Possible values:
- *                                                0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
- * @param {boolean} options.showButtonSelect      If isSelectable is true, a button for selecting a row may be shown. Possible values:
- *                                                0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
- * @param {boolean} options.showButtonAddLink     Will show a button for adding links to an item. Default: true.
- * @param {boolean} options.showButtonLabels      Will show labels for buttons on the button panel. Default: false.
- * @param {boolean} options.onEnterCallDatabase   Pressing enter will update the database with the value of the row being edited. Default: true.
- * @param {boolean} options.onEnterInsertNew      A new row will be inserted when pressing enter while editing a list. Default: false.
- * @param {boolean} options.onEnterMoveFocus      Pressing enter will move the focus to the next input element if editing an item. Default: True.
- * @param {boolean} options.onEscRemoveEmpty      The current row being edited in a list will be removed when pressing the Esc key if the row is empty. Default: true.
- * @param {boolean} options.onEscEndEdit          Pressing the Esc key will end the current editing. Default: true.
- * @param {boolean} options.onFocusoutRemoveEmpty The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
- * @param {boolean} options.useOddEven            If true, tags for odd and even columns will be generated for list entries. Default: false.
- * @param {String}  options.defaultMode           The default mode to use for display. One of `head`. `list` or `item`. Default: `list`.
- * @param {String}  options.defaultType           The default type to use for display. Default: "".
- * @param {integer} options.itemsPerPage          The number of rows to show per page. Only applicable for "list" and "select" modes. Default: 20.
- * @param {integer} options.currentPage           The current page to show. Only applicable for "list" and "select" modes. Default: 1.
- * @param {String}  options.grouping              How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
- * @param {String}  options.sortBy                The filter id of the table header that the table should be sorted by. Only valid if isSortable is `true`. Default: "".
- * @param {String}  options.sortDirection         Whether the sorting of tables should be ascending (`ASC`) or descending (`DESC`). Only valid if isSortable is `true`. Default: "`ASC`".
- * @param {boolean} options.refresh               If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
- * @param {boolean} options.uploadDirect          If true, the selected file will be uploaded without the user having to press the "edit" and "update" buttons. Default: true.
- * @param {Object}  options.linkIcons             Icons to use in the link popup menu. Default: null.
- * @param {Set}     options.select                List of ids that are marked as selected. Default: new Set().
- * @param {Set}     options.unselect              List of ids that are marked as unselected. Default: new Set().
+ * @param {Object}  options.model                  The model with data to be displayed. Default: null.
+ * @param {Object}  options.filters                The filters define how the data will be displayed. Default: null.
+ * @param {String}  options.id                     The jQuery id of a container element in which to display the view. Default: null.
+ * @param {boolean} options.isSelectable           An icon for selecting a list row will be displayed. Ignored for items. If isSelectable is set,
+ *                                                 isAddable, isRemovable, isEditable and isDeletable will be ignored. Default: false.
+ * @param {boolean} options.isAddable              An icon for adding new rows may be displayed. Ignored if isSelectable is set. Default: false.
+ * @param {boolean} options.isRemovable            An icon for removing will be displayed. Ignored if isSelectable is set. Default: false.
+ * @param {boolean} options.isEditable             Icons for edit, update and cancel will be displayed. Ignored if isSelectable is set. Default: false.
+ * @param {boolean} options.isDeletable            An icon for deleting will be displayed. Ignored if isSelectable is set. Default: false.
+ * @param {boolean} options.isSortable             List tables will be sortable by clicking on column headers. An icon indicating
+ *                                                 the direction of the sort wil be displayed. Default: true.
+ * @param {boolean} options.confirmRemove          A remove confirmation dialog will be displayed. Default: true.
+ * @param {boolean} options.confirmDelete          A delete confirmation dialog will be displayed. Default: true.
+ * @param {boolean} options.showHeader             If false, data headers will not be shown. Default: true.
+ * @param {boolean} options.showTableHeader        If false, list tables headers will not be shown. Default: true.
+ * @param {boolean} options.showTableFooter        If false, list tables footers will not be shown. Default: true.
+ * @param {boolean} options.showTableIngress       If false, a description for list tables will not be shown. Default: true.
+ * @param {boolean} options.showSearcher           If true, a search field for list tables will be shown. Default: false.
+ * @param {boolean} options.showPaginator          If false, a paginator buttons for list tables will not be shown. Default: true.
+ * @param {boolean} options.showToolbar            If true, will show a toolbar at the bottom. Default: true.
+ * @param {boolean} options.showMessages           If true, will show a message field in a toolbar. Default: false.
+ * @param {boolean} options.showServerErrors       If true, errors from a server will be shown directly. Default: false.
+ * @param {boolean} options.showEmptyRows          If true, empty rows will be shown in non-edit mode. Default: false.
+ * @param {boolean} options.showButtonNew          If true, a button for creating a new item may be shown. Default: false.
+ * @param {integer} options.showButtonAdd          If isAddable is true, a button for adding new rows may be shown in list table headers. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 0.
+ * @param {boolean} options.showButtonRemove       If isRemovable is true, a remove button may be shown. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
+ * @param {boolean} options.showButtonEdit         If isEditable is true, an edit button may be shown. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
+ * @param {boolean} options.showButtonUpdate       If isEditable is true, an update button may be shown in edit-mode. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
+ * @param {boolean} options.showButtonDelete       If isEditable is true, a delete button may be shown in edit-mode. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
+ * @param {boolean} options.showButtonCancel       If isEditable is true, a cancel button may be shown in edit-mode. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 2.
+ * @param {boolean} options.showButtonSelect       If isSelectable is true, a button for selecting a row may be shown. Possible values:
+ *                                                 0: Do not show button. 1: Show button in first column. 2: Show button in last column. Default: 1.
+ * @param {boolean} options.showButtonAddLinkItem  If true, will show a button for adding links to an item. Default: true.
+ * @param {boolean} options.showButtonAddLinkGroup If true, will show a button for adding items to a group. Default: true.
+ * @param {boolean} options.showButtonLabels       Will show labels for buttons on the button panel. Default: false.
+ * @param {boolean} options.onEnterCallDatabase    Pressing enter will update the database with the value of the row being edited. Default: true.
+ * @param {boolean} options.onEnterInsertNew       A new row will be inserted when pressing enter while editing a list. Default: false.
+ * @param {boolean} options.onEnterMoveFocus       Pressing enter will move the focus to the next input element if editing an item. Default: True.
+ * @param {boolean} options.onEscRemoveEmpty       The current row being edited in a list will be removed when pressing the Esc key if the row is empty. Default: true.
+ * @param {boolean} options.onEscEndEdit           Pressing the Esc key will end the current editing. Default: true.
+ * @param {boolean} options.onFocusoutRemoveEmpty  The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
+ * @param {boolean} options.useOddEven             If true, tags for odd and even columns will be generated for list entries. Default: false.
+ * @param {String}  options.defaultMode            The default mode to use for display. One of `head`. `list` or `item`. Default: `list`.
+ * @param {integer} options.itemsPerPage           The number of rows to show per page. Only applicable for "list" and "select" modes. Default: 20.
+ * @param {integer} options.currentPage            The current page to show. Only applicable for "list" and "select" modes. Default: 1.
+ * @param {String}  options.grouping               How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
+ * @param {boolean} options.simple                 If true, display only the value of the [name_key] data entry and disregard other data entires. Default: false.
+ * @param {String}  options.sortBy                 The filter id of the table header that the table should be sorted by. Only valid if isSortable is `true`. Default: "".
+ * @param {String}  options.sortDirection          Whether the sorting of tables should be ascending (`ASC`) or descending (`DESC`). Only valid if isSortable is `true`. Default: "`ASC`".
+ * @param {boolean} options.refresh                If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
+ * @param {boolean} options.uploadDirect           If true, the selected file will be uploaded without the user having to press the "edit" and "update" buttons. Default: true.
+ * @param {Object}  options.linkIcons              Icons to use in the link popup menu. Default: null.
+ * @param {Set}     options.select                 List of ids that are marked as selected. Default: new Set().
+ * @param {Set}     options.unselect               List of ids that are marked as unselected. Default: new Set().
  *
  * @example
  *      new anyView({model:mymodel,filters:myfilters,id:"mycontent"});
@@ -91,56 +92,57 @@ var ANY_MAX_REF_REC = 30;
 var anyViewWidget = $.widget("any.anyView", {
   // Default options
   options: {
-    model:                 null,
-    filters:               null,
-    id:                    null,
-    isSelectable:          false,
-    isAddable:             true,
-    isRemovable:           true,
-    isEditable:            true,
-    isDeletable:           true,
-    isSortable:            true,
-    confirmRemove:         true,
-    confirmDelete:         true,
-    showHeader:            true,
-    showTableHeader:       true,
-    showTableFooter:       true,
-    showTableIngress:      true,
-    showSearcher:          true,
-    showPaginator:         true,
-    showToolbar:           true,
-    showMessages:          true,
-    showServerErrors:      false,
-    showEmptyRows:         false,
-    showButtonNew:         true,
-    showButtonAdd:         1,
-    showButtonRemove:      2,
-    showButtonEdit:        1,
-    showButtonUpdate:      1,
-    showButtonDelete:      2,
-    showButtonCancel:      2,
-    showButtonSelect:      1,
-    showButtonAddLink:     true,
-    showButtonLabels:      false,
-    onEnterCallDatabase:   true,
-    onEnterInsertNew:      true, // Note: Only used for lists, ignored for items
-    onEnterMoveFocus:      true, // Will be overridden by onEnterCallDatabase==true TODO! Make it work for lists
-    onEscRemoveEmpty:      true,
-    onEscEndEdit:          true,
-    onFocusoutRemoveEmpty: true,
-    useOddEven:            true,
-    defaultMode:           "list",
-    defaultType:           "",
-    itemsPerPage:          20,
-    currentPage:           1,
-    grouping:              "",
-    sortBy:                "",
-    sortDirection:         "ASC",
-    refresh:               false,
-    uploadDirect:          true,
-    linkIcons:             null,
-    select:                new Set(), // List of ids that are marked as selected.
-    unselect:              new Set(), // List of ids that are marked as unselected.
+    model:                  null,
+    filters:                null,
+    id:                     null,
+    isSelectable:           false,
+    isAddable:              true,
+    isRemovable:            true,
+    isEditable:             true,
+    isDeletable:            true,
+    isSortable:             true,
+    confirmRemove:          true,
+    confirmDelete:          true,
+    showHeader:             true,
+    showTableHeader:        true,
+    showTableFooter:        true,
+    showTableIngress:       true,
+    showSearcher:           true,
+    showPaginator:          true,
+    showToolbar:            true,
+    showMessages:           true,
+    showServerErrors:       false,
+    showEmptyRows:          false,
+    showButtonNew:          true,
+    showButtonAdd:          1,
+    showButtonRemove:       2,
+    showButtonEdit:         1,
+    showButtonUpdate:       1,
+    showButtonDelete:       2,
+    showButtonCancel:       2,
+    showButtonSelect:       1,
+    showButtonAddLinkItem:  true,
+    showButtonAddLinkGroup: true,
+    showButtonLabels:       false,
+    onEnterCallDatabase:    true,
+    onEnterInsertNew:       true, // Note: Only used for lists, ignored for items
+    onEnterMoveFocus:       true, // Will be overridden by onEnterCallDatabase==true TODO! Make it work for lists
+    onEscRemoveEmpty:       true,
+    onEscEndEdit:           true,
+    onFocusoutRemoveEmpty:  true,
+    useOddEven:             true,
+    defaultMode:            "head",
+    itemsPerPage:           20,
+    currentPage:            1,
+    grouping:               "",
+    simple:                 false,
+    sortBy:                 "",
+    sortDirection:          "DESC",
+    refresh:                false,
+    uploadDirect:           true,
+    linkIcons:              null,
+    select:                 new Set(), // List of ids that are marked as selected.
+    unselect:               new Set(), // List of ids that are marked as unselected.
 
     // Local methods
     localSelect:     null,
@@ -347,8 +349,6 @@ $.any.anyView.prototype._findType = function (data,id,otype)
   if (!type)
     type = otype;
   if (!type)
-    type = this.options.defaultType;
-  if (!type)
     type = this.model.type;
   return type;
 }; // _findType
@@ -368,8 +368,14 @@ $.any.anyView.prototype._findMode = function (data,id,omode)
   }
   if (!mode && omode != "head")
     mode = omode;
+  if (!mode) {
+    // Set mode to mode of "first" element in object
+    let idx = Object.keys(data)[0];
+    if (idx || idx === 0)
+      mode = data[idx].list ? "list" : data[idx].item ? "item" : data[idx].head ? "head" : null;
+  }
   if (!mode)
-    mode = this.options.defaultMode; // If not found, set default
+    mode = this.mode == "list" || this.options.simple ? "list" : this.options.defaultMode;
   return mode;
 }; // _findMode
 
