@@ -574,16 +574,19 @@ anyModel.prototype.cbReset = function ()
  * @example
  *      mymodel.cbExecute();
  */
-anyModel.prototype.cbExecute = function ()
+anyModel.prototype.cbExecute = function (params)
 {
   if (this._listeners) {
     for (let i=0; i<this._listeners.length; ++i) {
       let cb_function = this._listeners[i][0];
       let cb_context  = this._listeners[i][1];
+      let cb_params   = this._listeners[i][2];
       if (cb_function) {
         //console.log(cb_function);
         //console.log(cb_context);
-        cb_function.call(cb_context,this);
+        if (params)
+          cb_params = params; // Incoming params override params in _listeners array
+        cb_function.call(cb_context,this,cb_params);
       }
     } // for
   } // if
