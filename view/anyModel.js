@@ -2147,6 +2147,8 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
       console.error("anyModel.dbUpdateSuccess: "+self.error_server);
     else {
       if (options) {
+          // TODO! Instead of the following, would it be better/simpler to just set data to what
+          // is returned from the server after update (as we do in dbUpdateLinkListSuccess)?
         // If item is in model's data structure, we must update model after successful insert/update
         let type = options.type ? options.type : self.type;
         let item = self.dataSearch({ type: type,

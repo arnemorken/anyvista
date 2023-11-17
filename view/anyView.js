@@ -446,13 +446,19 @@ $.any.anyView.prototype.empty = function (params)
  *                                  Default: `this.element`.
  * @param {Object}  params.model    A model containing the data to display.
  *                                  Default: `this.model`.
- * @param {Object}  params.data     The data to display / display from.
- *                                  Ignored if `model` is given.
- *                                  Default: `this.model.data` if `this.model` is set, null otherwise.
  * @param {string}  params.type     The type of the data to display.
  *                                  Ignored if `model` is given.
  *                                  Default: "".
  * @param {string}  params.mode     The mode in which to display data ("list", "item" or "head").
+ *                                  Default: "".
+ * @param {Object}  params.data     The data to display / display from.
+ *                                  Ignored if `model` is given.
+ *                                  Default: `this.model.data` if `this.model` is set, null otherwise.
+ * @param {string}  params.par_type The type of the data on the level above.
+ *                                  Ignored if `model` is given, in which case `model.parent.type` is used.
+ *                                  Default: "".
+ * @param {string}  params.par_mode The mode of the data on the level above, or of `model.parent`, if `model`
+ *                                  is given.
  *                                  Default: "".
  * @param {Object}  params.par_data The data on the level above `data`.
  *                                  Ignored if `model` is given, in which case `model.parent.data` is used.
@@ -460,12 +466,6 @@ $.any.anyView.prototype.empty = function (params)
  * @param {string}  params.par_id   The id in `par_data` where `data` may be found (`par_data[par_id] == data`).
  *                                  Ignored if `model` is given, in which case `model.parent.id` is used.
  *                                  Default: null.
- * @param {string}  params.par_type The type of the data on the level above.
- *                                  Ignored if `model` is given, in which case `model.parent.type` is used.
- *                                  Default: "".
- * @param {string}  params.par_mode The mode of the data on the level above, or of `model.parent`, if `model`
- *                                  is given.
- *                                  Default: "".
  * @param {boolean} params.edit     If true, the item should be displayed as editable.
  *                                  Default: false.
  * @param {integer} params.from     Pagination start.
@@ -486,13 +486,13 @@ $.any.anyView.prototype.refresh = function (params)
   }
   let parent   = params && params.parent             ? params.parent   : this.element;
   let model    = params && params.model              ? params.model    : null;
-  let data     = params && params.data     && !model ? params.data     : model ? model.data : this.model ? this.model.data : null;
   let type     = params && params.type     && !model ? params.type     : model ? model.type : this.model ? this.model.type : "";
   let mode     = params && params.mode               ? params.mode     : "";
-  let par_data = params && params.par_data && !model ? params.par_data : model && model.parent ? model.parent.data : this.model && this.model.parent ? this.model.parent.data : null;
-  let par_id   = params && params.par_id   && !model ? params.par_id   : model && model.parent ? model.parent.id   : this.model && this.model.parent ? this.model.parent.id   : "";
+  let data     = params && params.data     && !model ? params.data     : model ? model.data : this.model ? this.model.data : null;
   let par_type = params && params.par_type && !model ? params.par_type : model && model.parent ? model.parent.type : this.model && this.model.parent ? this.model.parent.type : "";
   let par_mode = params && params.par_mode           ? params.par_mode : "";
+  let par_data = params && params.par_data && !model ? params.par_data : model && model.parent ? model.parent.data : this.model && this.model.parent ? this.model.parent.data : null;
+  let par_id   = params && params.par_id   && !model ? params.par_id   : model && model.parent ? model.parent.id   : this.model && this.model.parent ? this.model.parent.id   : "";
   let edit     = params && params.edit               ? params.edit     : false;
   let from     = params && params.from               ? params.from     : 1;
   let num      = params && params.num                ? params.num      : this.options.itemsPerPage;
@@ -550,12 +550,12 @@ $.any.anyView.prototype.refresh = function (params)
               if (prev_mode == "list" && prev_type != curr_type)
                 the_parent = view._addContainerRow(parent,prev_type,prev_mode,curr_type,curr_mode,id_str);
               model = this.createModel({
+                             type:     curr_type,
                              data:     data,
                              id:       curr_mode=="item" ? id : "",
-                             type:     curr_type,
+                             par_type: par_type,
                              par_data: par_data,
                              par_id:   par_id,
-                             par_type: par_type,
                            });
               view  = this.createView({
                              model:    model,
@@ -569,8 +569,8 @@ $.any.anyView.prototype.refresh = function (params)
               }
             }
             if (view) {
-              /*
               // Refresh a header, a single list row or a single item
+              /*
               if (row_no == 0 && this.options.indent_level == 0 && curr_mode != "head") {
                 let id = view.element.attr("id");
                 $("#"+id).empty();
@@ -588,14 +588,14 @@ $.any.anyView.prototype.refresh = function (params)
                 }
                 view.refreshOne({
                        parent:   the_parent,
-                       data:     data,
-                       id:       id,
                        type:     curr_type,
                        mode:     curr_mode,
-                       par_data: par_data,
-                       par_id:   par_id,
+                       data:     data,
+                       id:       id,
                        par_type: par_type,
                        par_mode: par_mode,
+                       par_data: par_data,
+                       par_id:   par_id,
                        edit:     edit,
                      });
                 if (curr_mode == "list" && !view.rows_changed)
@@ -4468,7 +4468,6 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             select:     select_list_view.options.select,
             unselect:   select_list_view.options.unselect,
             name_key:   select_list_view.model.name_key,
-            grouping:   model.grouping,
           };
           w3_modaldialog(mod_opt);
           select_list_view.refresh();
@@ -4590,7 +4589,6 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         name_key:   name_key,
         select:     new Set(),
         unselect:   new Set().add(id),
-        id_str:     id_str,
       };
       w3_modaldialog(mod_opt);
     } // if
@@ -4608,7 +4606,6 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         name_key:  name_key,
         select:    new Set(),
         unselect:  new Set().add(id),
-        id_str:     id_str,
     };
     this.dbUpdateLinkList(opt);
   } // else
@@ -4797,7 +4794,7 @@ $.any.anyView.prototype.showMessages = function (modelOrString,spin)
  * If overridden by derived classes, this method *must* be called.
  *
  * @method anyView.initComponents
- * @return      `this`.
+ * @return `this`.
  */
 $.any.anyView.prototype.initComponents = function ()
 {
