@@ -1715,7 +1715,7 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
       self.dataInit(serverdata);
   }
   if (self.cbExecute && self.auto_search && self.auto_refresh && options.auto_refresh !== false)
-    self.cbExecute();
+    self.cbExecute({clear:true});
   return context;
 }; // dbSearchSuccess
 
@@ -2415,7 +2415,7 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
     }
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
-    self.cbExecute();
+    self.cbExecute({clear:true});
   return context;
 }; // dbUpdateLinkListSuccess
 
