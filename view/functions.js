@@ -206,7 +206,7 @@ function w3_modaldialog(options)
             // Header
             "<header class='w3-container'>"+
             "<div class='w3-modaldialog-header' style='font-weight:bold;background:#eeeeee;padding-left:0.4em;padding-top:.5em;'>"+heading+"&nbsp;"+
-            "<span onclick='$(\"#"+dia_id+"\").remove()' class='w3-button w3-display-topright'>&times;</span>"+
+            "<span onclick='w3_modaldialog_close(\""+parentId+"\",\""+elementId+"\")' class='w3-button w3-display-topright'>&times;</span>"+
             "</div>"+
             "</header>"+
             // Contents
@@ -217,8 +217,11 @@ function w3_modaldialog(options)
             "</div>";
   let p = $("#"+parentId);
   p.append(str);
-  $("#"+dia_id+"_ok_btn").on    ("click",context,$.proxy(okFunction,    context,options));
-  $("#"+dia_id+"_cancel_btn").on("click",context,$.proxy(cancelFunction,context,options));
+  $("#"+dia_id+"_ok_btn").on      ("click",context,$.proxy(okFunction,    context,options));
+  if (options.cancelFunction)
+    $("#"+dia_id+"_cancel_btn").on("click",context,$.proxy(cancelFunction,context,options));
+  else
+    $("#"+dia_id+"_cancel_btn").on("click",context,$.proxy(cancelFunction,context,parentId,elementId));
   $("#"+dia_id+"").css("display","block");
   // If contents is not a string, asssume it is a jQuery object and append it to the div created above
   if (typeof contents != "string") {
@@ -232,14 +235,13 @@ function w3_modaldialog(options)
 } // w3_modaldialog
 
 // default cancel function
-function w3_modaldialog_close(options)
+function w3_modaldialog_close(parentId,elementId)
 {
-  if (!options)
+  if (!parentId)
     return;
-  let parentId  = options.parentId,
-      elementId = options.elementId;
   let dia_id = elementId && elementId != "" ? parentId+"_"+elementId+"_moddia" : parentId+"_moddia";
   $("#"+dia_id).remove();
+  $(".fa-spin").hide(); // TODO! Temp. solution
 } // w3_modaldialog_close
 
 function w3_modaldialog_resize(options)
