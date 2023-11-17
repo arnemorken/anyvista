@@ -574,6 +574,8 @@ $.any.anyView.prototype.refresh = function (params)
               if (view) {
                 view.id_stack = JSON.parse(JSON.stringify(this.id_stack));
                 this.views[id_str] = view;
+                new_view   = true;
+                new_id_str = id_str;
               }
             }
             if (view) {
