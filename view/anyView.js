@@ -547,6 +547,8 @@ $.any.anyView.prototype.refresh = function (params)
               let idx = Number.isInteger(parseInt(par_id)) ? ""+parseInt(par_id) : par_id;
               this.id_stack.push(idx);
             }
+            let new_view   = false;
+            let new_id_str = "";
             // Create new view whenever we encounter a new type or a new mode
             if ((prev_type != "" && prev_type != curr_type) ||
                 (prev_mode != "" && prev_mode != curr_mode)) {
