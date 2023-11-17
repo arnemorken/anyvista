@@ -4508,6 +4508,7 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
    type:        event.data.link_type,
    id:          null,
    par_type:    event.data.type,
+   id_str:      event.data.id_str,
    header:      true,
    grouping:    null,
    simple:      true,
