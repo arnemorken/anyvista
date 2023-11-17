@@ -406,13 +406,13 @@ $.any.anyView.prototype._setPermissions = function ()
  *                   If specified, `this.model` will be set to `model`, before calling `this.refresh`.
  * @return  {Object} `this`.
  */
-$.any.anyView.prototype.onModelChange = function (model)
+$.any.anyView.prototype.onModelChange = function (model,params)
 {
   if (model) {
     this.model = model;
     this._setPermissions(); // Model permissions may have changed
   }
-  this.refresh();
+  this.refresh(params);
   this.showMessages(model);
   return this;
 }; // onModelChange
