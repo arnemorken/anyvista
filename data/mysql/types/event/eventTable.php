@@ -32,7 +32,7 @@ class eventTable extends anyTable
     "idKeyTable"         => "event_id",
     "idKeyMetaTable"     => "event_id",
     "nameKey"            => "event_name",
-    "orderBy"            => "event_name",
+    "orderBy"            => "event_date_start",
     "metaId"             => "meta_id",
     "fields" => [
       "event_id",
