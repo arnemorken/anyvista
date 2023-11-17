@@ -210,81 +210,27 @@ function csv2table()
                                       onSuccess: function() {
                                         doLog("Insertion of "+n_obj+" records complete",true);
                                       },
-                                      onFail:    function(con,jqXHR) {
-                                        doLog(jqXHR.responseText,true);
+                                      onFail:    function(context,jqXHR) {
+                                        let err = jqXHR.responseText;
+                                        if (!err)
+                                          err = jqXHR.statusText;
+                                        doLog(err,true);
                                       },
                                     });
               }
             }); // forEach
           } // else
         }, // success function
-        onFail: function(con,jqXHR) {
-          doLog(jqXHR.responseText,true);
+        onFail: function(context,jqXHR) {
+          let err = jqXHR.responseText;
+          if (!err)
+            err = jqXHR.statusText;
+          doLog(err,true);
         },
       }); // dbCreate
     }); // done
   });
 } // csv2table
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-function table2display()
-{
-  //
-  // Create data model and search data
-  //
-  doLog("Reading data from table...");
-  $( document ).ready(function() {
-    //
-    // Create data model
-    //
-    let data_model = new anyModel({type:      "rider",
-                                   source:    "remote",
-                                   db_fields: ["r_id","rank","rider_name","rider_no",
-                                              "times","gap","team","year","distance","num_stages","total_sec",
-                                              "gap_sec","result_type"],
-                                 });
-    //
-    // Create data view.
-    // The view should always be created before any calls to model methods are made,
-    // otherwise the models listener will not have been initialized and results from
-    // a database search, for example, will not be automatically displayed.
-    //
-    let data_view  = new anyView({ model:            data_model,
-                                   filters:          all_filters,
-                                   id:               "any_result",
-                                   isEditable:       false,
-                                   onEnterInsertNew: false,
-                                   showToolbar:      show_header,
-                                });
-    //
-    // Get data from table
-    //
-    let from = data_view.option("itemsPerPage") *(data_view.option("currentPage") - 1);
-    let num  = data_view.option("itemsPerPage");
-    let self = data_model;
-    data_model.dbSearch({
-      header: show_header ? "TDF 2021 riders" : false, // Add a header to the list
-      grouping: false,
-      from: from,
-      num:  num,
-      onSuccess: function(context,serverdata,options) {
-        //
-        // Display data
-        //
-        doLog("",true);
-        self.dbSearchSuccess(context,serverdata,options);
-        if (serverdata && serverdata.JSON_CODE && serverdata.JSON_CODE.error)
-          $("#any_result").html("<span style='color:red'>"+serverdata.JSON_CODE.error+"</span>");
-        console.log("Done.");
-      },
-      onFail: function(context,jqXHR) {
-        let err = jqXHR.responseText;
-        $("#any_result").html("<span style='color:red'>"+err+"</span>");
-      },
-    });
-  });
-} // table2display
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -322,7 +268,6 @@ function csv2display()
                                     onEnterInsertNew: false,
                                     showToolbar:      show_header,
                                     defaultMode:      "list",
-                                    defaultType:      data_model.type,
                                  });
       //
       // Insert in data model
@@ -348,6 +293,70 @@ function csv2display()
     }); // done
   });
 } // csv2display
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+function table2display()
+{
+  //
+  // Create data model and search data
+  //
+  doLog("Reading data from table...");
+  $( document ).ready(function() {
+    //
+    // Create data model
+    //
+    let data_model = new anyModel({ type:      "rider",
+                                    source:    "remote",
+                                    db_fields: ["r_id","rank","rider_name","rider_no",
+                                               "times","gap","team","year","distance","num_stages","total_sec",
+                                               "gap_sec","result_type"],
+                                    direction: "ASC",
+                                 });
+    //
+    // Create data view.
+    // The view should always be created before any calls to model methods are made,
+    // otherwise the models listener will not have been initialized and results from
+    // a database search, for example, will not be automatically displayed.
+    //
+    let data_view  = new anyView({ model:            data_model,
+                                   filters:          all_filters,
+                                   id:               "any_result",
+                                   isEditable:       false,
+                                   onEnterInsertNew: false,
+                                   showToolbar:      show_header,
+                                   sortDirection:    "ASC",
+                                });
+    //
+    // Get data from table
+    //
+    let from = data_view.option("itemsPerPage") *(data_view.option("currentPage") - 1);
+    let num  = data_view.option("itemsPerPage");
+    let self = data_model;
+    data_model.dbSearch({
+      header:    show_header ? "TDF 2021 riders" : false, // Add a header to the list
+      from:      from,
+      num:       num,
+      direction: "ASC",
+      onSuccess: function(context,serverdata,options) {
+        //
+        // Display data
+        //
+        doLog("",true);
+        self.dbSearchSuccess(context,serverdata,options);
+        if (serverdata && serverdata.JSON_CODE && serverdata.JSON_CODE.error)
+          $("#any_result").html("<span style='color:red'>"+serverdata.JSON_CODE.error+"</span>");
+        console.log("Done.");
+      },
+      onFail: function(context,jqXHR) {
+        let err = jqXHR.responseText;
+        if (!err)
+          err = jqXHR.statusText;
+        $("#any_result").html("<span style='color:red'>"+err+"</span>");
+      },
+    });
+  });
+} // table2display
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
