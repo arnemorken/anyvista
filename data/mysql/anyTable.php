@@ -884,11 +884,10 @@ class anyTable extends dbTable
         $this->mGrouping = $my_grouping;
     }
     $order = Parameters::get("order");
-    if ($order) {
+    if ($order)
       $this->mOrderBy = ltrim($order);
-      if (Parameters::get("dir"))
-        $this->mOrderDir = ltrim(Parameters::get("dir"));
-    }
+    if (Parameters::get("dir"))
+      $this->mOrderDir = ltrim(Parameters::get("dir"));
     $limit = !$this->mSimpleList ? $this->findLimit() : ""; // Use same limit for all groups
     $this->mNumResults = 0; // Init total number of results
     // Build and execute the query
