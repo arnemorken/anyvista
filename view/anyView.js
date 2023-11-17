@@ -1560,13 +1560,14 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
 
   if (!filter || !tr|| !data || !data[id])
     return false;
+  let simple = this.options.simple;
   let pl     = this.options.indent_level * this.options.indent_amount;
   let pl_str = pl > 0 ? "padding-left:"+pl+"px;" : "";
   let n = 0;
   for (let filter_id in filter) {
     if (filter.hasOwnProperty(filter_id)) {
       let filter_key = filter[filter_id];
-      if (filter_key && filter_key.DISPLAY) {
+      if (filter_key && filter_key.DISPLAY && (!simple || simple && filter_id == this.model.name_key)) {
         let model_str = params.filter
                         ? params.filter[filter_id].MODEL
                         : null;
