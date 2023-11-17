@@ -3504,11 +3504,10 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
   };
-  //this.id_stack = JSON.parse(JSON.stringify(pager.options.div_info.id_str));
-  this.id_stack.pop();
   this.options.data_level = 0;
   this.data_level = 0; // TODO! Why is this in 2 places?
   if (this.model.source == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
+    this.id_stack.pop(); // TODO! May not be the correct approach
     this.options.ref_rec = 0;
     mod_opt.from -= 1; // from is 0-based on server
     if (this.model.db_last_term && this.model.db_last_term != "")
@@ -3518,8 +3517,9 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
   }
   else {
     this.refresh({
-           from:   from,
-           num:    num,
+           from:  from,
+           num:   num,
+           clear: true,
          });
   }
 }; // pageNumClicked
