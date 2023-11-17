@@ -602,7 +602,7 @@ anyModel.prototype.cbExecute = function (params)
 //
 anyModel.prototype._getDataSourceName = function ()
 {
-  if (this.mode == "remote")
+  if (this.source == "remote")
     return any_defs.dataScript;
   return "";
 }; // _getDataSourceName
