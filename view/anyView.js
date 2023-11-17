@@ -2513,12 +2513,14 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
     return null;
   if (!this.options.linkIcons)
     return;
+  if (!this.options.showButtonAddLinkItem && !this.options.showButtonAddLinkGroup)
+    return;
 
   let parent  = opt.parent;
-  let id_str  = opt.row_id_str;
-  let tit_str = i18n.button.buttonAdd+"/"+i18n.button.buttonRemove;
+  let id_str  = opt.id_str;
+  let tit_str = i18n.message.addRemove;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_add_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+opt.id_str+"_add_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn     = $("<div id='"+btn_id+"' class='any-tool-addremove any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2529,9 +2531,15 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
     parent.append(btn);
   if (!opt.edit)
     btn.hide();
-  let fun = this.option("localShowLinkMenu")
+  let fun = opt.mode == "item" && this.options.showButtonAddLinkItem
             ? this.option("localShowLinkMenu")
-            : this.showLinkMenu;
+              ? this.option("localShowLinkMenu")
+              : this.showLinkMenu
+            : this.options.showButtonAddLinkGroup
+              ? this.option("localAddGroupLink")
+                ? this.option("localAddGroupLink")
+                : this.addGroupLink
+              : null;
   let con = this.option("menuContext")
             ? this.option("menuContext")
             : this.option("context")
@@ -2540,42 +2548,50 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
   opt.top_view = this.options.top_view; //parent.parent();
   btn.off("click").on("click", opt, $.proxy(fun,con));
 
-  let menu_id = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+id_str+"_link_dropdown";
-  opt.element_id = menu_id;
-  if ($("#"+menu_id).length)
-    $("#"+menu_id).remove();
-  let dd_menu = $("<div "+
-                  "class='w3-dropdown-content w3-bar-block w3-border any-link-menu' "+
-                  "id='"+menu_id+"'>"+
-                  "</div>");
-  btn.append(dd_menu);
-  dd_menu.hide();
+  if (opt.mode == "item" && this.options.showButtonAddLinkItem) {
+    // Popup menu for selecting types is only available for item views
+    let menu_id = this.id_base+"_"+opt.par_type+"_"+opt.par_mode+"_"+opt.id_str+"_link_dropdown";
+    opt.element_id = menu_id;
+    if ($("#"+menu_id).length)
+      $("#"+menu_id).remove();
+    let dd_menu = $("<div "+
+                    "class='w3-dropdown-content w3-bar-block w3-border any-link-menu' "+
+                    "id='"+menu_id+"'>"+
+                    "</div>");
+    btn.append(dd_menu);
+    dd_menu.hide();
 
-  // Pressing ESC (27) will hide the menu
-  let self = this;
-  window.onkeydown = function(e) {
+    // Pressing ESC (27) will hide the menu
+    if (!window.anyKeydownHandler)
+      window.anyKeydownHandler = [];
+    if (window.anyKeydownHandler.indexOf(id_str) == -1) {
+      window.addEventListener("keydown", (e) => this.handleEsc(e,opt,this));
+      window.anyKeydownHandler.push(id_str);
+    }
+    // Add the clickable menu entries
+    for (let link_type in this.options.linkIcons) {
+      if (this.options.linkIcons.hasOwnProperty(link_type)) {
+        let link_opt = { data:      opt.par_data,
+                         id:        opt.par_id,
+                         type:      opt.par_type,
+                         link_type: link_type,
+                         link_icon: this.options.linkIcons[link_type],
+                       };
+        let link_btn = this.refreshLinkButton(link_opt,this.dbSearchLinks);
+        dd_menu.append(link_btn); // Subevents
+      }
+    }
+  }
+  return btn;
+}; // refreshAddLinkButton
+
+$.any.anyView.prototype.handleEsc = function(e,opt,self) {
     if (e.keyCode == 27) {
       e.data = {};
       e.data.element_id = opt.element_id;
       self.showLinkMenu(e);
     }
-  };
-
-  // Add the clickable menu entries
-  for (let link_type in this.options.linkIcons) {
-    if (this.options.linkIcons.hasOwnProperty(link_type)) {
-      let link_opt = { data:      opt.data,
-                       id:        opt.id,
-                       type:      opt.type,
-                       link_type: link_type,
-                       link_icon: this.options.linkIcons[link_type],
-                     };
-      let link_btn = this.refreshLinkButton(link_opt,this.dbSearchLinks);
-      dd_menu.append(link_btn); // Subevents
-    }
-  }
-  return btn;
-}; // refreshAddLinkButton
+}; // handleEsc
 
 // Create a button for adding a link
 // By default calls dbSearchLinks
@@ -2609,9 +2625,8 @@ $.any.anyView.prototype.showLinkMenu = function (event)
   let dd_menu = $("#"+event.data.element_id);
   let elem = document.getElementById(event.data.element_id);
   if (elem) {
-    // TODO! w3-show should not be hardcoded
-    if (elem.className.indexOf("w3-show") == -1 && event.data.edit !== false && event.which !== 27) {
-      elem.className += " w3-show";
+    if (elem.className.indexOf("showmenu") == -1 && event.data.edit !== false && event.which !== 27) {
+      elem.className += " showmenu";
       dd_menu.show();
       // Clicking off the menu (inside this.element) will hide it
       if (this.element && this.element.length) {
@@ -2619,22 +2634,36 @@ $.any.anyView.prototype.showLinkMenu = function (event)
         opt2.edit    = false;
         opt2.elem    = elem;
         opt2.dd_menu = dd_menu;
-        this.element.off("click").on("click", opt2,
-          function(e) {
-            e.data.elem.className = elem.className.replace(" w3-show", "");
-            e.data.dd_menu.hide();
-          }
-        );
+        if (this.options.top_view.element.length) {
+            let tv_id = this.options.top_view.element.attr("id");
+            $("#"+tv_id).off("click").on("click", opt2,
+              function(e) {
+                e.data.elem.className = elem.className.replace(" showmenu", "");
+                e.data.dd_menu.hide();
+              }
+            );
+        }
       }
     }
     else {
-      elem.className = elem.className.replace(" w3-show", "");
+      elem.className = elem.className.replace(" showmenu", "");
       dd_menu.hide();
     }
   }
   event.preventDefault();
   return false;
 }; // showLinkMenu
+
+$.any.anyView.prototype.addGroupLink = function (event)
+{
+  let e = {};
+  e.data = {
+    link_type: event.data.type,
+    type:      event.data.par_type,
+    id_str:    event.data.id_str,
+  };
+  this.dbSearchLinks(e);
+}; // addGroupLink
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
