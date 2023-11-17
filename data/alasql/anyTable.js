@@ -556,17 +556,20 @@ anyTable.prototype.prepareData = function(inData)
 {
   //console.log("inData before prepare:"); console.log(inData);
   // Make room for a top level header
-  let data = {"data": { "+0": {} }};
+  let topidx = "+0";
+  if (this.id || this.id === 0)
+    topidx = this.id;
+  let data = {"data": { [topidx]: {} }};
 
   // Find and set the header
   let hdr = this.findHeader(inData);
   if (hdr && hdr != "") {
-    data["data"]["+0"]["head"] = "group";
-    data["data"]["+0"]["group_name"] = hdr;
+    data["data"][topidx]["head"] = "group";
+    data["data"][topidx]["group_name"] = hdr;
   }
 
   // Set data
-  data["data"]["+0"]["data"] = inData;
+  data["data"][topidx]["data"] = inData;
 
   // Set link types
   data["types"] = this.linking;

@@ -1756,23 +1756,26 @@ class anyTable extends dbTable
   {
     //vlog("inData before prepare:",$inData);
     // Make room for a top level header
-    $data = array("data" => array("+0" => null));
+    $topidx = "+0";
+    if (($this->mId || $this->mId === 0) && $this->mId != "")
+      $topidx = "+".$this->mId;
+    $data = array("data" => array($topidx => null));
 
     // Find and set the header
     $hdr = $this->findHeader($inData);
     if (isset($hdr) && $hdr != "") {
       if (($this->mId || $this->mId === 0) && $this->mId != "") {
-        $data["data"]["+0"]["head"] = $this->mType;
-        $data["data"]["+0"][$this->mNameKey] = $hdr;
+        $data["data"][$topidx]["head"] = $this->mType;
+        $data["data"][$topidx][$this->mNameKey] = $hdr;
       }
       else {
-        $data["data"]["+0"]["head"] = "group";
-        $data["data"]["+0"]["group_name"] = $hdr;
+        $data["data"][$topidx]["head"] = "group";
+        $data["data"][$topidx]["group_name"] = $hdr;
       }
     }
 
     // Set data
-    $data["data"]["+0"]["data"] = $inData;
+    $data["data"][$topidx]["data"] = $inData;
 
     // Set link types
     $data["types"] = $this->mLinking;
