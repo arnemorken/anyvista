@@ -1022,6 +1022,20 @@ class anyTable extends dbTable
         //elog("num_res:".$this->mNumResults);
       }
     } // if
+    else {
+      // Report back number of elements in groups
+      if (!$gid || $gid == "")
+        $gr_idx = "nogroup";
+      else
+      if (isInteger($gid))
+        $gr_idx = intval($gid);
+      else
+        $gr_idx = $gid;
+      if (array_key_exists($gr_idx,$data)) {
+        $n = sizeof($data[$gr_idx]);
+        $data[$gr_idx]["grouping_num_results"] = $n;
+      }
+    }
     return $success;
   } // dbExecListStmt
 
