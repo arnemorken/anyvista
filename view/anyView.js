@@ -588,14 +588,14 @@ $.any.anyView.prototype.refresh = function (params)
               */
               ++row_no;
               if (this.options && (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num))) {
-                if (!par_type || !par_data || !par_id) {
-                  let it = this._findParentItemModel();
-                  if (it && it.id) {
-                    par_type = it.type;
-                    par_data = it.data;
-                    par_id   = it.id;
-                  }
+                // If we have an item as (grand)parent, use its' type/data/id, not the immediate level above
+                let it = this._findParentItemModel();
+                if (it && it.id) {
+                  par_type = it.type;
+                  par_data = it.data;
+                  par_id   = it.id;
                 }
+                // Refresh one list row or one item
                 view.refreshOne({
                        parent:   the_parent,
                        type:     curr_type,
