@@ -2169,8 +2169,8 @@ $.any.anyView.prototype.refreshSelectButton = function (opt)
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let check_str = opt.checked
-                  ? "<i class='far fa-check-square'></i>"
-                  : "<i class='far fa-square'></i>";
+                  ? "<i class='fa-regular fa-square-check'></i>"
+                  : "<i class='fa-regular fa-square'></i>";
   let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-select-icon any-icon pointer' title='"+tit_str+"'>"+
               "<span class='check'>"+check_str+"</span>"+
               btn_str+
@@ -2417,7 +2417,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn     = $("<div id='"+btn_id+"' class='any-tool-addremove any-tool-button pointer' title='"+tit_str+"'>"+
-                  "<i class='fa fa-plus'></i>&nbsp;"+i18n.message.addRemove+
+                  "<i class='fa-solid fa-plus-minus'></i>&nbsp;&nbsp;"+i18n.message.addRemove+
                   btn_str+
                   "</div>");
   if (parent && parent.length)
@@ -2965,7 +2965,9 @@ $.any.anyView.prototype.getCheckStr = function (type,mode,id,val,edit,filter_key
     let the_id      = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
     let id_str      = ""+the_id;
     let it_id       = this.id_base+"_"+type+"_"+mode+"_"+id_str+"_"+filter_id+"_check";
-    let check_class = (val == "1") ? "far fa-check-square" : "far fa-square";
+    let check_class = (val == "1")
+                      ? "fa-regular fa-square-check"
+                      : "fa-regular fa-square";
     let title   = "Check if attended"; // TODO! Move to event class, also i18n
     str = "<div class='itemUnedit inlineDiv pointer' "+
           "id='"+it_id+"' "+
@@ -3987,9 +3989,9 @@ $.any.anyView.prototype._toggleChecked = function (event)
 {
   let opt = event.data;
   let chk_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+opt.row_id_str+"_select_icon .check";
-  let check_str = (opt.checked)
-                  ? "<i class='far fa-square'></i>"
-                  : "<i class='far fa-check-square'></i>";
+  let check_str = opt.checked
+                  ? "<i class='fa-regular fa-square'></i>"
+                  : "<i class='fa-regular fa-square-check'></i>";
   let chk = $("#"+chk_id);
   if (chk.length)
     chk.html(check_str);
