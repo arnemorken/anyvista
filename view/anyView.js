@@ -728,6 +728,7 @@ $.any.anyView.prototype.clearBeforeRefresh = function ()
 
 $.any.anyView.prototype._addContainerRow = function (parent,par_type,par_mode,curr_type,curr_mode,id_str)
 {
+  id_str = id_str.substr(0, id_str.lastIndexOf("_"));
   let the_parent = parent;
   let filter   = this.getFilter(par_type,par_mode);
   let num_cols = filter ? Object.size(filter) : 5;
@@ -747,7 +748,7 @@ $.any.anyView.prototype._addContainerRow = function (parent,par_type,par_mode,cu
       the_parent = new_tr.find("td");
     }
     else
-      $("<div id='"+row_id+"'></div>").insertAfter(parent);
+      the_parent = $("<div id='"+row_id+"'></div>").insertAfter(parent);
   }
   if (!the_parent.length)
     the_parent = parent;
