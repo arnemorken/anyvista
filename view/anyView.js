@@ -1142,6 +1142,7 @@ $.any.anyView.prototype.refreshData = function (params)
            data:       data,
            par_data:   par_data,
            par_id:     par_id,
+           par_type:   par_type,
            edit:       edit,
            id_str:     id_str,
            row_id_str: row_id_str,
@@ -1158,6 +1159,7 @@ $.any.anyView.prototype.refreshData = function (params)
              data:       data,
              par_data:   par_data,
              par_id:     par_id,
+             par_type:   par_type,
              id_str:     id_str,
              row_id_str: row_id_str,
              edit:       edit,
@@ -1408,6 +1410,8 @@ $.any.anyView.prototype.refreshThead = function (params)
                          filter_id:  filter_id,
                          filter_key: filter_key,
                          type:       type,
+                         par_id:     params.par_id,
+                         par_type:   params.par_type,
                        };
           th.off("click").on("click",th_opt,$.proxy(fun,this));
         }
@@ -3375,6 +3379,10 @@ $.any.anyView.prototype.sortTable = function (event)
     num:       num,
     order:     order,
     direction: this.options.sortDirection,
+    par_type:  type,
+    group_id:  event.data.par_id,
+    header:    false,
+    grouping:  false,
   };
   if (this.model.source == "remote") {
     // Remote search, let the database do the sorting.
@@ -3382,6 +3390,7 @@ $.any.anyView.prototype.sortTable = function (event)
     this.options.indent_level = -1;
     this.options.ref_rec = 0;
     this.showMessages("",true);
+    this.id_stack.pop(); // TODO! Not a good solution
     this.model.dbSearch(mod_opt);
   } // if remote
   else {
