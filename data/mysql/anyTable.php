@@ -1787,6 +1787,9 @@ class anyTable extends dbTable
       }
     }
 
+     // Set group type
+     $data["data"][$topidx]["group_type"] = $this->mType;
+
     // Set data
     $data["data"][$topidx]["data"] = $inData;
 
