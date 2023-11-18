@@ -2682,8 +2682,6 @@ $.any.anyView.prototype.createModel = function (params)
   let par_id    = params && (params.par_id || params.par_id === 0) ? params.par_id    : "";
   let modelName = params && typeof params.modelName === "string"   ? params.modelName : null;
 
-  if (!data)
-    return null;
   type = type ? type : this._findType(data,id,null);
   if (!type)
     return null;
