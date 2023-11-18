@@ -3774,6 +3774,7 @@ $.any.anyView.prototype.showItem = function (event)
   let type   = event.data.type;
   let id     = event.data.id;
   let is_new = event.data.is_new;
+
   if (is_new || id == "new" || id == -1 || (!id && id !== 0)) {
     // Find id for a new item if one is not specified
     if (this.model.source == "local") {
@@ -3792,13 +3793,26 @@ $.any.anyView.prototype.showItem = function (event)
       if ((!id && id !== 0) || id < 0) {
         let f = []; f[0] = this.model.id_key;
         this.showMessages(null,true); // TODO! i18n
-        this.model.dbSearchNextId({
-                     type:      type,
-                     is_new:    is_new,
-                     db_fields: f,
-                     onSuccess: this._foundNextIdFromDB,
-                     context:   this,
-                   }); // TODO! Asynchronous database call
+        let model = this.model;
+        let view  = this;
+        if (type != this.model.type) {
+          model = this.createModel({
+                         type: type,
+                         data: null,
+                         id:   null,
+                       });
+          view  = this.createView({
+                    model:        model,
+                  });
+        }
+        if (model && view)
+          model.dbSearchNextId({
+                  type:      type,
+                  is_new:    is_new,
+                  db_fields: f,
+                  onSuccess: view._foundNextIdFromDB,
+                  context:   view,
+                }); // TODO! Asynchronous database call
       }
       else
         this._doShowItem(event.data); // TODO! Not tested!
