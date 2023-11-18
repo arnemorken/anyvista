@@ -914,10 +914,6 @@ $.any.anyView.prototype.refreshToolbarForView = function (params)
 //
 $.any.anyView.prototype.refreshToolbarBottom = function (params)
 {
-  //console.log(params)
-  //console.log(this.model.type)
-  //console.log(this.options.newType)
-
   if (!params || !this.options)
     return null;
 
@@ -933,9 +929,6 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
 
   if (!parent || !type)
     return null;
-
-  if (!this.options.newType)
-    this.options.newType = this.model.type;
 
   // Create container
   let div_id   = this.id_base+"_"+type+"_toolbar_bottom";
@@ -977,12 +970,15 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
          });
     this.showMessages();
   }
-  if (this.options.showButtonNew && this.options.newType) {
+  let new_type = data && data["+0"] ? data["+0"].group_type : this.model.type;
+  if (!new_type)
+    new_type = this.model.type;
+  if (this.options.showButtonNew && new_type) {
     // Create a "new item"  button
-    //console.log("New "+this.options.newType);
+    //console.log("New "+new_type);
     this.refreshNewItemButton({
            parent: bardiv,
-           type:   this.options.newType,
+           type:   new_type,
            mode:   "item",
            data:   data,
            id:     id, // Find a new id
