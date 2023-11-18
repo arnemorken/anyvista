@@ -368,7 +368,7 @@ $.any.anyView.prototype._findMode = function (data,id,omode)
   }
   if (!mode && omode != "head")
     mode = omode;
-  if (!mode) {
+  if (!mode && data) {
     // Set mode to mode of "first" element in object
     let idx = Object.keys(data)[0];
     if (idx || idx === 0)
