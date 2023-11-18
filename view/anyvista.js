@@ -691,8 +691,8 @@
         define("gW3CSSURL",         gServer          . gThirdpartyJS . "w3css/");
         define("gW3CSS_css",        gW3CSSURL        . "w3.css");
 
-        define("gFontAwesomeURL",   gServer          . gThirdpartyJS . "fontawesome/");
-        define("gFontAwesome_css",  gFontAwesomeURL  . "fa.min.css");
+        define("gFontAwesomeURL",   gServer          . gThirdpartyJS . "fontawesome/css/");
+        define("gFontAwesome_css",  gFontAwesomeURL  . "fontawesome.css");
 
         define("gTinyMCEURL",       gServer          . gThirdpartyJS . "tinymce/js/tinymce/");
 *       define("gTinyMCE_js",       gTinyMCEURL      . "tinymce.min.js");
