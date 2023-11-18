@@ -138,7 +138,7 @@ class anyTable extends dbTable
             $mNumResults        = 0,
             $mPermission        = null,
             $mOrderBy           = null,
-            $mOrderDir          = "ASC",
+            $mOrderDir          = "DESC",
             $mSortFunction      = null;
 
   protected $mInsertSuccessMsg  = "",
@@ -258,7 +258,7 @@ class anyTable extends dbTable
       $this->mIdKeyMetaTable      = $defsOrType["idKeyMetaTable"];
       $this->mNameKey             = $defsOrType["nameKey"];
       $this->mOrderBy             = isset($defsOrType["orderBy"])  ? $defsOrType["orderBy"]  : null;
-      $this->mOrderDir            = isset($defsOrType["orderDir"]) ? $defsOrType["orderDir"] : "ASC";
+      $this->mOrderDir            = isset($defsOrType["orderDir"]) ? $defsOrType["orderDir"] : "DESC";
       $this->mMetaId              = $defsOrType["metaId"];
       // Set table fields, meta table fields and user link table fields
       $this->mTableFields         = $fields

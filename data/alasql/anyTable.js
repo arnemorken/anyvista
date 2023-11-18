@@ -46,7 +46,7 @@ var anyTable = function (connection,parameters,tableName,type,id,idKey,nameKey,o
   this.idKey     = idKey;
   this.nameKey   = nameKey;
   this.orderBy   = orderBy;
-  this.orderDir  = orderDir ? orderDir : "ASC";
+  this.orderDir  = orderDir ? orderDir : "DESC";
 
   this.linking   = null;
   this.maxId     = -1;
