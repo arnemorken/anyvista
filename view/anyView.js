@@ -2578,6 +2578,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
                          type:      opt.par_type,
                          link_type: link_type,
                          link_icon: this.options.linkIcons[link_type],
+                         id_str:    opt.id_str,
                        };
         let link_btn = this.refreshLinkButton(link_opt,this.dbSearchLinks);
         dd_menu.append(link_btn); // Subevents
@@ -4528,6 +4529,7 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
    type:        event.data.link_type,
    id:          null,
    par_type:    event.data.type,
+   par_id:      event.data.id,
    id_str:      event.data.id_str,
    header:      true,
    grouping:    null,
@@ -4562,12 +4564,12 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
     if (model.error_server)
       console.error("anyView.dbUpdateLinkListDialog: "+model.error_server);
 
-    if (serverdata.data) {
+    if (serverdata.data && options) {
       let parent_view = options.parent_view ? options.parent_view : null;
       if (parent_view) {
-        let type        = model.type;
-        let data        = model.data;
-        let id          = model.id;
+        let type        = options.par_type ? options.par_type : model.type;
+        let data        = options.par_data ? options.par_data : serverdata.data;
+        let id          = options.par_id   ? options.par_id   : model.id;
         let new_id_base = parent_view._createIdBase();
         let link_type   = options.type;
         let ll_id       = new_id_base+"_"+link_type+"_link_list";
@@ -4595,7 +4597,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           select_list_view.options.isSelectable    = true; // Use the select filter, if available
           select_list_view.options.unselect        = new Set();
           select_list_view.options.select          = new Set();
-          select_list_view.options.preselected = model.dataSearch({ data: data,
+          select_list_view.options.preselected = model.dataSearch({ data: model.data,
                                                                     type: link_type });
           let the_view = parent_view._findViewOfType(link_type);
           if (!the_view)
@@ -4605,7 +4607,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           let idstr = id || id === 0
                       ? Number.isInteger(parseInt(id)) ? parseInt(id) : id
                       : options.id_str;
-          let par_view_id = parent_view.id_base+"_"+type+"_"+parent_view.mode+"_"+idstr+"_data";
+          let par_view_id = parent_view.id_base+"_"+options.par_type+"_head_"+options.id_str+"_data";
           let mod_opt = {
             parentId:   par_view_id,
             elementId:  "",
