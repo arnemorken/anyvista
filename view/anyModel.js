@@ -2411,7 +2411,10 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
       console.error("anyModel.dbUpdateLinkListSuccess: "+self.error_server);
     if (serverdata.error == "") {
       options.new_data = serverdata.data;
-      self.dataUpdateLinkList(options); // Remove data
+      self.dataUpdateLinkList({
+             unselect:  options.unselect,
+             link_type: options.link_type,
+           }); // Remove data
       if (serverdata.data && serverdata.data["link-"+options.link_type]) // TODO! Not an ideal solution, depends on server side index
         $.extend(true, self.data, serverdata.data["link-"+options.link_type].data);
     }
