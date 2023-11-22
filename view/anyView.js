@@ -567,6 +567,7 @@ $.any.anyView.prototype.refresh = function (params)
                            });
               view  = this.createView({
                              model:    model,
+                             id:       id,
                              parent:   the_parent,
                              id_str:   id_str,
                              par_mode: par_mode,
@@ -2739,7 +2740,7 @@ $.any.anyView.prototype.createView = function (params)
   let type         = model                                                        ? model.type          : null;
   let mode         = model                                                        ? model.mode          : null;
   let data         = model                                                        ? model.data          : null;
-  let id           = model                                                        ? model.id            : "";
+  let id           = params && params.id                                          ? params.id           : model && model.id ? model.id          : "";
   let parent       = params && params.parent                                      ? params.parent       : null;
   let data_level   = params && (params.data_level   || params.data_level   === 0) ? params.data_level   : this.data_level   ? this.data_level   : 0;
   let indent_level = params && (params.indent_level || params.indent_level === 0) ? params.indent_level : this.indent_level ? this.indent_level : 0;
