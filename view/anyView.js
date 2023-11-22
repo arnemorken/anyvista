@@ -2662,6 +2662,7 @@ $.any.anyView.prototype.addGroupLink = function (event)
   e.data = {
     link_type: event.data.type,
     type:      event.data.par_type,
+    id:        event.data.par_id,
     id_str:    event.data.id_str,
   };
   this.dbSearchLinks(e);
