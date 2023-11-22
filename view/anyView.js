@@ -859,7 +859,7 @@ $.any.anyView.prototype.refreshOne = function (params)
 }; // refreshOne
 
 //
-// Display a toolbar for a new view (not used yet).
+// Display a toolbar for a new view
 //
 $.any.anyView.prototype.refreshToolbarForView = function (params)
 {
@@ -877,7 +877,7 @@ $.any.anyView.prototype.refreshToolbarForView = function (params)
   let par_data = params.par_data;
   let par_id   = params.par_id;
 
-  if (!parent || !type ||
+  if (!parent || !parent.length || !type ||
       par_type !== "group" || par_id === "nogroup" || par_id === "unknown" ||
       (type == "group" && par_type == "group"))
     return null;
