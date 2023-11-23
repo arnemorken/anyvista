@@ -922,11 +922,12 @@ function testModel()
                    deepEqual(dm.data !== null,
                              true, "dbSearch({id:"+myid+"}) returns item data:"+JSON.stringify(dm.data));
                    deepEqual(dm.data &&
-                             dm.data["+0"].data &&
-                             dm.data["+0"].data[idchk] &&
-                             parseInt(dm.data["+0"].data[idchk][dm.id_key]) === parseInt(myid) &&
-                             (dm.data["+0"].data[idchk][dm.name_key]        === uname ||
-                              dm.data["+0"].data[idchk]["user_login"]       === ulogin),
+                             dm.data[myid] &&
+                             dm.data[myid].data &&
+                             dm.data[myid].data[idchk] &&
+                             parseInt(dm.data[myid].data[idchk][dm.id_key]) === parseInt(myid) &&
+                             (dm.data[myid].data[idchk][dm.name_key]        === uname ||
+                              dm.data[myid].data[idchk]["user_login"]       === ulogin),
                              true, "dbSearch({id:"+myid+"}) returns expected data");
                    start();
                  },
@@ -947,10 +948,11 @@ function testModel()
                                 deepEqual(dm.data !== null,
                                           true, "dbSearch({id:"+myid+"}) returns item data:"+JSON.stringify(dm.data));
                                 deepEqual(dm.data &&
-                                          dm.data["+0"].data &&
-                                          parseInt(dm.data["+0"].data[idchk][dm.id_key]) === parseInt(myid) &&
-                                          (dm.data["+0"].data[idchk][dm.name_key]        === uname ||
-                                           dm.data["+0"].data[idchk]["user_login"]       === ulogin),
+                                          dm.data[myid] &&
+                                          dm.data[myid].data &&
+                                          parseInt(dm.data[myid].data[idchk][dm.id_key]) === parseInt(myid) &&
+                                          (dm.data[myid].data[idchk][dm.name_key]        === uname ||
+                                           dm.data[myid].data[idchk]["user_login"]       === ulogin),
                                           true, "dbSearch({id:"+myid+"}) returns expected data");
                                 start();
                               }, millisec);
@@ -1108,7 +1110,7 @@ function testModel()
                            let dm2 = new anyModel({type:"user",db_search:false,source:gDBSource,data:null});
                            dm2.dbSearch({type:"user",id:myid});
                            setTimeout(function() {
-                             deepEqual(dm2.data && parseInt(dm2.data["+0"].data[idchk].user_id) === parseInt(myid),
+                             deepEqual(dm2.data && parseInt(dm2.data[idchk].data[idchk].user_id) === parseInt(myid),
                                        true, "dbUpdate({type:'user',id:"+myid+"}) returns with correct data in database");
                              start();
                            }, millisec);
@@ -1178,8 +1180,7 @@ function testModel()
                              function(context,serverdata,options)
                              {
                                dm.dbSearchSuccess(context,serverdata,options); // Call default success function to get data
-                               deepEqual(dm2.data == null ||
-                                         dm2.data["+0"] != undefined && dm2.data["+0"].data.length == 0,
+                               deepEqual(dm2.data == null,
                                          true, "dbUpdate({type:'event',id:666}) returns data from database after update");
                                },
                            });
@@ -1248,9 +1249,10 @@ function testModel()
                            let dm2 = new anyModel({type:"user",db_search:false,source:gDBSource});
                            await dm2.dbSearch({type:"user",id:14});
                            setTimeout(function() {
-                             str = dm2.data ? dm2.data["+0"].data[idchk14].user_name : null;
+                             str = dm2.data ? dm2.data[idchk14].data[idchk14].user_name : null;
                              deepEqual(dm2.data &&
-                                       dm2.data["+0"].data[idchk14].user_name === "The faz user",
+                                       dm2.data[idchk14] &&
+                                       dm2.data[idchk14].data[idchk14].user_name === "The faz user",
                                        true, "dbUpdate({type:'user',id:14}) with different model type returns with correct data in database:"+str);
                              start();
                            }, millisec);
