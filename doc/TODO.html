@@ -14,6 +14,7 @@
     </ol>
     <h4>- Client:</h4>
     <ol>
+        <li>Bug: When adding new item to list, list header is removed while editing.</li>
         <li>Implement sorting for local data</li>
         <li>anyModel: Some async / await should be tested to see if they are neccessary</li>
         <li>Go through all TODO comments in code</li>
@@ -52,7 +53,6 @@
             <li>@param {boolean} options.isCreatable. Default: false</li>
             <li>@param {boolean} options.showServerMessages    If true, messages from a server will be shown directly. Default: true.</li>
             <li>@param {boolean} options.showButtonSelectAll   If isSelectable is true, a button for selecting all rows may be shown in list table headers. Default: false.</li>
-            <li>@param {boolean} options.showButtonSelectAll   If isSelectable is true, a button for selecting all rows may be shown in list table headers. Default: false.</li>
             <li>@param {boolean} options.onUpdateEndEdit       Pressing the update button will close the element currently being edited for editing. Default: true.</li>
           </ul>
         </li>
@@ -70,8 +70,8 @@
         <li>Page functionality</li>
         <li>Dropdown link for lists => new subrow (child)</li>
         <li>Option for edit: Direct edit for some (all?) field types (e.g. checkbox, date, ...)</li>
-        <li>Hook for anyVista types in refresh loop etc.</li>
         <li>"tokenlist" type in view filter</li>
+        <li>Hook for anyVista types in refresh loop etc.</li>
     </ol>
 
 </body>
