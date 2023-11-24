@@ -3604,10 +3604,11 @@ $.any.anyView.prototype.addListEntry = function (event)
   let new_id     = event.data.new_id;
   let is_new     = event.data.is_new;
 
+  let table_div  = $("#"+this.element.attr("id")).find("table");
   if (edit && (new_id || new_id === 0)) {
     this.model.dataDelete({ id: new_id });
     let new_params = {
-      table_div: this.element,
+      table_div: table_div,
       type:      type,
       data:      this.model.data,
       id:        par_id, // TODO! Is this correct?
@@ -3655,6 +3656,7 @@ $.any.anyView.prototype.addListEntry = function (event)
                    context:    this,
                    id_str:     id_str,
                    row_id_str: row_id_str,
+                   table_div:  table_div,
                  });
     }
   }
@@ -3691,10 +3693,11 @@ $.any.anyView.prototype._addListEntryFromDB = function (context,serverdata,optio
       if (typeof serverdata.new_id == "string")
         if (serverdata.new_id.length && serverdata.new_id[0] != "+")
           serverdata.new_id = "+"+serverdata.new_id;
-      serverdata.data     = options.data     ? options.data     : view.model.data;
-      serverdata.par_data = options.par_data ? options.par_data : null;
-      serverdata.par_id   = options.par_id   ? options.par_id   : null;
-      serverdata.filter   = view.getFilter(serverdata.type,serverdata.mode);
+      serverdata.data      = options.data     ? options.data     : view.model.data;
+      serverdata.par_data  = options.par_data ? options.par_data : null;
+      serverdata.par_id    = options.par_id   ? options.par_id   : null;
+      serverdata.filter    = view.getFilter(serverdata.type,serverdata.mode);
+      serverdata.table_div = options.table_div;
       view._addListEntry(serverdata);
     }
   }
@@ -3710,6 +3713,11 @@ $.any.anyView.prototype._addListEntry = function (opt)
   let id_str     = opt.id_str;
   let row_id_str = opt.row_id_str;
   let filter     = opt.filter;
+  let table_div  = opt.table_div;
+  if (!table_div) {
+    console.error("Table missing. "); // TODO! i18n
+    return null;
+  }
 
   let indata = {};
   if ((new_id || new_id===0) && !indata[new_id]) { // New row
@@ -3750,7 +3758,7 @@ $.any.anyView.prototype._addListEntry = function (opt)
   opt.new_id = null; // Important! To make addListEntry work with id == 0
 
   this.refreshData({
-         table_div:  this.element,
+         table_div:  table_div,
          type:       type,
          mode:       mode,
          data:       opt.data,
