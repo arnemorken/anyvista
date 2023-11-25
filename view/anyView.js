@@ -307,24 +307,37 @@ $.any.anyView.prototype._getOrCreateFilters = function (model)
 {
   let type = model ? model.type : null;
   let f = this.options.filters;
+  if (!type) { // If no type, set type to type of first data element (if any)
+   let data = model ? model.data : null;
+   if (data) {
+     let ix = Object.keys(data)[0];
+     let fd = data[ix];
+     if (fd) {
+       console.warn("No type specified, using type of first data element for filter. ");
+       type = fd.list ? fd.list : fd.item ? fd.item : fd.head ? fd.head : null
+     }
+   }
+  }
   if (!type) {
     console.warn("No type specified, cannot create filters. ");
     return f;
   }
-  // Return the filter if it already exists
+  // Return the filter for given type if we already have it in this.options
   if (f && f[type])
     return f;
-  // Create filter for given type, if the filter exists
+  // Check if filter class for given type exists
   let f_str = type+"Filter";
   if (!window[f_str]) {
     let def_str = "anyFilter";
     //console.warn("Filter class "+f_str+" not found, using "+def_str+". ");
     f_str = def_str;
+    // Check if default filter exists (it always should)
     if (!window[f_str]) {
       console.warn("Filter class "+f_str+" not found. No filter for "+type+". ");
       return f;
     }
   }
+  // Create minimal working filter for given type
   let filt = new window[f_str]({type:type,model:model});
   if (!f)
     f = {};
