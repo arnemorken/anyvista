@@ -4429,7 +4429,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
     }
   }
   if (id || id === 0) { // TODO!
-    if (mode == "item") {
+    if (mode == "item" && this.options.view) {
       // Update header for item view
       let topidx = "+0";
       if (id || id === 0)
