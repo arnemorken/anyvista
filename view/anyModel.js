@@ -358,11 +358,11 @@ var anyModel = function (options)
   if (options && !this.name_key)
     this.message += i18n.error.NAME_KEY_MISSING;
   if (this.message !== "")
-    console.log("anyModel constructor: "+this.message);
+    console.warn("anyModel: "+this.message);
   if (this.error !== "")
-    console.error("anyModel constructor: "+this.error);
+    console.error("anyModel: "+this.error);
   if (this.error_server !== "")
-    console.error("anyModel constructor: "+this.error_server);
+    console.error("anyModel: "+this.error_server);
 
   // Search
   if (options && options.db_search)
