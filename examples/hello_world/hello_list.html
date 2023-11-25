@@ -55,7 +55,9 @@ let my_filters = {
 };
 
 // Give the data to a model
-let my_model = new anyModel({ data: my_data });
+let my_model = new anyModel({
+  data: my_data,
+});
 
 // Give the model to a view and display
 let my_view  = new anyView({

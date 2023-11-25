@@ -52,12 +52,12 @@ let my_filters = {
 };
 
 // Give the data to a model
-var my_model = new anyModel({
+let my_model = new anyModel({
   data: my_data,
 });
 
 // Give the model to a view
-var my_view  = new anyView({
+let my_view  = new anyView({
   model:   my_model,
   filters: my_filters,
   id:      "minimal_foo_item", // Id of div in which to display result
