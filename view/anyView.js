@@ -2326,7 +2326,7 @@ $.any.anyView.prototype.refreshEditButton = function (opt)
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-edit-icon any-icon pointer' title='"+tit_str+"'>"+
-              "<i class='fas fa-pencil-alt'></i>"+
+              "<i class='fas fa-pencil-alt'></i>"+  // TODO! CSS
               btn_str+
               "</div>");
   if (parent && parent.length)
@@ -4966,10 +4966,12 @@ $.any.anyView.prototype.showMessages = function (modelOrString,spin)
     if (typeof modelOrString == "string") {
         msgdiv.append(close_icon+"<span style='color:red;'>"+modelOrString+"</span>");
     }
-    if (spin)
-      msgdiv.append("<i class='fas fa-spinner fa-spin'></i>");
     $("#"+div_id+"_close").off("click").on("click",function(event) { let msgdiv = $("#"+div_id); msgdiv.empty(); });
   }
+  if (spin)
+    msgdiv.append("<i class='fas fa-spinner fa-spin'></i>"); // TODO! CSS
+  else
+    msgdiv.removeClass("fas fa-spinner fa-spin"); // TODO! CSS
   return this;
 }; // showMessages
 
