@@ -4447,27 +4447,6 @@ $.any.anyView.prototype.dbUpdate = function (event)
         }
       }
     }
-    /* TODO! Neccessary for source == "remote"?
-    // Make sure the items original model is also updated
-    if (this.options.view && this.options.view != this) { // TODO! no view here
-      if (!event.data.is_new)
-        this.options.view.model.dataUpdate({
-                                  type:     type,
-                                  id:       id,
-                                  new_data: data_values,
-                                });
-      else {
-        let dv = {};
-        dv[id] = data_values;
-        this.options.view.model.dataInsert({
-                                  type:     type,
-                                  id:       par_id,
-                                  new_data: dv,
-                                  new_id:   id,
-                                });
-        }
-    }
-    */
   }
   // Update view TODO! Neccessary for source == "remote"?
   let item = this.model.dataSearch({
