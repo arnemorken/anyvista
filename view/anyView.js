@@ -4599,8 +4599,29 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           select_list_view.options.preselected = model.dataSearch({ data: model.data,
                                                                     type: link_type });
           let the_view = parent_view._findViewOfType(link_type);
-          if (!the_view)
-            the_view = parent_view;
+          if (!the_view) {
+            if (options.par_type == "group")
+              the_view = parent_view;
+            else {
+              let data_idx = "link-"+link_type;
+              parent_view.model.data[id].data[id].data[data_idx] =
+                {
+                  data: {
+                   0: { // Dummy entry, to make parent create a list view/model
+                     list: link_type,
+                     grouping: true,
+                   }
+                  },
+                  head: link_type,
+                  grouping: true,
+                  [link_type+"_name"]: link_type+"s", // TODO!
+                };
+              parent_view.options.item_opening = true;
+              parent_view.refresh();
+              let idx1 = ""+parseInt(id)+"_"+parseInt(id);
+              the_view = parent_view._findViewOfType(link_type);
+            }
+          }
           if (select_list_view.options.preselected)
             parent_view._addPreSelections(select_list_view);
           let idstr = id || id === 0
