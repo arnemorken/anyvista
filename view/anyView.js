@@ -25,6 +25,7 @@
  * @param {Object}  options.model                  The model with data to be displayed. Default: null.
  * @param {Object}  options.filters                The filters define how the data will be displayed. Default: null.
  * @param {String}  options.id                     The jQuery id of a container element in which to display the view. Default: null.
+ * @param {String}  options.mode                   The current mode of display for the view. Default: this.options.defaultMode.
  * @param {boolean} options.isSelectable           An icon for selecting a list row will be displayed. Ignored for items. If isSelectable is set,
  *                                                 isAddable, isRemovable, isEditable and isDeletable will be ignored. Default: false.
  * @param {boolean} options.isAddable              An icon for adding new rows may be displayed. Ignored if isSelectable is set. Default: false.
@@ -131,6 +132,7 @@ var anyViewWidget = $.widget("any.anyView", {
     onEscEndEdit:           true,
     onFocusoutRemoveEmpty:  true,
     useOddEven:             true,
+    mode:                   null,
     defaultMode:            "head",
     itemsPerPage:           20,
     currentPage:            1,
@@ -191,21 +193,25 @@ var anyViewWidget = $.widget("any.anyView", {
     if (!this.options.top_view)
       this.options.top_view = this;
 
-    this.id_base    = this.options.id_base
-                      ? this.options.id_base
-                      : this._createIdBase();
+    this.id_base      = this.options.id_base
+                        ? this.options.id_base
+                        : this._createIdBase();
 
-    this.data_level = this.options.data_level
-                      ? this.options.data_level
-                      : 0;
+    this.data_level   = this.options.data_level
+                        ? this.options.data_level
+                        : 0;
 
     this.indent_level = this.options.indent_level
                         ? this.options.indent_level
                         : 0;
 
-    this.model      = this.options.model
-                      ? this.options.model
-                      : null;
+    this.model        = this.options.model
+                        ? this.options.model
+                        : null;
+
+    this.mode         = this.options.mode
+                        ? this.options.mode
+                        : this.options.defaultMode;
 
     this.id_stack = []; // Dynamic stack of id strings for views
     this.views    = {};
@@ -2746,7 +2752,7 @@ $.any.anyView.prototype.getCreateModelOptions = function(type,data,id,link_id)
 /**
  * Create a new model in a new view and return the view.
  *
- * @method anyView.getCreateView
+ * @method anyView.createView
  * @return view
  */
 $.any.anyView.prototype.createView = function (params)
@@ -2788,7 +2794,6 @@ $.any.anyView.prototype.createView = function (params)
     view = new window[v_str](view_opt);
     if (!Object.keys(view).length)
       throw i18n.error.COULD_NOT_CREATE_VIEW+" "+v_str;
-    view.mode = mode; // mode of view (head,list or item)
   }
   catch (err) {
     let errstr = err+" with id "+view_opt.id; // TODO! i18n
@@ -2813,6 +2818,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
   let view_id = this.id_base+"_"+type+"_"+mode+"_"+id_str+"_data";
   return {
     model:                  model,
+    mode:                   mode,
     filters:                this._getOrCreateFilters(model), // Create filter if we don't already have one
     id:                     view_id,
     view:                   this,
