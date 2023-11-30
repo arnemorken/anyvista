@@ -74,4 +74,3 @@ var userViewTabs = function (options)
 
 userViewTabs.prototype = new anyViewTabs(null);
 userViewTabs.prototype.constructor = userViewTabs;
-//@ sourceURL=userViewTabs.js

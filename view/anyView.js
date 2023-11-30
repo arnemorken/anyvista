@@ -5020,4 +5020,3 @@ var anyView = function (options)
     return null;
   return $.any.anyView(options);
 };
-//@ sourceURL=anyView.js

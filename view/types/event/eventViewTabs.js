@@ -163,4 +163,3 @@ var eventViewTabs = function (options)
 
 eventViewTabs.prototype = new anyViewTabs(null);
 eventViewTabs.prototype.constructor = eventViewTabs;
-//@ sourceURL=eventViewTabs.js

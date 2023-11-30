@@ -102,7 +102,7 @@ function testModel()
   // Omitted tests for:
   // - cbSubscribe
   // - cbUnsubscribe
-  // - cbResetListeners
+  // - cbReset
   // - cbExecute
   ///////////////////////
 
@@ -1608,4 +1608,3 @@ function getPermutations(list, maxLen)
   // Start with size 1 because of initial values
   return generate(perm, maxLen, 1);
 }
-//@ sourceURL=TestModel.js

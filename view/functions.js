@@ -254,5 +254,3 @@ function w3_modaldialog_resize(options)
   if (options.height)
     $("#"+dia_id).css("height",options.height);
 } // w3_modaldialog_resize
-
-//@ sourceURL=functions.js
