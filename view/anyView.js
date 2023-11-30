@@ -592,13 +592,13 @@ $.any.anyView.prototype.refresh = function (params)
                              par_mode: par_mode,
                            });
               if (view) {
-                view.id_stack = JSON.parse(JSON.stringify(this.id_stack));
                 this.views[id_str] = view;
                 new_view   = true;
                 new_id_str = id_str;
               }
             }
             if (view) {
+              view.id_stack = JSON.parse(JSON.stringify(this.id_stack));
               // Refresh a header, a single list row or a single item
               /*
               if (row_no == 0 && this.options.indent_level == 0 && curr_mode != "head") {
