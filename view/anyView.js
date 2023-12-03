@@ -768,7 +768,7 @@ $.any.anyView.prototype._addContainerRow = function (parent,par_type,par_mode,cu
       the_parent = new_tr.find("td");
     }
     else
-      the_parent = $("<div id='"+row_id+"'></div>").insertAfter(parent);
+      the_parent = $("<div id='"+row_id+"'></div>").appendTo(parent);
   }
   if (!the_parent.length)
     the_parent = parent;
