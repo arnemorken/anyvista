@@ -5003,7 +5003,7 @@ $.any.anyView.prototype.initComponents = function ()
       force_p_newlines:  false,
       forced_root_block: false, // Or ''?
       plugins: [
-        "link image media autoresize"
+        "link image media autoresize lists"
       ],
       autoresize_on_init: true,
       autoresize_min_height: 0,
