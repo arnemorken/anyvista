@@ -2788,8 +2788,13 @@ $.any.anyView.prototype.createView = function (params)
               : type+"View"; // Use default view name derived from type
   try {
     if (!window[v_str]) {
+      // Use fallback view name
       console.warn("View class "+v_str+" not found, using anyView. "); // TODO! i18n
-      v_str = "anyView"; // Use fallback view name
+      let def_str = view_opt.grouping
+                    ? "anyView"+view_opt.grouping.capitalize()
+                    : "anyView";
+      console.warn(v_str+" is not a valid list view, using "+def_str+". ");
+      v_str = def_str;
     }
     view = new window[v_str](view_opt);
     if (!Object.keys(view).length)
@@ -3165,6 +3170,8 @@ $.any.anyView.prototype.getListView = function (type,mode,id,val,edit,filter_key
                 ? list_type.capitalize()+"View"+view_opt.grouping.capitalize()
                 : list_type.capitalize()+"View";
   if (!window[v_str]) {
+    // Use fallback view name
+    console.warn("View class "+v_str+" not found, using anyView. "); // TODO! i18n
     let def_str = view_opt.grouping
                   ? "anyView"+view_opt.grouping.capitalize()
                   : "anyView";
