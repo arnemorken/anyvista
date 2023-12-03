@@ -64,7 +64,7 @@
  * @param {boolean} options.showButtonAddLinkItem  If true, will show a button for adding links to an item. Default: true.
  * @param {boolean} options.showButtonAddLinkGroup If true, will show a button for adding items to a group. Default: true.
  * @param {boolean} options.showButtonLabels       Will show labels for buttons on the button panel. Default: false.
- * @param {boolean} options.onEnterCallDatabase    Pressing enter will update the database with the value of the row being edited. Default: true.
+ * @param {boolean} options.onEnterUpdateEdit      Pressing enter will update the database with the value of the row being edited. Default: true.
  * @param {boolean} options.onEnterInsertNew       A new row will be inserted when pressing enter while editing a list. Default: false.
  * @param {boolean} options.onEnterMoveFocus       Pressing enter will move the focus to the next input element if editing an item. Default: True.
  * @param {boolean} options.onEscRemoveEmpty       The current row being edited in a list will be removed when pressing the Esc key if the row is empty. Default: true.
@@ -125,9 +125,9 @@ var anyViewWidget = $.widget("any.anyView", {
     showButtonAddLinkItem:  true,
     showButtonAddLinkGroup: true,
     showButtonLabels:       false,
-    onEnterCallDatabase:    true,
+    onEnterUpdateEdit:      true,
     onEnterInsertNew:       true, // Note: Only used for lists, ignored for items
-    onEnterMoveFocus:       true, // Will be overridden by onEnterCallDatabase==true TODO! Make it work for lists
+    onEnterMoveFocus:       true, // Will be overridden by onEnterUpdateEdit==true TODO! Make it work for lists
     onEscRemoveEmpty:       true,
     onEscEndEdit:           true,
     onFocusoutRemoveEmpty:  true,
@@ -3573,7 +3573,7 @@ $.any.anyView.prototype._processKeyup = function (event)
       let is_new = event.data.is_new ? event.data.is_new : data && data[id] ? data[id].is_new : false;
       event.data.is_new   = is_new;
       event.data.new_data = event.data.data;
-      if (this.options.onEnterCallDatabase)
+      if (this.options.onEnterUpdateEdit)
         this.dbUpdate(event);
       let mode = event.data.mode;
       if (mode == "list") {
@@ -3586,12 +3586,12 @@ $.any.anyView.prototype._processKeyup = function (event)
         }
         else
         if (this.options.onEnterMoveFocus) {
-          // TODO! Enter in a list input field should optionally move to next row and start editing it, unless onEnterInsertNew or onEnterCallDatabase are true.
+          // TODO! Enter in a list input field should optionally move to next row and start editing it, unless onEnterInsertNew or onEnterUpdateEdit are true.
         }
       }
       else
       if (mode == "item") {
-        if (this.options.onEnterMoveFocus && !this.options.onEnterCallDatabase) {
+        if (this.options.onEnterMoveFocus && !this.options.onEnterUpdateEdit) {
           let elem = $(":focus");
           if (elem.length) {
             let next_input = elem.parent().parent().next().find("input");
