@@ -3233,6 +3233,7 @@ $.any.anyView.prototype.getListViewOptions = function (model,view_id,edit,view)
     showTableFooter: view ? view.options.showTableFooter : false,
     showToolbar:     false,
     onEscEndEdit:    view ? view.options.onEscEndEdit : this.options.onEscEndEdit,
+    defaultMode:     "list",
   };
 }; // getListViewOptions
 
