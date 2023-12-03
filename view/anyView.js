@@ -88,7 +88,7 @@
  *      new anyView({model:mymodel,filters:myfilters,id:"mycontent"});
  */
 var ANY_LOCALE_NOT_FOUND = "No locale found. ";
-var ANY_MAX_REF_REC = 30;
+var ANY_MAX_REF_REC = 50;
 
 var anyViewWidget = $.widget("any.anyView", {
   // Default options
@@ -504,7 +504,7 @@ $.any.anyView.prototype.empty = function (params)
  */
 $.any.anyView.prototype.refresh = function (params)
 {
-  if (!params || !params.dont_reset_rec || !this.options) {
+  if (params && params.reset_rec) {
     if (!this.options)
       this.options = {};
     this.options.ref_rec = 0; // Reset on every call to refresh
@@ -852,16 +852,16 @@ $.any.anyView.prototype.refreshOne = function (params)
         ++this.options.indent_level;
       subdata = subdata.data;
       this.refresh({
-             parent:         params.data_div,
-             type:           type,
-             mode:           mode,
-             data:           subdata,
-             par_type:       type,
-             par_mode:       mode,
-             par_data:       data,
-             par_id:         id,
-             edit:           edit,
-             dont_reset_rec: true,
+             parent:    params.data_div,
+             type:      type,
+             mode:      mode,
+             data:      subdata,
+             par_type:  type,
+             par_mode:  mode,
+             par_data:  data,
+             par_id:    id,
+             edit:      edit,
+             reset_rec: false,
            });
       if ((mode == "list"))
         --this.options.indent_level;
