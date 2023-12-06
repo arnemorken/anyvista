@@ -2798,6 +2798,9 @@ $.any.anyView.prototype.createView = function (params)
       console.warn(v_str+" is not a valid list view, using "+def_str+". ");
       v_str = def_str;
     }
+    let elm = $("#"+view_opt.id);
+    if (elm.length)
+      elm.empty();
     view = new window[v_str](view_opt);
     if (!Object.keys(view).length)
       throw i18n.error.COULD_NOT_CREATE_VIEW+" "+v_str;
