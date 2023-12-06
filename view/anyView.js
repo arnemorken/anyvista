@@ -615,7 +615,7 @@ $.any.anyView.prototype.refresh = function (params)
                   par_data = it.data;
                   par_id   = it.id;
                 }
-                // Refresh one list row or one item
+                // Refresh one list row, one item or one header
                 view.refreshOne({
                        parent:   the_parent,
                        type:     curr_type,
@@ -3534,7 +3534,7 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     type:      pager.options.div_info.type,
     grouping:  this.options.grouping,
     simple:    this.options.grouping === null,
-    header:    false,
+    header:    false, // Important!
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
   };
@@ -5034,3 +5034,4 @@ var anyView = function (options)
     return null;
   return $.any.anyView(options);
 };
+//@ sourceURL=anyView.js
