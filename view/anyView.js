@@ -1543,6 +1543,8 @@ $.any.anyView.prototype.refreshDataFooter = function (params)
         if (!pager.options.hideIfOne || num_results > pager.options.itemsPerPage)
           $("#"+pager.container_id).css("display","inline-block");
       }
+      else
+        console.warn("anyPaginator missing, cannot paginate data. ");
     }
   } // if
   if (this.options.showSearcher && num_results > this.options.itemsPerPage) {
