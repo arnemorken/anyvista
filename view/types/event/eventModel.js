@@ -108,12 +108,7 @@ eventModel.prototype.dbUpdateGetURL = function (options)
   return url_str;
 }; // dbUpdateGetURL
 
-/**
- * @method dataSearchUserLink
- * @description Search the item model for a user with the given id and return true if "user_attended" is set.
- * @param {integer} user_id
- * @return true if checked, false otherwise
- */
+// Search the item model for a user with the given id and return true if "user_attended" is set, false otherwise
 eventModel.prototype.dataSearchUserLink = function (user_id)
 {
   if (!user_id)
