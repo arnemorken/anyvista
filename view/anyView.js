@@ -1,6 +1,6 @@
 /* jshint sub:true */
 /* jshint esversion: 9 */
-/* globals $,i18n,any_defs,isFunction,w3_modaldialog,w3_modaldialog_close,tinyMCE,tinymce */
+/* globals $,i18n,any_defs,isFunction,w3_modaldialog,w3_modaldialog_close,tinyMCE,tinymce,doUploadFile, */
 "use strict";
 
 /****************************************************************************************
@@ -320,7 +320,7 @@ $.any.anyView.prototype._getOrCreateFilters = function (model)
      let fd = data[ix];
      if (fd) {
        console.warn("No type specified, using type of first data element for filter. ");
-       type = fd.list ? fd.list : fd.item ? fd.item : fd.head ? fd.head : null
+       type = fd.list ? fd.list : fd.item ? fd.item : fd.head ? fd.head : null;
      }
    }
   }
@@ -599,13 +599,6 @@ $.any.anyView.prototype.refresh = function (params)
             }
             if (view) {
               view.id_stack = JSON.parse(JSON.stringify(this.id_stack));
-              // Refresh a header, a single list row or a single item
-              /*
-              if (row_no == 0 && this.options.indent_level == 0 && curr_mode != "head") {
-                let id = view.element.attr("id");
-                $("#"+id).empty();
-              }
-              */
               ++row_no;
               if (this.options && (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num))) {
                 // If we have an item as (grand)parent, use its' type/data/id, not the immediate level above
@@ -615,7 +608,7 @@ $.any.anyView.prototype.refresh = function (params)
                   par_data = it.data;
                   par_id   = it.id;
                 }
-                // Refresh one list row, one item or one header
+                // Refresh a header, a single list row or a single item
                 view.refreshOne({
                        parent:   the_parent,
                        type:     curr_type,
@@ -783,18 +776,12 @@ $.any.anyView.prototype.refreshOne = function (params)
   if (!params || !this.options)
     return this;
 
-  let parent   = params.parent;
-  let type     = params.type;
-  let mode     = params.mode;
-  let data     = params.data;
-  let id       = params.id;
-  let par_type = params.par_type;
-  let par_mode = params.par_mode;
-  let par_data = params.par_data;
-  let par_id   = Number.isInteger(parseInt(params.par_id))
-                 ? ""+parseInt(params.par_id)
-                 : params.par_id;
-  let edit     = params.edit;
+  let parent = params.parent;
+  let type   = params.type;
+  let mode   = params.mode;
+  let data   = params.data;
+  let id     = params.id;
+  let edit   = params.edit;
 
   // Find identifier strings for containers and rows
   let id_str = this.id_stack.join('_');
@@ -890,7 +877,6 @@ $.any.anyView.prototype.refreshToolbarForView = function (params)
   let type     = params.type;
   let mode     = params.mode;
   let data     = params.data;
-  let id       = params.id;
   let id_str   = params.id_str;
   let par_type = params.par_type;
   let par_mode = params.par_mode;
@@ -3341,7 +3327,7 @@ $.any.anyView.prototype._uploadClicked = function (event)
     $("#"+elem_id+"_upload").val(null);
 
     // See if we should upload the file immediately
-    if (this.options.uploadDirect) {
+    if (this.options.uploadDirect && typeof doUploadFile === "function") {
       let uid = this.model && this.model.permission ? this.model.permission.current_user_id : "u";
       if (uid<0)
         uid = "u";
@@ -3893,7 +3879,6 @@ $.any.anyView.prototype._foundNextIdFromDB = function (context,serverdata,option
 $.any.anyView.prototype._doShowItem = function (opt)
 {
   let type     = opt.head ? opt.head : opt.item ? opt.item : opt.list ? opt.list : opt.type ? opt.type : "";
-  let mode     = "item";
   let data     = opt.data;
   let id       = opt.id;
   let is_new   = opt.is_new != undefined ? opt.is_new : false;
@@ -4637,15 +4622,11 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                 };
               parent_view.options.item_opening = true;
               parent_view.refresh();
-              let idx1 = ""+parseInt(id)+"_"+parseInt(id);
               the_view = parent_view._findViewOfType(link_type);
             }
           }
           if (select_list_view.options.preselected)
             parent_view._addPreSelections(select_list_view);
-          let idstr = id || id === 0
-                      ? Number.isInteger(parseInt(id)) ? parseInt(id) : id
-                      : options.id_str;
           let par_view_id = parent_view.id_base+"_"+options.par_type+"_head_"+options.id_str+"_data";
           let mod_opt = {
             parentId:   par_view_id,
@@ -4744,7 +4725,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   let link_mode = event.data.par_mode;
   let link_data = event.data.par_data;
   let link_id   = event.data.par_id;
-  let id_str    = event.data.row_id_str;
+
   if (!data || !data[id]) {
     console.warn("Data not found ("+type+" id="+id+"). ");
     return null;

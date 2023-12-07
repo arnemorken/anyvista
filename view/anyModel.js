@@ -1,6 +1,6 @@
 /* jshint sub:true */
 /* jshint esversion: 9 */
-/* globals $,i18n,any_defs,isInt,dbConnection,anyTableFactory, */
+/* globals $,i18n,any_defs,isInt,dbConnection,anyTableFactory,gSource, */
 "use strict";
 
 /****************************************************************************************
