@@ -509,18 +509,18 @@ $.any.anyView.prototype.refresh = function (params)
       this.options = {};
     this.options.ref_rec = 0; // Reset on every call to refresh
   }
-  let parent   = params && params.parent             ? params.parent   : this.element;
-  let model    = params && params.model              ? params.model    : null;
-  let type     = params && params.type     && !model ? params.type     : model ? model.type : this.model ? this.model.type : "";
-  let mode     = params && params.mode               ? params.mode     : "";
-  let data     = params && params.data     && !model ? params.data     : model ? model.data : this.model ? this.model.data : null;
-  let par_type = params && params.par_type && !model ? params.par_type : model && model.parent ? model.parent.type : this.model && this.model.parent ? this.model.parent.type : "";
-  let par_mode = params && params.par_mode           ? params.par_mode : "";
-  let par_data = params && params.par_data && !model ? params.par_data : model && model.parent ? model.parent.data : this.model && this.model.parent ? this.model.parent.data : null;
-  let par_id   = params && params.par_id   && !model ? params.par_id   : model && model.parent ? model.parent.id   : this.model && this.model.parent ? this.model.parent.id   : "";
-  let edit     = params && params.edit               ? params.edit     : false;
-  let from     = params && params.from               ? params.from     : 1;
-  let num      = params && params.num                ? params.num      : this.options.itemsPerPage;
+  let parent   = params && params.parent   ? params.parent   : this.element;
+  let model    = params && params.model    ? params.model    : this.model;
+  let type     = params && params.type     ? params.type     : model                 ? model.type        : "";
+  let data     = params && params.data     ? params.data     : model                 ? model.data        : null;
+  let par_id   = params && params.par_id   ? params.par_id   : model                 ? model.link_id     : "";
+  let mode     = params && params.mode     ? params.mode     : "";
+  let par_type = params && params.par_type ? params.par_type : model && model.parent ? model.parent.type : "";
+  let par_data = params && params.par_data ? params.par_data : model && model.parent ? model.parent.data : null;
+  let par_mode = params && params.par_mode ? params.par_mode : "";
+  let edit     = params && params.edit     ? params.edit     : false;
+  let from     = params && params.from     ? params.from     : 1;
+  let num      = params && params.num      ? params.num      : this.options.itemsPerPage;
 
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
@@ -566,13 +566,12 @@ $.any.anyView.prototype.refresh = function (params)
               let idx = Number.isInteger(parseInt(par_id)) ? ""+parseInt(par_id) : par_id;
               this.id_stack.push(idx);
             }
+            // Create the current id_str
+            let id_str = this.id_stack.join('_');
             let new_view   = false;
-            let new_id_str = "";
             // Create new view whenever we encounter a new type or a new mode
             if ((prev_type != "" && prev_type != curr_type) ||
                 (prev_mode != "" && prev_mode != curr_mode)) {
-              // Create the current id_str
-              let id_str = this.id_stack.join('_');
               // If the new type/mode is contained within a list, create a new row to contain a new parent container
               if (prev_mode == "list" && prev_type != curr_type)
                 the_parent = view._addContainerRow(parent,prev_type,prev_mode,curr_type,curr_mode,id_str);
@@ -593,8 +592,7 @@ $.any.anyView.prototype.refresh = function (params)
                            });
               if (view) {
                 this.views[id_str] = view;
-                new_view   = true;
-                new_id_str = id_str;
+                new_view = true;
               }
             }
             if (view) {
@@ -625,7 +623,7 @@ $.any.anyView.prototype.refresh = function (params)
                   --row_no;
               }
             } // if view
-            if (new_view) {
+            if (id_str && id_str != "") {
               // Refresh bottom toolbar for this view
               let p_id = view.element.attr("id");
               let p    = $("#"+p_id);
@@ -637,11 +635,10 @@ $.any.anyView.prototype.refresh = function (params)
                      par_type: par_type,
                      par_mode: par_mode,
                      par_data: par_data,
-                     par_id:   par_id,
-                     id_str:   new_id_str,
+                     par_id:   par_id ? par_id : view.model.link_id,
+                     id_str:   id_str,
                    });
-              new_view   = false;
-              new_id_str = "";
+              new_view = false;
             }
             if (curr_mode == "head" || curr_mode == "item")
               this.id_stack.pop();
@@ -909,8 +906,9 @@ $.any.anyView.prototype.refreshToolbarForView = function (params)
          edit:   true,
        });
 
-  console.log("Add/remove "+type+"s to/from '"+par_data[par_id].group_name+"'");
-
+  let nc = bardiv.children().length;
+  if (!nc)
+    bardiv.remove();
   return null;
 }; // refreshToolbarForView
 
@@ -947,11 +945,6 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
   if ((this.options.showButtonAddLinkItem || this.options.showButtonAddLinkGroup) && data && id && data[id] &&
      (data[id].item || data[id].head && data[id].data && data[id].data[id] && data[id].data[id].item)) {
     // Create an "add link" button
-    let item_key = type + "_name"; // TODO!
-    let str = type == "group"
-              ? "group '"+data[id].group_name+"'"
-              : " "+data[id][item_key];
-    //console.log("Add "+type+"s to "+str);
     this.refreshAddLinkButton({
            parent: bardiv,
            type:   type,
@@ -2518,7 +2511,7 @@ $.any.anyView.prototype.refreshNewItemButton = function (opt)
 // By default calls showLinkMenu
 $.any.anyView.prototype.refreshAddLinkButton = function (opt)
 {
-  if (!opt || !this.options)
+  if (!opt || !opt.par_id || !this.options)
     return null;
   if (!this.options.linkIcons)
     return;
@@ -2786,8 +2779,9 @@ $.any.anyView.prototype.createView = function (params)
     }
     let elm = $("#"+view_opt.id);
     if (elm.length)
-      elm.empty();
-    view = new window[v_str](view_opt);
+      view = this._findViewById(view_opt.id); // See if we can reuse view
+    if (!view)
+      view = new window[v_str](view_opt); // Create a new view
     if (!Object.keys(view).length)
       throw i18n.error.COULD_NOT_CREATE_VIEW+" "+v_str;
   }
@@ -4710,6 +4704,26 @@ $.any.anyView.prototype._findViewOfType = function (type)
   return v;
 }; // _findViewOfType
 
+$.any.anyView.prototype._findViewById = function (id)
+{
+  let v = null;
+  if (this.views) {
+    // Find the view to refresh
+    for (let x in this.views) {
+      if (this.views.hasOwnProperty(x)) {
+        let the_view = this.views[x];
+        let elm = the_view.element;
+        let eid = elm.attr(id);
+        if ($("#"+eid).length)
+          return the_view;
+        else
+          v = the_view._findViewById(id);
+      }
+    }
+  }
+  return v;
+}; // _findViewById
+
 $.any.anyView.prototype.dbRemoveDialog = function (event)
 {
   if (!this.model)
@@ -4806,6 +4820,8 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
 
   // Update database
   opt.context = this.model;
+  if (!opt.id)
+    opt.id  = this.model.link_id; // TODO! Is this always correct?
   if (!this.model.dbUpdateLinkList(opt))
     return false;
   return true;
