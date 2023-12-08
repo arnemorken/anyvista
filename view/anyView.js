@@ -347,6 +347,7 @@ $.any.anyView.prototype._findType = function (data,id,otype)
 {
   let type = null;
   if (data) {
+    // Data item exists, see if it has a specified type
     if (id || id === 0) {
       let d = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
       if (d)
@@ -355,12 +356,33 @@ $.any.anyView.prototype._findType = function (data,id,otype)
     if (!type)
       type = data.list ? data.list : data.item ? data.item : data.head ? data.head : null;
   }
+  if (!type && otype)
+    type = otype; // Set to previous type
   if (!type)
-    type = otype;
+    type = this._findTypeFromData(data); // Find type from *_name element of data[0]
   if (!type)
-    type = this.model.type;
+    type = this.model.type; // Set to model type
   return type;
 }; // _findType
+
+// Try to determine type from *_name element of first item in data
+$.any.anyView.prototype._findTypeFromData = function (data)
+{
+  if (data) {
+    let ix = Object.keys(data)[0];
+    if (ix) {
+      for (let key in data[ix]) {
+        if (data[ix].hasOwnProperty(key)) {
+          let n = key.lastIndexOf("_");
+          if (n != -1 && key.substring(0,n)) {
+            return key.substring(0,n);
+          }
+        }
+      }
+    }
+  }
+  return "";
+}; // _findTypeFromData
 
 // Find the current mode to use
 $.any.anyView.prototype._findMode = function (data,id,omode)
@@ -511,6 +533,8 @@ $.any.anyView.prototype.refresh = function (params)
   let edit     = params && params.edit     ? params.edit     : false;
   let from     = params && params.from     ? params.from     : 1;
   let num      = params && params.num      ? params.num      : this.options.itemsPerPage;
+  if (!type)
+    type = this._findType(data); // Find type from *_name element of data[0]
 
   if (!parent)
     throw i18n.error.VIEW_AREA_MISSING;
@@ -525,7 +549,7 @@ $.any.anyView.prototype.refresh = function (params)
 
   // Find the filters to use if we don't have them already
   if (!this.options.filters || !this.options.filters[type])
-    this.options.filters = this._getOrCreateFilters(model ? model : this.model);
+    this.options.filters = this._getOrCreateFilters(type,data);
 
   if (this.preRefresh)
     this.preRefresh(params);
@@ -613,7 +637,7 @@ $.any.anyView.prototype.refresh = function (params)
                   --row_no;
               }
             } // if view
-            if (id_str && id_str != "") {
+            if (id_str) {
               // Refresh bottom toolbar for this view
               let p_id = view.element.attr("id");
               let p    = $("#"+p_id);
@@ -2740,8 +2764,8 @@ $.any.anyView.prototype.createView = function (params)
 
   if (!model)
     return null;
-  type = type ? type : this._findType(data,id,null);
-  mode = mode ? mode : this._findMode(data,id,null);
+  type = type ? type : this._findType(data,id);
+  mode = mode ? mode : this._findMode(data,id);
   if (!type || !mode)
     return null;
   if (!parent)
@@ -4681,7 +4705,8 @@ $.any.anyView.prototype._findViewOfType = function (type)
     for (let x in this.views) {
       if (this.views.hasOwnProperty(x)) {
         let the_view = this.views[x];
-        if (the_view.model && the_view.model.type == type && the_view.mode != "head")
+        if (the_view.model && the_view.model.type == type &&
+            the_view.mode != "head") // TODO! We should get rid of this.mode, this seems to be the only place it is used
           return the_view;
         else {
           v = the_view._findViewOfType(type);
