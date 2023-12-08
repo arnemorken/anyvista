@@ -309,21 +309,11 @@ $.any.anyView.prototype._createIdBase = function ()
 }; // _createIdBase
 
 // Get filters, or create them if they dont exist yet
-$.any.anyView.prototype._getOrCreateFilters = function (model)
+$.any.anyView.prototype._getOrCreateFilters = function (type,data)
 {
-  let type = model ? model.type : null;
   let f = this.options.filters;
-  if (!type) { // If no type, set type to type of first data element (if any)
-   let data = model ? model.data : null;
-   if (data) {
-     let ix = Object.keys(data)[0];
-     let fd = data[ix];
-     if (fd) {
-       console.warn("No type specified, using type of first data element for filter. ");
-       type = fd.list ? fd.list : fd.item ? fd.item : fd.head ? fd.head : null;
-     }
-   }
-  }
+  if (!type)
+   type = this._findType(data)
   if (!type) {
     console.warn("No type specified, cannot create filters. ");
     return f;
@@ -344,7 +334,7 @@ $.any.anyView.prototype._getOrCreateFilters = function (model)
     }
   }
   // Create minimal working filter for given type
-  let filt = new window[f_str]({type:type,model:model});
+  let filt = new window[f_str]({type:type});
   if (!f)
     f = {};
   f[type] = filt.filters[type]; // Add new filters, but dont overwrite old ones
@@ -2809,7 +2799,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
   return {
     model:                  model,
     mode:                   mode,
-    filters:                this._getOrCreateFilters(model), // Create filter if we don't already have one
+    filters:                this._getOrCreateFilters(type,model?model.data:null), // Create filter if we don't already have one
     id:                     view_id,
     view:                   this,
     id_base:                this.id_base,
