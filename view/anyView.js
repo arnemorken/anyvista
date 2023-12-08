@@ -3789,7 +3789,7 @@ $.any.anyView.prototype._addListEntry = function (opt)
          table_div:  table_div,
          type:       type,
          mode:       mode,
-         data:       opt.data,
+         data:       the_data,
          id:         new_id,
          par_data:   par_data,
          par_id:     par_id,
