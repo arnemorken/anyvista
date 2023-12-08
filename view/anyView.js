@@ -3654,6 +3654,7 @@ $.any.anyView.prototype.addListEntry = function (event)
     if (this.model.source != "remote") {
       let new_id = this.model.dataSearchNextId(null,type);
       if (new_id >= 0) {
+        row_id_str += "_"+new_id;
         this._addListEntry({
                type:       type,
                mode:       "list",
@@ -3663,6 +3664,7 @@ $.any.anyView.prototype.addListEntry = function (event)
                par_id:     par_id,
                id_str:     id_str,
                row_id_str: row_id_str,
+               table_div:  table_div,
                filter:     filter,
              });
       }
