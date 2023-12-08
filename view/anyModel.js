@@ -699,7 +699,7 @@ anyModel.prototype.dataSearch = function (options,
           // id search
           let is_int = Number.isInteger(parseInt(idc));
           if ((is_int && parseInt(idc) == parseInt(id)) || (!is_int && idc == id)) {
-            item = data;
+            item = data; // Note! Ignoring options.parent in this case
           }
         }
         else {
@@ -802,7 +802,7 @@ anyModel.prototype.dataSearchMaxId = function (data,type,_prev_type)
     type = this.type;
   if (!type)
     return -1;
-  // If a non-numerical index is found, return immediately
+  // If any non-numerical index is found, return immediately
   let datakeys = Object.keys(data);
   for (const key in datakeys) {
     if (datakeys.hasOwnProperty(key)) {
@@ -1264,7 +1264,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
         // TODO! Not implemented
       }
     } // for
-  }
+  } // if
   return true;
 }; // dataUpdateLinkList
 
