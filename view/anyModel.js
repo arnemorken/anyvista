@@ -1195,15 +1195,12 @@ anyModel.prototype.dataUpdateLinkList = function (options)
 
   if (!the_data)
     return false;
-  if (!the_type || !the_link_type) {
-    let errstr = "";
-    if (!the_type)      errstr += i18n.error.TYPE_MISSING;
-    if (!the_link_type) errstr += i18n.error.LINK_TYPE_MISSING;
-    console.error("anyModel.dataUpdateLinkList: "+errstr);
+  if (!the_link_type) {
+    console.error("anyModel.dataUpdateLinkList: "+i18n.error.LINK_TYPE_MISSING);
     return false;
   }
-  if (the_id && the_link_id) {
-    // Remove the link data with id 'options.id' and return
+  if (the_link_id) {
+    // Remove the link data and return
     this.dataDelete({ data: the_link_data,
                       id:   the_link_id,
                       type: the_link_type,
@@ -1219,14 +1216,14 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                              id:   rem_id,
                              type: the_link_type,
                           }))
-        console.warn("Could not remove "+the_type+" item with id "+rem_id+" (not found in data). "); // TODO! i18n
+        console.warn("Could not remove "+the_link_type+" item with id "+rem_id+" (not found in data). "); // TODO! i18n
     } // for
-    if (the_data && the_data["link-"+the_type] && (!the_data["link-"+the_type].data || !Object.size(the_data["link-"+the_type].data)))
+    if (the_data && the_type && the_data["link-"+the_type] && (!the_data["link-"+the_type].data || !Object.size(the_data["link-"+the_type].data)))
       delete the_data["link-"+the_type];
   } // if
 
   // Insert or update link in `select`
-  if (options.select) {
+  if (options.select && the_id && the_type) {
     for (let sel_id of options.select) {
       // Only insert item if it is not already in model
       if (!this.dataSearch({ data: the_data,
