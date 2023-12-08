@@ -830,7 +830,7 @@ anyModel.prototype.dataSearchMaxId = function (data,type,_prev_type)
     else
       _prev_type = dtype;
     if (!dtype)
-      return -1;
+      dtype = type;
     if (type == dtype)
       this.max = Math.max(this.max,max);
   }
