@@ -4839,6 +4839,11 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
   opt.context = this.model;
   if (!opt.id)
     opt.id  = this.model.link_id; // TODO! Is this always correct?
+  if (!opt.type)
+    if (this.model.type)
+      opt.type = this.model.type;
+    else
+      opt.type = opt.link_type;
   if (!this.model.dbUpdateLinkList(opt))
     return false;
   return true;
