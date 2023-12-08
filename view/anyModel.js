@@ -350,13 +350,15 @@ var anyModel = function (options)
     }
   }
 
-  // Warnings and errors
+  // Show warnings about crucial elements missing
   if (options && !this.type)
-    this.message += i18n.error.TYPE_MISSING;
+    console.warn("anyModel: "+i18n.error.TYPE_MISSING);
   if (options && !this.id_key)
-    this.message += i18n.error.ID_KEY_MISSING;
+    console.warn("anyModel: "+i18n.error.ID_KEY_MISSING);
   if (options && !this.name_key)
-    this.message += i18n.error.NAME_KEY_MISSING;
+    console.warn("anyModel: "+i18n.error.NAME_KEY_MISSING);
+
+  // Show other warnings and errors (from server, etc.)
   if (this.message !== "")
     console.warn("anyModel: "+this.message);
   if (this.error !== "")
