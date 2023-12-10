@@ -1774,21 +1774,20 @@ class anyTable extends dbTable
       $topidx = "+".$this->mId;
     $data = array("data" => array($topidx => null));
 
-    // Find and set the header
+    // Set header and "head"
     $hdr = $this->findHeader($inData);
-    if (isset($hdr) && $hdr != "") {
-      if (($this->mId || $this->mId === 0) && $this->mId != "") {
-        $data["data"][$topidx]["head"] = $this->mType;
+    if (($this->mId || $this->mId === 0) && $this->mId != "") {
+      $data["data"][$topidx]["head"] = $this->mType;
+      if (isset($hdr) && $hdr != "")
         $data["data"][$topidx][$this->mNameKey] = $hdr;
-      }
-      else {
-        $data["data"][$topidx]["head"] = "group";
-        $data["data"][$topidx]["group_name"] = $hdr;
-      }
     }
-
-     // Set group type
-     $data["data"][$topidx]["group_type"] = $this->mType;
+    else {
+      $data["data"][$topidx]["head"] = "group";
+      if (isset($hdr) && $hdr != "")
+        $data["data"][$topidx]["group_name"] = $hdr;
+    }
+    // Set group type
+    $data["data"][$topidx]["group_type"] = $this->mType;
 
     // Set data
     $data["data"][$topidx]["data"] = $inData;
