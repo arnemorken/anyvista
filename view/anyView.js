@@ -133,7 +133,7 @@ var anyViewWidget = $.widget("any.anyView", {
     onFocusoutRemoveEmpty:  true,
     useOddEven:             true,
     mode:                   null,
-    defaultMode:            "head",
+    defaultMode:            "list",
     itemsPerPage:           20,
     currentPage:            1,
     grouping:               "",
@@ -385,10 +385,11 @@ $.any.anyView.prototype._findTypeFromData = function (data)
 }; // _findTypeFromData
 
 // Find the current mode to use
-$.any.anyView.prototype._findMode = function (data,id,omode)
+$.any.anyView.prototype._findMode = function (data,id)
 {
   let mode = null;
   if (data) {
+    // Data item exists, see if it has a specified mode
     if (id || id === 0) {
       let d = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
       if (d)
@@ -397,16 +398,10 @@ $.any.anyView.prototype._findMode = function (data,id,omode)
     if (!mode)
       mode = data.list ? "list" : data.item ? "item" : data.head ? "head" : null;
   }
-  if (!mode && omode != "head")
-    mode = omode;
-  if (!mode && data) {
-    // Set mode to mode of "first" element in object
-    let idx = Object.keys(data)[0];
-    if (idx || idx === 0)
-      mode = data[idx].list ? "list" : data[idx].item ? "item" : data[idx].head ? "head" : null;
+  if (!mode) {
+    // No mode specified, so fall back to default
+    mode = this.options.defaultMode;
   }
-  if (!mode)
-    mode = this.mode == "list" || this.options.simple ? "list" : this.options.defaultMode;
   return mode;
 }; // _findMode
 
@@ -569,7 +564,7 @@ $.any.anyView.prototype.refresh = function (params)
           if (view) {
             // Find the type and mode of the current data item (default is the previous type/mode)
             let curr_type = view._findType(data,id,prev_type);
-            let curr_mode = view._findMode(data,id,prev_mode);
+            let curr_mode = view._findMode(data,id);
             // See if we need to add to id_stack
             if (curr_mode == "head" || curr_mode == "item") {
               let idx = Number.isInteger(parseInt(id)) ? ""+parseInt(id) : id;
