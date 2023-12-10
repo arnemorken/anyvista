@@ -1371,6 +1371,7 @@ $.any.anyView.prototype.refreshThead = function (params)
       id:         "new", // Find a new id
       par_data:   params.par_data,
       par_id:     params.par_id,
+      par_type:   params.par_type,
       id_str:     id_str,
       row_id_str: row_id_str,
       filter:     filter,
@@ -3623,6 +3624,7 @@ $.any.anyView.prototype.addListEntry = function (event)
   let id         = event.data.id;
   let par_data   = event.data.par_data;
   let par_id     = event.data.par_id;
+  let par_type   = event.data.par_type;
   let id_str     = event.data.id_str;
   let row_id_str = event.data.row_id_str;
   let edit       = event.data.edit;
@@ -3640,6 +3642,7 @@ $.any.anyView.prototype.addListEntry = function (event)
       id:        par_id, // TODO! Is this correct?
       par_data:  par_data,
       par_id:    par_id,
+      par_type:  par_type,
     };
     this.refreshData(new_params);
   }
@@ -3662,6 +3665,7 @@ $.any.anyView.prototype.addListEntry = function (event)
                new_id:     new_id,
                par_data:   par_data,
                par_id:     par_id,
+               par_type:   par_type,
                id_str:     id_str,
                row_id_str: row_id_str,
                table_div:  table_div,
@@ -3685,6 +3689,9 @@ $.any.anyView.prototype.addListEntry = function (event)
                    id_str:     id_str,
                    row_id_str: row_id_str,
                    table_div:  table_div,
+                   par_data:   par_data,
+                   par_id:     par_id,
+                   par_type:   par_type,
                  });
     }
   }
@@ -3724,6 +3731,7 @@ $.any.anyView.prototype._addListEntryFromDB = function (context,serverdata,optio
       serverdata.data      = options.data     ? options.data     : view.model.data;
       serverdata.par_data  = options.par_data ? options.par_data : null;
       serverdata.par_id    = options.par_id   ? options.par_id   : null;
+      serverdata.par_type  = options.par_type ? options.par_type : null;
       serverdata.filter    = view.getFilter(serverdata.type,serverdata.mode);
       serverdata.table_div = options.table_div;
       view._addListEntry(serverdata);
@@ -3738,6 +3746,7 @@ $.any.anyView.prototype._addListEntry = function (opt)
   let new_id     = opt.new_id;
   let par_data   = opt.par_data;
   let par_id     = opt.par_id;
+  let par_type   = opt.par_type;
   let id_str     = opt.id_str;
   let row_id_str = opt.row_id_str;
   let filter     = opt.filter;
@@ -3793,6 +3802,7 @@ $.any.anyView.prototype._addListEntry = function (opt)
          id:         new_id,
          par_data:   par_data,
          par_id:     par_id,
+         par_type:   par_type,
          id_str:     id_str,
          row_id_str: row_id_str,
          edit:       true,
