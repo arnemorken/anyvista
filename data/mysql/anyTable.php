@@ -1908,11 +1908,9 @@ class anyTable extends dbTable
     $this->dbMetaInsertOrUpdate($this->mId);
 
     // Insert in group table, if group id is given and we have a group table
-    // TODO! Untested
-    if (isset($this->mTableNameGroupLink) &&
-        $this->tableExists($this->mTableNameGroupLink)) {
-      $gid = Parameters::get("group_id");
-      if ($gid && $gid != ""  && $gid != "nogroup" && $this->mType != "group") {
+    $gid = Parameters::get("group_id");
+    if (($gid || $gid==0)&& $gid != "" && $gid != "nogroup" && $this->mType != "group") {
+      if (isset($this->mTableNameGroupLink) && $this->tableExists($this->mTableNameGroupLink)) {
         $stmt = "INSERT INTO ".$this->mTableNameGroupLink." (group_id,".$this->mType."_id) ".
                 "VALUES ('".$gid."','".$this->mId."')";
         //error_log("stmt:".$stmt);
@@ -1921,8 +1919,11 @@ class anyTable extends dbTable
       }
     }
     // Insert in link table, if link id is given
-    // TODO! Not implemented yet
-
+    $link_id = Parameters::get("link_id");
+    if (($link_id || $link_id==0) && $link_id != "") {
+        Parameters::set("add",$link_id);
+        $this->dbUpdateLinkList();
+    }
     // Set result message
     $this->setMessage($this->mInsertSuccessMsg);
 
@@ -2274,8 +2275,8 @@ class anyTable extends dbTable
           foreach ($inslist as $updval) {
             if ($updval && intval($id) != intval($updval)) {
               $stmt = "UPDATE ".$this->mTableName." ".
-                      "SET parent_id='".intval($id)."' ".
-                      "WHERE ".$id_key."='".intval($updval)."'";
+                      "SET parent_id='".intval($updval)."' ".
+                      "WHERE ".$id_key."='".intval($id)."'";
               //elog("dbUpdateLinkList(5):".$stmt);
               if (!$this->query($stmt))
                 return null;
