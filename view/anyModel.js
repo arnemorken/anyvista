@@ -794,7 +794,7 @@ anyModel.prototype.dataSearchMaxId = function (data,type,_prev_type)
   if (!data)
     data = this.data;
   // If empty dataset, start with 0
-  if (!data) {
+  if (!data || Object.size(data) == 0) {
     this.max = 0;
     return 0;
   }
