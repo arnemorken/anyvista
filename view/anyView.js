@@ -4993,7 +4993,7 @@ $.any.anyView.prototype.showMessages = function (modelOrString,spin)
   let msgdiv = $("#"+div_id);
   if (msgdiv.length) {
     msgdiv.empty();
-    if (!modelOrString)
+    if (!modelOrString && modelOrString != "")
       modelOrString = this.model;
     let close_icon = "<span id='"+div_id+"_close' style='padding-right:5px;' class='far fa-window-close'></span>";
     if (typeof modelOrString == "object" && this.options) {
@@ -5008,7 +5008,8 @@ $.any.anyView.prototype.showMessages = function (modelOrString,spin)
     }
     else
     if (typeof modelOrString == "string") {
-        msgdiv.append(close_icon+"<span style='color:red;'>"+modelOrString+"</span>");
+      let cl_ic = modelOrString == "" ? "" : close_icon;
+      msgdiv.append(cl_ic+"<span style='color:red;'>"+modelOrString+"</span>");
     }
     $("#"+div_id+"_close").off("click").on("click",function(event) { let msgdiv = $("#"+div_id); msgdiv.empty(); });
   }
