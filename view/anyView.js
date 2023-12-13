@@ -3652,7 +3652,8 @@ $.any.anyView.prototype.addListEntry = function (event)
     if (this.model.source != "remote") {
       let new_id = this.model.dataSearchNextId(null,type);
       if (new_id >= 0) {
-        row_id_str += "_"+new_id;
+        row_id_str  = row_id_str.substr(0, row_id_str.lastIndexOf("_"));
+        row_id_str += row_id_str ? "_"+new_id : new_id;
         this._addListEntry({
                type:       type,
                mode:       "list",
