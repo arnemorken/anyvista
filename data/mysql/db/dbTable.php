@@ -165,14 +165,21 @@ class dbTable
     if (isset($unique))
       $sql .= ",UNIQUE KEY(".$unique.")";
     $sql .= ")";
-    //error_log("dbCreate,sql:$sql");
-    if ($this->query($sql)) {
-      error_log("Table $tableName created successfully");
-      return true;
+    error_log("dbCreate,sql:$sql");
+    try {
+      if ($this->query($sql)) {
+        error_log("Table $tableName created successfully");
+        return true;
+      }
+      $this->mError = "dbTable::dbCreate: Error creating table $tableName:".$this->getError();
+      error_log($this->mError);
+      return false;
     }
-    $this->mError = "dbTable::dbCreate: Error creating table $tableName:".$this->getError();
-    error_log($this->mError);
-    return false;
+    catch (Exception $e) {
+        $this->mError = "dbCreate::query: Exception: ".$e->getMessage();
+        $this->mError .= "\nQuery was: ".$sql;
+        error_log($this->mError);
+    }
   } // dbCreate
 
   /**
@@ -195,28 +202,35 @@ class dbTable
       return false;
     }
     //error_log("dbTable.query:".$stmt);
-    if (substr($stmt,0,6) == "SELECT") {
-      try {
-        $this->mDBResult = $this->mDBConnection->mDBHandle->query($stmt);
-        if (!$this->mDBResult) {
-          $this->mError = "dbTable::query3: ".$this->mDBConnection->getError();
-          $this->mError .= "<br/>\nQuery was: ".$stmt;
+    try {
+      if (substr($stmt,0,6) == "SELECT") {
+        try {
+          $this->mDBResult = $this->mDBConnection->mDBHandle->query($stmt);
+          if (!$this->mDBResult) {
+            $this->mError = "dbTable::query3: ".$this->mDBConnection->getError();
+            $this->mError .= "<br/>\nQuery was: ".$stmt;
+            error_log($this->mError);
+          }
+        }
+        catch (Exception $e) {
+          $this->mError = "dbTable::query4: Exception: ".$e->getMessage();
+          $this->mError .= "\nQuery was: ".$stmt;
           error_log($this->mError);
         }
       }
-      catch (Exception $e) {
-        $this->mError = "dbTable::query4: Exception: ".$e->getMessage();
-        $this->mError .= "\nQuery was: ".$stmt;
-        error_log($this->mError);
+      else {
+        $this->mNumRowsChanged = $this->mDBConnection->mDBHandle->exec($stmt);
+        if ($this->mNumRowsChanged === false) {
+          $this->mError = "dbTable::query5: ".$this->mDBConnection->getError();
+          $this->mError .= "\nQuery was: ".$stmt;
+          error_log($this->mError);
+        }
       }
     }
-    else {
-      $this->mNumRowsChanged = $this->mDBConnection->mDBHandle->exec($stmt);
-      if ($this->mNumRowsChanged === false) {
-        $this->mError = "dbTable::query5: ".$this->mDBConnection->getError();
+    catch (Exception $e) {
+        $this->mError = "query::query: Exception: ".$e->getMessage();
         $this->mError .= "\nQuery was: ".$stmt;
         error_log($this->mError);
-      }
     }
     return !$this->isError(); // Return true if ok
   } // query
