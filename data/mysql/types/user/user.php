@@ -47,7 +47,7 @@ var view_options  = { id:          view_area,
                       model:       model,
                       isEditable:  is_admin || is_new || is_me,
                       isDeletable: is_admin || is_new || is_me,
-                      isRemovable: false,
+                      isRemovable: is_admin,
                       edit:        is_new,
                     };
 var view          = new userViewTabs(view_options);
