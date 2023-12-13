@@ -139,6 +139,11 @@ class dbTable
     if (!$type)
       return false;
     $tableName = "any_".$type;
+    if ($this->tableExists($tableName)) {
+      $this->mError = "dbTable::dbCreate: Table $tableName already exists";
+      error_log($this->mError);
+      return false;
+    }
     $key_field = $type."_id"; // Default PRIMARY KEY field
     $sql = "CREATE TABLE $tableName (";
     if (!$tableFields) {
@@ -165,7 +170,8 @@ class dbTable
       error_log("Table $tableName created successfully");
       return true;
     }
-    error_log("Error creating table $tableName:".$this->getError());
+    $this->mError = "dbTable::dbCreate: Error creating table $tableName:".$this->getError();
+    error_log($this->mError);
     return false;
   } // dbCreate
 
