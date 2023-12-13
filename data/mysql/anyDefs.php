@@ -68,7 +68,7 @@ define("gTinyMCE_js",       gTinyMCEURL      . "tinymce.min.js");
 
 //define("WP_PLUGIN",""); // Comment out if using the server API, but not as a Wordpress plugin
 define("gWordpressURL",     gServer            . "Prosjekter/testserver/");
-define("gWProot", dirname(dirname(dirname(dirname(dirname(__FILE__)))))); // Path to wp-load.php
+define("gWProot", dirname(dirname(dirname(dirname(dirname(dirname(__FILE__))))))); // Path to wp-load.php
 define("gWPLoad", gWProot . "/wp-load.php"); // Wordpress functions
 
 // The names of user tables and columns depend on whether we run against a Wordpress database or not
