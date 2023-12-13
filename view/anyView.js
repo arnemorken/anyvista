@@ -4928,9 +4928,9 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
 
 $.any.anyView.prototype.dbDelete = function (opt)
 {
-  // Close dialog and stop spinner
+  // Close dialog and start spinner
   w3_modaldialog_close(opt.parentId,opt.elementId);
-  this.showMessages("",false);
+  this.showMessages("",true);
 
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
