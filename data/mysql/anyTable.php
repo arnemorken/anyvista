@@ -607,7 +607,9 @@ class anyTable extends dbTable
       return null;
     if ($this->mId == "max" || $this->mId == "par")
       return ($this->mData); // dbSearchMaxId() and dbSearchParents() do not need to call prepareData()
-    return $this->prepareData($this->mData);
+    return $this->mNumResults != 0
+           ? $this->prepareData($this->mData)
+           : $this->mData;
   } // dbSearch
 
   protected function dbValidateSearch()
@@ -719,6 +721,7 @@ class anyTable extends dbTable
       $this->setError("Missing key ($key) or value ($val). ");
       return false;
     }
+    $this->mNumResults = 0;
     // Build and execute the query
     $stmt = $this->dbPrepareSearchItemStmt($key,$val,$includeUser);
     //elog("dbSearchItem:".$stmt);
@@ -732,7 +735,7 @@ class anyTable extends dbTable
         $this->dbSearchItemLists($data); // Get lists associated with the item
       $data["+".$this->mId]["item"] = $this->mType;
       $data["id"] = $this->mId;
-
+      $this->mNumResults = 1;
     }
     return !$this->isError();
   } // dbSearchItem
@@ -1033,6 +1036,7 @@ class anyTable extends dbTable
       if (array_key_exists($gr_idx,$data)) {
         $n = sizeof($data[$gr_idx]);
         $data[$gr_idx]["grouping_num_results"] = $n;
+        $this->mNumResults += $n;
       }
     }
     return $success;
