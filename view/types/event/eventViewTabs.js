@@ -1,3 +1,5 @@
+/* jshint esversion: 9 */
+/* globals $,anyViewTabs,eventFilter,eventValidator, */
 "use strict";
 /****************************************************************************************
  *

@@ -1,3 +1,5 @@
+/* jshint esversion: 9 */
+/* globals $,anyViewTabs,doUploadFile,any_defs,i18n,documentFilter,documentValidator, */
 "use strict";
 /****************************************************************************************
  *

@@ -1,3 +1,4 @@
+/* jshint esversion: 9 */
 "use strict";
 /****************************************************************************************
  *
@@ -21,7 +22,6 @@ var eventFilter = function (options)
   this.is_logged_in = permission && parseInt(permission.current_user_id) > 0;
   this.is_new       = (data_id == "new" || parseInt(data_id) == -1);
   this.is_admin     = permission && permission.is_admin;
-  let disp_result   = this.is_logged_in ? 1 : 0;
   this.filters = {
     event: {
       item: {

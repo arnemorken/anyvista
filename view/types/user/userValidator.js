@@ -1,3 +1,5 @@
+/* jshint esversion: 9 */
+/* globals $,emailIsValid, */
 "use strict";
 /****************************************************************************************
  *
@@ -34,12 +36,12 @@ userValidator.prototype.validateUpdate = function (opt,view)
   let item = view.model.dataSearch({type:opt.type,id:opt.id,data:opt.data});
   if (!item || !item[opt.id])
     return false; // Should never happen
-  let is_new = item[opt.id].is_new || (!opt.id && opt.id !== 0) || parseInt(opt.id) == -1
+  let is_new = item[opt.id].is_new || (!opt.id && opt.id !== 0) || parseInt(opt.id) == -1;
 
   // Validate display name
   let nameid0 = elem_id_base+"_display_name .itemEdit";
-  let v0 = jQuery("#"+nameid0).val();
-  if (jQuery("#"+nameid0).length != 0 && !v0)
+  let v0 = $("#"+nameid0).val();
+  if ($("#"+nameid0).length != 0 && !v0)
       err += "Display name missing. ";
 
   // Validate login/email
@@ -77,12 +79,12 @@ userValidator.prototype.validateUpdate = function (opt,view)
 
   // Validate gender
   let nameid1 = elem_id_base+"_gender .itemEdit";
-  if (jQuery("#"+nameid1).length != 0 && !jQuery("#"+nameid1).val())
+  if ($("#"+nameid1).length != 0 && !$("#"+nameid1).val())
       err += "Gender missing. ";
 
   // Validate date of birth
   let nameid2 = elem_id_base+"_date_birth .itemEdit";
-  if (jQuery("#"+nameid2).length != 0 && !jQuery("#"+nameid2).val())
+  if ($("#"+nameid2).length != 0 && !$("#"+nameid2).val())
       err += "Birth date missing. ";
 
   // Validate password

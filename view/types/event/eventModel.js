@@ -1,3 +1,5 @@
+/* jshint esversion: 9 */
+/* globals $,anyModel,isInt, */
 "use strict";
 /****************************************************************************************
  *
@@ -66,8 +68,10 @@ eventModel.prototype.dbSetAttended = function (options)
   if (this.source == "remote") { // Remote server call
     let url  = this._getDataSourceName() + param_str;
     let self = this;
-    jQuery.getJSON(url)
-    .done(function(jqXHR) { return self.dbSetAttendedSuccess(jqXHR,options); });
+    $.getJSON(url)
+    .done(function(serverdata) {
+      return self.dbSetAttendedSuccess(serverdata,options);
+    });
   }
   else {
     // TODO
@@ -77,19 +81,18 @@ eventModel.prototype.dbSetAttended = function (options)
   return true;
 }; // dbSetAttended
 
-eventModel.prototype.dbSetAttendedSuccess = function (jqXHR,options)
+eventModel.prototype.dbSetAttendedSuccess = function (serverdata,options)
 {
-  let context = options.context ? options.context : this;
-  if (jqXHR) {
+  let self = options.context ? options.context : this;
+  if (serverdata) {
     // Remove encapsulation, if it exists
-    let serverdata = jqXHR;
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
-    context.message = serverdata.message;
-    context.error   = serverdata.error;
+    self.message = serverdata.message;
+    self.error   = serverdata.error;
   }
-  if (context.cbExecute)
-    context.cbExecute();
+  if (self.cbExecute)
+    self.cbExecute();
   return true;
 }; // dbSetAttendedSuccess
 
