@@ -1,3 +1,6 @@
+/* jshint sub:true */
+/* jshint esversion: 9 */
+/* globals i18n,any_defs,dbConnection,anyTableFactory,anyModel,test,module,deepEqual,asyncTest,start, */
 "use strict";
 
 /****************************************************************************************
@@ -370,7 +373,6 @@ function testModel()
 
   test('dataSearchNextId and dataSearchMaxId', function() {
 
-    let dm1 = new anyModel({type:"foo",source:gDBSource});
     var data1 = {
       6: {
         head: "group",
@@ -799,8 +801,7 @@ function testModel()
                                        new_data:  new_data,
                                      });
       console.log(JSON.stringify(dm.data));
-      deepEqual(res !== null
-                ,
+      deepEqual(res !== null,
                 true, "dataUpdateLinkList - different types ("+i+"). ");
       if (i==7)
         break;
@@ -1039,7 +1040,7 @@ function testModel()
                                 start();
                               }, millisec);
                             },
-                         })
+                         });
     deepEqual(res, true, "dbSearch({type:'user',id:"+myid+"}) returns true");
   });
 
