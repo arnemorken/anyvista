@@ -2281,8 +2281,8 @@ anyModel.prototype.dbUpdateLinkList = function (options)
 anyModel.prototype._dbUpdateLinkListLocal = async function (options)
 {
   if (this.table_factory) {
-    let the_type   = options.type      ? options.type      : this.type;
-    let table_name = options.tableName ? options.tableName : the_type+"Table";
+    let the_type   = options && options.type      ? options.type      : this.type;
+    let table_name = options && options.tableName ? options.tableName : the_type+"Table";
     let table = await this.table_factory.createClass(table_name,{header:true});
     if (table && table.error == "") {
       let self = this;
