@@ -60,33 +60,41 @@ Parameters::set("fields",array (
   $data  = null;
 
   if ($cmd != "perm" && $type != null && $type != "") {
-    $table = anyTableFactory::createClass($type,null);
-    if ($table != null) {
-      //$start = microtime(true);
-      switch ($cmd) {
-        case "cre": $table->dbCreate($type,Parameters::get("table"),Parameters::get("unique")); break;
-        case "ins": $data = $table->dbInsert(); break;
-        case "upd": $data = $table->dbUpdate(); break;
-        case "del": $data = $table->dbDelete(); break;
-        default:    $data = $table->dbSearch(); break;
+    try {
+      $table = anyTableFactory::createClass($type,null);
+      if ($table != null) {
+        //$start = microtime(true);
+        switch ($cmd) {
+          case "cre": $table->dbCreate($type,Parameters::get("table"),Parameters::get("unique")); break;
+          case "ins": $data = $table->dbInsert(); break;
+          case "upd": $data = $table->dbUpdate(); break;
+          case "del": $data = $table->dbDelete(); break;
+          default:    $data = $table->dbSearch(); break;
+        }
+        //$time_elapsed_secs = microtime(true) - $start;
+        //error_log("anyGetData: time_elapsed_secs: $time_elapsed_secs");
+        if ($table->isError() ||
+            Parameters::get("search") === "no" || Parameters::get("search") === "false" ||
+            Parameters::get($table->getIdKey()) === "") {
+          $data = $table->getData();
+          if ($data !== null && !empty($data))
+            $data = $table->prepareData($data);
+        }
+        $data["permission"] = $table->getPermission();
+        $data["message"]    = $table->getMessage();
+        $data["error"]      = $table->getError();
       }
-      //$time_elapsed_secs = microtime(true) - $start;
-      //error_log("anyGetData: time_elapsed_secs: $time_elapsed_secs");
-      if ($table->isError() ||
-          Parameters::get("search") === "no" || Parameters::get("search") === "false" ||
-          Parameters::get($table->getIdKey()) === "") {
-        $data = $table->getData();
-        if ($data !== null && !empty($data))
-          $data = $table->prepareData($data);
+      else { // No table
+        $data["data"]    = null;
+        $data["message"] = "";
+        $data["error"]   = anyTableFactory::getError();
       }
-      $data["permission"] = $table->getPermission();
-      $data["message"]    = $table->getMessage();
-      $data["error"]      = $table->getError();
     }
-    else { // No table
-      $data["data"]    = null;
-      $data["message"] = "";
-      $data["error"]   = anyTableFactory::getError();
+    catch (Error $e) {
+      $err = "Server exception: ".$e->getMessage();
+      if ($data && (is_array($data) || is_object($data)))
+        $data["error"] = $err;
+      error_log($err);
     }
   }
 
@@ -97,10 +105,6 @@ Parameters::set("fields",array (
   $json_string = "{\"JSON_CODE\":".
                  json_encode($data).
                  "}";
-  //error_log("anyGetData json encoded data:\n".var_export(json_encode($data),true));
-
-  //header('Access-Control-Allow-Origin: *');
-  //header("Content-Type: application/json");
   if ($doEcho)
     echo $json_string;
   //else
