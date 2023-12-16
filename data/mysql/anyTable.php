@@ -2427,10 +2427,14 @@ class anyTable extends dbTable
       foreach ($this->mLinking as $idx => $link_type) {
         if ($this->mType !== $link_type) {
           $link_table = $this->findLinkTableName($link_type);
-          $stmt = "DELETE FROM ".$link_table." WHERE ".$this->getIdKey()."='".$this->mId."'";
-          //elog("dbDelete(3):".$stmt);
-          if (!$this->query($stmt))
-            return null;
+          if ($this->tableExists($link_table)) {
+            $stmt = "DELETE FROM ".$link_table." WHERE ".$this->getIdKey()."='".$this->mId."'";
+            //elog("dbDelete(3):".$stmt);
+            if (!$this->query($stmt))
+              return null;
+          }
+          //else
+          //  elog("dbDelete: Link table $link_table does not exist. ");
         }
       }
     }
