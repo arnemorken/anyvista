@@ -2810,7 +2810,7 @@ $.any.anyView.prototype.createView = function (params)
  * @method anyView.getCreateViewOptions
  * @return opt
  */
-// TODO! options.localRemove etc. must be sent as params when creating new view
+// TODO! Check that all relevant options are sent as params when creating new view
 $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,id_str,data_level,indent_level,params)
 {
   if (!this.options)
@@ -2857,9 +2857,19 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
     isSelectable:           this.options.isSelectable,
     itemLinkClicked:        this.options.itemLinkClicked,
     clickContext:           this.options.clickContext,
-    preselected:            this.options.isSelectable ? this.options.preselected : null,
-    select:                 this.options.isSelectable ? this.options.select      : null,
-    unselect:               this.options.isSelectable ? this.options.unselect    : null,
+    preselected:            this.options.isSelectable    ? this.options.preselected     : null,
+    select:                 this.options.isSelectable    ? this.options.select          : null,
+    unselect:               this.options.isSelectable    ? this.options.unselect        : null,
+    localSelect:            this.options.localSelect     ? this.options.localSelect     : null,
+    localUpdate:            this.options.localUpdate     ? this.options.localUpdate     : null,
+    localDelete:            this.options.localDelete     ? this.options.localDelete     : null,
+    localAdd:               this.options.localAdd        ? this.options.localAdd        : null,
+    localRemove:            this.options.localRemove     ? this.options.localRemove     : null,
+    localNew:               this.options.localNew        ? this.options.localNew        : null,
+    localEdit:              this.options.localEdit       ? this.options.localEdit       : null,
+    localCancel:            this.options.localCancel     ? this.options.localCancel     : null,
+    localCloseItem:         this.options.localCloseItem  ? this.options.localCloseItem  : null,
+    itemLinkClicked:        this.options.itemLinkClicked ? this.options.itemLinkClicked : null,
   };
 }; // getCreateViewOptions
 
