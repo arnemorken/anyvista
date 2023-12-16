@@ -372,6 +372,7 @@ class userTable extends anyTable
 
   public function dbInsert()
   {
+    $this->mError = "";
     if (!$this->dbValidateInsert())
       return null;
 
@@ -401,6 +402,7 @@ class userTable extends anyTable
             $this->mMessage .= "Couldn't log in. ";
         }
       }
+      $this->mData["id"] = $user_id;
     }
     else {
       $user_id = null;
@@ -410,7 +412,7 @@ class userTable extends anyTable
       return $res;
     }
     //error_log($this->getError().":".var_export($user_id,true));
-    return $user_id;
+    return $this->mData;
   } // dbInsert
 
   protected function dbLoginUser()
