@@ -2393,6 +2393,10 @@ class anyTable extends dbTable
     // Delete item(s) from table
     if (!$this->dbValidateDelete())
       return null;
+    if (!$this->tableExists($this->mTableName)) {
+      $this->setError("Table $this->mTableName does not exist. ");
+      return null;
+    }
     $this->mData = null; // TODO! Why?
     $stmt = "DELETE FROM ".$this->mTableName." WHERE ".$this->mIdKeyTable."='".$this->mId."'";
     //elog("dbDelete(1):".$stmt);
