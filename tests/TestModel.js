@@ -127,7 +127,7 @@ function testModel()
               dm1.permission.current_user_id === null &&
               dm1.permission.is_logged_in    === true &&
               dm1.permission.is_admin        === false &&
-              dm1.message                    !== "" &&
+              dm1.message                    === "" &&
               dm1.error                      === "" &&
               dm1.error_server               === "" &&
               dm1.db_timeout_sec             === 10,
@@ -922,12 +922,12 @@ function testModel()
                    deepEqual(dm.data !== null,
                              true, "dbSearch({id:"+myid+"}) returns item data:"+JSON.stringify(dm.data));
                    deepEqual(dm.data &&
-                             dm.data[myid] &&
-                             dm.data[myid].data &&
-                             dm.data[myid].data[idchk] &&
-                             parseInt(dm.data[myid].data[idchk][dm.id_key]) === parseInt(myid) &&
-                             (dm.data[myid].data[idchk][dm.name_key]        === uname ||
-                              dm.data[myid].data[idchk]["user_login"]       === ulogin),
+                             dm.data[idchk] &&
+                             dm.data[idchk].data &&
+                             dm.data[idchk].data[idchk] &&
+                             parseInt(dm.data[idchk].data[idchk][dm.id_key]) === parseInt(myid) &&
+                             (dm.data[idchk].data[idchk][dm.name_key]        === uname ||
+                              dm.data[idchk].data[idchk]["user_login"]       === ulogin),
                              true, "dbSearch({id:"+myid+"}) returns expected data");
                    start();
                  },
@@ -948,11 +948,11 @@ function testModel()
                                 deepEqual(dm.data !== null,
                                           true, "dbSearch({id:"+myid+"}) returns item data:"+JSON.stringify(dm.data));
                                 deepEqual(dm.data &&
-                                          dm.data[myid] &&
-                                          dm.data[myid].data &&
-                                          parseInt(dm.data[myid].data[idchk][dm.id_key]) === parseInt(myid) &&
-                                          (dm.data[myid].data[idchk][dm.name_key]        === uname ||
-                                           dm.data[myid].data[idchk]["user_login"]       === ulogin),
+                                          dm.data[idchk] &&
+                                          dm.data[idchk].data &&
+                                          parseInt(dm.data[idchk].data[idchk][dm.id_key]) === parseInt(myid) &&
+                                          (dm.data[idchk].data[idchk][dm.name_key]        === uname ||
+                                           dm.data[idchk].data[idchk]["user_login"]       === ulogin),
                                           true, "dbSearch({id:"+myid+"}) returns expected data");
                                 start();
                               }, millisec);
