@@ -892,7 +892,7 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
   }
   else {
     // Link with same type (sub-element with parent id)
-    if (self.hasParentId()) {
+    if (this.hasParentId()) {
       if (dellist) {
         // Remove parent for elements in dellist
         for (let i=0; i<dellist.length; i++) {
