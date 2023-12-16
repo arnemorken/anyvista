@@ -1,3 +1,5 @@
+/* jshint esversion: 9 */
+/* globals $, */
 "use strict";
 /****************************************************************************************
  *
@@ -73,7 +75,7 @@ function w3_autocomplete(fieldOrFieldId,type,id,arr,onSelect,context)
 {
   var inp = typeof fieldOrFieldId == "string" ? document.getElementById(fieldOrFieldId) : fieldOrFieldId;
   if (!inp) {
-    console.error("autocomplete: input field missing")
+    console.error("autocomplete: input field missing");
     return;
   }
   if (!inp.id)
@@ -100,7 +102,8 @@ function w3_autocomplete(fieldOrFieldId,type,id,arr,onSelect,context)
           b.innerHTML += arr[i].label.substr(val.length);
           b.innerHTML += "<input type='hidden' id='"+arr[i].value+"' value='" + arr[i].label + "'>"; // input field that will hold the current array items value
           // execute a function when someone clicks on the item value (div element)
-          b.addEventListener("click", function(e) {
+          b.addEventListener("click",
+            function(e) {
               let inp_tags = this.getElementsByTagName("input");
               var name = inp_tags[0].value; // insert the value for the autocomplete text field
               var sel_id = inp_tags[0].id;
@@ -108,7 +111,8 @@ function w3_autocomplete(fieldOrFieldId,type,id,arr,onSelect,context)
               closeAllLists(); // close the list of autocompleted values, (or any other open lists of autocompleted values
               var pid = typeof fieldOrFieldId == "string" ? fieldOrFieldId : fieldOrFieldId.id;
               onSelect.call(context,type,sel_id,name,pid);
-          });
+            }
+          );
           a.appendChild(b);
         }
       }

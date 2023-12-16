@@ -313,7 +313,7 @@ $.any.anyView.prototype._getOrCreateFilters = function (type,data)
 {
   let f = this.options.filters;
   if (!type)
-   type = this._findType(data)
+   type = this._findType(data);
   if (!type) {
     console.warn("No type specified, cannot create filters. ");
     return f;
@@ -2855,8 +2855,8 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
     isRemovable:            this.options.isRemovable || mode == "item", // TODO! Not a good solution
     isDeletable:            this.options.isDeletable,
     isSelectable:           this.options.isSelectable,
-    itemLinkClicked:        this.options.itemLinkClicked,
-    clickContext:           this.options.clickContext,
+    itemLinkClicked:        this.options.itemLinkClicked ? this.options.itemLinkClicked : null,
+    clickContext:           this.options.clickContext    ? this.options.clickContext    : null,
     preselected:            this.options.isSelectable    ? this.options.preselected     : null,
     select:                 this.options.isSelectable    ? this.options.select          : null,
     unselect:               this.options.isSelectable    ? this.options.unselect        : null,
@@ -2869,7 +2869,6 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
     localEdit:              this.options.localEdit       ? this.options.localEdit       : null,
     localCancel:            this.options.localCancel     ? this.options.localCancel     : null,
     localCloseItem:         this.options.localCloseItem  ? this.options.localCloseItem  : null,
-    itemLinkClicked:        this.options.itemLinkClicked ? this.options.itemLinkClicked : null,
   };
 }; // getCreateViewOptions
 

@@ -10,7 +10,6 @@
 var i18n = {
   button: {
     buttonNew:            "Ny",
-    buttonAdd:            "Legg til",
     buttonEdit:           "Rediger",
     buttonUpdate:         "Lagre",
     buttonDelete:         "Slett",
