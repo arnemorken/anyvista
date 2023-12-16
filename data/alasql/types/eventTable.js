@@ -46,4 +46,4 @@ eventTable.prototype.createLinkTables = function()
 eventTable.prototype.hasParentId = function()
 {
   return true;
-} // hasParentId
+}; // hasParentId

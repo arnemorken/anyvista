@@ -1,6 +1,6 @@
 /* jshint sub:true */
 /* jshint esversion: 6 */
-/* globals alasql,isInt */
+/* globals alasql, */
 "use strict";
 /********************************************************************************************
  *                                                                                          *

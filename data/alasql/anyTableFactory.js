@@ -1,5 +1,6 @@
 /* jshint sub:true */
 /* jshint esversion: 9 */
+/* globals gServer,gHomeFolder, */
 "use strict";
 
 var anyTableFactory = function (connection)

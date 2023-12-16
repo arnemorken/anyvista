@@ -1,6 +1,6 @@
 /* jshint sub:true */
 /* jshint esversion: 9 */
-/* globals $,i18n,any_defs,isFunction,w3_modaldialog,w3_modaldialog_close,tinyMCE,tinymce */
+/* globals alasql, */
 "use strict";
 /********************************************************************************************
  *                                                                                          *
@@ -85,7 +85,6 @@ dbTable.prototype.queryMaxId = async function(tableName)
   if (!tableName)
     return null;
 
-  let dataType = tableName == "acugroup" ? "group" : tableName;
   this.err = "";
   let self = this;
   if (!this.tableExists(tableName)) {

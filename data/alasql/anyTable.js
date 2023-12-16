@@ -1,6 +1,6 @@
 /* jshint sub:true */
 /* jshint esversion: 9 */
-/* globals $,i18n,any_defs,isFunction,w3_modaldialog,w3_modaldialog_close,tinyMCE,tinymce */
+/* globals anyTableFactory,dbTable,alasql, */
 "use strict";
 
 /********************************************************************************************
@@ -69,7 +69,7 @@ anyTable.prototype.constructor = anyTable;
 anyTable.prototype.hasParentId = function()
 {
   return false;
-} // hasParentId
+}; // hasParentId
 
 /////////////////////////
 //////// finders ////////
@@ -264,30 +264,32 @@ anyTable.prototype.dbSearchItemLists = async function(id,linking)
   let factory = new anyTableFactory(this.connection);
   let self = this;
   for (let link_type in linking) {
-    let link_object    = linking[link_type];
-    let link_tablename = link_object[0];
-    let link_classname = link_object[1];
-    //console.log(self.type+";"+link_type+":"+link_tablename+","+link_classname);
-    if (self.tableExists(link_tablename)) {
-      let tab = await factory.createClass(link_classname,true,true); // TODO!
-      //console.log("created "+link_classname);
-      await tab.dbSearchList(self.type,tab.type,id)
-      .then( function(data) {
-        let link_idx = "link-"+link_type;
-        let name_key = tab.nameKey;
-        if (!self.data[id])
-          self.data[id]              = { };
-        if (!self.data[id].data)
-          self.data[id].data         = { };
-        self.data[id].data[link_idx] = { data: { } };
-        self.data[id].data[link_idx]["head"] = link_type;
-        self.data[id].data[link_idx]["data"] = tab.data;
-        if (name_key)
-          self.data[id].data[link_idx][name_key] = self.findDefaultItemListHeader(link_type);
-        //console.log("item list "+link_type+":");
-        //console.log(self.data);
-        return Promise.resolve(data);
-      });
+    if (linking.hasOwnProperty(link_type)) {
+      let link_object    = linking[link_type];
+      let link_tablename = link_object[0];
+      let link_classname = link_object[1];
+      //console.log(self.type+";"+link_type+":"+link_tablename+","+link_classname);
+      if (self.tableExists(link_tablename)) {
+        let tab = await factory.createClass(link_classname,true,true); // TODO!
+        //console.log("created "+link_classname);
+        await tab.dbSearchList(self.type,tab.type,id)
+        .then( function(data) {
+          let link_idx = "link-"+link_type;
+          let name_key = tab.nameKey;
+          if (!self.data[id])
+            self.data[id]              = { };
+          if (!self.data[id].data)
+            self.data[id].data         = { };
+          self.data[id].data[link_idx] = { data: { } };
+          self.data[id].data[link_idx]["head"] = link_type;
+          self.data[id].data[link_idx]["data"] = tab.data;
+          if (name_key)
+            self.data[id].data[link_idx][name_key] = self.findDefaultItemListHeader(link_type);
+          //console.log("item list "+link_type+":");
+          //console.log(self.data);
+          return Promise.resolve(data);
+        });
+      }
     }
   }
   return Promise.resolve(this.data);
@@ -434,65 +436,72 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,linkId)
 
   // Make sure parent/child items are present in all groups where parent exists
   for (let gidx in data) {
-    let grp = data[gidx];
-    for (let idx in grp) {
-      let item = grp[idx];
-      if (item && item["parent_id"]) {
-        let pid = item["parent_id"];
-        for (let gidx2 in data) {
-          let grp2 = data[gidx2];
-          let item_parent = grp2[pid] || grp2[pid] === 0
-                            ? grp2[pid]
-                            : grp2["+"+pid] || grp2["+"+pid] === 0
-                              ? grp2["+"+pid]
-                              : null;
-          if (item_parent && gidx2 != gidx) {
-            //console.log("found child "+idx+" in group "+gidx+" with parent "+pid+"...");
-            if (!grp2[idx] && !grp2["+"+idx])
-              grp2[idx] = item;  // Copy child to other group
-            if (!grp[pid] && !grp["+"+pid]) {
-              let name = item[this.nameKey];
-              let err = "Warning: Item "+idx+" ("+name+") does not have parent in same group. ";
-              this.error = err;
-              console.log(err);
-            }
+    if (data.hasOwnProperty(gidx)) {
+      let grp = data[gidx];
+      for (let idx in grp) {
+        if (grp.hasOwnProperty(idx)) {
+          let item = grp[idx];
+          if (item && item["parent_id"]) {
+            let pid = item["parent_id"];
+            for (let gidx2 in data) {
+              if (data.hasOwnProperty(gidx2)) {
+                let grp2 = data[gidx2];
+                let item_parent = grp2[pid] || grp2[pid] === 0
+                                  ? grp2[pid]
+                                  : grp2["+"+pid] || grp2["+"+pid] === 0
+                                    ? grp2["+"+pid]
+                                    : null;
+                if (item_parent && gidx2 != gidx) {
+                  //console.log("found child "+idx+" in group "+gidx+" with parent "+pid+"...");
+                  if (!grp2[idx] && !grp2["+"+idx])
+                    grp2[idx] = item;  // Copy child to other group
+                  if (!grp[pid] && !grp["+"+pid]) {
+                    let name = item[this.nameKey];
+                    let err = "Warning: Item "+idx+" ("+name+") does not have parent in same group. ";
+                    this.error = err;
+                    console.log(err);
+                  }
+                } // if
+              } // if
+            } // for
           } // if
-        } // for
-      } // if
-    } // for
+        } // if
+      } // for
+    } // if
   } // for
 
   // Build data tree
   let data_tree = {};
   data_tree["grouping"] = true; // TODO! Should be able to specify this via option
   for (let gidx in data) {
-    let grp = data[gidx];
-    let ngidx = linkId
-                ? this.type
-                : Number.isInteger(gidx)
-                  ? "+"+gidx
-                  : gidx;
-    if (!data_tree[ngidx]) // TODO! This may not be the correct solution
-      data_tree[ngidx] = {};
-    if (data[gidx]) {
-      let gname = null;
-      data_tree[ngidx]["head"] = "group";
-      if (!linkId) {
-        data_tree[ngidx]["group_type"] = this.type;
-        data_tree[ngidx]["group_id"]   = ngidx;
-        gname = this.findDefaultHeader(this.type);
-        data_tree[ngidx]["group_name"] = gname;
+    if (data.hasOwnProperty(gidx)) {
+      let ngidx = linkId
+                  ? this.type
+                  : Number.isInteger(gidx)
+                    ? "+"+gidx
+                    : gidx;
+      if (!data_tree[ngidx]) // TODO! This may not be the correct solution
+        data_tree[ngidx] = {};
+      if (data[gidx]) {
+        let gname = null;
+        data_tree[ngidx]["head"] = "group";
+        if (!linkId) {
+          data_tree[ngidx]["group_type"] = this.type;
+          data_tree[ngidx]["group_id"]   = ngidx;
+          gname = this.findDefaultHeader(this.type);
+          data_tree[ngidx]["group_name"] = gname;
+        }
+        else {
+          let idx = data[gidx][linkId] ? linkId : "+" + linkId;
+          if (data[gidx][idx])
+            data_tree[ngidx][this.nameKey] = data[gidx][idx][this.nameKey];
+        }
       }
-      else {
-        let idx = data[gidx][linkId] ? linkId : "+" + linkId;
-        if (data[gidx][idx])
-          data_tree[ngidx][this.nameKey] = data[gidx][idx][this.nameKey];
-      }
-    }
-    if (!data_tree[ngidx]["data"]) // TODO! This may not be the correct solution
-      data_tree[ngidx]["data"] = this.buildDataTree(data[gidx],null);
-    if (!data_tree[ngidx]["data"])
-      delete data_tree[ngidx]["data"];
+      if (!data_tree[ngidx]["data"]) // TODO! This may not be the correct solution
+        data_tree[ngidx]["data"] = this.buildDataTree(data[gidx],null);
+      if (!data_tree[ngidx]["data"])
+        delete data_tree[ngidx]["data"];
+    } // if
   } // for
 
   // If grouping is specified, build group tree and stick data tree to it
@@ -517,35 +526,37 @@ anyTable.prototype.buildDataTree = function(flatdata,parentId)
   let retval = {};
   let id_name = this.idKey;
   for (let idx in flatdata) {
-    let subdata = flatdata[idx];
-    if (!idx.startsWith("grouping")) {
-      let sub_pid = subdata["parent_id"];
-      let parent_not_in_group = sub_pid && sub_pid != "" &&
-                                !flatdata[sub_pid] && !flatdata["+"+sub_pid];
-      let pid = null;
-      if (parent_not_in_group) {
-        pid = subdata["parent_id"];
-        delete subdata["parent_id"];
-      }
-      if (!subdata["parent_id"])
-        subdata["parent_id"] = null;
-      if (subdata["parent_id"] == parentId) {
-        var children = null;
-        if (subdata[id_name] && subdata[id_name] != "")
-          children = this.buildDataTree(flatdata,subdata[id_name]);
-        if (children)
-          subdata["data"] = children;
-        if (parent_not_in_group)
-          subdata["parent_id"] = pid;
-        retval[idx] = subdata;
-        subdata = null;
-      }
-      else {
-        if (pid != null)
-          subdata["parent_id"] = pid;
-      }
-    }
-  }
+    if (flatdata.hasOwnProperty(idx)) {
+      let subdata = flatdata[idx];
+      if (!idx.startsWith("grouping")) {
+        let sub_pid = subdata["parent_id"];
+        let parent_not_in_group = sub_pid && sub_pid != "" &&
+                                  !flatdata[sub_pid] && !flatdata["+"+sub_pid];
+        let pid = null;
+        if (parent_not_in_group) {
+          pid = subdata["parent_id"];
+          delete subdata["parent_id"];
+        }
+        if (!subdata["parent_id"])
+          subdata["parent_id"] = null;
+        if (subdata["parent_id"] == parentId) {
+          var children = null;
+          if (subdata[id_name] && subdata[id_name] != "")
+            children = this.buildDataTree(flatdata,subdata[id_name]);
+          if (children)
+            subdata["data"] = children;
+          if (parent_not_in_group)
+            subdata["parent_id"] = pid;
+          retval[idx] = subdata;
+          subdata = null;
+        }
+        else {
+          if (pid != null)
+            subdata["parent_id"] = pid;
+        }
+      } // if
+    } // if
+  } // for
   return retval;
 }; // buildDataTree
 
@@ -605,7 +616,7 @@ anyTable.prototype.dbInsert = async function(options)
   if (!options || !options.keys || !options.values || !this.dbValidateInsert(options))
     return Promise.resolve(null);
 
-  this.id = options.id ? options.id : null
+  this.id = options.id ? options.id : null;
 
   // Insert in normal table
   let stmt = await this.dbPrepareInsertStmt(options.keys,options.values);
@@ -951,8 +962,8 @@ anyTable.prototype.dbUpdateLink = async function(options)
     this.error = "Link table not found";
     return Promise.resolve(null);
   }
-  let id_key_link = link_type+"_id"; // TODO! Not general enough
   /*
+  let id_key_link = link_type+"_id"; // TODO! Not general enough
   if (!this.dbTableHasLink(link_table,id_key_link,link_id,this.idKey,this.id)) {
     this.message = "Link not found"; // TODO! i18n
     return Promise.resolve(null);
