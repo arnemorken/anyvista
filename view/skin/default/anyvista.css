@@ -288,6 +288,12 @@ input[type=submit] {
 .any-list-td:hover {
   background-color: #87ceeb;
 }
+.any-rows-odd {
+  background-color: #bbb;
+}
+.any-rows-even {
+  background-color: #ddd;
+}
 
 /**************************
  * Table cell entries

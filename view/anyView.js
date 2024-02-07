@@ -72,7 +72,8 @@
  * @param {boolean} options.onEscRemoveEmpty       The current row being edited in a list will be removed when pressing the Esc key if the row is empty. Default: true.
  * @param {boolean} options.onEscEndEdit           Pressing the Esc key will end the current editing. Default: true.
  * @param {boolean} options.onFocusoutRemoveEmpty  The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
- * @param {boolean} options.useOddEven             If true, tags for odd and even columns will be generated for list entries. Default: false.
+ * @param {boolean} options.useOddEvenColums       If true, tags for odd and even columns will be generated for list entries. Default: false.
+ * @param {boolean} options.useOddEvenRows         If true, tags for odd and even rows will be generated for list entries. Default: false.
  * @param {String}  options.defaultMode            The default mode to use for display. One of `head`. `list` or `item`. Default: `list`.
  * @param {integer} options.itemsPerPage           The number of rows to show per page. Only applicable for "list" and "select" modes. Default: 20.
  * @param {integer} options.currentPage            The current page to show. Only applicable for "list" and "select" modes. Default: 1.
@@ -134,7 +135,8 @@ var anyViewWidget = $.widget("any.anyView", {
     onEscRemoveEmpty:       true,
     onEscEndEdit:           true,
     onFocusoutRemoveEmpty:  true,
-    useOddEven:             true,
+    useOddEvenColums:       true,
+    useOddEvenRows:         true,
     mode:                   null,
     defaultMode:            "list",
     itemsPerPage:           20,
@@ -630,6 +632,7 @@ $.any.anyView.prototype.refresh = function (params)
                        par_data: par_data,
                        par_id:   par_id,
                        edit:     edit,
+                       row_no:   row_no,
                      });
                 if (curr_mode == "list" && !view.rows_changed)
                   --row_no;
@@ -1188,6 +1191,7 @@ $.any.anyView.prototype.refreshData = function (params)
                                  id_str:     id_str,
                                  row_id_str: row_id_str,
                                  edit:       edit,
+                                 row_no:     params.row_no,
                                });
     }
   }
@@ -1620,6 +1624,11 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
   if (!row_has_data)
     return null; // Nothing to display
 
+  let odd_even = this.options.useOddEvenRows && params.row_no
+                 ? params.row_no%2
+                   ? "class='any-rows-even'"
+                   : "class='any-rows-odd'"
+                 : "";
   let tr_id  = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_tr";
   let tr = $("#"+tr_id);
   if (tr.length) {
@@ -1627,7 +1636,7 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     $("#"+td_ids).remove(); // Do not remove the tr tag, only the contents TODO! Should we use detach or empty instead of remove?
   }
   else {
-    tr = $("<tr id='"+tr_id+"'></tr>");
+    tr = $("<tr id='"+tr_id+"'"+odd_even+"></tr>");
     tbody.append(tr);
   }
   let cell_opt = {
@@ -1644,6 +1653,7 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     row_id_str: row_id_str,
     edit:       edit,
     filter:     filter,
+    row_no:     params.row_no,
   };
   this.refreshTableDataFirstCell(cell_opt);
   this.refreshTableDataListCells(cell_opt);
@@ -1691,10 +1701,10 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
                        : "";
         ++n;
         let td_id    = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id;
-        let odd_even = this.options.useOddEven
+        let odd_even = this.options.useOddEvenColums
                        ? n%2
-                         ? "any-even"
-                         : "any-odd"
+                         ? "any-cols-even"
+                         : "any-cols-odd"
                        : "";
         let class_id = "any-list-"+filter_id;
         let pln_str  = this.model.name_key
@@ -2885,6 +2895,8 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
     showButtonNew:          this.options.showButtonNew,
     showButtonAddLinkItem:  this.options.showButtonAddLinkItem,
     showButtonAddLinkGroup: this.options.showButtonAddLinkGroup,
+    useOddEvenColums:       this.options.useOddEvenColums,
+    useOddEvenRows:         this.options.useOddEvenRows,
     defaultMode:            this.options.defaultMode,
     sortBy:                 this.options.sortBy,
     sortDirection:          this.options.sortDirection,
@@ -2896,6 +2908,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
     isRemovable:            this.options.isRemovable || mode == "item", // TODO! Not a good solution
     isDeletable:            this.options.isDeletable,
     isSelectable:           this.options.isSelectable,
+
     itemLinkClicked:        this.options.itemLinkClicked ? this.options.itemLinkClicked : null,
     clickContext:           this.options.clickContext    ? this.options.clickContext    : null,
     preselected:            this.options.isSelectable    ? this.options.preselected     : null,
