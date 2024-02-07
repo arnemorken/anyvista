@@ -69,6 +69,7 @@ var eventFilter = function (options)
       //other_expenses:      { HEADER:"Other&nbsp;expenses",DISPLAY:1,       TYPE:"number" },
         user_attended:       { HEADER:"Att.",               DISPLAY:1,       TYPE:"check", FUNCTION: "dbSetAttended" },
         document_status:     { HEADER:"Doc&nbsp;status",    DISPLAY:1,       TYPE:"label" },
+        event_ingress:       { HEADER:"",                   DISPLAY:3,       TYPE:"html" },
       },
       head: {
         event_name:          { HEADER:"Events",             DISPLAY:1,       TYPE:"label" },

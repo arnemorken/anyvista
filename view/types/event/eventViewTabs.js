@@ -21,6 +21,7 @@ $.widget("any.eventViewTabs", $.any.anyViewTabs, {
   // Default options
   options: {
     grouping:    "tabs",
+    showRowIngress: true,
     mustEnroll:  true,
     mustLogin:   false,
     disp_result: true,

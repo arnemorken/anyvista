@@ -40,6 +40,8 @@
  * @param {boolean} options.showTableHeader        If false, list tables headers will not be shown. Default: true.
  * @param {boolean} options.showTableFooter        If false, list tables footers will not be shown. Default: true.
  * @param {boolean} options.showTableIngress       If false, a description for list tables will not be shown. Default: true.
+ * @param {boolean} options.showRowIngress         If true and "[type]_ingress" exists in the data, an extra row will be shown beneath the ordinary
+ *                                                 row displaying the contents of the "[type]_ingress" data field. Default: false.
  * @param {boolean} options.showSearcher           If true, a search field for list tables will be shown. Default: false.
  * @param {boolean} options.showPaginator          If false, a paginator buttons for list tables will not be shown. Default: true.
  * @param {boolean} options.showToolbar            If true, will show a toolbar at the bottom. Default: true.
@@ -108,6 +110,7 @@ var anyViewWidget = $.widget("any.anyView", {
     showTableHeader:        true,
     showTableFooter:        true,
     showTableIngress:       true,
+    showRowIngress:         false,
     showSearcher:           true,
     showPaginator:          true,
     showToolbar:            true,
@@ -1645,6 +1648,8 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
   this.refreshTableDataFirstCell(cell_opt);
   this.refreshTableDataListCells(cell_opt);
   this.refreshTableDataLastCell(cell_opt);
+  if (this.options.showRowIngress)
+    this.refreshTableDataIngress(cell_opt);
   // Clean up
   if (!tr.children().length || (!row_has_data && !this.options.showEmptyRows))
     tr.remove();
@@ -1675,7 +1680,7 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
   let pl_str = pl > 0 ? "padding-left:"+pl+"px;" : "";
   let n = 0;
   for (let filter_id in filter) {
-    if (filter.hasOwnProperty(filter_id)) {
+    if (filter.hasOwnProperty(filter_id) && filter_id != type+"_ingress") {
       let filter_key = filter[filter_id];
       if (filter_key && filter_key.DISPLAY && (!simple || simple && filter_id == this.model.name_key)) {
         let model_str = params.filter
@@ -1707,6 +1712,40 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
   }
   return true;
 }; // refreshTableDataListCells
+
+$.any.anyView.prototype.refreshTableDataIngress = function (params)
+{
+  if (!params || !params.data)
+    return false;
+
+  let tr         = params.parent;
+  let type       = params.type;
+  let mode       = params.mode;
+  let data       = params.data;
+  let id         = params.id;
+  let par_data   = params.par_data;
+  let par_id     = params.par_id;
+  let id_str     = params.id_str;
+  let row_id_str = params.row_id_str;
+  let edit       = params.edit;
+  let filter     = params.filter;
+  let filter_id  = type+"_ingress";
+  let filter_key = filter[filter_id];
+
+  if (data[id] && data[id][filter_id]) {
+    let str = this.getCellEntryStr(id,type,mode,row_id_str,filter_id,filter_key,data[id],data.lists,edit);
+    let ncells = Object.size(data[id]);
+    let odd_even = this.options.useOddEvenRows && params.row_no
+                   ? params.row_no%2
+                     ? "class='any-rows-even'"
+                     : "class='any-rows-odd'"
+                   : "";
+    let tr_id2 = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_tr_ingress";
+    $("#"+tr_id2).remove();
+    let tr2    = $("<tr id='"+tr_id2+"' "+odd_even+"><td/><td colspan='"+ncells+"' class='any-list-ingress' style='font-size:90%;'>"+str+"</td><td/></tr>");
+    tr2.insertAfter(tr);
+  }
+}; // refreshTableDataIngress
 
 // Return table body, or null on error
 $.any.anyView.prototype.refreshItemTableDataRow = function (params)
@@ -1753,7 +1792,7 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
   let is_hidden = false;
   tbody.empty();
   for (let filter_id in filter) {
-    if (filter.hasOwnProperty(filter_id)) {
+    if (filter.hasOwnProperty(filter_id) && filter_id != type+"_ingress") {
       let filter_key = filter[filter_id];
       if (filter_key && filter_key.DISPLAY) {
         ++n;
@@ -2833,6 +2872,8 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
     showHeader:             this.options.showHeader,
     showTableHeader:        params && params.showTableHeader  !== undefined ? params.showTableHeader  : this.options.showTableHeader,
     showTableFooter:        params && params.showTableFooter  !== undefined ? params.showTableFooter  : this.options.showTableFooter,
+    showTableIngress:       this.options.showTableIngress,
+    showRowIngress:         this.options.showRowIngress,
     showButtonEdit:         params && params.showButtonEdit   !== undefined ? params.showButtonEdit   : this.options.showButtonEdit,
     showButtonUpdate:       params && params.showButtonUpdate !== undefined ? params.showButtonUpdate : this.options.showButtonUpdate,
     showButtonCancel:       params && params.showButtonCancel !== undefined ? params.showButtonCancel : this.options.showButtonCancel,

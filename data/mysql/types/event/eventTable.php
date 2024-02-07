@@ -116,6 +116,7 @@ class eventTable extends anyTable
         "other_expenses"      => 1,
         "salary_number"       => 1,
         "user_attended"       => 1,
+        "event_ingress"       => 1,
       ],
       "item" => [
         "event_id"            => 1,
