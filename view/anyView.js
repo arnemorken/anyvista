@@ -1088,7 +1088,8 @@ $.any.anyView.prototype.refreshHeader = function (params,skipName)
     return null;
   }
   // Create the header entries
-  parent.empty();
+  if (params.id != "nogroup") // TODO! Temporary fix - unclear why we have to do this check!
+    parent.empty();
   let d = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
   let n = 0;
   for (let filter_id in filter) {

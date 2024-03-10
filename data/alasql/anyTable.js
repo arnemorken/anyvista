@@ -134,7 +134,7 @@ anyTable.prototype.findLinkTableName = function(linkType)
  *
  * @return array|null Data array, or null on error or no data
  */
-anyTable.prototype.dbSearch = function(options)
+anyTable.prototype.dbSearch = async function(options) // TODO! Is async needed here?
 {
   let type = options && options.type ? options.type : this.type;
   let id   = options && options.id   ? options.id   : this.id;
@@ -155,7 +155,7 @@ anyTable.prototype.dbSearch = function(options)
 }; // dbSearch
 
 // Internal method, do not call directly.
-anyTable.prototype._dbSearch = function(type,id)
+anyTable.prototype._dbSearch = async function(type,id) // TODO! Is async needed here?
 {
   if (!type) {
     // Error
@@ -228,15 +228,15 @@ anyTable.prototype.dbSearchParents = function()
 //
 // Search database for an item, including linked lists.
 //
-anyTable.prototype.dbSearchItem = function(id)
+anyTable.prototype.dbSearchItem = async function(id) // TODO! Is async needed here?
 {
   if (!id)
     return Promise.resolve(false);
   let stmt = this.dbPrepareSearchItemStmt(this.idKey,id);
   let self = this;
   //console.log("dbSearchItem:"+stmt);
-  return alasql.promise(stmt)
-  .then (function(rows) {
+  return await alasql.promise(stmt) // TODO! Is await needed here?
+  .then (async function(rows) { // TODO! Is async needed here?
     //console.log("dbSearchItem, raw item data:"); console.log(rows);
     self.data = self.getRowData(rows,self.data,self.type,"item");
     //console.log("dbSearchItem, grouped item data:"); console.log(self.data);
@@ -729,7 +729,7 @@ anyTable.prototype.dbUpdate = async function(options)
     return Promise.resolve(null);
 
   if (!options.id || options.id == "" || options.is_new)
-    return this.dbInsert(options); // Assume it is a new item to be inserted
+    return await this.dbInsert(options); // Assume it is a new item to be inserted // TODO! Is await needed here?
 
   this.id = options.id;
 

@@ -1,7 +1,7 @@
 <?php
 /********************************************************************************************
  *                                                                                          *
- * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.                 *
+ * anyVista is copyright (C) 2011-2024 Arne D. Morken and Balanse Software.                 *
  *                                                                                          *
  * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use. *
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).                  *
@@ -219,9 +219,9 @@ class anyTable extends dbTable
   } // constructor
 
   //
-  // Set variables from table definitions or type.
-  // Setting variables from type can be used in simple situations where
-  // the type doesnt need to supply its own mTableDefs object.
+  // Set properties from table definitions or type.
+  // Setting properties from type can be used in simple situations
+  // where the type doesnt need to supply its own mTableDefs object.
   //
   private function initProperties($defsOrType)
   {
@@ -426,40 +426,42 @@ class anyTable extends dbTable
   /**
    * Returns the table's name.
    */
-  public function getTableName()  { return $this->mTableName; }
+  public function getTableName()     { return $this->mTableName; }
 
   /**
    * Returns the meta table's name.
    */
-  public function getTableNameMeta()  { return $this->mTableNameMeta; }
+  public function getTableNameMeta() { return $this->mTableNameMeta; }
 
   /**
    * Returns the data.
    */
-  public function getData()       { return $this->mData; }
+  public function getData()          { return $this->mData; }
+
   /**
    * Returns the type of the table data.
    */
-  public function getType()       { return $this->mType; }
+  public function getType()          { return $this->mType; }
+
   /**
    * Returns the id of the table data, if an item. If a list, the result is undefined.
    */
-  public function getId()         { return $this->mId; }
+  public function getId()            { return $this->mId; }
 
   /**
    * Returns the id key of the table data.
    */
-  public function getIdKey()      { return $this->mIdKey; }
+  public function getIdKey()         { return $this->mIdKey; }
 
   /**
    * Returns the name name of the table data.
    */
-  public function getNameKey()    { return $this->mNameKey; }
+  public function getNameKey()       { return $this->mNameKey; }
 
   /**
    * Returns the permission object.
    */
-  public function getPermission() { return $this->mPermission; }
+  public function getPermission()    { return $this->mPermission; }
 
   /**
    * Override and return true in table classes which have parent_id.
@@ -475,13 +477,13 @@ class anyTable extends dbTable
 
   protected function findDefaultHeader($type,$skipOther=false)
   {
-    $other = $skipOther ? "" : "Other "; // TODO: i18n
-    return $other.$type."s";             // TODO: i18n
+    $other = $skipOther ? "" : "Other "; // TODO! i18n
+    return $other.$type."s";             // TODO! i18n
   } // findDefaultHeader
 
   protected function findDefaultListHeader($type)
   {
-    return ucfirst($type)." list"; // TODO: i18n
+    return ucfirst($type)." list"; // TODO! i18n
   } // findDefaultListHeader
 
   protected function findDefaultItemHeader($type,$inData)
@@ -496,7 +498,7 @@ class anyTable extends dbTable
       $hdr = $inData[$ix][$this->mNameKey];
     else
     if (isset($this->mLinkId))
-      $this->setError($this->mNameKey." missing"); // TODO: i18n
+      $this->setError($this->mNameKey." missing"); // TODO! i18n
     return $hdr;
   } // findDefaultItemHeader
 
@@ -916,8 +918,8 @@ class anyTable extends dbTable
                 $has_nogroup = true;
             }
           }
-        }
-      }
+        } // foreach
+      } // if
       // Build and execute the query for ungrouped data (if not queried already)
       if (!$has_nogroup)
         $success = $this->dbExecListStmt($data,"nogroup",$limit) || $success;
@@ -1572,7 +1574,7 @@ class anyTable extends dbTable
     }
 
     // Build data tree
-    //vlog("buildGroupTreeAndAttach,group_data:",$group_data);
+    //vlog("buildGroupTreeAndAttach,group_data:",               $group_data);
     //vlog("buildGroupTreeAndAttach,data before building tree:",$data);
     $data_tree = array();
     $data_tree["grouping"] = $this->mGrouping;
@@ -1635,16 +1637,14 @@ class anyTable extends dbTable
         $group_data["group"]["unknown"]["group_description"] = ucfirst($this->mType)."s belonging to non-".$this->mType." group&nbsp;&nbsp;".
                                                                '<i style="color:red" class="fa fad fa-exclamation-triangle"></i>'; // TODO! i18n and CSS
       }
+      if (!isset($group_data["group"]))
+        $group_data["group"] = array();
       $this->dbAttachToGroups($group_data["group"],$data_tree);
       $group_data["group"]["grouping"] = true;
       //vlog("buildGroupTreeAndAttach,group_data:",$group_data);
       $data = $group_data["group"];
     }
     else {
-      //if ($this->mGrouping && $this->mType != "group")
-      //  $gr_idx = "nogroup";
-      //else
-      //  $gr_idx = $this->mType;
       if (isset($this->mLinkId))
         $data = isset($data_tree[$this->mType]) && isset($data_tree[$this->mType]["data"])
                 ? $data_tree[$this->mType]["data"]
@@ -1659,21 +1659,21 @@ class anyTable extends dbTable
   protected function dbSearchGroupInfo($type=null,$group_id=null)
   {
     // Get group tree and append data to it
-    $data_tree = array();
-    $data_tree["group"] = array();
-    $data_tree["group"] = $this->buildDataTree($data_tree["group"],null);
-    //vlog("dbSearchGroupInfo,data_tree:",$data_tree);
+    $data = array();
+    $data["group"] = array();
+    $data["group"] = $this->buildDataTree($data["group"],null);
+    //vlog("dbSearchGroupInfo,data:",$data);
 
     // Add the default "nogroup" group
     if ($type && $type != "") {
-      $data_tree["group"]["nogroup"]["group_type"] = $type;
-      $data_tree["group"]["nogroup"]["group_id"]   = "nogroup";
-      $data_tree["group"]["nogroup"]["group_name"] = $this->findDefaultNogroupHeader($type);
-      $data_tree["group"]["nogroup"]["head"]       = "group";
+      $data["group"]["nogroup"]["group_type"] = $type;
+      $data["group"]["nogroup"]["group_id"]   = "nogroup";
+      $data["group"]["nogroup"]["group_name"] = $this->findDefaultNogroupHeader($type);
+      $data["group"]["nogroup"]["head"]       = "group";
     }
-    //vlog("dbSearchGroupInfo,data_tree:",$data_tree);
-    //$this->tdata = $data_tree; // TODO! Why?
-    return $data_tree;
+    //vlog("dbSearchGroupInfo,data:",$data);
+    //$this->tdata = $data; // TODO! Why?
+    return $data;
   } // dbSearchGroupInfo
 
   protected function buildDataTree(&$flatdata,$parentId=null)
@@ -1913,7 +1913,7 @@ class anyTable extends dbTable
     // Insert in group table, if group id is given and we have a group table
     $gid = Parameters::get("group_id");
     if (($gid || $gid==0)&& $gid != "" && $gid != "nogroup" && $this->mType != "group") {
-      if (isset($this->mTableNameGroupLink) && $this->tableExists($this->mTableNameGroupLink)) {
+      if ($this->tableExists($this->mTableNameGroupLink)) {
         $stmt = "INSERT INTO ".$this->mTableNameGroupLink." (group_id,".$this->mType."_id) ".
                 "VALUES ('".$gid."','".$this->mId."')";
         //error_log("stmt:".$stmt);

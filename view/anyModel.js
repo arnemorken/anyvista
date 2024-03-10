@@ -64,11 +64,13 @@
  *                                          a locally defined method ("local") or call a database
  *                                          method on a remote server ("remote").
  *                                          Default: "local".
- * @param {Object}   options.db_connection  The database connection. Only valid when `source` is "local",
- *                                          in which case a client side AlaSQL database will be used.
+ * @param {Object}   options.db_connection  The database connection.
+ *                                          Only valid when `source` is "local", in which case
+ *                                          a client side AlaSQL database will be used.
  *                                          Default: null.
- * @param {Object}   options.table_factory  The table factory class. Only valid when `source` is `"local"`,
- *                                          in which case a client side AlaSQL database will be used.
+ * @param {Object}   options.table_factory  The table factory class.
+ *                                          Only valid when `source` is "local", in which case
+ *                                          a client side AlaSQL database will be used.
  *                                          Default: null.
  * @param {Array}    options.db_fields      An array of strings to be sent to the server, indicating
  *                                          which columns ofthe table should be used in a search or
@@ -192,8 +194,8 @@ var anyModel = function (options)
   this.source = typeof gSource !== 'undefined' ? gSource : "local";
 
   /**
-  * The database connection. Only valid when `source` is "local",
-  * in which case a client side AlaSQL database will be used.
+  * The database connection.
+  * Only valid when `source` is "local", in which case a client side AlaSQL database will be used.
   *
   * @type       {String}
   * @default    null
@@ -201,8 +203,8 @@ var anyModel = function (options)
   this.db_connection = null;
 
   /**
-  * The table factory class. Only valid when `source` is "local",
-  * in which case a client side AlaSQL database will be used.
+  * The table factory class. 
+  * Only valid when `source` is "local", in which case a client side AlaSQL database will be used.
   *
   * @type       {String}
   * @default    null
@@ -323,8 +325,8 @@ var anyModel = function (options)
   this._dataInitDefault();
   this.dataInit(options);
 
-  // If `this.source` is "local", we may need a connection to the database and a table factory
-  // TODO! Is this the best place to do it?
+  // If `this.source` is "local", we will need a connection to the local database and a table factory.
+  // If not specified in options, create one.
   if (this.source == "local") {
     let dbname = "test_anydbase";
     let params = {
@@ -975,7 +977,7 @@ anyModel.prototype.dataInsert = function (options)
           item[filter_id] = new_data[filter_id];
     }
     else
-    if (!new_id && new_id != 0) {
+    if (!new_id && new_id !== 0) {
       // No new id was specified and none should be generated
       if (!item[the_id].data)
         item[the_id].data = {};
@@ -1575,7 +1577,7 @@ anyModel.prototype._dbSearchLocal = async function (options)
     let table = await this.table_factory.createClass(table_name,{header:true});
     if (table && table.error == "") {
       let self = this;
-      return table.dbSearch(options)
+      return await table.dbSearch(options) // TODO! Is await needed here?
       .then( function(serverdata) {
         self.error   = table.error;
         self.message = table.message;
@@ -1917,7 +1919,7 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
  *
  * @return true if the database call was made, false otherwise.
  */
-anyModel.prototype.dbUpdate = async function (options)
+anyModel.prototype.dbUpdate = function (options) // TODO! Should this be an async method?
 {
   if (!options || typeof options != "object")
     options = {};
@@ -1998,7 +2000,7 @@ anyModel.prototype.dbUpdate = async function (options)
     return true;
   }
   else { // Local method call (AlaSQL server)
-    await this._dbUpdateLocal(options,item_to_send);
+    this._dbUpdateLocal(options,item_to_send); // TODO! Should we have await here?
     if (this.error)
       console.error(this.error);
     return this.error == "";
@@ -2783,4 +2785,3 @@ anyModel.prototype._dbFail = function (context,jqXHR)
   }
   return context;
 }; // _dbFail
-//@ sourceURL=anyModel.js

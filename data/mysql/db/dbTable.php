@@ -20,7 +20,7 @@ require_once "dbConnection.php";
  *      new dbTable($connection);
  *
 */
-class dbTable
+abstract class dbTable
 {
   private   $mDBConnection   = null;
   private   $mDBResult       = null;
@@ -43,13 +43,13 @@ class dbTable
   // Abstract methods, implement (override) these in deriving class
   /////////////////////////////////////////////////////////////////
 
-  public    function dbSearch()            {} // Abstract
-  protected function prepareData(&$inData) {} // Abstract
-  public    function dbInsert()            {} // Abstract
-  public    function dbUpdate()            {} // Abstract
-  public    function dbUpdateLinkList()    {} // Abstract
-  public    function dbUpdateLink()        {} // Abstract
-  public    function dbDelete()            {} // Abstract
+  abstract public    function dbSearch();
+  abstract protected function prepareData(&$inData);
+  abstract public    function dbInsert();
+  abstract public    function dbUpdate();
+  abstract public    function dbUpdateLinkList();
+  abstract public    function dbUpdateLink();
+  abstract public    function dbDelete();
 
   /////////////////////////
   // Getters

@@ -1,7 +1,7 @@
 <?php
 /****************************************************************************************
  *
- * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.
+ * anyVista is copyright (C) 2011-2024 Arne D. Morken and Balanse Software.
  *
  * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
@@ -11,7 +11,9 @@ require_once "anyTable.php";
 /**
  * __Class for interacting with an anyVista group database table.__
  * Inherits from `anyTable`, which manages the basic database operations.
- * This class (along with the `userTable` class) is mandatory for the anyVista server backend.
+ * This class is mandatory for the anyVista server backend.
+ *
+ * See `anyTable` for a description of the data structure the class uses.
  *
  * @class groupTable
  * @constructor
@@ -167,7 +169,7 @@ class groupTable extends anyTable
   protected function dbSearchGroupInfo($type=null,$group_id=null)
   {
     $data = array();
-    if ($group_id != "nogroup") { // No need to search if we say we dont want a group!
+    if ($group_id != "nogroup") { // No need to search if we dont want a group!
       $stmt = "SELECT ".$this->getTableName().".group_id,".
                         $this->getTableName().".group_type,".
                         $this->getTableName().".group_name,".
@@ -194,7 +196,8 @@ class groupTable extends anyTable
       while (($nextrow = $this->getNext(true)) != null) {
         $idx = "+".$nextrow[$this->mIdKeyTable];
         if ($this->mTableFields) {
-          for ($t=0; $t<count($this->mTableFields); $t++) {
+          $len = count($this->mTableFields);
+          for ($t=0; $t<$len; $t++) {
             $item_id_table = $this->mTableFields[$t];
             $this->getCellData($item_id_table,$nextrow,$data,$idx,"group",null,"list");
           }
@@ -204,8 +207,8 @@ class groupTable extends anyTable
         else
           $mode = "head";
         $data["group"][$idx][$mode] = "group";
-      }
-    } // if
+      } // while
+    } // if group_id
     //vlog("dbSearchGroupInfo,data:",$data);
     if ($this->mGrouping) {
       // Get group tree and append data to it

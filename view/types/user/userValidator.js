@@ -22,7 +22,7 @@ var userValidator = function ()
 userValidator.prototype.validateUpdate = function (opt,view)
 {
   let err = "";
-  if (!opt.id && opt.id != 0)
+  if (!opt.id && opt.id !== 0)
     err += "Id missing. ";
 
   let elem_id_base = view.getIdBase()+"_"+opt.type+"_"+opt.mode+"_"+opt.id_str;
