@@ -34,7 +34,7 @@ Parameters::set("header","true");
 Parameters::set("grouping","false");
 Parameters::set("from","0");
 Parameters::set("num","20");
-Parameters::set("fields",array (
+Parameters::set("tableFields",array (
   0 => 'r_id',
   1 => 'rank',
   2 => 'rider_name',

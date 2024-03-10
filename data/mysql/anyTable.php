@@ -228,7 +228,7 @@ class anyTable extends dbTable
     $this->mError   = "";
     $this->mMessage = "";
 
-    $fields = Parameters::get("fields");
+    $fields = Parameters::get("tableFields");
 
     if (gettype($defsOrType) == "array") {
       // Table defs given, check if it is valid
@@ -401,10 +401,10 @@ class anyTable extends dbTable
 
   private function initFiltersFromParam()
   {
-    $fields = Parameters::get("fields");
-    if ($fields) {
+    $tableFields = Parameters::get("tableFields");
+    if ($tableFields) {
       $this->mFilters = array();
-      foreach ($fields as $name => $val) {
+      foreach ($tableFields as $name => $val) {
         $this->mFilters["list"][$val] = "1";
         $this->mFilters["item"][$val] = "1";
       }
@@ -413,9 +413,9 @@ class anyTable extends dbTable
 
   private function initFieldsFromParam()
   {
-    $fields = Parameters::get("fields");
-    if ($fields) {
-      $this->mTableFields = $fields;
+    $tableFields = Parameters::get("tableFields");
+    if ($tableFields) {
+      $this->mTableFields = $tableFields;
     }
   } // initFieldsFromParam
 
