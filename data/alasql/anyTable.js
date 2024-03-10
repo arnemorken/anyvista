@@ -145,8 +145,9 @@ anyTable.prototype.dbSearch = async function(options) // TODO! Is async needed h
   this.type = type;
   if (id)
     this.id = id;
+  let groupId = options ? options.groupId : null;
   let self = this;
-  return this._dbSearch(type,id)
+  return this._dbSearch(groupId)
   .catch(function(err) {
     console.log(err);
     self.error = err;
@@ -155,8 +156,10 @@ anyTable.prototype.dbSearch = async function(options) // TODO! Is async needed h
 }; // dbSearch
 
 // Internal method, do not call directly.
-anyTable.prototype._dbSearch = async function(type,id) // TODO! Is async needed here?
+anyTable.prototype._dbSearch = async function(groupId) // TODO! Is async needed here?
 {
+  let type = this.type;
+  let id   = this.id;
   if (!type) {
     // Error
     this.error = "dbSearch: type missing. ";
@@ -181,7 +184,7 @@ anyTable.prototype._dbSearch = async function(type,id) // TODO! Is async needed 
   else {
     if (id || id === 0) {
       // Search for an item
-      return this.dbSearchItem(id)
+      return this.dbSearchItem(groupId,id)
       .then(function(data) {
         self.data = data ? self.prepareData(data) : null;
         return Promise.resolve(self.data);
@@ -189,7 +192,7 @@ anyTable.prototype._dbSearch = async function(type,id) // TODO! Is async needed 
     }
     else {
       // Search for a list
-      return this.dbSearchList(type)
+      return this.dbSearchList(groupId,type)
       .then(function(data) {
         self.data = data ? self.prepareData(data) : null;
         return Promise.resolve(self.data);
@@ -228,7 +231,7 @@ anyTable.prototype.dbSearchParents = function()
 //
 // Search database for an item, including linked lists.
 //
-anyTable.prototype.dbSearchItem = async function(id) // TODO! Is async needed here?
+anyTable.prototype.dbSearchItem = async function(groupId,id) // TODO! Is async needed here?
 {
   if (!id)
     return Promise.resolve(false);
@@ -242,7 +245,7 @@ anyTable.prototype.dbSearchItem = async function(id) // TODO! Is async needed he
     //console.log("dbSearchItem, grouped item data:"); console.log(self.data);
     if (!self.data || Object.keys(self.data).length === 0)
       return Promise.resolve(null);
-    return self.dbSearchItemLists(id,self.linking);
+    return self.dbSearchItemLists(groupId,id,self.linking);
   });
 }; // dbSearchItem
 
@@ -258,7 +261,7 @@ anyTable.prototype.dbPrepareSearchItemStmt = function(key,val)
 //
 // Search for lists associated with the item
 //
-anyTable.prototype.dbSearchItemLists = async function(id,linking)
+anyTable.prototype.dbSearchItemLists = async function(groupId,id,linking)
 {
   if (!id || !linking) {
     return Promise.resolve(null);
@@ -274,7 +277,7 @@ anyTable.prototype.dbSearchItemLists = async function(id,linking)
       if (self.tableExists(link_tablename)) {
         let tab = await factory.createClass(link_classname,true,true); // TODO!
         //console.log("created "+link_classname);
-        await tab.dbSearchList(self.type,tab.type,id)
+        await tab.dbSearchList(groupId,self.type,tab.type,id)
         .then( function(data) {
           let link_idx = "link-"+link_type;
           let name_key = tab.nameKey;
@@ -299,7 +302,7 @@ anyTable.prototype.dbSearchItemLists = async function(id,linking)
 
 //////////////////////////////// List search ////////////////////////////////
 
-anyTable.prototype.dbSearchList = function(type,linkType,linkId)
+anyTable.prototype.dbSearchList = async function(groupId,type,linkType,linkId)
 {
   if (!type)
     type = this.type;
@@ -310,7 +313,7 @@ anyTable.prototype.dbSearchList = function(type,linkType,linkId)
   }
   this.num_results = 0;
   let self = this;
-  return this.dbExecListStmt(type,linkType,linkId)
+  return this.dbExecListStmt(groupId,type,linkType,linkId)
   .then( function(data) {
     self.data = self.buildGroupTreeAndAttach(data,linkId);
     //console.log("dbSearchList, tree list data:"); console.log(self.data);
@@ -319,9 +322,9 @@ anyTable.prototype.dbSearchList = function(type,linkType,linkId)
 }; // dbSearchList
 
 // Build and execute the query
-anyTable.prototype.dbExecListStmt = function(type,linkType,linkId)
+anyTable.prototype.dbExecListStmt = function(groupId,type,linkType,linkId)
 {
-  let stmt = this.dbPrepareSearchListStmt(type,linkType,linkId);
+  let stmt = this.dbPrepareSearchListStmt(groupId,type,linkType,linkId);
   let self = this;
   //console.log("dbExecListStmt:"+stmt);
   return alasql.promise(stmt)
@@ -334,17 +337,17 @@ anyTable.prototype.dbExecListStmt = function(type,linkType,linkId)
 }; // dbExecListStmt
 
 // Build the query
-anyTable.prototype.dbPrepareSearchListStmt = function(type,linkType,linkId)
+anyTable.prototype.dbPrepareSearchListStmt = function(groupId,type,linkType,linkId)
 {
   let link_table_name = this.findLinkTableName(type);
-  let stmt = this.findListSelect(link_table_name,type,linkType)+
-             this.findListLeftJoin(link_table_name,type,linkType)+
-             this.findListWhere(link_table_name,type,linkType,linkId)+
+  let stmt = this.findListSelect  (link_table_name,groupId,type,linkType)+
+             this.findListLeftJoin(link_table_name,groupId,type,linkType)+
+             this.findListWhere   (link_table_name,groupId,type,linkType,linkId)+
              this.findListOrderBy();
   return stmt;
 }; // dbPrepareSearchListStmt
 
-anyTable.prototype.findListSelect = function(linkTableName,type,linkType)
+anyTable.prototype.findListSelect = function(linkTableName,groupId,type,linkType)
 {
   // Select from own table
   let sl = "SELECT DISTINCT "+this.tableName+".* ";
@@ -355,7 +358,7 @@ anyTable.prototype.findListSelect = function(linkTableName,type,linkType)
   return sl;
 }; // findListSelect
 
-anyTable.prototype.findListLeftJoin = function(linkTableName,type,linkType)
+anyTable.prototype.findListLeftJoin = function(linkTableName,groupId,type,linkType)
 {
   let lj = "";
   if (linkType && linkTableName) {
@@ -365,7 +368,7 @@ anyTable.prototype.findListLeftJoin = function(linkTableName,type,linkType)
   return lj;
 }; // findListLeftJoin
 
-anyTable.prototype.findListWhere = function(linkTableName,type,linkType,linkId)
+anyTable.prototype.findListWhere = function(linkTableName,groupId,type,linkType,linkId)
 {
   let where = "";
   if (linkType && linkId && linkTableName) {
