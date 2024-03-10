@@ -23,36 +23,34 @@ require_once "anyTable.php";
  */
 class groupTable extends anyTable
 {
-  protected $mTableDefs = [
-    "tableName"          => "any_group",
-    "tableNameMeta"      => "any_groupmeta",
-    "tableNameGroupLink" => "any_group",
-    "tableNameUserLink"  => "any_group_user",
-    "type"               => "group",
-    "idKey"              => "group_id",
-    "idKeyTable"         => "group_id",
-    "idKeyMetaTable"     => "group_id",
-    "nameKey"            => "group_name",
-    "orderBy"            => "group_type",
-    "metaId"             => "meta_id",
-    "fields" => [
+  protected $mType           = "group",
+            $mIdKey          = "group_id",
+            $mIdKeyTable     = "group_id",
+            $mIdKeyMetaTable = "group_id",
+            $mNameKey        = "group_name",
+            $mOrderBy        = "group_type";
+
+  protected $mTableName          = "any_group",
+            $mTableNameMeta      = "any_groupmeta",
+            $mTableNameGroupLink = "any_group",
+            $mTableNameUserLink  = "any_group_user";
+
+  protected $mTableFields = [
       "group_id",
       "group_type",
       "group_name",
       "group_description",
-      "parent_id",
       "group_sort_order",
       "group_status",
       "group_privacy",
       "group_header_image",
-    ],
-    "fieldsMeta" => [
-    ],
-    "fieldsGroup" => [
-    ],
-    "fieldsLeftJoin" => [
-      "group" => [
-      ],
+      "parent_id",
+    ];
+
+  protected $mTableFieldsMeta = [
+    ];
+
+  protected $mTableFieldsLeftJoin = [
       "user" => [
         "user_id",
         "user_joined_date",
@@ -61,8 +59,11 @@ class groupTable extends anyTable
       "event" => [
         "event_id",
       ],
-    ],
-    "filters" => [
+    ];
+
+  protected $mLinking = ["document","event","user"];
+
+  protected $mFilters = [
       "list" => [
         "group_id"          => 1,
         "group_type"        => 1,
@@ -87,9 +88,7 @@ class groupTable extends anyTable
         "group_privacy"     => 1,
         "membership"        => 1,
       ],
-    ],
-    "types" => ["document","event","user"],
-  ];
+    ];
 
   protected $mInsertSuccessMsg  = "Group created. ",
             $mUpdateSuccessMsg  = "Group updated. ",
@@ -103,7 +102,7 @@ class groupTable extends anyTable
   // Constructor
   public function __construct($connection)
   {
-    parent::__construct($connection,$this->mTableDefs);
+    parent::__construct($connection);
   }
 
   public function hasParentId()

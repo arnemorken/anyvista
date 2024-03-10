@@ -102,33 +102,33 @@ require_once "anyTableFactory.php";
  */
 class anyTable extends dbTable
 {
-  protected $mTableDefs = null; // Must be provided by deriving class
-
-  protected $mTableName          = null,
-            $mTableNameMeta      = null,
-            $mTableNameGroupLink = null,
-            $mTableNameUserLink  = null,
-            $mTableNameGroup     = "any_group",
-            $mTableNameUser      = ANY_DB_USER_TABLE;
-
-  protected $mTableFields         = null,
-            $mTableFieldsMeta     = null,
-            $mTableFieldsGroup    = null,
-            $mTableFieldsLeftJoin = null;
-
   protected
   /** @var array Contains data for a list or an item. See "Data structure" above. */
             $mData              = null,
   /** @var string The type of the table data (e.g. `user`). */
-            $mType              = null,
+            $mType              = null,               // Type of the table, e.g. "event".
   /** @var string|int Null if list, non-null if item */
             $mId                = null,
-            $mIdKey             = null,
-            $mIdKeyTable        = null,
-            $mIdKeyMetaTable    = null,
-            $mNameKey           = null,
-            $mMetaId            = null,
-            $mLinkType          = null,  // Used by items that have associated lists // TODO! Send as parameter to methods
+            $mIdKey             = null,               // The id key used by the client, e.g. "event_id" or "user_id".
+            $mIdKeyTable        = null,               // The id key used in the table, e.g. "event_id" or "ID".
+            $mIdKeyMetaTable    = null,               // The id key used in the meta table, "event_id" or "user_id".
+            $mNameKey           = null,               // The name key used by the client and in the table, e.g. "event_name" or "login_name".
+            $mMetaId            = "meta_id",          // The name of the id field in the meta table, e.g. "meta_id" or "umeta_id".
+            $mOrderBy           = null,               // The field to sort by. e.g. "event_date_start".
+            $mOrderDir          = "DESC";             // The direction of the sort, "ASC" or "DESC".
+
+  protected $mTableName          = null,              // Name of the main table, e.g. "any_event".
+            $mTableNameMeta      = null,              // Name of the meta table, e.g. "any_eventmeta".
+            $mTableNameGroup     = "any_group",       // TODO! Not here!
+            $mTableNameGroupLink = null,              // Name of the group link table for this table type, e.g. "any_event_group".
+            $mTableNameUser      = ANY_DB_USER_TABLE, // Name of the user link table for this table type, e.g. "any_event_user".
+            $mTableNameUserLink  = null;
+
+  protected $mTableFields         = null,             // Contains the field names of the table.
+            $mTableFieldsMeta     = null,             // Contains the name of the meta keys of the meta table.
+            $mTableFieldsLeftJoin = null;             // Contains the field names to left join with.
+
+  protected $mLinkType          = null,  // Used by items that have associated lists // TODO! Send as parameter to methods
             $mLinkId            = null,  // Used by items that have associated lists // TODO! Send as parameter to methods
             $mGrouping          = true,  // Group results by default
             $mSimpleList        = false, // In a "simple" list search we get only the id, name and parent_id
@@ -137,8 +137,6 @@ class anyTable extends dbTable
             $mMaxId             = -1,
             $mNumResults        = 0,
             $mPermission        = null,
-            $mOrderBy           = null,
-            $mOrderDir          = "DESC",
             $mSortFunction      = null;
 
   protected $mInsertSuccessMsg  = "",
@@ -159,25 +157,7 @@ class anyTable extends dbTable
   * Constructor
   *
   * @param dbConnection $connection Info about the database connection. See `db/dbConnection`.
-  * @param array|string $defsOrType An array containing the following entries:
-  *                          - tableName:          Name of the main table, e.g. "any_event".
-  *                          - tableNameMeta:      Name of the meta table, e.g. "any_eventmeta".
-  *                          - tableNameGroupLink: Name of the group link table for this table type, e.g. "any_event_group".
-  *                          - tableNameUserLink:  Name of the user link table for this table type, e.g. "any_event_user".
-  *                          - type:               Type of the table, e.g. "event".
-  *                          - idKey:              The id key used by the client, e.g. "event_id" or "user_id".
-  *                          - idKeyTable:         The id key used in the table, e.g. "event_id" or "ID".
-  *                          - idKeyMetaTable:     The id key used in the meta table, "event_id" or "user_id".
-  *                          - nameKey:            The name key used by the client and in the table, e.g. "event_name" or "login_name".
-  *                          - orderBy:            The field to sort by. e.g. "event_date_start".
-  *                          - orderDir:           The direction of the sort, "ASC" or "DESC".
-  *                          - metaId:             The name of the id field in the meta table, e.g. "meta_id" or "umeta_id".
-  *                          - fields:             An array containing the field names of the table.
-  *                          - fieldsMeta:         An array containing the name of the meta keys of the meta table.
-  *                          - fieldsGroup:        An array containing the field names of the group table.
-  *                          - fieldsLeftJoin:     An array containing the field names of the user link table.
-  *                          - filters:            Filters.
-  *                          - types:              An array containing the names of the anyVista types this table can interact with.
+  * @param array|string $inType An optional type (override the one set by deriving class).
   *
   * #### Example
   *```
@@ -185,7 +165,7 @@ class anyTable extends dbTable
   *      $userTable = new anyTable($conn,"user");
   *```
   */
-  public function __construct($connection,$defsOrType)
+  public function __construct($connection,$inType=null)
   {
     // Initialize permissions
     $wp   = defined("WP_PLUGIN") ? new wpPermission() : null;
@@ -208,7 +188,7 @@ class anyTable extends dbTable
       return;
     }
     // Initialize properties
-    if (!$this->initProperties($defsOrType))
+    if (!$this->initProperties($inType))
       return;
 
     // Filters should be defined in the options parameter, but may also
@@ -221,98 +201,83 @@ class anyTable extends dbTable
   //
   // Set properties from table definitions or type.
   // Setting properties from type can be used in simple situations
-  // where the type doesnt need to supply its own mTableDefs object.
+  // where the type doesnt need to supply its own table definitions.
   //
-  private function initProperties($defsOrType)
+  private function initProperties($inType)
   {
     $this->mError   = "";
     $this->mMessage = "";
 
-    $fields = Parameters::get("tableFields");
-
-    if (gettype($defsOrType) == "array") {
-      // Table defs given, check if it is valid
-      if (!$this->validateTableDefs($defsOrType))
-        return false;
-
-      if ($defsOrType["type"])
-        $type = $defsOrType["type"];
-      else
-        $type = Parameters::get("type");
-      $this->mType = $type;
-
-      // Set variables from table defs
-      $this->mTableName           = $defsOrType["tableName"];
-      $this->mTableNameMeta       = $defsOrType["tableNameMeta"];
-      $this->mTableNameGroupLink  = $defsOrType["tableNameGroupLink"];
-      $this->mTableNameUserLink   = $defsOrType["tableNameUserLink"];
-      $this->mIdKey               = $defsOrType["idKey"]
-                                    ? $defsOrType["idKey"]
-                                    : ( $fields && $fields[0]
-                                        ? $fields[0]
-                                        : $type."_id"
-                                      );
-      $this->mIdKeyTable          = $defsOrType["idKeyTable"]
-                                    ? $defsOrType["idKeyTable"]
-                                    : $this->mIdKey;
-      $this->mIdKeyMetaTable      = $defsOrType["idKeyMetaTable"];
-      $this->mNameKey             = $defsOrType["nameKey"];
-      $this->mOrderBy             = isset($defsOrType["orderBy"])  ? $defsOrType["orderBy"]  : null;
-      $this->mOrderDir            = isset($defsOrType["orderDir"]) ? $defsOrType["orderDir"] : "DESC";
-      $this->mMetaId              = $defsOrType["metaId"];
-      // Set table fields, meta table fields and user link table fields
-      $this->mTableFields         = $fields
-                                    ? $fields
-                                    : $defsOrType["fields"];
-      $this->mTableFieldsMeta     = $defsOrType["fieldsMeta"];
-      $this->mTableFieldsGroup    = $defsOrType["fieldsGroup"];
-      $this->mTableFieldsLeftJoin = $defsOrType["fieldsLeftJoin"];
-      // Set table filters
-      if (isset($defsOrType["filters"]))
-        $this->mFilters = $defsOrType["filters"];
-      // Set types this class may interact
-      if (isset($defsOrType["types"]))
-        $this->mLinking = $defsOrType["types"];
+    // Determine type (mandatory)
+    if (gettype($inType) == "string")
+      $this->mType = $inType; // Type given as in-parameter override type in parameter or class
+    if (!$this->mType)
+      $this->mType = ltrim(Parameters::get("type")); // Type given as parameter override type in class
+    if (!$this->mType) {
+      $this->mError .= "Type missing. ";
+      return false;
     }
-    else
-    if (!$defsOrType || gettype($defsOrType) == "string") {
-      if ($defsOrType)
-        $type = $defsOrType;
-      else
-        $type = Parameters::get("type");
-      $this->mType = $type;
+    // Set defaults if not set by derived class
+    if (!$this->mIdKey)          $this->mIdKey          = $this->mType."_id";
+    if (!$this->mIdKeyTable)     $this->mIdKeyTable     = $this->mIdKey;
+    if (!$this->mIdKeyMetaTable) $this->mIdKeyMetaTable = $this->mIdKey;
+    if (!$this->mNameKey)        $this->mNameKey        = $this->mType."_name";
+    if (!$this->mOrderBy)        $this->mOrderBy        = $this->mNameKey;
+    if (!$this->mOrderDir)       $this->mOrderDir       = "DESC";
+    if (!$this->mMetaId)         $this->mMetaId         = "meta_id";
 
-      // Set minimal working values
-      $this->mTableName          = "any_".$this->mType;
-      $this->mTableNameMeta      = null; // No meta table for auto-generated type/table
-      // Group table link
+    // Table name
+    if (!$this->mTableName) {
+      $this->mTableName = "any_".$this->mType;
+      // No meta table for auto-generated table
+      $this->mTableNameMeta   = null;
+      $this->mIdKeyMetaTable  = null;
+      $this->mMetaId          = null;
+      $this->mTableFieldsMeta = null;
+    }
+    // Group table link
+    if (!$this->mTableNameGroupLink) {
       $ltn = ["group",$this->mType];
       sort($ltn);
       $ltn = "any_".implode("_",$ltn);
       $this->mTableNameGroupLink = $ltn;
+    }
+    // User table link
+    if (!$this->mTableNameUserLink) {
       $ltn = ["user",$this->mType];
       sort($ltn);
       $ltn = "any_".implode("_",$ltn);
       $this->mTableNameUserLink  = $ltn;
-      $this->mIdKey              = $fields && $fields[0]
-                                   ? $fields[0]
-                                   : $type."_id";
-      $this->mIdKeyTable         = $this->mIdKey;
-      $this->mIdKeyMetaTable     = null; // No meta table for auto-generated type/table
-      $this->mNameKey            = $this->mType."_name";
-      $this->mOrderBy            = $this->mIdKeyTable;
-      $this->mMetaId             = null; // No meta table for auto-generated type/table
+    }
+    // Table fields
+    $tableFields = Parameters::get("tableFields");
+    if ($tableFields)
+      $this->mTableFields = $tableFields; // Table fields given as parameter override fields in class
+    else
+    if (!$this->mTableFields) { // Set default minimal table fields
+      $this->mTableFields = [ $this->mIdKey,
+                              $this->mNameKey,
+                            ];
+    }
+    // Left join table fields
+    if (!$this->mTableFieldsLeftJoin) {
+      $this->mTableFieldsLeftJoin = [ // Set default left join to group_id
+        "group" => [
+          "group_id",
+        ]
+      ];
+    }
+    // Types this class may interact with
+    $str = Parameters::get("types");
+    if ($str)
+      $this->mLinking = explode(',', $str);
+    if (!$this->mLinking)
+      $this->mLinking = ["group"];
+    if (!in_array($this->mType,$this->mLinking))
+      array_unshift($this->mLinking,$this->mType); // Add the current type as a "link" in order to work with sub-items
 
-      // Set default table fields
-      $this->mTableFields = $fields
-                            ? $fields
-                            : [ $this->mIdKey,
-                                $this->mNameKey,
-                              ];
-      // Set default table meta fields
-      $this->mTableFieldsMeta = null;
-
-      // Set default table filters
+    // Default table filters
+    if (!$this->mFilters) {
       $this->mFilters = [
         "list" => [
           $this->mIdKey   => 1,
@@ -325,14 +290,12 @@ class anyTable extends dbTable
       ];
     }
 
-    if (!isset($this->mType)) // Option type overrides parameter type
-      $this->mType = ltrim(Parameters::get("type"));
-    if (!isset($this->mType))
-      return "Table type missing. "; // Cannot continue without a type
+    if (!$this->validateProperties())
+      return false;
 
     // Set some common properties if not already set
     if (!isset($this->mOrderBy))
-      $this->mOrderBy = $this->mIdKeyTable;
+      $this->mOrderBy = $this->mNameKey;
     if (!isset($this->mMetaId))
       $this->mMetaId = null;
     if (!isset($this->mInsertSuccessMsg))
@@ -351,44 +314,35 @@ class anyTable extends dbTable
     if (!in_array($this->mIdKeyTable,$this->mTableFields))
       $this->mIdKeyTable = $this->mTableFields[0];
 
-    $str = Parameters::get("types");
-    if ($str)
-      $this->mLinking = explode(',', $str);
-    if (!isset($this->mLinking))
-      $this->mLinking = array();
-    if (!in_array($this->mType,$this->mLinking))
-      array_unshift($this->mLinking,$this->mType); // Add the current type as a "link" in order to work with sub-items
-
     return true;
   } // initProperties
 
-  private function validateTableDefs($tableDefs)
+  private function validateProperties()
   {
-    if (!$tableDefs) {
-      $this->mError = "Table definitions missing. ";
+    $this->mError = "";
+
+    if (!$this->mType)
+      $this->mError .= "Table type missing. ";
+
+    if (!$this->mTableName)
+      $this->mError .= "Table name missing. ";
+
+    if (!$this->mIdKey)
+      $this->mError .= "Id key missing. ";
+
+    if (!$this->mIdKeyTable)
+      $this->mError .= "Table id key missing. ";
+
+    if ($this->mTableNameMeta && !$this->mIdKeyMetaTable)
+      $this->mError .= "Meta table id key missing. ";
+
+    if (!$this->mNameKey)
+      $this->mError .= "Name key missing. ";
+
+    if ($this->mError !== "")
       return false;
-    }
-    $err = "";
-    if (!isset($tableDefs["type"]))
-      $err .= "Type missing. ";
-    if (!isset($tableDefs["tableName"]))
-      $err .= "Table name missing. ";
-  //if (!isset($tableDefs["tableNameMeta"]))
-  //  $err .= "Meta table name missing. ";
-    if (!isset($tableDefs["idKey"]))
-      $err .= "Id key missing. ";
-    if (!isset($tableDefs["idKeyTable"]))
-      $err .= "Table id key missing. ";
-  //if (!isset($tableDefs["idKeyMetaTable"]))
-  //  $err .= "Meta table id key missing. ";
-    if (!isset($tableDefs["nameKey"]))
-      $err .= "Name key missing. ";
-    if ($err !== "") {
-      $this->mError = $tableDefs["type"]." ".$err;
-      return false;
-    }
     return true;
-  } // validateTableDefs
+  } // validateProperties
 
   /**
    * initFilters

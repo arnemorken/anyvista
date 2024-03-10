@@ -25,19 +25,20 @@ require_once "anyTable.php";
  */
 class userTable extends anyTable
 {
-  protected $mTableDefs = [
-    "tableName"          => ANY_DB_USER_TABLE,
-    "tableNameMeta"      => ANY_DB_USERMETA_TABLE,
-    "tableNameGroupLink" => "any_group_user",
-    "tableNameUserLink"  => ANY_DB_USER_TABLE,
-    "type"               => "user",
-    "idKey"              => "user_id",
-    "idKeyTable"         => ANY_DB_USER_ID,
-    "idKeyMetaTable"     => "user_id",
-    "nameKey"            => ANY_DB_USER_NAME,
-    "orderBy"            => ANY_DB_USER_NAME,
-    "metaId"             => ANY_DB_USER_META_ID,
-    "fields" => [
+  protected $mType           = "user",
+            $mIdKey          = "user_id",
+            $mIdKeyTable     = ANY_DB_USER_ID,
+            $mIdKeyMetaTable = "user_id",
+            $mNameKey        = ANY_DB_USER_NAME,
+            $mMetaId         = ANY_DB_USER_META_ID,
+            $mOrderBy        = ANY_DB_USER_NAME;
+
+  protected $mTableName          = ANY_DB_USER_TABLE,
+            $mTableNameMeta      = ANY_DB_USERMETA_TABLE,
+            $mTableNameGroupLink = "any_group_user",
+            $mTableNameUserLink  = ANY_DB_USER_TABLE;
+
+  protected $mTableFields = [
       ANY_DB_USER_ID,
       ANY_DB_USER_NAME,
       ANY_DB_USER_LOGIN,
@@ -48,8 +49,9 @@ class userTable extends anyTable
       "user_status",
       "user_registered",
       "user_activation_key",
-    ],
-    "fieldsMeta" => [
+    ];
+
+  protected $mTableFieldsMeta = [
       "user_id",
       "user_name",
       "display_name",
@@ -65,17 +67,9 @@ class userTable extends anyTable
       "salary_number",
       "salary_minimum",
       "other_expenses",
-    ],
-    "fieldsGroup" => [
-      "group_type",
-      "group_id",
-      "group_name",
-      "group_description",
-      "group_sort_order",
-      "group_status",
-      "group_privacy",
-    ],
-    "fieldsLeftJoin" => [
+    ];
+
+  protected $mTableFieldsLeftJoin = [
       "group" => [
         "group_id",
         "user_joined_date",
@@ -93,8 +87,11 @@ class userTable extends anyTable
         "user_feedback",
         "user_attended",
       ],
-    ],
-    "filters" => [
+    ];
+
+  protected $mLinking = ["event","group",/*"document"*/];
+
+  protected $mFilters = [
       "list" => [
         "user_id"          => 1,
         "group_id"         => 1,
@@ -149,9 +146,7 @@ class userTable extends anyTable
         "user_attended"    => 1,
         "user_role"        => 1,
       ],
-    ],
-    "types" => [/*"document",*/"event","group"],
-  ];
+    ];
 
   protected $mInsertSuccessMsg  = "User created. ",
             $mUpdateSuccessMsg  = "User updated. ",
@@ -166,7 +161,7 @@ class userTable extends anyTable
   // Constructor
   public function __construct($connection)
   {
-    parent::__construct($connection,$this->mTableDefs);
+    parent::__construct($connection);
   }
 
   /////////////////////////////////////////////////////////////////////////////

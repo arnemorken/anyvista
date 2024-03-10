@@ -22,19 +22,19 @@ require_once "anyTable.php";
  */
 class eventTable extends anyTable
 {
-  protected $mTableDefs = [
-    "tableName"          => "any_event",
-    "tableNameMeta"      => "any_eventmeta",
-    "tableNameGroupLink" => "any_event_group",
-    "tableNameUserLink"  => "any_event_user",
-    "type"               => "event",
-    "idKey"              => "event_id",
-    "idKeyTable"         => "event_id",
-    "idKeyMetaTable"     => "event_id",
-    "nameKey"            => "event_name",
-    "orderBy"            => "event_date_start",
-    "metaId"             => "meta_id",
-    "fields" => [
+  protected $mType           = "event",
+            $mIdKey          = "event_id",
+            $mIdKeyTable     = "event_id",
+            $mIdKeyMetaTable = "event_id",
+            $mNameKey        = "event_name",
+            $mOrderBy        = "event_date_start";
+
+  protected $mTableName          = "any_event",
+            $mTableNameMeta      = "any_eventmeta",
+            $mTableNameGroupLink = "any_event_group",
+            $mTableNameUserLink  = "any_event_user";
+
+  protected $mTableFields = [
       "event_id",
       "event_name",
       "event_description",
@@ -53,8 +53,9 @@ class eventTable extends anyTable
       "event_instructor_id",
       "parent_id",
       "event_header_image",
-    ],
-    "fieldsMeta" => [
+    ];
+
+  protected $mTableFieldsMeta = [
       "pay_total",
       "pay_balance",
       "user_discount",
@@ -62,17 +63,9 @@ class eventTable extends anyTable
       "salary_number",
       "salary_minimum",
       "other_expenses",
-    ],
-    "fieldsGroup" => [
-      "group_type",
-      "group_id",
-      "group_name",
-      "group_description",
-      "group_sort_order",
-      "group_status",
-      "group_privacy",
-    ],
-    "fieldsLeftJoin" => [
+    ];
+
+  protected $mTableFieldsLeftJoin = [
       "group" => [
         "group_id",
         "main_event",
@@ -91,8 +84,11 @@ class eventTable extends anyTable
         "document_id",
         "document_status",
       ],
-    ],
-    "filters" => [
+  ];
+
+  protected $mLinking = ["group","user","document"];
+
+  protected $mFilters = [
       "list" => [
         "event_id"            => 1,
         "event_name"          => 1,
@@ -145,9 +141,7 @@ class eventTable extends anyTable
         "salary_number"       => 1,
         "user_attended"       => 1,
       ],
-    ],
-    "types" => ["document","group","user"],
-  ];
+    ];
 
   protected $mInsertSuccessMsg  = "Event created. ",
             $mUpdateSuccessMsg  = "Event updated. ",
@@ -165,7 +159,7 @@ class eventTable extends anyTable
   // Constructor
   public function __construct($connection)
   {
-    parent::__construct($connection,$this->mTableDefs);
+    parent::__construct($connection);
   }
 
   /////////////////////////////////////////////////////////////////////////////
