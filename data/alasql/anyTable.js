@@ -39,17 +39,18 @@ var anyTable = function (connection,parameters,tableName,type,id,idKey,nameKey,o
   dbTable.call(this,connection);
 
   // Initialize properties
-  this.tableName = tableName;
-  this.data      = null;
-  this.type      = type;
-  this.id        = id;
-  this.idKey     = idKey;
-  this.nameKey   = nameKey;
-  this.orderBy   = orderBy;
-  this.orderDir  = orderDir ? orderDir : "DESC";
+  this.type     = type;
+  this.data     = null;
+  this.id       = id;
+  this.idKey    = idKey;
+  this.nameKey  = nameKey;
 
-  this.linking   = null;
-  this.maxId     = -1;
+  this.tableName          = tableName;
+  this.orderBy  = orderBy  ? orderBy  : null;
+  this.orderDir = orderDir ? orderDir : "DESC";
+
+  this.linking  = null;
+  this.maxId    = -1;
 
   // TODO! i18n
   this.insertSuccessMsg  = "Insert succeeded. ";
@@ -137,12 +138,13 @@ anyTable.prototype.dbSearch = function(options)
 {
   let type = options && options.type ? options.type : this.type;
   let id   = options && options.id   ? options.id   : this.id;
-  if (id)
-    this.id = id;
   if (!type) {
     this.error = "dbSearch: type missing. ";
     return Promise.resolve(null);
   }
+  this.type = type;
+  if (id)
+    this.id = id;
   let self = this;
   return this._dbSearch(type,id)
   .catch(function(err) {
@@ -457,7 +459,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,linkId)
                     grp2[idx] = item;  // Copy child to other group
                   if (!grp[pid] && !grp["+"+pid]) {
                     let name = item[this.nameKey];
-                    let err = "Warning: Item "+idx+" ("+name+") does not have parent in same group. ";
+                    let err = "Warning: Item "+idx+" ("+name+") does not have parent in same group. "; // TODO i18n
                     this.error = err;
                     console.log(err);
                   }
@@ -471,6 +473,8 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,linkId)
   } // for
 
   // Build data tree
+  //console.log("buildGroupTreeAndAttach,group_data:");                console.log(group_data);
+  //console.log("buildGroupTreeAndAttach,data before building tree:"); console.log(data);
   let data_tree = {};
   data_tree["grouping"] = true; // TODO! Should be able to specify this via option
   for (let gidx in data) {
@@ -515,6 +519,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,linkId)
     else
       data = data_tree;
   }
+  //console.log("buildGroupTreeAndAttach,data after building tree:"); console.log(data);
   return data;
 }; // buildGroupTreeAndAttach
 
@@ -555,6 +560,7 @@ anyTable.prototype.buildDataTree = function(flatdata,parentId)
             subdata["parent_id"] = pid;
         }
       } // if
+      //else console.log(subdata);
     } // if
   } // for
   return retval;
@@ -970,7 +976,7 @@ anyTable.prototype.dbUpdateLink = async function(options)
   }
   */
   // Link found, we can update it
-  if (this.tableFieldsLeftJoin[link_type]) {
+  if (this.tableFieldsLeftJoin && this.tableFieldsLeftJoin[link_type]) {
     let val_found = false;
     let stmt = "UPDATE "+link_table+" SET ";
     for (let t=0; t<this.tableFieldsLeftJoin[link_type].length; t++) {
