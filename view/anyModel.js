@@ -354,10 +354,10 @@ var anyModel = function (options)
       if (options.db_name && options.db_version) {
         let params = {
           dbtype:    "INDEXEDDB", // "LOCALSTORAGE"
-          dbname:    dbname,
-          dbversion: dbversion,
+          dbname:    options.db_name,
+          dbversion: options.db_version,
           onSuccess: async function() {
-            console.log("anyModel: Local database "+dbname+" ready"); // TODO! i18n
+            console.log("anyModel: Local database "+options.db_name+" ready"); // TODO! i18n
           },
           onFail: function(err) {
             console.error("anyModel: Could not create connection: "+err); // TODO! i18n
@@ -375,7 +375,6 @@ var anyModel = function (options)
           this.table_factory = options.table_factory;
         else
           this.table_factory = new anyTableFactory(this.db_connection);
-      }
     }
   }
 
