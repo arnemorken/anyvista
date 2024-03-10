@@ -37,31 +37,34 @@ anyTableFactory.prototype.createClass = async function(className,parameters,call
 anyTableFactory.prototype._createClass = function(className,parameters,callback)
 {
   try {
-  var head = document.getElementsByTagName("head")[0];
-  var js   = document.createElement("script");
-  var path = gServer+gHomeFolder+"data/alasql/types/" + className + ".js";
-  //console.log("loading "+path);
-  let self = this;
-  js.async = false;
-  js.src   = path;
-  let res = new Promise( function(resolve) {
-    js.addEventListener("load", function() {
-      //console.log("creating class "+className);
-      let table_class = new window[className](self.connection,parameters);
-      table_class.className = className;
-      //if (callback)
-      //  callback(table_class);
-      return resolve(table_class);
+    var head = document.getElementsByTagName("head")[0];
+    var js   = document.createElement("script");
+    var path = parameters.path
+               ? parameters.path
+               : gServer+gHomeFolder+"data/alasql/types/";
+    path += className + ".js"
+    //console.log("loading "+path);
+    let self = this;
+    js.async = false;
+    js.src   = path;
+    let res = new Promise( function(resolve) {
+      js.addEventListener("load", function() {
+        //console.log("creating class "+className);
+        let table_class = new window[className](self.connection,parameters);
+        table_class.className = className;
+        //if (callback)
+        //  callback(table_class);
+        return resolve(table_class);
+      });
+      js.onerror = function(e){
+        let errstr = "Could not find "+path;
+        //console.error(errstr);
+        self.error = errstr;
+        return resolve({error: errstr});
+      };
+      head.appendChild(js);
     });
-    js.onerror = function(e){
-      let errstr = "Could not find "+path;
-      //console.error(errstr);
-      self.error = errstr;
-      return resolve({error: errstr});
-    };
-    head.appendChild(js);
-  });
-  return res;
+    return res;
   }
   catch (err) {
     console.log(err);
