@@ -919,48 +919,7 @@
           class taskTable extends anyTable
           {
             protected $mTableDefs = [
-              "tableName"          => "any_task",
-              "tableNameMeta"      => "any_taskmeta",
-              "tableNameGroupLink" => "any_task_group",
-              "tableNameUserLink"  => "any_task_user",
-              "type"               => "task",
-              "idKey"              => "task_id",
-              "idKeyTable"         => "task_id",
-              "idKeyMetaTable"     => "task_id",
-              "nameKey"            => "task_name",
-              "orderBy"            => "task_date_start",
-              "metaId"             => "meta_id",
-              "fields" => [
-                "task_id",
-                "task_name",
-                "task_description",
-                "task_owner",
-                "task_date_start",
-                "task_date_end",
-                "task_status",
-              ],
-              "fieldsMeta" => [
-              ],
-              "fieldsGroup" => [
-                "group_type",
-                "group_id",
-                "group_name",
-                "group_description",
-                "group_sort_order",
-                "group_status",
-                "group_privacy",
-              ],
-              "fieldsLeftJoin" => [
-                "group" => [
-                  "group_id",
-                ],
-                "user" => [
-                  "user_id",
-                  ],
-                "document" => [
-                  "document_id",
-                  ],
-              ],
+              "types" => ["group","task","user","document"],
               "filters" => [
                 "list" => [
                   "task_id"          => 1,
@@ -981,7 +940,6 @@
                   "task_status"      => 1,
                 ],
               ],
-              "types" => ["task","group","user","document"],
             ];
 
             protected $mInsertSuccessMsg = "Task created. ",
