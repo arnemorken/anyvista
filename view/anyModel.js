@@ -346,25 +346,34 @@ var anyModel = function (options)
   // If `this.source` is "local", we will need a connection to the local database and a table factory.
   // If not specified in options, create one.
   if (this.source == "local") {
-    let dbname = "test_anydbase";
-    let params = {
-      dbtype:    "INDEXEDDB", // "LOCALSTORAGE"
-      dbname:    dbname,
-      dbversion: "1",
-      onSuccess: async function() {
-        console.log("anyModel: Local database "+dbname+" ready"); // TODO! i18n
-      },
-      onFail: function(err) {
-        console.error("anyModel: Could not create connection: "+err); // TODO! i18n
-        return false;
-      },
-    };
     if (!this.db_connection && typeof dbConnection !== 'undefined') {
-      this.db_connection = new dbConnection(params);
-      if (this.db_connection.error)
-        console.error(this.db_connection.error);
-      else {
-        if (!this.table_factory)
+      if (!options.db_name)
+        console.warn("anyModel: Local database name missing. "); // TODO! i18n
+      if (!options.db_version)
+        console.warn("anyModel: Local database version missing. "); // TODO! i18n
+      if (options.db_name && options.db_version) {
+        let params = {
+          dbtype:    "INDEXEDDB", // "LOCALSTORAGE"
+          dbname:    dbname,
+          dbversion: dbversion,
+          onSuccess: async function() {
+            console.log("anyModel: Local database "+dbname+" ready"); // TODO! i18n
+          },
+          onFail: function(err) {
+            console.error("anyModel: Could not create connection: "+err); // TODO! i18n
+            return false;
+          },
+        };
+        this.db_connection = new dbConnection(params);
+        if (this.db_connection.error)
+          console.error(this.db_connection.error);
+      }
+    } // if !db_connection
+    if (this.db_connection && !this.db_connection.error) {
+      if (!this.table_factory)
+        if (options.table_factory)
+          this.table_factory = options.table_factory;
+        else
           this.table_factory = new anyTableFactory(this.db_connection);
       }
     }
