@@ -23,11 +23,11 @@ var dbConnection = function (options)
     return;
   this.error   = "";
   if (!options.dbtype || options.dbtype == "")
-    this.error += "Database type not specified. ";
+    this.error += "Database type not specified. "; // TODO! i18n
   if (!options.dbname || options.dbname == "")
-    this.error += "Database name missing. ";
+    this.error += "Database name missing. ";       // TODO! i18n
   if (!options.dbversion || options.dbversion == "")
-    this.error += "Unknown database version. ";
+    this.error += "Database version missing. ";    // TODO! i18n
   if (this.error)
     return;
 
@@ -62,7 +62,7 @@ var dbConnection = function (options)
   // Catch alasql errors
   .catch( function(err) {
     // Fatal error: Could not create or connect to database
-    self.error = self.any_dbname+":"+err;
+    self.error = self.any_dbname+": "+err;
     console.error(self.error);
     return fail_func
            ? fail_func.call(context,err) // Call user defined error handler

@@ -44,7 +44,7 @@ dbTable.prototype.dbDelete         = function() {};
 //
 // Create the database table associated with the class
 //
-dbTable.prototype.dbCreate = async function(mergeArray)
+dbTable.prototype.dbCreate = async function(mergeArray) // TODO! Rename to createTable (also in mysql class)?
 {
   if (!this.sqlCreate)
     return Promise.resolve(false);
@@ -74,6 +74,11 @@ dbTable.prototype.query = function(SQL,mergeArray,disregardResult)
     if (!disregardResult)
       self.data = data;
     return Promise.resolve(data);
+  })
+  .catch(function(err) {
+    self.err = err;
+    console.error(self.err);
+    return null;
   });
 }; // query
 
@@ -110,8 +115,6 @@ dbTable.prototype.queryMaxId = async function(tableName)
 
 dbTable.prototype.tableExists = function(tableName)
 {
-  if (!tableName)
-    tableName = this.tableName;
   if (!tableName)
     return null;
 
