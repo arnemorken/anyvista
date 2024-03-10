@@ -685,8 +685,8 @@ class anyTable extends dbTable
       return false; // An error occured
 
     // Get the data
-    if ($this->getRowData($data,"item")) {
-      $this->dbSearchMeta($data,"item"); // Search and get the meta data
+    if ($this->getRowData("item",$data)) {
+      $this->dbSearchMeta("item",$data); // Search and get the meta data
       if (!$skipLinks)
         $this->dbSearchItemLists($data); // Get lists associated with the item
       $data["+".$this->mId]["item"] = $this->mType;
@@ -901,7 +901,7 @@ class anyTable extends dbTable
           if (!(!$stmt || $stmt == "" || !$this->query($stmt) || $this->isError())) {
             // Get the data
             $xdata = null;
-            $ok = $this->getRowData($xdata,"list");
+            $ok = $this->getRowData("list",$xdata);
             if ($ok) {
               if ($xdata && $xdata["nogroup"]) {
                 $data["unknown"] = null;
@@ -917,11 +917,12 @@ class anyTable extends dbTable
           }
         }
       }
-    }
+    } // else
+
     if ($success) {
       // Search and get the meta data
       if (!$this->mSimpleList)
-        $this->dbSearchMeta($data,"list");
+        $this->dbSearchMeta("list",$data);
 
       // Sort the list
       if ($this->mSortFunction)
@@ -951,7 +952,7 @@ class anyTable extends dbTable
     if (!$stmt || $stmt == "" || !$this->query($stmt) || $this->isError())
       return false; // Something went wrong
     // Get the data
-    $success = $this->getRowData($data,"list");
+    $success = $this->getRowData("list",$data);
 
     if ($limit != "") {
       // Count how many rows would have been returned without LIMIT
@@ -1223,7 +1224,7 @@ class anyTable extends dbTable
   //////////////////////////////// Metadata search ////////////////////////////////
 
   // Get the meta data
-  protected function dbSearchMeta(&$data,$mode)
+  protected function dbSearchMeta($mode,&$data)
   {
     if (!$this->tableExists($this->mTableNameMeta)) {
       //$this->mMessage .= "No meta table for '$this->mType' type. ";
@@ -1268,7 +1269,7 @@ class anyTable extends dbTable
       return false;
 
     // Get the data
-    return $this->getRowMetaData($data,$mode);
+    return $this->getRowMetaData($mode,$data);
   } // dbSearchMeta
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1278,7 +1279,7 @@ class anyTable extends dbTable
   //
   // Get the data from query result to array
   //
-  protected function getRowData(&$data,$mode)
+  protected function getRowData($mode,&$data)
   {
     $this->mLastNumRows = 0; // Used to break (theoretical) infinite recursion
     $filter = $mode == "list"
@@ -1436,7 +1437,7 @@ class anyTable extends dbTable
   //
   // Get the meta data from table row(s) to array
   //
-  protected function getRowMetaData(&$data,$mode)
+  protected function getRowMetaData($mode,&$data)
   {
     if (!$this->tableExists($this->mTableNameMeta))
       return false;
