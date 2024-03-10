@@ -72,8 +72,8 @@
  *                                          Only valid when `source` is "local", in which case
  *                                          a client side AlaSQL database will be used.
  *                                          Default: null.
- * @param {Array}    options.db_fields      An array of strings to be sent to the server, indicating
- *                                          which columns ofthe table should be used in a search or
+ * @param {Array}    options.table_fields   An array of strings to be sent to the server, indicating
+ *                                          which columns of the table should be used in a search or
  *                                          update/insert. These fields are only applied if the
  *                                          server fails to find a filter corresponding to `type`.
  *                                          Default: null.
@@ -203,7 +203,25 @@ var anyModel = function (options)
   this.db_connection = null;
 
   /**
-  * The table factory class. 
+  * The database name.
+  * Only valid when `source` is "local", in which case a client side AlaSQL database will be used.
+  *
+  * @type       {String}
+  * @default    null
+  */
+  this.db_name = null;
+
+  /**
+  * The database version.
+  * Only valid when `source` is "local", in which case a client side AlaSQL database will be used.
+  *
+  * @type       {String}
+  * @default    null
+  */
+  this.db_version = null;
+
+  /**
+  * The table factory class.
   * Only valid when `source` is "local", in which case a client side AlaSQL database will be used.
   *
   * @type       {String}
@@ -219,7 +237,7 @@ var anyModel = function (options)
   * @type       {Array}
   * @default    null
   */
-  this.db_fields = null;
+  this.table_fields = null;
 
   /**
   * Whether to call the search method while initializing the class, or while searching on the
@@ -386,7 +404,7 @@ anyModel.prototype._dataInitDefault = function ()
   this.source          = typeof gSource !== 'undefined' ? gSource : "local";
   this.db_connection   = null;
   this.table_factory   = null;
-  this.db_fields       = null;
+  this.table_fields    = null;
   this.db_search       = false;
   this.db_search_term  = "";
   this.db_last_term    = "";
@@ -425,7 +443,7 @@ anyModel.prototype._dataInitDefault = function ()
  * @param {String}  options.source         "local" or "remote". Optional.
  * @param {Object}  options.db_connection  The database connection. Only valid when `source` is "local". Optional.
  * @param {Object}  options.table_factory  The table factory class. Only valid when `source` is "local". Optional.
- * @param {Array}   options.db_fields      An array of strings to be sent to the server, indicating which columns
+ * @param {Array}   options.table_fields   An array of strings to be sent to the server, indicating which columns
  *                                         of the table should be used in a search or update/insert. Optional.
  * @param {boolean} options.db_search      Whether to call the search method. Optional.
  * @param {String}  options.db_search_term The string to search for. Optional.
@@ -476,7 +494,7 @@ anyModel.prototype.dataInit = function (options)
     if (options.source)                                { this.source         = options.source; }
     if (options.db_connection)                         { this.db_connection  = options.db_connection; }
     if (options.table_factory)                         { this.table_factory  = options.table_factory; }
-    if (options.db_fields)                             { this.db_fields      = options.db_fields; }
+    if (options.table_fields)                          { this.table_fields   = options.table_fields; }
     if (options.db_search)                             { this.db_search      = options.db_search; }
     if (options.db_search_term)                        { this.db_search_term = options.db_search_term; }
     if (options.db_last_term)                          { this.db_last_term   = options.db_last_term; }
@@ -502,8 +520,8 @@ anyModel.prototype.dataInit = function (options)
       this.error        = i18n.error.SERVER_ERROR;
     }
 
-    if (this.db_fields && this.id_key && !this.db_fields.includes(this.id_key))
-      this.id_key = this.db_fields[0];
+    if (this.table_fields && this.id_key && !this.table_fields.includes(this.id_key))
+      this.id_key = this.table_fields[0];
 
     if (!this.error) {
       if (!this.data)
@@ -1503,11 +1521,11 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  * @param {string}   options.direction  Sort in ascending or descending direction.
  *                                      Optional. Default: undefined (server decides).
  * @param {string}   options.db_search_term A string to search for.
- *                                      Optional. Default: undefined.
- * @param {Object}   options.db_fields  An array of strings to be sent to the server, indicating which columns
- *                                      of the table should be used in the search. These fields are only
- *                                      applied if the server fails to find a filter corresponding to `type`.
- *                                      Optional. Default: undefined.
+ *                                          Optional. Default: undefined.
+ * @param {Object}   options.table_fields   An array of strings to be sent to the server, indicating which columns
+ *                                          of the table should be used in the search. These fields are only
+ *                                          applied if the server fails to find a filter corresponding to `type`.
+ *                                          Optional. Default: undefined.
  * @param {integer}  options.timeoutSec Number of seconds before timing out.
  *                                      Optional. Default: 10.
  * @param {Function} options.onSuccess  Method to call on success.
@@ -1543,11 +1561,11 @@ anyModel.prototype.dbSearch = function (options)
     if (!url)
       return false;
     let item_to_send = {};
-    if (options.db_fields)
-      item_to_send.fields = options.db_fields;
+    if (options.table_fields)
+      item_to_send.tableFields = options.table_fields;
     else
-    if (this.db_fields)
-      item_to_send.fields = this.db_fields;
+    if (this.table_fields)
+      item_to_send.tableFields = this.table_fields;
     else
       item_to_send = null;
     //const start = Date.now();
@@ -1730,7 +1748,7 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
  *
  * @param {integer}  options.type       Item's type.
  *                                      Optional. Default: `this.type`.
- * @param {Array}    options.db_fields
+ * @param {Array}    options.table_fields
  *
  * @param {integer}  options.timeoutSec Number of seconds before timing out.
  *                                      Optional. Default: 10.
@@ -1764,11 +1782,11 @@ anyModel.prototype.dbSearchNextId = function (options)
     if (!url)
       return false;
     let item_to_send = {};
-    if (options.db_fields)
-      item_to_send.fields = options.db_fields;
+    if (options.table_fields)
+      item_to_send.tableFields = options.table_fields;
     else
-    if (this.db_fields) // TODO! What is this?
-      item_to_send.fields = this.db_fields;
+    if (this.table_fields) // TODO! What is this?
+      item_to_send.tableFields = this.table_fields;
     else
       item_to_send = null;
     $.getJSON(url,item_to_send) // Call server
@@ -1904,10 +1922,10 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
  *                                      rather than updated. Note: If set, an insert operation will be performed
  *                                      even if `options.id` has a value.
  *                                      Optional. Default: false.
- * @param {Object}   options.db_fields  An array of strings to be sent to the server, indicating which columns
- *                                      of the table should be used in the update/insert. These fields are only
- *                                      applied if the server fails to find a filter corresponding to `type`.
- *                                      Optional. Default: undefined.
+ * @param {Object}   options.table_fields An array of strings to be sent to the server, indicating which columns
+ *                                        of the table should be used in the update/insert. These fields are only
+ *                                        applied if the server fails to find a filter corresponding to `type`.
+ *                                        Optional. Default: undefined.
  * @param {integer}  options.timeoutSec Number of seconds before timing out.
  *                                      Optional. Default: 10.
  * @param {Function} options.onSuccess  Method to call on success.
@@ -1985,11 +2003,11 @@ anyModel.prototype.dbUpdate = function (options) // TODO! Should this be an asyn
     let url = this.dbUpdateGetURL(options);
     if (!url)
       return false;
-    if (options.db_fields)
-      item_to_send.fields = options.db_fields;
+    if (options.table_fields)
+      item_to_send.tableFields = options.table_fields;
     else
-    if (this.db_fields) // TODO! What is this?
-      item_to_send.fields = this.db_fields;
+    if (this.table_fields) // TODO! What is this?
+      item_to_send.tableFields = this.table_fields;
     $.getJSON(url,item_to_send) // Call server
     .done(function(serverdata,textStatus,jqXHR) {
       return self.success ? self.success(self.context,serverdata,options) : false;

@@ -8,7 +8,7 @@ var eventTable = function (connection,parameters)
                    "user":     [ "any_event_user",     "userTable" ],
                    "document": [ "any_document_event", "documentTable" ],
                  };
-  this.fields = [
+  this.tableFields = [
     "event_id",
     "event_name",
     "event_description",

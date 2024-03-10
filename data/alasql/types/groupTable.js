@@ -8,7 +8,7 @@ var groupTable = function (connection,parameters)
                    "document": [ "any_document_group", "documentTable" ],
                    "user":     [ "any_group_user",     "userTable" ],
                  };
-  this.fields = [
+  this.tableFields = [
     "group_id",
     "group_name",
     "group_description",

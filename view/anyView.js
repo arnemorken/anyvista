@@ -2784,7 +2784,7 @@ $.any.anyView.prototype.getCreateModelOptions = function(type,data,id,link_id)
     link_id:      link_id,
     parent:       this.model, // TODO! Not always correct.
     source:       this.model.source,
-    db_fields:    this.model.db_fields,
+    table_fields: this.model.table_fields,
     db_last_term: this.model.db_last_term,
     permission:   this.model.permission,
   };
@@ -3742,16 +3742,16 @@ $.any.anyView.prototype.addListEntry = function (event)
       let f = []; f[0] = this.model.id_key;
       this.showMessages("",true);
       this.model.dbSearchNextId({
-                   type:       type,
-                   db_fields:  f,
-                   onSuccess:  this._addListEntryFromDB,
-                   context:    this,
-                   id_str:     id_str,
-                   row_id_str: row_id_str,
-                   table_div:  table_div,
-                   par_data:   par_data,
-                   par_id:     par_id,
-                   par_type:   par_type,
+                   type:         type,
+                   table_fields: f,
+                   onSuccess:    this._addListEntryFromDB,
+                   context:      this,
+                   id_str:       id_str,
+                   row_id_str:   row_id_str,
+                   table_div:    table_div,
+                   par_data:     par_data,
+                   par_id:       par_id,
+                   par_type:     par_type,
                  });
     }
   }
@@ -3916,11 +3916,11 @@ $.any.anyView.prototype.showItem = function (event)
         }
         if (model && view)
           model.dbSearchNextId({
-                  type:      type,
-                  is_new:    is_new,
-                  db_fields: f,
-                  onSuccess: view._foundNextIdFromDB,
-                  context:   view,
+                  type:         type,
+                  is_new:       is_new,
+                  table_fields: f,
+                  onSuccess:    view._foundNextIdFromDB,
+                  context:      view,
                 }); // TODO! Asynchronous database call
       }
       else
