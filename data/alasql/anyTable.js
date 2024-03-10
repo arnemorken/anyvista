@@ -46,7 +46,7 @@ var anyTable = function (connection,parameters,tableName,type,id,idKey,nameKey,o
   this.nameKey  = nameKey;
 
   this.tableName          = tableName;
-  this.tableNameGroup     = "acugroup"; // TODO! Not here!
+  this.tableNameGroup     = "any_group"; // TODO! Not here!
   this.tableNameGroupLink = null;
 
   this.orderBy  = orderBy  ? orderBy  : null;
