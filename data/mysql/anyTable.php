@@ -852,12 +852,12 @@ class anyTable extends dbTable
     // Build and execute the query
     if ($group_id && $this->mType != "group") {
       // Query data from the given group (or "nogroup")
-      $success = $this->dbExecListStmt($data,$group_id,$limit);
+      $success = $this->dbExecListStmt($data,$group_id,$group_table,$limit);
     }
     else
     if (!$this->mGrouping || $this->mType == "group") {
       // Query all data, non-grouped
-      $success = $this->dbExecListStmt($data,null,$limit);
+      $success = $this->dbExecListStmt($data,null,$group_table,$limit);
     }
     else {
       // Query grouped data
@@ -867,7 +867,7 @@ class anyTable extends dbTable
         foreach ($group_data["group"] as $gid => $group) {
           if ($group["group_type"] == $this->mType) {
             if ($this->tableExists($this->mTableNameGroupLink)) {
-              $success = $this->dbExecListStmt($data,$gid,$limit) || $success;
+              $success = $this->dbExecListStmt($data,$gid,$group_table,$limit) || $success;
               if ($gid == "nogroup")
                 $has_nogroup = true;
             }
@@ -876,12 +876,12 @@ class anyTable extends dbTable
       } // if
       // Build and execute the query for ungrouped data (if not queried already)
       if (!$has_nogroup)
-        $success = $this->dbExecListStmt($data,"nogroup",$limit) || $success;
+        $success = $this->dbExecListStmt($data,"nogroup",$group_table,$limit) || $success;
 
       // Build and execute the query for grouped data that may have illegal group type (i.e. not same as list type).
       // Ideally this should not happen, but if it does, such data will not show up unless we do this.
       if ($group_data && isset($group_data["group"]) && $this->mLinkId == "") {
-        //$success = $this->dbExecListStmt($data,-1,$limit) || $success; // -1 signifies this special query
+        //$success = $this->dbExecListStmt($data,-1,$group_table,$limit) || $success; // -1 signifies this special query
         $linktable    = $this->findLinkTableName("group");
         $linktable_id = $this->findLinkTableId("group");
         $stmt =  "SELECT DISTINCT ".$this->mTableName.".*  ".
@@ -941,12 +941,12 @@ class anyTable extends dbTable
     return !$this->isError();
   } // dbSearchList
 
-  protected function dbExecListStmt(&$data,$gid=null,$limit="")
+  protected function dbExecListStmt(&$data,$gid=null,$groupTable=null,$limit="")
   {
     // Build and execute the query for a group
     if ($gid == "nogroup")
       $gid = null;
-    $partial_stmt = $this->dbPrepareSearchListStmt($gid);
+    $partial_stmt = $this->dbPrepareSearchListStmt($gid,$groupTable);
     $stmt = $partial_stmt.$limit;
     //elog("dbExecListStmt1:".$stmt);
     if (!$stmt || $stmt == "" || !$this->query($stmt) || $this->isError())
@@ -956,7 +956,7 @@ class anyTable extends dbTable
 
     if ($limit != "") {
       // Count how many rows would have been returned without LIMIT
-      $part_stmt = $this->dbPrepareSearchListStmt($gid);
+      $part_stmt = $this->dbPrepareSearchListStmt($gid,$groupTable);
       $count_stmt = "SELECT count(*) AS num_results FROM (".
                     $part_stmt.
                     ") AS dummy";
@@ -999,10 +999,10 @@ class anyTable extends dbTable
     return $success;
   } // dbExecListStmt
 
-  protected function dbPrepareSearchListStmt($gid=null)
+  protected function dbPrepareSearchListStmt($gid=null,$groupTable=null)
   {
     // Get query fragments
-    $select    = $this->findListSelect($gid);
+    $select    = $this->findListSelect($gid,$groupTable);
     $left_join = $this->findListLeftJoin($gid);
     $where     = $this->findListWhere($gid);
     $order_by  = $this->findListOrderBy();
@@ -1016,17 +1016,16 @@ class anyTable extends dbTable
     return $stmt;
   } // dbPrepareSearchListStmt
 
-  protected function findListSelect($gid)
+  protected function findListSelect($gid,$groupTable)
   {
     // Select from own table
     $sl = "SELECT DISTINCT ".$this->mTableName.".* ";
 
     // Always select from group table, except if has parent_id while being a list-for list
-    if ($gid /*&& isset($this->mTableFieldsGroup) &&
-        !($this->hasParentId() && (isset($this->mLinkType) || (isset($this->mId) && $this->mId != "")))*/) {
-      if ($this->mType != "group" &&
-          $this->tableExists($this->mTableNameGroup)) {
-        foreach ($this->mTableFieldsGroup as $field)
+    if ($gid && $groupTable && $this->mType != "group"
+        /*&& !($this->hasParentId() && (isset($this->mLinkType) || (isset($this->mId) && $this->mId != "")))*/) {
+      foreach ($groupTable->mTableFields as $field) {
+        if ($field != "parent_id") // To avoid conflict with the current tables parent_id
           $sl .= ", ".$this->mTableNameGroup.".".$field;
       }
     }
@@ -1250,8 +1249,7 @@ class anyTable extends dbTable
       }
     }
     */
-    $has_grp_lnk     = isset($this->mTableNameGroupLink) &&
-                             $this->tableExists($this->mTableNameGroupLink);
+    $has_grp_lnk     = $this->tableExists($this->mTableNameGroupLink);
     $group_id_sel    = $has_grp_lnk && $is_list || isset($this->mLinkType) ? ",".$this->mTableNameGroupLink.".group_id " : " ";
     $group_type_sel  = /*$has_grp_lnk && $this->mType == "group" ? ",any_group.group_type" :*/ " ";
     $group_left_join = $has_grp_lnk ? "LEFT JOIN ".$this->mTableNameGroupLink." ".
@@ -1546,7 +1544,7 @@ class anyTable extends dbTable
         if (!isset($this->mId) || $this->mId == "") {
           $data_tree[$ngidx]["group_type"] = $this->mType;
           $data_tree[$ngidx]["group_id"]   = $ngidx;
-          $gname = isset($group_data) && isset($group_data["group"][$ngidx])
+          $gname = isset($group_data) && isset($group_data["group"]) && isset($group_data["group"][$ngidx])
                    ? $group_data["group"][$ngidx]["group_name"]
                    : ucfirst($data_tree[$ngidx]["group_type"])." groups"; // TODO i18n
           if ($this->mType != "group") {
