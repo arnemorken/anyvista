@@ -3,6 +3,15 @@
 /* globals gServer,gHomeFolder, */
 "use strict";
 
+/********************************************************************************************
+ *                                                                                          *
+ * anyVista is copyright (C) 2011-2024 Arne D. Morken and Balanse Software.                 *
+ *                                                                                          *
+ * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use. *
+ * Get licences here: http://balanse.info/anyvista/license/ (coming soon).                  *
+ *                                                                                          *
+ ********************************************************************************************/
+
 var anyTableFactory = function (connection)
 {
   this.connection = connection;

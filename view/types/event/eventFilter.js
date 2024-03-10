@@ -81,3 +81,4 @@ var eventFilter = function (options)
     },
   };
 }; // constructor
+//@ sourceURL=eventFilter.js

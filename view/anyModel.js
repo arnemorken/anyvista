@@ -2133,9 +2133,17 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
   self.db_last_command = "upd";
-  if (serverdata && typeof serverdata == 'object') {
+  if (serverdata && typeof serverdata == "object") {
+    let srv_err = false;
     if (serverdata.JSON_CODE)
-      serverdata = serverdata.JSON_CODE;
+      if (typeof serverdata.JSON_CODE != "object")
+        srv_err = true;
+      else
+        serverdata = serverdata.JSON_CODE;
+    if (srv_err) {
+      console.error("anyModel.dbUpdateSuccess: Illegal server data, check server log. "); // TODO! i18n
+      return context;
+    }
     if (Object.size(serverdata.data) == 0)
       serverdata.data = null;
     self.message = serverdata.message;

@@ -310,7 +310,7 @@ $.any.anyView.prototype.getFilter = function (type,mode)
 // Get a unique id to be used as a prefix for elements
 $.any.anyView.prototype._createIdBase = function ()
 {
-  return "idBase" + 1 + Math.floor(Math.random()*10000000); // Pseudo-unique id
+  return "av" + 1 + Math.floor(Math.random()*10000000); // Pseudo-unique id
 }; // _createIdBase
 
 // Get filters, or create them if they dont exist yet

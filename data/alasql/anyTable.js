@@ -5,7 +5,7 @@
 
 /********************************************************************************************
  *                                                                                          *
- * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.                 *
+ * anyVista is copyright (C) 2011-2024 Arne D. Morken and Balanse Software.                 *
  *                                                                                          *
  * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use. *
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).                  *
@@ -77,12 +77,12 @@ anyTable.prototype.hasParentId = function()
 
 anyTable.prototype.findDefaultHeader = function(type)
 {
-  return "Other "+type+"s"; // TODO!
+  return "Other "+type+"s"; // TODO! i18n
 }; // findDefaultHeader
 
 anyTable.prototype.findDefaultListHeader = function(type)
 {
-  return type.charAt(0).toUpperCase() + type.slice(1) + " list"; // TODO: i18n
+  return type.charAt(0).toUpperCase() + type.slice(1) + " list"; // TODO! i18n
 }; // findDefaultListHeader
 
 anyTable.prototype.findDefaultItemHeader = function(type,inData)
@@ -98,7 +98,7 @@ anyTable.prototype.findDefaultItemHeader = function(type,inData)
     hdr = inData[ix][this.nameKey];
   else
   if (this.linkId)
-    this.error = this.nameKey + " missing"; // TODO: i18n
+    this.error = this.nameKey + " missing"; // TODO! i18n
   return hdr;
 }; // findDefaultItemHeader
 
