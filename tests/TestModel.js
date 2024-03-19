@@ -5,7 +5,7 @@
 
 /****************************************************************************************
  *
- * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.
+ * anyVista is copyright (C) 2011-2024 Arne D. Morken and Balanse Software.
  *
  * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
@@ -49,8 +49,8 @@ async function connectSuccess(options)
   console.log("connectSuccess");
 
   // Create table classes
-  let ustab = await gFactory.createClass("userTable", {header:true});
-  let evtab = await gFactory.createClass("eventTable",{header:true});
+  let ustab = await gFactory.createClass("userTable", {type:"user", header:true});
+  let evtab = await gFactory.createClass("eventTable",{type:"event",header:true});
 
   // Create tables
   await ustab.dbCreate()

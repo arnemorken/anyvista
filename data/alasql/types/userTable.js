@@ -1,18 +1,28 @@
 var userTable = function (connection,parameters)
 {
-  this.tableName = "any_user";
-  this.className = "userTable";
-  anyTable.call(this,connection,parameters,this.tableName,"user",null,"user_id","user_name");
+  anyTable.call(this,connection,parameters);
 
-  this.linking = { "group":    [ "any_group_user",    "groupTable" ],
-                   "event":    [ "any_event_user",    "eventTable" ],
-                   "document": [ "any_document_user", "documentTable" ],
-                 };
+  this.className          = "userTable";
+  this.type               = "user";
+  this.idKey              = "user_id";
+  this.nameKey            = "user_name";
+  this.tableName          = "any_user";
+  this.tableNameGroupLink = "any_user_group";
+
   this.tableFields = [
     "user_id",
     "user_name",
     "user_description",
   ];
+  this.tableFieldsLeftJoin = {
+    group: ["group_id","user_joined_date","user_role"],
+    event: ["user_result","user_feedback","user_attended"],
+  };
+  this.linkTypes = {
+    group:    [ "any_group_user",    "groupTable" ],
+    event:    [ "any_event_user",    "eventTable" ],
+    document: [ "any_document_user", "documentTable" ],
+  };
   this.sqlCreate = "\
     CREATE TABLE IF NOT EXISTS "+this.tableName+" (\
       user_id          INT PRIMARY KEY AUTOINCREMENT,\
@@ -20,6 +30,8 @@ var userTable = function (connection,parameters)
       user_description BLOB,\
       parent_id        INT,\
       UNIQUE (user_id));\
+    ";
+  this.sqlCreateLinks = "\
     CREATE TABLE IF NOT EXISTS any_event_user (\
       event_id         INT PRIMARY KEY,\
       user_id          INT PRIMARY KEY,\
@@ -27,10 +39,6 @@ var userTable = function (connection,parameters)
       user_attended    INT,\
       UNIQUE (event_id,user_id));\
     ";
-  this.tableFieldsLeftJoin = {
-    group: ["group_id","user_joined_date","user_role"],
-    event: ["user_result","user_feedback","user_attended"],
-  };
 }; // constructor
 
 userTable.prototype = new anyTable(null);

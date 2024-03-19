@@ -24,37 +24,172 @@
  * @class anyTable
  * @constructor
  * @param {Object} connection Info about the database connection. See `db/dbConnection.js`
- * @param {String} tableName  Name of the main table, e.g. "any_event".
- * @param {String} type       Type of the table, e.g. "event".
- * @param {String} idKey      The id key used in the table, e.g. "event_id".
- * @param {String} nameKey    The name key used in the table, e.g. "event_name".
- * @param {String} orderBy    The field to sort by. e.g. "event_date_start".
- * @param {String} orderDir   The direction of the sort, "ASC" or "DESC".
+ * @param {Object} parameters An object which may contain the following properties:
+ *
+ * @param {String}     parameters.type       Type of the table, e.g. "event".
+ * @param {String}     parameters.idKey      The id key used in the table, e.g. "event_id".
+ * @param {String}     parameters.nameKey    The name key used in the table, e.g. "event_name".
+ * @param {String}     parameters.tableName  Name of the main table, e.g. "any_event". Mandatory.
+ * @param {String}     parameters.orderBy    The field to sort by. e.g. "event_date_start".
+ * @param {String}     parameters.orderDir   The direction of the sort, "ASC" or "DESC".
+ * @param {String|int} parameters.id
+ * ... TODO!
  */
-var anyTable = function (connection,parameters,tableName,type,id,idKey,nameKey,orderBy,orderDir)
+var anyTable = function (connection,paramOrType)
 {
-  this.parameters = parameters ? parameters : {};
+  /**
+  * The type of the table data (e.g. "event").
+  *
+  * @type       {String}
+  * @default    null
+  */
+  this.type = null;
 
-  // Initiate the database connection
-  dbTable.call(this,connection);
+  /**
+  * The id key used by the client, e.g. "event_id" or "user_id".
+  *
+  * @type       {String}
+  * @default    null
+  */
+  this.idKey = null;
 
-  // Initialize properties
-  this.type     = type;
-  this.data     = null;
-  this.id       = id;
-  this.idKey    = idKey;
-  this.nameKey  = nameKey;
+  /**
+  * The name key used by the client and in the table, e.g. "event_name" or "login_name".
+  *
+  * @type       {String}
+  * @default    null
+  */
+  this.nameKey = null;
 
-  this.tableName          = tableName;
-  this.tableNameGroup     = "any_group"; // TODO! Not here!
+  /**
+  * The field to sort by. e.g. "event_date_start".
+  *
+  * @type       {String}
+  * @default    null
+  */
+  this.orderBy = null;
+
+  /**
+  * The direction of the sort, "ASC" or "DESC".
+  *
+  * @type       {String}
+  * @default    "DESC"
+  */
+  this.orderDir = "DESC";
+
+  /**
+  * Whether returned data should be grouped.
+  *
+  * @type       {Boolean}
+  * @default    true
+  */
+  this.grouping = true;
+
+  /**
+  * Whether a header should be generated, or the header to return.
+  *
+  * @type       {Boolean|String}
+  * @default    true
+  */
+  this.header = false;
+
+  /**
+  * Name of the main table, e.g. "any_event".
+  *
+  * @type       {String}
+  * @default    null
+  */
+  this.tableName = null;
+
+  /**
+  * Name of the group table, e.g. "any_group".
+  *
+  * @type       {String}
+  * @default    "any_group"
+  */
+  this.tableNameGroup = "any_group";
+
+  /**
+  * Name of the group link table for this table type, e.g. "any_event_group".
+  *
+  * @type       {String}
+  * @default    null
+  */
   this.tableNameGroupLink = null;
 
-  this.orderBy  = orderBy  ? orderBy  : null;
-  this.orderDir = orderDir ? orderDir : "DESC";
-  this.grouping = true; // Group results by default
+  /**
+  * The field names of the table.
+  * Must be set by deriving class.
+  *
+  * @type       {Array}
+  * @default    null
+  */
+  this.tableFields = null;
 
-  this.linking  = null;
-  this.maxId    = -1;
+  /**
+  * The field names to left join with (for each type).
+  * Should be set by deriving class.
+  *
+  * @type       {Object}
+  * @default    null
+  */
+  this.tableFieldsLeftJoin = null;
+
+  /**
+  *
+  *
+  * @type       {Array}
+  * @default    null
+  */
+  this.linkTypes = null;
+
+  /**
+  *
+  *
+  * @type       {String}
+  * @default    null
+  */
+  this.path = "";
+
+  /**
+  * Contains data for a list or an item.
+  *
+  * @type       {Object}
+  * @default    null
+  */
+  this.data = null;
+
+  /**
+  * The id is null if operating on a list, non-null if item.
+  *
+  * @type       {String|int}
+  * @default    null
+  */
+  this.id = null;
+
+  /**
+  * The value of max id after a search for it.
+  *
+  * @type       {String|int}
+  * @default    null
+  */
+  this.maxId = -1;
+
+  /**
+  * Number of rows returned by search.
+  *
+  * @type       {int}
+  * @default    null
+  */
+  this.numResults = -1;
+
+  /**
+  * Prefix of tables.
+  *
+  * @type       {String}
+  * @default    null
+  */
+  this.tablePrefix = ""; // TODO! Give as param!
 
   // TODO! i18n
   this.insertSuccessMsg  = "Insert succeeded. ";
@@ -63,10 +198,90 @@ var anyTable = function (connection,parameters,tableName,type,id,idKey,nameKey,o
   this.itemUnexists      = "Item does not exist. ";
   this.deleteSuccessMsg  = "%% deleted. ";
   this.deleteNothingToDo = "Nothing to delete. ";
+
+  // Initiate the database connection
+  dbTable.call(this,connection);
+  if (!this.connection) {
+    this.error = "No connection to database. ";
+    return;
+  }
+  // Initialize properties
+  this.parameters = paramOrType ? paramOrType : {};
+  if (!this.initProperties(this.parameters))
+    return;
 }; // constructor
 
 anyTable.prototype = new dbTable();
 anyTable.prototype.constructor = anyTable;
+
+anyTable.prototype.initProperties = function(paramOrType)
+{
+  this.error   = "";
+  this.message = "";
+  //
+  // Determine type (mandatory)
+  //
+  if (typeof paramOrType == "string")
+    this.type = paramOrType;
+  else
+  if (typeof paramOrType == "object")
+    this.type = paramOrType.type;
+  if (!this.type) {
+    this.error += "anyTable: Type missing. ";
+    console.error(this.error);
+    return false;
+  }
+  //
+  // Override class properties from properties in paramOrType (if it is an array)
+  //
+  if (typeof paramOrType == "object") {
+    if (paramOrType["id"])                    this.id                  = paramOrType["id"];
+    if (paramOrType["idKey"])                 this.idKey               = paramOrType["idKey"];
+    if (paramOrType["nameKey"])               this.nameKey             = paramOrType["nameKey"];
+    if (paramOrType["orderBy"])               this.orderBy             = paramOrType["orderBy"];
+    if (paramOrType["orderDir"])              this.orderDir            = paramOrType["orderDir"];
+    if (paramOrType["grouping"] != undefined) this.grouping            = paramOrType["grouping"];
+    if (paramOrType["header"]   != undefined) this.header              = paramOrType["header"];
+    if (paramOrType["tableName"])             this.tableName           = paramOrType["tableName"];
+    if (paramOrType["tableNameGroup"])        this.tableNameGroup      = paramOrType["tableNameGroup"];
+    if (paramOrType["tableNameGroupLink"])    this.tableNameGroupLink  = paramOrType["tableNameGroupLink"];
+    if (paramOrType["tableFields"])           this.tableFields         = paramOrType["tableFields"];
+    if (paramOrType["tableFieldsLeftJoin"])   this.tableFieldsLeftJoin = paramOrType["tableFieldsLeftJoin"];
+    if (paramOrType["linkTypes"])             this.linkTypes           = paramOrType["linkTypes"];
+    if (paramOrType["path"])                  this.path                = paramOrType["path"];
+  }
+  //
+  // Set defaults if not set yet
+  //
+  if (!this.idKey)               this.idKey          = this.type + "_id";
+  if (!this.nameKey)             this.nameKey        = this.type + "_name";
+  if (!this.orderBy)             this.orderBy        = this.nameKey;
+  if (!this.orderDir)            this.orderDir       = "DESC";
+  if (this.grouping !== false)   this.grouping       = true;
+  if (this.header === undefined) this.header         = false;
+  if (!this.tableName)           this.tableName      = this.tablePrefix + this.type;
+  if (!this.tableNameGroup)      this.tableNameGroup = this.tablePrefix + "group";
+  if (!this.tableNameGroupLink) {
+    let ltn = ["group",this.type].sort();
+    this.tableNameGroupLink = this.tablePrefix + ltn.join("_");
+  }
+  if (!this.tableFields) { // Set default minimal table fields
+    this.tableFields = [ this.idKey,
+                         this.nameKey,
+                       ];
+  }
+  if (!this.tableFieldsLeftJoin) { // Set default left join to group_id
+    this.tableFieldsLeftJoin = {
+      group: [ "group_id" ]
+    };
+  }
+  if (!this.linkTypes)
+    this.linkTypes = ["group"];
+  if (!this.linkTypes.includes(this.type))
+    this.linkTypes.unshift(this.yype); // Add the current type as a "link" in order to work with sub-items
+
+  return true;
+}; // initProperties
 
 /**
  * Override and return true in table classes which have parent_id.

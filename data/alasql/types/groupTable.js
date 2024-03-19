@@ -1,8 +1,13 @@
 var groupTable = function (connection,parameters)
 {
-  this.tableName = "any_group";
-  this.className = "groupTable";
-  anyTable.call(this,connection,parameters,this.tableName,"group",null,"group_id","group_name");
+  anyTable.call(this,connection,parameters);
+
+  this.className          = "groupTable";
+  this.type               = "group";
+  this.idKey              = "group_id";
+  this.nameKey            = "group_name";
+  this.tableName          = "any_group";
+
 
   this.linking = { "event":    [ "any_event_group",    "eventTable" ],
                    "document": [ "any_document_group", "documentTable" ],
@@ -30,5 +35,5 @@ var groupTable = function (connection,parameters)
     ";
 }; // constructor
 
-groupTable.prototype = new anyTable(null);
+groupTable.prototype = new anyTable();
 groupTable.prototype.constructor = groupTable;

@@ -55,9 +55,9 @@ async function connectSuccess(options)
   let factory = new anyTableFactory(gDbase);
 
   // Create table classes
-  let grtab = await factory.createClass("groupTable",{header:true});
-  let ustab = await factory.createClass("userTable", {header:true});
-  let evtab = await factory.createClass("eventTable",{header:true});
+  let grtab = await factory.createClass("groupTable",{type:"group",header:true,grouping:false});
+  let ustab = await factory.createClass("userTable", {type:"user", header:true,grouping:false});
+  let evtab = await factory.createClass("eventTable",{type:"event",header:true,grouping:false});
 
   let du = null;
   let de = null;
@@ -167,20 +167,20 @@ async function connectSuccess(options)
     return evtab.dbDelete({id:11})
     .then( function(data) {
       if (ustab.data)
-        d1 = ustab.data.data;
+        d1 = ustab.data ? ustab.data.data : null;
     });
   })
 */
   .then( () => {
     return ustab.dbSearch()
     .then( function(data) {
-      du = ustab.data.data;
+      du = ustab.data ? ustab.data.data : null;
     });
   })
   .then( () => {
     return evtab.dbSearch({id:11})
     .then( function(data) {
-      de = evtab.data.data;
+      de = evtab.data ? evtab.data.data : null;
     });
   })
   .then( () => {
@@ -188,7 +188,7 @@ async function connectSuccess(options)
     evtab.id = null;
     return evtab.dbSearch({id:11})
     .then( function(data) {
-      let de2 = evtab.data.data;
+      let de2 = evtab.data ? evtab.data.data : null;
     });
   })
   .then( () => {

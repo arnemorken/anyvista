@@ -1,18 +1,28 @@
 var eventTable = function (connection,parameters)
 {
-  this.tableName = "any_event";
-  this.className = "eventTable";
-  anyTable.call(this,connection,parameters,this.tableName,"event",null,"event_id","event_name");
+  anyTable.call(this,connection,parameters);
 
-  this.linking = { "group":    [ "any_event_group",    "groupTable" ],
-                   "user":     [ "any_event_user",     "userTable" ],
-                   "document": [ "any_document_event", "documentTable" ],
-                 };
+  this.className          = "eventTable";
+  this.type               = "event";
+  this.idKey              = "event_id";
+  this.nameKey            = "event_name";
+  this.tableName          = "any_event";
+  this.tableNameGroupLink = "any_event_group";
+
   this.tableFields = [
     "event_id",
     "event_name",
     "event_description",
   ];
+  this.tableFieldsLeftJoin = {
+    group: ["group_id"],
+    user:  ["user_result","user_feedback","user_attended"],
+  };
+  this.linkTypes = {
+    group:    [ "any_event_group",    "groupTable" ],
+    user:     [ "any_event_user",     "userTable" ],
+    document: [ "any_document_event", "documentTable" ],
+  };
   this.sqlCreate = "\
     CREATE TABLE IF NOT EXISTS "+this.tableName+" (\
       event_id          INT PRIMARY KEY AUTOINCREMENT,\
@@ -29,10 +39,6 @@ var eventTable = function (connection,parameters)
       user_attended     INT,\
       UNIQUE (event_id,user_id));\
     ";
-  this.tableFieldsLeftJoin = {
-    group: ["group_id"],
-    user:  ["user_result","user_feedback","user_attended"],
-  };
 }; // constructor
 
 eventTable.prototype = new anyTable(null);

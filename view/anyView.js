@@ -5,7 +5,7 @@
 
 /****************************************************************************************
  *
- * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.
+ * anyVista is copyright (C) 2011-2024 Arne D. Morken and Balanse Software.
  *
  * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
@@ -1088,8 +1088,8 @@ $.any.anyView.prototype.refreshHeader = function (params,skipName)
     return null;
   }
   // Create the header entries
-  if (params.id != "nogroup") // TODO! Temporary fix - unclear why we have to do this check!
-    parent.empty();
+  //if (params.id != "nogroup") // TODO! Temporary fix - unclear why we have to do this check!
+  //  parent.empty();
   let d = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
   let n = 0;
   for (let filter_id in filter) {

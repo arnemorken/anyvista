@@ -5,7 +5,7 @@
 
 /****************************************************************************************
  *
- * anyVista is copyright (C) 2011-2023 Arne D. Morken and Balanse Software.
+ * anyVista is copyright (C) 2011-2024 Arne D. Morken and Balanse Software.
  *
  * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
@@ -1428,9 +1428,9 @@ anyModel.prototype.dbCreate = function (options)
 anyModel.prototype._dbCreateLocal = async function (options)
 {
   if (this.table_factory) {
-    let the_type   = options.type      ? options.type      : this.type;
-    let table_name = options.tableName ? options.tableName : the_type+"Table";
-    let table = await this.table_factory.createClass(table_name,{header:true,path:options.path});
+    let the_type   = options && options.type      ? options.type      : this.type;
+    let table_name = options && options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{type:the_type,header:true,path:options.path});
     if (table && table.error == "") {
       let self = this;
       return await table.dbCreate(options)
@@ -1589,8 +1589,7 @@ anyModel.prototype.dbSearch = function (options)
     return true;
   }
   else { // Local method call (AlaSQL server)
-    this._dbSearchLocal(options);
-    return this.error == "";
+    return this._dbSearchLocal(options);
   }
 }; // dbSearch
 
@@ -1598,9 +1597,9 @@ anyModel.prototype.dbSearch = function (options)
 anyModel.prototype._dbSearchLocal = async function (options)
 {
   if (this.table_factory) {
-    let the_type   = options.type      ? options.type      : this.type;
-    let table_name = options.tableName ? options.tableName : the_type+"Table";
-    let table = await this.table_factory.createClass(table_name,{header:true,path:options.path});
+    let the_type   = options && options.type      ? options.type      : this.type;
+    let table_name = options && options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{type:the_type,header:true,path:options.path});
     if (table && table.error == "") {
       let self = this;
       return await table.dbSearch(options) // TODO! Is await needed here?
@@ -1611,7 +1610,7 @@ anyModel.prototype._dbSearchLocal = async function (options)
           return self.success(self.context,serverdata,options);
         self.error = i18n.error.SUCCCESS_CB_MISSING;
         console.warn("anyModel._dbSearchLocal: "+self.message);
-        return false;
+        return Promise.resolve(false);
       });
     } // if table
     else {
@@ -1628,7 +1627,7 @@ anyModel.prototype._dbSearchLocal = async function (options)
     return this.success(this,this,options);
   this.error = i18n.error.SUCCCESS_CB_MISSING;
   console.warn("anyModel._dbSearchLocal: "+this.message);
-  return false;
+  return Promise.resolve(false);
 }; // _dbSearchLocal
 
 /**
@@ -1816,9 +1815,9 @@ anyModel.prototype.dbSearchNextId = function (options)
 anyModel.prototype._dbSearchNextIdLocal = async function (options)
 {
   if (this.table_factory) {
-    let the_type   = options.type      ? options.type      : this.type;
-    let table_name = options.tableName ? options.tableName : the_type+"Table";
-    let table = await this.table_factory.createClass(table_name,{header:true,path:options.path});
+    let the_type   = options && options.type      ? options.type      : this.type;
+    let table_name = options && options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{type:the_type,header:true,path:options.path});
     if (table && table.error == "") {
       let self = this;
       return await table.dbSearchMaxId(options)
@@ -2037,9 +2036,9 @@ anyModel.prototype.dbUpdate = function (options) // TODO! Should this be an asyn
 anyModel.prototype._dbUpdateLocal = async function (options,item_to_send)
 {
   if (this.table_factory) {
-    let the_type   = options.type      ? options.type      : this.type;
-    let table_name = options.tableName ? options.tableName : the_type+"Table";
-    let table = await this.table_factory.createClass(table_name,{header:true,path:options.path});
+    let the_type   = options && options.type      ? options.type      : this.type;
+    let table_name = options && options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{type:the_type,header:true,path:options.path});
     if (table && table.error == "") {
       options.keys   = Object.keys  (item_to_send);
       options.values = Object.values(item_to_send);
@@ -2319,7 +2318,7 @@ anyModel.prototype._dbUpdateLinkListLocal = async function (options)
   if (this.table_factory) {
     let the_type   = options && options.type      ? options.type      : this.type;
     let table_name = options && options.tableName ? options.tableName : the_type+"Table";
-    let table = await this.table_factory.createClass(table_name,{header:true,path:options.path});
+    let table = await this.table_factory.createClass(table_name,{type:the_type,header:true,path:options.path});
     if (table && table.error == "") {
       let self = this;
       return table.dbUpdateLinkList(options)
@@ -2521,9 +2520,9 @@ anyModel.prototype.dbUpdateLink = function (options)
 anyModel.prototype._dbUpdateLinkLocal = async function (options)
 {
   if (this.table_factory) {
-    let the_type   = options.type      ? options.type      : this.type;
-    let table_name = options.tableName ? options.tableName : the_type+"Table";
-    let table = await this.table_factory.createClass(table_name,{header:true,path:options.path});
+    let the_type   = options && options.type      ? options.type      : this.type;
+    let table_name = options && options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{type:the_type,header:true,path:options.path});
     if (table && table.error == "") {
       let self = this;
       return table.dbUpdateLink(options)
@@ -2690,9 +2689,9 @@ anyModel.prototype.dbDelete = function (options)
 anyModel.prototype._dbDeleteLocal = async function (options)
 {
   if (this.table_factory) {
-    let the_type   = options.type      ? options.type      : this.type;
-    let table_name = options.tableName ? options.tableName : the_type+"Table";
-    let table = await this.table_factory.createClass(table_name,{header:true,path:options.path});
+    let the_type   = options && options.type      ? options.type      : this.type;
+    let table_name = options && options.tableName ? options.tableName : the_type+"Table";
+    let table = await this.table_factory.createClass(table_name,{type:the_type,header:true,path:options.path});
     if (table && table.error == "") {
       let self = this;
       return await table.dbDelete(options)
