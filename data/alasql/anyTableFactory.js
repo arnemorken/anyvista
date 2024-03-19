@@ -42,7 +42,7 @@ anyTableFactory.prototype._createClass = function(className,parameters,callback)
     var path = parameters.path
                ? parameters.path
                : gServer+gHomeFolder+"data/alasql/types/";
-    path += className + ".js"
+    path += className + ".js";
     //console.log("loading "+path);
     let self = this;
     js.async = false;

@@ -8,7 +8,7 @@
  * anyVista is copyright (C) 2011-2024 Arne D. Morken and Balanse Software.                 *
  *                                                                                          *
  * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use. *
- * Get licences here: http://balanse.info/anyvista/license/ (coming soon).                  *
+ * Get licences here: http://balanse.info/anyvista/license/                                 *
  *                                                                                          *
  ********************************************************************************************/
 
@@ -430,7 +430,7 @@ anyTable.prototype.dbExecListStmt = async function(data,groupId,type,linkType,li
     //console.log("dbExecListStmt, raw list data:"); console.log(data);
     return Promise.resolve(data);
   });
-  return success
+  return success;
 }; // dbExecListStmt
 
 // Build the query
@@ -543,6 +543,7 @@ anyTable.prototype.getRowData = function(rows,mode,type,data)
                 : null;
     if (!idx && idx !== 0)
       continue;
+
     if ((mode == "list" || mode == "head")) {
       if (!data[gidx])
         data[gidx] = {};
@@ -571,6 +572,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,group_data,linkId)
     return null;
 
   // Make sure parent/child items are present in all groups where parent exists
+  //console.log("buildGroupTreeAndAttach,data before copying parent/child:"); console.log(data);
   for (let gidx in data) {
     if (data.hasOwnProperty(gidx)) {
       let grp = data[gidx];
@@ -713,12 +715,12 @@ anyTable.prototype.buildDataTree = function(flatdata,parentId)
         if (!subdata["parent_id"])
           delete subdata["parent_id"]; // = null;
         if (subdata["parent_id"] == parentId) {
-          var children = null;
+          let children = null;
           if (subdata[id_name] && subdata[id_name] != "")
             children = this.buildDataTree(flatdata,subdata[id_name]);
           if (children && Object.size(children))
             subdata["data"] = children;
-          if (parent_not_in_group && pid)
+          if (parent_not_in_group && (pid || pid === 0))
             subdata["parent_id"] = pid;
           if (subdata)
             retval[idx] = subdata;
@@ -743,8 +745,8 @@ anyTable.prototype.dbAttachToGroups = function(group_tree,data_tree)
     for (let gid in group_tree) { // Iterate over group ids
       let group = group_tree[gid];
       if (group) {
-        console.log(Object.size(group["data"]))
-        if (group["data"] && Object.size(group["data"]) > 0)
+        //console.log(Object.size(group["data"]));
+        if (group["data"] && Object.size(group["data"]))
           this.dbAttachToGroups(group["data"],data_tree); // Recursive call
         let idx = null;
         if (data_tree[gid])
@@ -768,7 +770,7 @@ anyTable.prototype.dbAttachToGroups = function(group_tree,data_tree)
       }
     } // for
   } // if group_tree
-} // dbAttachToGroups
+}; // dbAttachToGroups
 
 /**
  * Prepare data related to a list or a single item. Adds a default top header.
@@ -782,7 +784,7 @@ anyTable.prototype.prepareData = function(inData)
     topidx = this.id;
   let data = {"data": { [topidx]: {} }};
 
-  // Find and set the header
+  // Set header and "head"
   let hdr = this.findHeader(inData);
   if (hdr && hdr != "") {
     data["data"][topidx]["head"] = "group";

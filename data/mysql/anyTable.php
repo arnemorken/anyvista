@@ -4,7 +4,7 @@
  * anyVista is copyright (C) 2011-2024 Arne D. Morken and Balanse Software.                 *
  *                                                                                          *
  * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use. *
- * Get licences here: http://balanse.info/anyvista/license/ (coming soon).                  *
+ * Get licences here: http://balanse.info/anyvista/license/                                 *
  *                                                                                          *
  ********************************************************************************************/
 
@@ -57,13 +57,13 @@ require_once "anyTableFactory.php";
  *         [integer]: '[type name]',         // Optional. One or more type names.
  *         ...
  *       },
- *       'permission': {                     // Mandatory
- *         'current_user_id': '[id]',        // Mandatory
- *         'is_logged_in':    true | false,  // Mandatory
- *         'is_admin':        true | false,  // Mandatory
+ *       'permission': {                    // Mandatory
+ *         'current_user_id': '[id]',       // Mandatory
+ *         'is_logged_in':    true | false, // Mandatory
+ *         'is_admin':        true | false, // Mandatory
  *       },
- *       'message': '[string]',              // Optional
- *       'error':   '[string]',              // Optional
+ *       'message': '[string]',             // Optional
+ *       'error':   '[string]',             // Optional
  *     }
  *
  * NOTE! When transferring the data structure from a server to the Javascript client the indices of the object will
@@ -139,6 +139,7 @@ class anyTable extends dbTable
             $mPermission        = null,
             $mSortFunction      = null;
 
+  // TODO! i18n
   protected $mInsertSuccessMsg  = "",
             $mUpdateSuccessMsg  = "",
             $mDeleteSuccessMsg  = "",
@@ -373,6 +374,14 @@ class anyTable extends dbTable
     }
   } // initFieldsFromParam
 
+  /**
+   * Override and return true in table classes which have parent_id.
+   */
+  public function hasParentId()
+  {
+    return false;
+  } // hasParentId
+
   /////////////////////////
   //////// getters ////////
   /////////////////////////
@@ -417,14 +426,6 @@ class anyTable extends dbTable
    */
   public function getPermission()    { return $this->mPermission; }
 
-  /**
-   * Override and return true in table classes which have parent_id.
-   */
-  public function hasParentId()
-  {
-    return false;
-  } // hasParentId
-
   /////////////////////////
   //////// finders ////////
   /////////////////////////
@@ -432,7 +433,7 @@ class anyTable extends dbTable
   protected function findDefaultHeader($type,$skipOther=false)
   {
     $other = $skipOther ? "" : "Other "; // TODO! i18n
-    return $other.$type."s";             // TODO! i18n
+    return $other.$type."s";
   } // findDefaultHeader
 
   protected function findDefaultListHeader($type)
@@ -561,8 +562,10 @@ class anyTable extends dbTable
     }
     if (!$ok)
       return null;
+
     if ($this->mId == "max" || $this->mId == "par")
       return ($this->mData); // dbSearchMaxId() and dbSearchParents() do not need to call prepareData()
+
     return $this->mNumResults != 0
            ? $this->prepareData($this->mData)
            : $this->mData;
@@ -668,22 +671,20 @@ class anyTable extends dbTable
 
   //
   // Search database for an item, including meta data and linked lists.
-  //
   // Returns true on success, false on error.
   //
   protected function dbSearchItem(&$data,$key,$val,$skipLinks=false,$includeUser=true)
   {
     if ($key === null || $key == "" || $val === null || $val == "") {
-      $this->setError("Missing key ($key) or value ($val). ");
+      $this->setError("Missing key ($key) or value ($val). "); // TODO! i18n
       return false;
     }
     $this->mNumResults = 0;
     // Build and execute the query
     $stmt = $this->dbPrepareSearchItemStmt($key,$val,$includeUser);
     //elog("dbSearchItem:".$stmt);
-    if (!$stmt || $stmt == "" || !$this->query($stmt))
+    if (!$this->query($stmt))
       return false; // An error occured
-
     // Get the data
     if ($this->getRowData("item",$data)) {
       $this->dbSearchMeta("item",$data); // Search and get the meta data
@@ -699,7 +700,6 @@ class anyTable extends dbTable
   protected function dbPrepareSearchItemStmt($key,$val,$includeUser=true)
   {
     // Get query fragments
-    $this->mError = "";
     $includeUser  = $includeUser &&
                     $this->mType != "user" &&
                     isset($this->mTableFieldsLeftJoin) &&
@@ -765,8 +765,7 @@ class anyTable extends dbTable
       return true;
     // Must have an id
     if (!isset($this->mId) || $this->mId == "") {
-      $err = "Id missing while searching for linked lists. "; // TODO! i18n
-      $this->setError($err);
+      $this->setError("No id while searching for linked lists. "); // TODO! i18n
       return false;
     }
     // Get group data to a "flat" list
@@ -850,7 +849,8 @@ class anyTable extends dbTable
     $limit = !$this->mSimpleList ? $this->findLimit() : ""; // Use same limit for all groups
     $this->mNumResults = 0; // Init total number of results
     // Build and execute the query
-    if ($group_id && $this->mType != "group") {
+    $success = false;
+    if ($groupId && $this->mType != "group") {
       // Query data from the given group (or "nogroup")
       $success = $this->dbExecListStmt($data,$group_id,$group_table,$limit);
     }
@@ -861,7 +861,6 @@ class anyTable extends dbTable
     }
     else {
       // Query grouped data
-      $success = false;
       $has_nogroup = false;
       if ($group_data && isset($group_data["group"])) {
         foreach ($group_data["group"] as $gid => $group) {
@@ -1337,9 +1336,9 @@ class anyTable extends dbTable
               if (!$this->mSimpleList || $field == $this->mIdKey || $field == $this->mNameKey || $field == "parent_id")
                 $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$mode);
             } // for
-          }
+          } // if
         } // foreach
-      }
+      } // if
     } // while
     //elog("getRowData1 ($this->mType),data:".var_export($data,true));
 
@@ -1625,7 +1624,6 @@ class anyTable extends dbTable
       $data["group"]["nogroup"]["head"]       = "group";
     }
     //vlog("dbSearchGroupInfo,data:",$data);
-    //$this->tdata = $data; // TODO! Why?
     return $data;
   } // dbSearchGroupInfo
 
@@ -1652,7 +1650,7 @@ class anyTable extends dbTable
         }
         if (is_array($subdata)) {
           if (!isset($subdata["parent_id"]))
-            $subdata["parent_id"] = NULL;
+            $subdata["parent_id"] = null;
           if ($subdata["parent_id"] == $parentId) {
             if (isset($subdata[$id_name]) && $subdata[$id_name] != "")
               $children = $this->buildDataTree($flatdata,$subdata[$id_name]);
