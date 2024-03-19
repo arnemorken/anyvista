@@ -2778,15 +2778,16 @@ $.any.anyView.prototype.createModel = function (params)
 $.any.anyView.prototype.getCreateModelOptions = function(type,data,id,link_id)
 {
   return {
-    type:         type,
-    data:         data,
-    id:           id,
-    link_id:      link_id,
-    parent:       this.model, // TODO! Not always correct.
-    source:       this.model.source,
-    table_fields: this.model.table_fields,
-    db_last_term: this.model.db_last_term,
-    permission:   this.model.permission,
+    type:          type,
+    data:          data,
+    id:            id,
+    link_id:       link_id,
+    parent:        this.model, // TODO! Not always correct.
+    source:        this.model.source,
+    table_fields:  this.model.table_fields,
+    db_connection: this.model.db_connection,
+    db_last_term:  this.model.db_last_term,
+    permission:    this.model.permission,
   };
 }; // getCreateModelOptions
 
