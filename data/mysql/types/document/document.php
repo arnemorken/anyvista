@@ -40,7 +40,7 @@ var model_options = { source:       "remote",
                       message:      serverdata ? serverdata.message    : null,
                       error_server: serverdata ? serverdata.error      : null,
                       permission:   serverdata ? serverdata.permission : null,
-                      types:        serverdata ? serverdata.types      : null,
+                      link_types:   serverdata ? serverdata.link_types : null,
                     };
 var model         = new groupModel(model_options); // Groups of documents
 var view_options  = { id:            view_area,

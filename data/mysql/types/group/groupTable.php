@@ -61,7 +61,7 @@ class groupTable extends anyTable
       ],
     ];
 
-  protected $mLinking = ["document","event","user"];
+  protected $mLinkTypes = ["document","event","user"];
 
   protected $mFilters = [
       "list" => [

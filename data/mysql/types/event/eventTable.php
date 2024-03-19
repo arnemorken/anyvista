@@ -86,7 +86,7 @@ class eventTable extends anyTable
       ],
   ];
 
-  protected $mLinking = ["group","user","document"];
+  protected $mLinkTypes = ["group","user","document"];
 
   protected $mFilters = [
       "list" => [
@@ -205,9 +205,9 @@ class eventTable extends anyTable
   /////////////////////// Database query fragments ////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function findListWhere($gid)
+  protected function findListWhere($gid,$linkType=null,$linkId=null)
   {
-    $where = parent::findListWhere($gid);
+    $where = parent::findListWhere($gid,$linkType,$linkId);
     $w = "";
     $event_date_start = Parameters::get("event_date_start");
     $event_date_end   = Parameters::get("event_date_end");

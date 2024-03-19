@@ -53,8 +53,8 @@ require_once "anyTableFactory.php";
  *         }
  *         ...
  *       } // data
- *       'types': {                          // Optional
- *         [integer]: '[type name]',         // Optional. One or more type names.
+ *       'link_types': {                    // Optional
+ *         [integer]: '[type name]',        // Optional. One or more type names.
  *         ...
  *       },
  *       'permission': {                    // Mandatory
@@ -103,41 +103,133 @@ require_once "anyTableFactory.php";
 class anyTable extends dbTable
 {
   protected
-  /** @var array Contains data for a list or an item. See "Data structure" above. */
-            $mData              = null,
-  /** @var string The type of the table data (e.g. `user`). */
-            $mType              = null,               // Type of the table, e.g. "event".
-  /** @var string|int Null if list, non-null if item */
-            $mId                = null,
-            $mIdKey             = null,               // The id key used by the client, e.g. "event_id" or "user_id".
-            $mIdKeyTable        = null,               // The id key used in the table, e.g. "event_id" or "ID".
-            $mIdKeyMetaTable    = null,               // The id key used in the meta table, "event_id" or "user_id".
-            $mNameKey           = null,               // The name key used by the client and in the table, e.g. "event_name" or "login_name".
-            $mMetaId            = "meta_id",          // The name of the id field in the meta table, e.g. "meta_id" or "umeta_id".
-            $mOrderBy           = null,               // The field to sort by. e.g. "event_date_start".
-            $mOrderDir          = "DESC";             // The direction of the sort, "ASC" or "DESC".
+  /**
+  * @var string The type of the table data (e.g. "event").
+  */
+  $mType = null,
 
-  protected $mTableName          = null,              // Name of the main table, e.g. "any_event".
-            $mTableNameMeta      = null,              // Name of the meta table, e.g. "any_eventmeta".
-            $mTableNameGroup     = "any_group",       // TODO! Not here!
-            $mTableNameGroupLink = null,              // Name of the group link table for this table type, e.g. "any_event_group".
-            $mTableNameUser      = ANY_DB_USER_TABLE, // Name of the user link table for this table type, e.g. "any_event_user".
-            $mTableNameUserLink  = null;
+  /**
+  * @var string The id key used by the client, e.g. "event_id" or "user_id".
+  */
+  $mIdKey = null,
 
-  protected $mTableFields         = null,             // Contains the field names of the table.
-            $mTableFieldsMeta     = null,             // Contains the name of the meta keys of the meta table.
-            $mTableFieldsLeftJoin = null;             // Contains the field names to left join with.
+  /**
+  * @var string The id key used in the table, e.g. "event_id" or "ID".
+  */
+  $mIdKeyTable = null,
 
-  protected $mLinkType          = null,  // Used by items that have associated lists // TODO! Send as parameter to methods
-            $mLinkId            = null,  // Used by items that have associated lists // TODO! Send as parameter to methods
-            $mGrouping          = true,  // Group results by default
-            $mSimpleList        = false, // In a "simple" list search we get only the id, name and parent_id
-            $mFilters           = null,
-            $mLinking           = null,
-            $mMaxId             = -1,
-            $mNumResults        = 0,
-            $mPermission        = null,
-            $mSortFunction      = null;
+  /**
+  * @var string The id key used in the meta table, "event_id" or "user_id".
+  */
+  $mIdKeyMetaTable = null,
+
+  /**
+  * @var string The name key used by the client and in the table, e.g. "event_name" or "login_name".
+  */
+  $mNameKey = null,
+
+  /**
+  * @var string The name of the id field in the meta table, e.g. "meta_id" or "umeta_id".
+  */
+  $mMetaId = "meta_id",
+
+  /**
+  * @var string The field to sort by. e.g. "event_date_start".
+  */
+  $mOrderBy = null,
+
+  /**
+  * @var string The direction of the sort, "ASC" or "DESC".
+  */
+  $mOrderDir = "DESC",
+
+  /**
+  * @var string Name of the main table, e.g. "any_event".
+  */
+  $mTableName = null,
+
+  /**
+  * @var string Name of the meta table, e.g. "any_eventmeta".
+  */
+  $mTableNameMeta = null,
+
+  /**
+  * @var string Name of the group table, e.g. "any_group".
+  */
+  $mTableNameGroup = "any_group",
+
+  /**
+  * @var string Name of the user table, e.g. "any_user".
+  */
+  $mTableNameUser = ANY_DB_USER_TABLE,
+
+  /**
+  * @var string Name of the group link table for this table type, e.g. "any_event_group".
+  */
+  $mTableNameGroupLink = null,
+
+  /**
+  * @var string Name of the user link table for this table type, e.g. "any_event_user".
+  */
+  $mTableNameUserLink = null,
+
+  /**
+  * @var array The field names of the table.
+  *            Must be set by deriving class.
+  */
+  $mTableFields = null,
+
+  /**
+  * @var array The name of the meta keys of the meta table.
+  *            May be set by deriving class.
+  */
+  $mTableFieldsMeta = null,
+
+  /**
+  * @var array The field names to left join with (for each type).
+  *            Should be set by deriving class.
+  */
+  $mTableFieldsLeftJoin = null,
+
+  /**
+  * @var array
+  */
+  $mLinkTypes = null,
+
+  /**
+  * @var boolean Whether returned data should be grouped (default = true).
+  */
+  $mGrouping = true,
+
+  /**
+  * @var array Contains data for a list or an item. See "Data structure" above.
+  */
+  $mData = null,
+
+  /**
+  * @var string|int The id is null if operating on a list, non-null if item.
+  */
+  $mId = null,
+
+  /**
+  * @var string|int The value of max id after a search for it.
+  */
+  $mMaxId = -1,
+
+  /**
+  * @var int Number of rows returned by search.
+  */
+  $mNumResults = 0,
+
+  /**
+  * @var string Prefix of tables.
+  */
+  $mTablePrefix  = "any_", // TODO! Give as param!
+
+  $mSimpleList   = false, // In a "simple" list search we get only the id, name and parent_id
+  $mFilters      = null,
+  $mPermission   = null,
+  $mSortFunction = null;
 
   // TODO! i18n
   protected $mInsertSuccessMsg  = "",
@@ -148,17 +240,17 @@ class anyTable extends dbTable
             $mUpdateNothingToDo = "Nothing to update. ",
             $mDeleteNothingToDo = "Nothing to delete. ";
 
-  private   $mNumRowsChanged    = 0,
-            $mLastNumRows       = 0,   // Used to break (theoretical) infinite recursion
-            $mPageSize          = 30,  // Number of items returned per page
-            $mRecMax            = 100, // Used to avoid infinite recursion
-            $mRecDepth          = 0;   // Recursion depth
+  private   $mLastNumRows  = 0,    // Used to break (theoretical) infinite recursion
+            $mRecurseMax   = 100,  // Used to avoid infinite recursion
+            $mRecurseDepth = 0,    // Recursion depth
+            $mPageSize     = 30,   // Default number of items returned per page
+            $mGroupTable   = null; // Set by dbSearchItemLists, dbSearchList and dbUpdateLinkList
 
 /**
   * Constructor
   *
-  * @param dbConnection $connection Info about the database connection. See `db/dbConnection`.
-  * @param array|string $inType An optional type (override the one set by deriving class).
+  * @param dbConnection $connection  Info about the database connection. See `db/dbConnection`.
+  * @param array|string $paramOrType An parameter object OR optional type overriding the one set by deriving class.
   *
   * #### Example
   *```
@@ -166,7 +258,7 @@ class anyTable extends dbTable
   *      $userTable = new anyTable($conn,"user");
   *```
   */
-  public function __construct($connection,$inType=null)
+  public function __construct($connection,$paramOrType=null)
   {
     // Initialize permissions
     $wp   = defined("WP_PLUGIN") ? new wpPermission() : null;
@@ -189,10 +281,10 @@ class anyTable extends dbTable
       return;
     }
     // Initialize properties
-    if (!$this->initProperties($inType))
+    if (!$this->initProperties($paramOrType))
       return;
 
-    // Filters should be defined in the options parameter, but may also
+    // Filters should be defined by the derived class, but may also
     // be specified / manipulated in the initFilters method.
     $this->initFilters($this->mFilters);
 
@@ -201,81 +293,128 @@ class anyTable extends dbTable
 
   //
   // Set properties from table definitions or type.
-  // Setting properties from type can be used in simple situations
-  // where the type doesnt need to supply its own table definitions.
+  // Setting properties from type can be used in simple situations where
+  // the type class doesnt need to supply its own table definitions.
   //
-  private function initProperties($inType)
+  private function initProperties($paramOrType)
   {
     $this->mError   = "";
     $this->mMessage = "";
-
+    //
     // Determine type (mandatory)
-    if (gettype($inType) == "string")
-      $this->mType = $inType; // Type given as in-parameter override type in parameter or class
-    if (!$this->mType)
-      $this->mType = ltrim(Parameters::get("type")); // Type given as parameter override type in class
+    //
+    if (gettype($paramOrType) == "string")
+      $this->mType = $paramOrType;
+    else
+    if (gettype($paramOrType) == "array")
+      $this->mType = $paramOrType["type"];
+   if (!$this->mType)
+      $this->mType = ltrim(Parameters::get("type"));
     if (!$this->mType) {
-      $this->mError .= "Type missing. ";
+      $this->mError .= "anyTable: Type missing. ";
       return false;
     }
-    // Set defaults if not set by derived class
-    if (!$this->mIdKey)          $this->mIdKey          = $this->mType."_id";
-    if (!$this->mIdKeyTable)     $this->mIdKeyTable     = $this->mIdKey;
-    if (!$this->mIdKeyMetaTable) $this->mIdKeyMetaTable = $this->mIdKey;
-    if (!$this->mNameKey)        $this->mNameKey        = $this->mType."_name";
-    if (!$this->mOrderBy)        $this->mOrderBy        = $this->mNameKey;
-    if (!$this->mOrderDir)       $this->mOrderDir       = "DESC";
-    if (!$this->mMetaId)         $this->mMetaId         = "meta_id";
+    //
+    // Some properties that may be set from global parameters.
+    // Properties given as global parameter override fields in class.
+    //
+    $par_id = ltrim(Parameters::get($this->mIdKey));
+    if ($par_id)
+      $this->mId = $par_id;
 
-    // Table name
-    if (!$this->mTableName) {
-      $this->mTableName = "any_".$this->mType;
-      // No meta table for auto-generated table
-      $this->mTableNameMeta   = null;
+    $par_grouping = Parameters::get("grouping");
+    if ($par_grouping)
+      $this->mGrouping = $par_grouping;
+
+    $par_table_fields = Parameters::get("tableFields");
+    if ($par_table_fields)
+      $this->mTableFields = $par_table_fields;
+
+    $par_table_fields_meta = Parameters::get("tableFieldsMeta");
+    if ($par_table_fields_meta)
+      $this->mTableFieldsMeta = $par_table_fields_meta;
+
+    $par_table_fields_left_join = Parameters::get("tableFieldsLeftJoin");
+    if ($par_table_fields_left_join)
+      $this->mTableFieldsLeftJoin = $par_table_fields_left_join;
+
+    $par_link_types = Parameters::get("link_types"); // Types this class may interact with
+    if ($par_link_types)
+      $this->mLinkTypes = explode(',', $par_link_types);
+    //
+    // Override class properties from properties in paramOrType (if it is an array)
+    //
+    if (gettype($paramOrType) == "array") {
+      if (paramOrType["idKey"])               $this->mIdKey               = paramOrType["idKey"];
+      if (paramOrType["idKeyTable"])          $this->mIdKeyTable          = paramOrType["idKeyTable"];
+      if (paramOrType["idKeyMetaTable"])      $this->mIdKeyMetaTable      = paramOrType["idKeyMetaTable"];
+      if (paramOrType["nameKey"])             $this->mNameKey             = paramOrType["nameKey"];
+      if (paramOrType["metaId"])              $this->mMetaId              = paramOrType["metaId"];
+      if (paramOrType["orderBy"])             $this->mOrderBy             = paramOrType["orderBy"];
+      if (paramOrType["orderDir"])            $this->mOrderDir            = paramOrType["orderDir"];
+      if (isset(paramOrType["grouping"]))     $this->mGrouping            = paramOrType["grouping"];
+      if (paramOrType["tableName"])           $this->mTableName           = paramOrType["tableName"];
+      if (paramOrType["tableNameMeta"])       $this->mTableNameMeta       = paramOrType["tableNameMeta"];
+      if (paramOrType["tableNameGroup"])      $this->mTableNameGroup      = paramOrType["tableNameGroup"];
+      if (paramOrType["tableNameUser"])       $this->mTableNameUser       = paramOrType["tableNameUser"];
+      if (paramOrType["tableNameGroupLink"])  $this->mTableNameGroupLink  = paramOrType["tableNameGroupLink"];
+      if (paramOrType["tableNameUserLink"])   $this->mTableNameUserLink   = paramOrType["tableNameUserLink"];
+      if (!$par_table_fields &&
+          paramOrType["tableFields"])         $this->mTableFields         = paramOrType["tableFields"];
+      if (!$par_table_fields_meta &&
+          paramOrType["tableFieldsMeta"])     $this->mTableFieldsMeta     = paramOrType["tableFieldsMeta"];
+      if (!$par_table_fields_left_join &&
+          paramOrType["tableFieldsLeftJoin"]) $this->mTableFieldsLeftJoin = paramOrType["tableFieldsLeftJoin"];
+      if (!$par_link_types &&
+          paramOrType["linkTypes"])           $this->mLinkTypes           = paramOrType["linkTypes"];
+    }
+    //
+    // Set defaults if not set yet
+    //
+    if (!$this->mIdKey)             $this->mIdKey          = $this->mType."_id";
+    if (!$this->mIdKeyTable)        $this->mIdKeyTable     = $this->mIdKey;
+    if (!$this->mIdKeyMetaTable)    $this->mIdKeyMetaTable = $this->mIdKey;
+    if (!$this->mNameKey)           $this->mNameKey        = $this->mType."_name";
+    if (!$this->mMetaId)            $this->mMetaId         = "meta_id";
+    if (!$this->mOrderBy)           $this->mOrderBy        = $this->mNameKey;
+    if (!$this->mOrderDir)          $this->mOrderDir       = "DESC";
+    if ($this->mGrouping !== false) $this->mGrouping       = true;
+    if (!$this->mTableName)    {
+      $this->mTableName = $this->mTablePrefix.$this->mType;
+      // No meta table for default (i.e. auto-generated) table
       $this->mIdKeyMetaTable  = null;
       $this->mMetaId          = null;
+      $this->mTableNameMeta   = null;
       $this->mTableFieldsMeta = null;
     }
-    // Group table link
+    if (!$this->mTableNameGroup)
+      $this->mTableNameGroup = $this->mTablePrefix."group";
+    if (!$this->mTableNameUser)
+      $this->mTableNameUser = $this->mTablePrefix."user";
     if (!$this->mTableNameGroupLink) {
       $ltn = ["group",$this->mType];
       sort($ltn);
-      $ltn = "any_".implode("_",$ltn);
-      $this->mTableNameGroupLink = $ltn;
+      $this->mTableNameGroupLink = $this->mTablePrefix.implode("_",$ltn);
     }
-    // User table link
     if (!$this->mTableNameUserLink) {
       $ltn = ["user",$this->mType];
       sort($ltn);
-      $ltn = "any_".implode("_",$ltn);
-      $this->mTableNameUserLink  = $ltn;
+      $this->mTableNameUserLink = $this->mTablePrefix.implode("_",$ltn);
     }
-    // Table fields
-    $tableFields = Parameters::get("tableFields");
-    if ($tableFields)
-      $this->mTableFields = $tableFields; // Table fields given as parameter override fields in class
-    else
     if (!$this->mTableFields) { // Set default minimal table fields
       $this->mTableFields = [ $this->mIdKey,
                               $this->mNameKey,
                             ];
     }
-    // Left join table fields
-    if (!$this->mTableFieldsLeftJoin) {
-      $this->mTableFieldsLeftJoin = [ // Set default left join to group_id
-        "group" => [
-          "group_id",
-        ]
+    if (!$this->mTableFieldsLeftJoin) { // Set default left join to group_id
+      $this->mTableFieldsLeftJoin = [
+        "group" => [ "group_id" ]
       ];
     }
-    // Types this class may interact with
-    $str = Parameters::get("types");
-    if ($str)
-      $this->mLinking = explode(',', $str);
-    if (!$this->mLinking)
-      $this->mLinking = ["group"];
-    if (!in_array($this->mType,$this->mLinking))
-      array_unshift($this->mLinking,$this->mType); // Add the current type as a "link" in order to work with sub-items
+    if (!$this->mLinkTypes)
+      $this->mLinkTypes = ["group"];
+    if (!in_array($this->mType,$this->mLinkTypes))
+      array_unshift($this->mLinkTypes,$this->mType); // Add the current type as a "link" in order to work with sub-items
 
     // Default table filters
     if (!$this->mFilters) {
@@ -291,23 +430,12 @@ class anyTable extends dbTable
       ];
     }
 
-    if (!$this->validateProperties())
-      return false;
-
-    // Set some common properties if not already set
-    if (!isset($this->mOrderBy))
-      $this->mOrderBy = $this->mNameKey;
-    if (!isset($this->mMetaId))
-      $this->mMetaId = null;
     if (!isset($this->mInsertSuccessMsg))
       $this->mInsertSuccessMsg = ucfirst($this->mType)." created. ";
     if (!isset($this->mUpdateSuccessMsg))
       $this->mUpdateSuccessMsg = ucfirst($this->mType)." updated. ";
     if (!isset($this->mDeleteSuccessMsg))
       $this->mDeleteSuccessMsg = ucfirst($this->mType)." deleted. ";
-
-    if (!isset($this->mId) || $this->mId == "")
-      $this->mId = ltrim(Parameters::get($this->mIdKey));
 
     // Make sure some vital fields exist
     if (!in_array($this->mOrderBy,$this->mTableFields))
@@ -317,33 +445,6 @@ class anyTable extends dbTable
 
     return true;
   } // initProperties
-
-  private function validateProperties()
-  {
-    $this->mError = "";
-
-    if (!$this->mType)
-      $this->mError .= "Table type missing. ";
-
-    if (!$this->mTableName)
-      $this->mError .= "Table name missing. ";
-
-    if (!$this->mIdKey)
-      $this->mError .= "Id key missing. ";
-
-    if (!$this->mIdKeyTable)
-      $this->mError .= "Table id key missing. ";
-
-    if ($this->mTableNameMeta && !$this->mIdKeyMetaTable)
-      $this->mError .= "Meta table id key missing. ";
-
-    if (!$this->mNameKey)
-      $this->mError .= "Name key missing. ";
-
-    if ($this->mError !== "")
-      return false;
-    return true;
-  } // validateProperties
 
   /**
    * initFilters
@@ -430,6 +531,24 @@ class anyTable extends dbTable
   //////// finders ////////
   /////////////////////////
 
+  protected function findHeader($inData)
+  {
+    $hdr = "";
+    $h = Parameters::get("header");
+    if ($h && $h !== true && $h !== "true" && $h !== false && $h !== "false")
+      $hdr = $h; // Use the header provided in the in-parameter
+    else
+    if (!isset($this->mId) || $this->mId == "") {
+      if ($h === true || $h === "true")
+        $hdr = $this->findDefaultListHeader($this->mType);
+    }
+    else {
+      if ($h !== false && $h !== "false")
+        $hdr = $this->findDefaultItemHeader($this->mType,$inData);
+    }
+    return $hdr;
+  } // findHeader
+
   protected function findDefaultHeader($type,$skipOther=false)
   {
     $other = $skipOther ? "" : "Other "; // TODO! i18n
@@ -452,7 +571,6 @@ class anyTable extends dbTable
     if (isset($inData[$ix][$this->mNameKey]))
       $hdr = $inData[$ix][$this->mNameKey];
     else
-    if (isset($this->mLinkId))
       $this->setError($this->mNameKey." missing"); // TODO! i18n
     return $hdr;
   } // findDefaultItemHeader
@@ -478,7 +596,7 @@ class anyTable extends dbTable
     if ($linkType == "user")
       $str = ANY_DB_USERMETA_TABLE;
     else
-      $str = "any_".$linkType."meta";
+      $str = $this->mTablePrefix.$linkType."meta";
     return $str;
   } // findMetaTableName
 
@@ -496,7 +614,7 @@ class anyTable extends dbTable
       return $this->mTableName;
     $ltn = [$type,$this->mType];
     sort($ltn);
-    $ltn = "any_".implode("_",$ltn);
+    $ltn = $this->mTablePrefix.implode("_",$ltn);
     return $ltn;
   } // findLinkTableName
 
@@ -514,7 +632,7 @@ class anyTable extends dbTable
     if ($type == "user")
       $str = ANY_DB_USER_TABLE;
     else
-      $str = "any_".$type;
+      $str = $this->mTablePrefix.$type;
     return $str;
   } // findTypeTableName
 
@@ -552,13 +670,12 @@ class anyTable extends dbTable
     if ($this->mId || $this->mId === 0)
       $ok = $this->dbSearchItem($this->mData,$this->mIdKeyTable,$this->mId);
     else {
+      $group_id = Parameters::get("group_id");
       $g = Parameters::get("grouping");
       $s = Parameters::get("simple");
       $this->mGrouping   = $g !== false && $g !== "false" && $g !== "0";
       $this->mSimpleList = $s === true  || $s === "true"  || $s === "1";
-      $this->mLinkType   = null;
-      $this->mLinkId     = null;
-      $ok = $this->dbSearchList($this->mData);
+      $ok = $this->dbSearchList($this->mData,$group_id);
     }
     if (!$ok)
       return null;
@@ -620,21 +737,13 @@ class anyTable extends dbTable
     $this->mData       = null;
     $this->mGrouping   = true;
     $this->mSimpleList = true;
-    $this->mLinkType   = null;
-    $this->mLinkId     = null;
     if (!$this->dbSearchList($this->mData))
       return null;
 
     // TODO! Untested code below.
     /*
-    $lf   = $this->mLinkType;
-    $lfid = $this->mLinkId;
-    $this->mLinkType = null;
-    $this->mLinkId   = null;
     $this->mSimpleList = false;
     $this->dbSearchList($items);
-    $this->mLinkType = $lf;
-    $this->mLinkId   = $lfid;
     //elog("dbSearchParents,items:".var_export($items,true));
     $sel_arr = array();
     if ($items != null) {
@@ -761,52 +870,45 @@ class anyTable extends dbTable
   protected function dbSearchItemLists(&$data)
   {
     // If no link types found, return with no error
-    if (!isset($this->mLinking))
+    if (!isset($this->mLinkTypes))
       return true;
     // Must have an id
     if (!isset($this->mId) || $this->mId == "") {
       $this->setError("No id while searching for linked lists. "); // TODO! i18n
       return false;
     }
-    // Get group data to a "flat" list
-    $group_id    = Parameters::get("group_id");
-    $group_table = anyTableFactory::createClass("group",$this);
-    $group_table->mGrouping = false;
-
     // Search through all registered link types/tables
-    foreach ($this->mLinking as $i => $link_type)
-      $this->dbSearchItemListOfType($data,$link_type,$group_id,$group_table);
+    $group_id = Parameters::get("group_id");
+    foreach ($this->mLinkTypes as $i => $link_type)
+      $this->dbSearchItemListOfType($data,$link_type,$group_id);
     return true;
   } // dbSearchItemLists
 
-  protected function dbSearchItemListOfType(&$data,$link_type,$group_id,$group_table)
+  protected function dbSearchItemListOfType(&$data,$link_type,$group_id)
   {
-    $idx = "+".$this->mId;
-    $table = anyTableFactory::createClass($link_type,$this);
-    if ($table) {
-      $link_table = $this->findLinkTableName($link_type);
-      if ($table->mType != $this->mType || $this->hasParentId()) {
-        if ($this->tableExists($link_table)) {
-          $g = Parameters::get("grouping");
-          $s = Parameters::get("simple");
-          $table->mGrouping   = $g !== false && $g !== "false" && $g !== "0";
-          $table->mSimpleList = $s === true  || $s === "true"  || $s === "1";
-          $table->mLinkType   = $this->mType;
-          $table->mLinkId     = $this->mId;
-          $table_data         = null;
-          $group_table->dbSearchGroupInfo($table->mType,$group_id);
-          if (!$table->dbSearchList($table_data,$group_table))
-            $this->mError .= $table->getError();
-          if ($table_data) {
-            $link_idx = "link-".$link_type;
-            $name_key = $table->getNameKey();
-            $data[$idx]["data"]["grouping"] = $table->mGrouping;
-            $data[$idx]["data"][$link_idx]["grouping"] = $table->mGrouping;
-            $data[$idx]["data"][$link_idx]["head"]     = $link_type;
-            $data[$idx]["data"][$link_idx]["data"]     = $table_data;
-            if ($name_key)
-              $data[$idx]["data"][$link_idx][$name_key] = $this->findDefaultItemListHeader($link_type,$table_data,true);
-          }
+    $link_tablename = $this->findLinkTableName($link_type);
+    //elog($this->mType.";".$link_type.":".$link_tablename);
+    if ($this->tableExists($link_tablename)) {
+      $table = anyTableFactory::createClass($link_type,$this);
+      //elog("created class ".$link_type);
+      if ($table && ($table->mType != $this->mType || $this->hasParentId())) {
+        $g = Parameters::get("grouping");
+        $s = Parameters::get("simple");
+        $table->mGrouping   = $g !== false && $g !== "false" && $g !== "0";
+        $table->mSimpleList = $s === true  || $s === "true"  || $s === "1";
+        $table_data         = null;
+        if (!$table->dbSearchList($table_data,$group_id,$this->mType,$this->mId))
+          $this->mError .= $table->getError();
+        if ($table_data) {
+          $idx      = "+".$this->mId;
+          $link_idx = "link-".$link_type;
+          $name_key = $table->getNameKey();
+          $data[$idx]["data"]["grouping"] = $table->mGrouping;
+          $data[$idx]["data"][$link_idx]["grouping"] = $table->mGrouping;
+          $data[$idx]["data"][$link_idx]["head"]     = $link_type;
+          $data[$idx]["data"][$link_idx]["data"]     = $table_data;
+          if ($name_key)
+            $data[$idx]["data"][$link_idx][$name_key] = $this->findDefaultItemListHeader($link_type,$table_data,true);
         }
       }
     }
@@ -823,24 +925,8 @@ class anyTable extends dbTable
   //
   // Returns true on success, false on error
   //
-  protected function dbSearchList(&$data,$group_table=null)
+  protected function dbSearchList(&$data,$groupId,$linkType=null,$linkId=null)
   {
-    $group_id = Parameters::get("group_id");
-    if ($group_table != null)
-      $group_data = $group_table->mData;
-    else
-    if ($this->mType != "group") {
-      // Get group data to a "flat" list
-      $my_grouping = $this->mGrouping;
-      $group_table = anyTableFactory::createClass("group",$this);
-      $group_table->mGrouping = false;
-      $group_data  = $group_table->dbSearchGroupInfo($this->mType,$group_id);
-      //vlog("dbSearchList,group_data($this->mType,$group_id):",$group_data);
-      if ((empty($group_data) || !isset($group_data["group"])) && $group_table)
-        $this->setError($group_table->mError);
-      if ($this->mType == "group")
-        $this->mGrouping = $my_grouping;
-    }
     $order = Parameters::get("order");
     if ($order)
       $this->mOrderBy = ltrim($order);
@@ -848,16 +934,32 @@ class anyTable extends dbTable
       $this->mOrderDir = ltrim(Parameters::get("dir"));
     $limit = !$this->mSimpleList ? $this->findLimit() : ""; // Use same limit for all groups
     $this->mNumResults = 0; // Init total number of results
+
+    if ($this->mGroupTable != null)
+      $group_data = $this->mGroupTable->mData;
+    else
+    if ($this->mGrouping && $this->mType != "group") {
+      // Get group data to a "flat" list
+      $my_grouping = $this->mGrouping;
+      $this->mGroupTable = anyTableFactory::createClass("group",$this);
+      $this->mGroupTable->mGrouping = false;
+      $group_data = $this->mGroupTable->dbSearchGroupInfo($this->mType,$groupId);
+      //vlog("dbSearchList,group_data($this->mType,$groupId):",$group_data);
+      if ((empty($group_data) || !isset($group_data["group"])))
+        $this->setError($this->mGroupTable->mError);
+      if ($this->mType == "group") // TODO! Always false
+        $this->mGrouping = $my_grouping;
+    }
     // Build and execute the query
     $success = false;
     if ($groupId && $this->mType != "group") {
       // Query data from the given group (or "nogroup")
-      $success = $this->dbExecListStmt($data,$group_id,$group_table,$limit);
+      $success = $this->dbExecListStmt($data,$groupId,$limit,$linkType,$linkId);
     }
     else
     if (!$this->mGrouping || $this->mType == "group") {
       // Query all data, non-grouped
-      $success = $this->dbExecListStmt($data,null,$group_table,$limit);
+      $success = $this->dbExecListStmt($data,null,$limit,$linkType,$linkId);
     }
     else {
       // Query grouped data
@@ -866,7 +968,7 @@ class anyTable extends dbTable
         foreach ($group_data["group"] as $gid => $group) {
           if ($group["group_type"] == $this->mType) {
             if ($this->tableExists($this->mTableNameGroupLink)) {
-              $success = $this->dbExecListStmt($data,$gid,$group_table,$limit) || $success;
+              $success = $this->dbExecListStmt($data,$gid,$limit,$linkType,$linkId) || $success;
               if ($gid == "nogroup")
                 $has_nogroup = true;
             }
@@ -875,12 +977,12 @@ class anyTable extends dbTable
       } // if
       // Build and execute the query for ungrouped data (if not queried already)
       if (!$has_nogroup)
-        $success = $this->dbExecListStmt($data,"nogroup",$group_table,$limit) || $success;
+        $success = $this->dbExecListStmt($data,"nogroup",$limit,$linkType,$linkId) || $success;
 
       // Build and execute the query for grouped data that may have illegal group type (i.e. not same as list type).
       // Ideally this should not happen, but if it does, such data will not show up unless we do this.
-      if ($group_data && isset($group_data["group"]) && $this->mLinkId == "") {
-        //$success = $this->dbExecListStmt($data,-1,$group_table,$limit) || $success; // -1 signifies this special query
+      if ($group_data && isset($group_data["group"]) && $linkId == "") {
+        //$success = $this->dbExecListStmt($data,-1,$limit,$linkType,$linkId) || $success; // -1 signifies this special query
         $linktable    = $this->findLinkTableName("group");
         $linktable_id = $this->findLinkTableId("group");
         $stmt =  "SELECT DISTINCT ".$this->mTableName.".*  ".
@@ -918,44 +1020,47 @@ class anyTable extends dbTable
       }
     } // else
 
-    if ($success) {
-      // Search and get the meta data
-      if (!$this->mSimpleList)
-        $this->dbSearchMeta("list",$data);
+    if (!$success)
+      return !$this->isError();
 
-      // Sort the list
-      if ($this->mSortFunction)
-        call_user_func($this->mSortFunction);
+    // Search and get the meta data
+    if (!$this->mSimpleList)
+      $this->dbSearchMeta("list",$data,$linkType,$linkId);
 
-      // Group the data and build the data tree
-      if (!$group_table) {
-        $group_table = $this;
-        $group_data  = $this->mData;
-      }
-      if ($this->mType != "group")
-        $group_table->mGrouping = true;
-      $group_data["group"] = $group_table->buildDataTree($group_data["group"]);
-      $this->buildGroupTreeAndAttach($data,$group_data);
+    // Sort the list
+    if ($this->mSortFunction)
+      call_user_func($this->mSortFunction);
+
+    // Group the data and build the data tree
+    if (!$this->mGroupTable) {
+      $this->mGroupTable = $this;
+      $group_data  = $this->mData;
     }
+    if ($this->mType != "group")
+      $this->mGroupTable->mGrouping = true;
+    $group_data["group"] = $this->mGroupTable->buildDataTree($group_data["group"]);
+    $this->buildGroupTreeAndAttach($data,$group_data,$linkId);
+    //vlog("dbSearchList, tree list data:",$this->mData);
+
     return !$this->isError();
   } // dbSearchList
 
-  protected function dbExecListStmt(&$data,$gid=null,$groupTable=null,$limit="")
+  protected function dbExecListStmt(&$data,$gid=null,$limit="",$linkType=null,$linkId=null)
   {
     // Build and execute the query for a group
     if ($gid == "nogroup")
       $gid = null;
-    $partial_stmt = $this->dbPrepareSearchListStmt($gid,$groupTable);
+    $partial_stmt = $this->dbPrepareSearchListStmt($gid,$linkType,$linkId);
     $stmt = $partial_stmt.$limit;
     //elog("dbExecListStmt1:".$stmt);
-    if (!$stmt || $stmt == "" || !$this->query($stmt) || $this->isError())
+    if (!$this->query($stmt) || $this->isError())
       return false; // Something went wrong
     // Get the data
     $success = $this->getRowData("list",$data);
 
     if ($limit != "") {
       // Count how many rows would have been returned without LIMIT
-      $part_stmt = $this->dbPrepareSearchListStmt($gid,$groupTable);
+      $part_stmt = $this->dbPrepareSearchListStmt($gid,$linkType,$linkId);
       $count_stmt = "SELECT count(*) AS num_results FROM (".
                     $part_stmt.
                     ") AS dummy";
@@ -998,13 +1103,13 @@ class anyTable extends dbTable
     return $success;
   } // dbExecListStmt
 
-  protected function dbPrepareSearchListStmt($gid=null,$groupTable=null)
+  protected function dbPrepareSearchListStmt($gid=null,$linkType=null,$linkId=null)
   {
     // Get query fragments
-    $select    = $this->findListSelect($gid,$groupTable);
-    $left_join = $this->findListLeftJoin($gid);
-    $where     = $this->findListWhere($gid);
-    $order_by  = $this->findListOrderBy();
+    $select    = $this->findListSelect  ($gid,$linkType,$linkId);
+    $left_join = $this->findListLeftJoin($gid,$linkType,$linkId);
+    $where     = $this->findListWhere   ($gid,$linkType,$linkId);
+    $order_by  = $this->findListOrderBy ();
 
     // Build the query
     $stmt = $select.
@@ -1015,26 +1120,26 @@ class anyTable extends dbTable
     return $stmt;
   } // dbPrepareSearchListStmt
 
-  protected function findListSelect($gid,$groupTable)
+  protected function findListSelect($gid,$linkType=null,$linkId=null)
   {
     // Select from own table
     $sl = "SELECT DISTINCT ".$this->mTableName.".* ";
 
     // Always select from group table, except if has parent_id while being a list-for list
-    if ($gid && $groupTable && $this->mType != "group"
-        /*&& !($this->hasParentId() && (isset($this->mLinkType) || (isset($this->mId) && $this->mId != "")))*/) {
-      foreach ($groupTable->mTableFields as $field) {
+    if (($gid || $gid === 0) && $this->mGroupTable && $this->mType != "group"
+        /*&& !($this->hasParentId() && (isset($linkType) || (isset($this->mId) && $this->mId != "")))*/) {
+      foreach ($this->mGroupTable->mTableFields as $field) {
         if ($field != "parent_id") // To avoid conflict with the current tables parent_id
           $sl .= ", ".$this->mTableNameGroup.".".$field;
       }
     }
     // Select from link table
-    if (isset($this->mLinkId) && $this->mLinkId != "" && isset($this->mLinkType)) {
-      if ($this->mLinkType != "group" &&
-          isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin[$this->mLinkType])) {
-        $linktable = $this->findLinkTableName($this->mLinkType);
+    if (isset($linkId) && $linkId != "" && isset($linkType)) {
+      if ($linkType != "group" &&
+          isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin[$linkType])) {
+        $linktable = $this->findLinkTableName($linkType);
         if ($this->tableExists($linktable)) {
-          foreach ($this->mTableFieldsLeftJoin[$this->mLinkType] as $field)
+          foreach ($this->mTableFieldsLeftJoin[$linkType] as $field)
             $sl .= ", ".$linktable.".".$field;
         }
       }
@@ -1045,7 +1150,7 @@ class anyTable extends dbTable
     return $sl;
   } // findListSelect
 
-  protected function findListLeftJoin($gid)
+  protected function findListLeftJoin($gid,$linkType=null,$linkId=null)
   {
     $cur_uid = $this->mPermission["current_user_id"];
     $lj = "";
@@ -1053,27 +1158,27 @@ class anyTable extends dbTable
       $lj .= "LEFT JOIN ".$this->mTableName." temp ON ".$this->mTableName.".parent_id=temp.".$this->mIdKey." ";
     // Always left join group table, except if has parent_id while being a list-for list
     if ($this->mType != "group")
-      $lj .= $this->findListLeftJoinOne($cur_uid,"group",$gid);
+      $lj .= $this->findListLeftJoinOne($cur_uid,$gid,"group",$linkId);
 
     // Left join link  table
-    if (isset($this->mLinkId) && $this->mLinkId != "" && isset($this->mLinkType)) {
-      if ($this->mLinkType != "group" &&
-          isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin[$this->mLinkType])) {
-        $lj .= $this->findListLeftJoinOne($cur_uid,$this->mLinkType,$gid);
+    if (isset($linkId) && $linkId != "" && isset($linkType)) {
+      if ($linkType != "group" &&
+          isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin[$linkType])) {
+        $lj .= $this->findListLeftJoinOne($cur_uid,$gid,$linkType,$linkId);
       }
     }
     return $lj;
   } // findListLeftJoin
 
-  protected function findListLeftJoinOne($cur_uid,$link_type,$gid)
+  protected function findListLeftJoinOne($cur_uid,$gid,$linkType=null,$linkId=null)
   {
-    $linktable     = $this->findLinkTableName($link_type);
-    $typetable     = $this->findTypeTableName($link_type);
-    $metatable     = $this->findMetaTableName($link_type);
+    $linktable     = $this->findLinkTableName($linkType);
+    $typetable     = $this->findTypeTableName($linkType);
+    $metatable     = $this->findMetaTableName($linkType);
 
-    $linktable_id  = $this->findLinkTableId($link_type);
-    $typetable_id  = $this->findTypeTableId($link_type);
-    $metatable_id  = $this->findMetaTableId($link_type);
+    $linktable_id  = $this->findLinkTableId($linkType);
+    $typetable_id  = $this->findTypeTableId($linkType);
+    $metatable_id  = $this->findMetaTableId($linkType);
 
     $has_linktable = $this->tableExists($linktable);
     $has_typetable = $this->tableExists($typetable);
@@ -1081,20 +1186,20 @@ class anyTable extends dbTable
 
     $lj = "";
     if ($has_linktable) {
-      $lj .= "LEFT JOIN ".$linktable.  " ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ";
-      if ($this->hasParentId() && $this->mLinkId == null)
+      $lj .= "LEFT JOIN ".$linktable." ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ";
+      if ($this->hasParentId() && $linkId == null)
         $lj .= "OR ".$linktable.".".$this->mIdKeyTable."=temp.".$this->mIdKeyTable." ";
-      if (!isset($this->mLinkType) && $link_type == "user" && $cur_uid)
+      if (!isset($linkType) && $linkType == "user" && $cur_uid)
         $lj .= "AND CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$cur_uid." AS INT) "; // Only return results for current user
       if ($has_typetable) {
-        if ($link_type != "group") {
+        if ($linkType != "group") {
           $lj .= "LEFT JOIN ".$typetable." ON CAST(".$linktable.".".$linktable_id." AS INT)=CAST(".$typetable.".".$typetable_id." AS INT) ";
           if ($has_metatable)
-            $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=CAST(".$typetable.".".$typetable_id." AS INT) ";
+            $lj .= "LEFT JOIN ".$metatable." ON CAST(".$metatable.".".$metatable_id." AS INT)=CAST(".$typetable.".".$typetable_id." AS INT) ";
         }
       }
     }
-    if ($has_typetable && $link_type == "group" && $gid) {
+    if ($has_typetable && $linkType == "group" && $gid) {
       $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
       $lj .= "LEFT JOIN ".$typetable." ON CAST(".$typetable.".".$typetable_id." AS INT)=".$db_gid." ";
       $lj .= "AND ".$this->mTableNameGroup.".group_type='".$this->mType."' ";
@@ -1106,23 +1211,23 @@ class anyTable extends dbTable
     return $lj;
   } // findListLeftJoinOne
 
-  protected function findListWhere($gid)
+  protected function findListWhere($gid,$linkType=null,$linkId=null)
   {
-    $has_group_linktable = $this->tableExists($this->mTableNameGroupLink);
-    $skipOwnType = $this->mLinkType == $this->mType;
     $where = null;
-    $link_table = $this->findLinkTableName($this->mLinkType);
+    $skipOwnType = $linkType == $this->mType;
+    $link_tablename = $this->findLinkTableName($linkType);
     if (!$skipOwnType &&
-        isset($this->mLinkType) &&
-        isset($this->mLinkId)   && $this->mLinkId != "nogroup" &&
-        $this->tableExists($link_table)) {
-      $where_id = $link_table.".".$this->mLinkType."_id='".$this->mLinkId."' "; // TODO! semi-hardcoded id of link table
+        isset($linkType) &&
+        isset($linkId)   && $linkId != "nogroup" &&
+        $this->tableExists($link_tablename)) {
+      $where_id = $link_tablename.".".$linkType."_id='".$linkId."' "; // TODO! semi-hardcoded id of link table
       $where = "WHERE ".$where_id;
     }
+    $has_group_linktable = $this->tableExists($this->mTableNameGroupLink);
     // If has parent_id while being a list-for list
-    if ($this->hasParentId() && (isset($this->mLinkType) || (isset($this->mId) && $this->mId != ""))) {
+    if ($this->hasParentId() && (isset($linkType) || (isset($this->mId) && $this->mId != ""))) {
       if (isset($this->mId) && $this->mId != "" && is_numeric($this->mId) &&
-          (!isset($this->mLinkType) || (isset($this->mLinkType) && $this->mLinkType == $this->mType))) {
+          (!isset($linkType) || (isset($linkType) && $linkType == $this->mType))) {
         $gstr = $this->mTableName.".".$this->mIdKeyTable." IN ( ".
                 "SELECT ".$this->mTableName.".".$this->mIdKeyTable." ".
                 "FROM (SELECT @pv := '$this->mId') ".
@@ -1162,7 +1267,7 @@ class anyTable extends dbTable
         else
           $where .= " AND ".$gt_str;
       }
-      if (!isset($this->mLinkType)) {
+      if (!isset($linkType)) {
         if ($has_group_linktable) {
           $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
           $lf_str = $this->mTableNameGroup.".group_id=".$db_gid." ";
@@ -1180,7 +1285,7 @@ class anyTable extends dbTable
     }
     else {
       if ($this->mGrouping && $this->mType != "group" && $has_group_linktable &&
-          !($this->hasParentId() && (isset($this->mLinkType) || (isset($this->mId) && $this->mId != "")))) {
+          !($this->hasParentId() && (isset($linkType) || (isset($this->mId) && $this->mId != "")))) {
         $n_str = $this->mTableNameGroupLink.".group_id is null ";
         if ($where === null)
           $where  = " WHERE ".$n_str;
@@ -1222,7 +1327,7 @@ class anyTable extends dbTable
   //////////////////////////////// Metadata search ////////////////////////////////
 
   // Get the meta data
-  protected function dbSearchMeta($mode,&$data)
+  protected function dbSearchMeta($mode,&$data,$linkType=null,$linkId=null)
   {
     if (!$this->tableExists($this->mTableNameMeta)) {
       //$this->mMessage .= "No meta table for '$this->mType' type. ";
@@ -1235,12 +1340,12 @@ class anyTable extends dbTable
               ? "WHERE ".$this->mTableNameMeta.".".$this->mIdKeyMetaTable."='".$meta_id."' "
               : "";
     /* TODO! Untested (left join with link table)
-    $left_join  = null;
-    $link_table = $this->findLinkTableName($this->mLinkType);
-    if (isset($this->mLinkType) && isset($this->mLinkId) && $link_table !== null) {
-      if ($this->mLinkType != $this->mType && $this->mLinkType != "group") {
-        $left_join = "LEFT JOIN ".$link_table." ON ".$link_table.".".$this->mLinkType."_id='".$this->mLinkId."' ";
-        $where_id = $this->mTableNameMeta.".".$this->mIdKeyMetaTable."=".$link_table.".".$this->mIdKeyMetaTable." ";
+    $left_join = null;
+    if (isset($linkType) && $linkType != $this->mType && $linkType != "group" && isset($linkId)) {
+      $link_tablename = $this->findLinkTableName($linkType);
+      if ($link_tablename !== null) {
+        $left_join = "LEFT JOIN ".$link_tablename." ON ".$link_tablename.".".$linkType."_id='".$linkId."' ";
+        $where_id = $this->mTableNameMeta.".".$this->mIdKeyMetaTable."=".$link_tablename.".".$this->mIdKeyMetaTable." ";
         if ($where === null)
           $where  = "WHERE ".$where_id;
         else
@@ -1249,7 +1354,7 @@ class anyTable extends dbTable
     }
     */
     $has_grp_lnk     = $this->tableExists($this->mTableNameGroupLink);
-    $group_id_sel    = $has_grp_lnk && $is_list || isset($this->mLinkType) ? ",".$this->mTableNameGroupLink.".group_id " : " ";
+    $group_id_sel    = $has_grp_lnk && $is_list /*|| isset($linkType)*/ ? ",".$this->mTableNameGroupLink.".group_id " : " ";
     $group_type_sel  = /*$has_grp_lnk && $this->mType == "group" ? ",any_group.group_type" :*/ " ";
     $group_left_join = $has_grp_lnk ? "LEFT JOIN ".$this->mTableNameGroupLink." ".
                                       "ON ".$this->mTableNameMeta.".".$this->mIdKeyMetaTable."=".$this->mTableNameGroupLink.".".$this->mIdKeyMetaTable." "
@@ -1328,8 +1433,8 @@ class anyTable extends dbTable
       }
 
       // Link tables for item
-      if (isset($this->mLinking)) {
-        foreach ($this->mLinking as $i => $link_type) {
+      if (isset($this->mLinkTypes)) {
+        foreach ($this->mLinkTypes as $i => $link_type) {
           if (isset($this->mTableFieldsLeftJoin[$link_type])) {
             for ($t=0; $t<count($this->mTableFieldsLeftJoin[$link_type]); $t++) {
               $field = $this->mTableFieldsLeftJoin[$link_type][$t];
@@ -1491,11 +1596,11 @@ class anyTable extends dbTable
   //
   // Build the data group tree for all groups for a list search.
   //
-  protected function buildGroupTreeAndAttach(&$data,$group_data)
+  protected function buildGroupTreeAndAttach(&$data,$group_data,$linkId=null)
   {
     if (!$data || empty($data))
       return;
-    $this->mRecDepth = 0;
+    $this->mRecurseDepth = 0;
 
     // Make sure parent/child items are present in all groups where parent exists
     //vlog("buildGroupTreeAndAttach,data before copying parent/child:",$data);
@@ -1531,7 +1636,7 @@ class anyTable extends dbTable
     $data_tree = array();
     $data_tree["grouping"] = $this->mGrouping;
     foreach ($data as $gidx => $grp) {
-      $ngidx = isset($this->mLinkId)
+      $ngidx = isset($linkId)
                ? $this->mType
                : ( isInteger($gidx)
                    ? "+".$gidx
@@ -1579,7 +1684,7 @@ class anyTable extends dbTable
     //
     if ($this->mGrouping && !$this->mSimpleList &&
         (!isset($this->mId) || $this->mId == "") &&
-        !isset($this->mLinkId)) {
+        !isset($linkId)) {
       if (!isset($data_tree["unknown"]))
         $data_tree["unknown"] = null;
       if ($data_tree["unknown"]) {
@@ -1597,7 +1702,7 @@ class anyTable extends dbTable
       $data = $group_data["group"];
     }
     else {
-      if (isset($this->mLinkId))
+      if (isset($linkId))
         $data = isset($data_tree[$this->mType]) && isset($data_tree[$this->mType]["data"])
                 ? $data_tree[$this->mType]["data"]
                 : $data_tree;
@@ -1629,9 +1734,9 @@ class anyTable extends dbTable
 
   protected function buildDataTree(&$flatdata,$parentId=null)
   {
-    ++$this->mRecDepth;
-    if ($this->mRecDepth > $this->mLastNumRows + $this->mRecMax) {
-      error_log("buildDataTree: Too much recursion ($this->mRecDepth)");
+    ++$this->mRecurseDepth;
+    if ($this->mRecurseDepth > $this->mLastNumRows + $this->mRecurseMax) {
+      error_log("buildDataTree: Too much recursion ($this->mRecurseDepth)");
       return null;
     }
     if (!$flatdata)
@@ -1656,7 +1761,7 @@ class anyTable extends dbTable
               $children = $this->buildDataTree($flatdata,$subdata[$id_name]);
             else
               $children = null;
-            if ($this->mRecDepth > $this->mLastNumRows + $this->mRecMax)
+            if ($this->mRecurseDepth > $this->mLastNumRows + $this->mRecurseMax)
               break; // Break recursion
             if ($children)
               $subdata["data"] = $children;
@@ -1680,7 +1785,7 @@ class anyTable extends dbTable
     //vlog("dbAttachToGroups,group_tree:",$group_tree);
     //vlog("dbAttachToGroups,data_tree:", $data_tree);
     if ($group_tree !== null) {
-      foreach ($group_tree as $gid => $group) { // Iterate over group ids
+      foreach ($group_tree as $gid => &$group) { // Iterate over group ids
         if (isset($group_tree[$gid]["data"]) && $group_tree[$gid]["data"] !== null)
           $this->dbAttachToGroups($group_tree[$gid]["data"],$data_tree); // Recursive call
         if (isset($data_tree[$gid]) && $data_tree[$gid] != "")
@@ -1748,42 +1853,18 @@ class anyTable extends dbTable
     $data["data"][$topidx]["data"] = $inData;
 
     // Set link types
-    $data["types"] = $this->mLinking;
+    $data["link_types"] = $this->mLinkTypes;
 
     //vlog("data after prepare:",$data);
     return $data;
   } // prepareData
 
-  protected function findHeader($inData)
-  {
-    $hdr = "";
-    $h = Parameters::get("header");
-    if ($h && $h !== true && $h !== "true" && $h !== false && $h !== "false")
-      $hdr = $h; // Use the header provided in the in-parameter
-    else
-    if (!isset($this->mId) || $this->mId == "") {
-      if ($h === true || $h === "true")
-        $hdr = $this->findDefaultListHeader($this->mType);
-    }
-    else {
-      if ($h !== false && $h !== "false")
-        $hdr = $this->findDefaultItemHeader($this->mType,$inData);
-    }
-    return $hdr;
-  } // findHeader
-
   public function prepareParents($type,$itemIdKey,$itemNameKey)
   {
     // TODO! Untested. See also searchParents()
     return null;
-    $lf   = $this->mLinkType;
-    $lfid = $this->mLinkId;
-    $this->mLinkType = null;
-    $this->mLinkId   = null;
     $this->mSimpleList = false;
     $this->dbSearchList($items);
-    $this->mLinkType = $lf;
-    $this->mLinkId   = $lfid;
     //elog("prepareParents,items:".var_export($items,true));
     $sel_arr = array();
     if ($items != null) {
@@ -1835,9 +1916,8 @@ class anyTable extends dbTable
     if (!$this->dbValidateInsert())
       return null;
 
-    $this->mId             = -1;
-    $this->mData           = null;
-    $this->mNumRowsChanged = 0;
+    $this->mId   = -1;
+    $this->mData = null;
 
     $this->initFieldsFromParam();
 
@@ -1847,9 +1927,8 @@ class anyTable extends dbTable
     if (!$stmt || $stmt == "" || !$this->query($stmt))
       return null;
 
-    // mNumRowsChanged == 1 if the insert succeeded
-    $this->mNumRowsChanged = $this->getNumRowsChanged();
-    if ($this->mNumRowsChanged == 0) {
+    // Number of rows changed == 1 if the insert succeeded
+    if ($this->getNumRowsChanged() == 0) {
       $this->setMessage($this->mInsertNothingToDo);
       return null;
     }
@@ -1959,8 +2038,7 @@ class anyTable extends dbTable
       return $this->dbUpdateLink();
 
     // Initialize
-    $this->mData           = null;
-    $this->mNumRowsChanged = 0;
+    $this->mData = null;
     $this->initFieldsFromParam();
 
     // Update normal table
@@ -1972,7 +2050,6 @@ class anyTable extends dbTable
     }
     if ($this->isError())
       return null;
-    $this->mNumRowsChanged = $this->getNumRowsChanged();
 
     // Update meta table
     $this->dbMetaInsertOrUpdate($this->mId);
@@ -1982,7 +2059,7 @@ class anyTable extends dbTable
       $this->dbUpdateLink();
 
     // Set result message
-    if ($this->mNumRowsChanged > 0)
+    if ($this->getNumRowsChanged() > 0)
       $this->setMessage($this->mUpdateSuccessMsg);
     else
       $this->setMessage($this->mUpdateNothingToDo);
@@ -2125,7 +2202,6 @@ class anyTable extends dbTable
     //elog("dbMetaInsertOrUpdateSingle:".$stmt);
     if (!$this->query($stmt))
       return false;
-    $this->mNumRowsChanged += $this->getNumRowsChanged();
     return true;
   } // dbMetaInsertOrUpdateSingle
 
@@ -2140,8 +2216,7 @@ class anyTable extends dbTable
     if (!$this->dbValidateUpdate())
       return null;
     // Initialize
-    $this->mData           = null;
-    $this->mNumRowsChanged = 0;
+    $this->mData = null;
     $this->initFieldsFromParam(); // TODO! Neccessary?
 
     $link_type = Parameters::get("link_type");
@@ -2161,8 +2236,8 @@ class anyTable extends dbTable
 
     if ($link_type != $this->mType) {
       // Link with different type (sublist of item)
-      $link_table = $this->findLinkTableName($link_type);
-      if (!$link_table || $link_table == "") {
+      $link_tablename = $this->findLinkTableName($link_type);
+      if (!$link_tablename || $link_tablename == "") {
         $this->setMessage("Link table not found. ",true); // TODO! i18n
         return null;
       }
@@ -2170,11 +2245,11 @@ class anyTable extends dbTable
         // Remove elements from the item's list
         foreach ($dellist as $delval) {
           if ($delval) {
-            if (!$this->dbTableHasLink($link_table,$id_key_link,$delval,$id_key,$id))
+            if (!$this->dbTableHasLink($link_tablename,$id_key_link,$delval,$id_key,$id))
               $this->setMessage("Link not found. ",true); // TODO! i18n
             else {
               // Link exists, we can delete it
-              $stmt = "DELETE FROM ".$link_table." ".
+              $stmt = "DELETE FROM ".$link_tablename." ".
                       "WHERE ".
                       $id_key_link."='".intval($delval)."' ".
                       "AND ".
@@ -2191,11 +2266,11 @@ class anyTable extends dbTable
         foreach ($inslist as $insval) {
           if ($insval) {
             // Dont add if element already exists in list
-            if ($this->dbTableHasLink($link_table,$id_key_link,$insval,$id_key,$id))
+            if ($this->dbTableHasLink($link_tablename,$id_key_link,$insval,$id_key,$id))
               $this->setMessage("Link already exists. ",true); // TODO! i18n
             else {
               // Link does not exist, we can add it
-              $stmt = "INSERT INTO ".$link_table." (".
+              $stmt = "INSERT INTO ".$link_tablename." (".
                       $id_key_link.",".$id_key.
                       ") VALUES (".
                       intval($insval).",".intval($id).
@@ -2241,13 +2316,9 @@ class anyTable extends dbTable
     }
     $this->setMessage($this->mUpdateSuccessMsg);
 
-    // Get group data to a "flat" list
-    $group_id    = Parameters::get("group_id");
-    $group_table = anyTableFactory::createClass("group",$this);
-    $group_table->mGrouping = false;
-
     // Get the (updated) list for the item
-    $ok = $this->dbSearchItemListOfType($data,$link_type,$group_id,$group_table);
+    $group_id = Parameters::get("group_id");
+    $ok = $this->dbSearchItemListOfType($data,$link_type,$group_id);
 
     if (!$ok)
       return null;
@@ -2277,20 +2348,20 @@ class anyTable extends dbTable
       return null;
     }
     // Check if exists
-    $link_table = $this->findLinkTableName($link_type);
-    if ($link_table === null) {
-      $this->setError("Link table $link_table not found");
+    $link_tablename = $this->findLinkTableName($link_type);
+    if ($link_tablename === null) {
+      $this->setError("Link table $link_tablename not found");
       return null;
     }
     $id_key_link = $link_type."_id"; // TODO! Not general enough
-    if (!$this->dbTableHasLink($link_table,$id_key_link,$link_id,$this->mIdKey,$this->mId)) {
-      $this->setMessage("Link not found in $link_table",true); // TODO! i18n
+    if (!$this->dbTableHasLink($link_tablename,$id_key_link,$link_id,$this->mIdKey,$this->mId)) {
+      $this->setMessage("Link not found in $link_tablename",true); // TODO! i18n
       return null;
     }
     // Link found, we can update it
     if (isset($this->mTableFieldsLeftJoin[$link_type])) {
       $val_found = false;
-      $stmt = "UPDATE ".$link_table." SET ";
+      $stmt = "UPDATE ".$link_tablename." SET ";
       for ($t=0; $t<count($this->mTableFieldsLeftJoin[$link_type]); $t++) {
         $str = $this->mTableFieldsLeftJoin[$link_type][$t];
         $val = Parameters::get($str);
@@ -2378,18 +2449,18 @@ class anyTable extends dbTable
         return null;
     }
     // Delete all links for an item with given id from associated tables (to avoid orphaned links)
-    if (isset($this->mLinking)) {
-      foreach ($this->mLinking as $idx => $link_type) {
+    if (isset($this->mLinkTypes)) {
+      foreach ($this->mLinkTypes as $idx => $link_type) {
         if ($this->mType !== $link_type) {
-          $link_table = $this->findLinkTableName($link_type);
-          if ($this->tableExists($link_table)) {
-            $stmt = "DELETE FROM ".$link_table." WHERE ".$this->getIdKey()."='".$this->mId."'";
+          $link_tablename = $this->findLinkTableName($link_type);
+          if ($this->tableExists($link_tablename)) {
+            $stmt = "DELETE FROM ".$link_tablename." WHERE ".$this->getIdKey()."='".$this->mId."'";
             //elog("dbDelete(3):".$stmt);
             if (!$this->query($stmt))
               return null;
           }
           //else
-          //  elog("dbDelete: Link table $link_table does not exist. ");
+          //  elog("dbDelete: Link table $link_tablename does not exist. ");
         }
       }
     }

@@ -89,7 +89,7 @@ class userTable extends anyTable
       ],
     ];
 
-  protected $mLinking = ["event","group",/*"document"*/];
+  protected $mLinkTypes = ["event","group",/*"document"*/];
 
   protected $mFilters = [
       "list" => [

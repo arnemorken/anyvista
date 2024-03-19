@@ -60,7 +60,7 @@ class documentTable extends anyTable
       ],
     ];
 
-  protected $mLinking = ["group","user","event"];
+  protected $mLinkTypes = ["group","user","event"];
 
   protected $mFilters = [
       "list" => [
@@ -117,9 +117,9 @@ class documentTable extends anyTable
   /////////////////////// Database query fragments ////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function findListWhere($gid)
+  protected function findListWhere($gid,$linkType=null,$linkId=null)
   {
-    $where = parent::findListWhere($gid);
+    $where = parent::findListWhere($gid,$linkType,$linkId);
     return $where;
   } // findListWhere
 
