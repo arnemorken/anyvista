@@ -19,9 +19,9 @@ var userTable = function (connection,parameters)
     event: ["user_result","user_feedback","user_attended"],
   };
   this.linkTypes = {
-    group:    [ "any_group_user",    "groupTable" ],
-    event:    [ "any_event_user",    "eventTable" ],
-    document: [ "any_document_user", "documentTable" ],
+    group:     { className: "groupTable",     tableName: "any_group",    linkTableName: "any_group_user" },
+    event:     { className: "eventTable",     tableName: "any_event",    linkTableName: "any_event_user" },
+    document:  { className: "documentTable",  tableName: "any_document", linkTableName: "any_document_user" },
   };
   this.sqlCreate = "\
     CREATE TABLE IF NOT EXISTS "+this.tableName+" (\

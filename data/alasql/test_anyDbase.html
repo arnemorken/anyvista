@@ -184,7 +184,7 @@ async function connectSuccess(options)
     });
   })
   .then( () => {
-    evtab.parameters.header = "Upcoming events";
+    evtab.header = "Upcoming events";
     evtab.id = null;
     return evtab.dbSearch({id:11})
     .then( function(data) {

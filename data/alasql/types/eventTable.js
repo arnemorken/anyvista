@@ -19,13 +19,13 @@ var eventTable = function (connection,parameters)
     user:  ["user_result","user_feedback","user_attended"],
   };
   this.linkTypes = {
-    group:    [ "any_event_group",    "groupTable" ],
-    user:     [ "any_event_user",     "userTable" ],
-    document: [ "any_document_event", "documentTable" ],
+    group:     { className: "groupTable",     tableName: "any_group",    linkTableName: "any_event_group" },
+    user:      { className: "userTable",      tableName: "any_user",     linkTableName: "any_event_user" },
+    document:  { className: "documentTable",  tableName: "any_document", linkTableName: "any_event_document" },
   };
   this.sqlCreate = "\
     CREATE TABLE IF NOT EXISTS "+this.tableName+" (\
-      event_id          INT PRIMARY KEY AUTOINCREMENT,\
+      event_id          INT PRIMARY KEY,\
       event_name        STRING,\
       event_description BLOB,\
       parent_id         INT,\
@@ -33,8 +33,8 @@ var eventTable = function (connection,parameters)
     ";
   this.sqlCreateLinks = "\
     CREATE TABLE IF NOT EXISTS any_event_user (\
-      event_id          INT PRIMARY KEY AUTOINCREMENT,\
-      user_id           INT PRIMARY KEY AUTOINCREMENT,\
+      event_id          INT PRIMARY KEY,\
+      user_id           INT PRIMARY KEY,\
       user_result       INT,\
       user_attended     INT,\
       UNIQUE (event_id,user_id));\
