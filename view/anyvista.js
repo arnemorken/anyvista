@@ -918,9 +918,20 @@
           require_once "anyTable.php";
           class taskTable extends anyTable
           {
-            protected $mTableDefs = [
-              "types" => ["group","task","user","document"],
-              "filters" => [
+            protected $mType           = "task",
+                      $mIdKey          = "task_id",
+                      $mIdKeyTable     = "task_id",
+                      $mIdKeyMetaTable = "task_id",
+                      $mNameKey        = "task_name";
+
+            protected $mTableName          = "any_task",
+                      $mTableNameMeta      = "any_taskmeta",
+                      $mTableNameGroupLink = "any_group_task",
+                      $mTableNameUserLink  = "any_task_user";
+
+            protected $mLinkTypes = ["group","user"];
+
+            protected $mFilters = [
                 "list" => [
                   "task_id"          => 1,
                   "task_name"        => 1,
@@ -939,8 +950,7 @@
                   "task_date_end"    => 1,
                   "task_status"      => 1,
                 ],
-              ],
-            ];
+              ];
 
             protected $mInsertSuccessMsg = "Task created. ",
                       $mUpdateSuccessMsg = "Task updated. ",
@@ -948,7 +958,7 @@
 
             public function __construct($connection)
             {
-              parent::__construct($connection,$this->mTableDefs);
+              parent::__construct($connection);
             }
 
             protected function initFilters($filters)
@@ -958,9 +968,9 @@
               return true;
             }
 
-            protected function findListWhere($skipOwnId=false)
+            protected function findListWhere($skipOwnId=false,$linkType=null,$linkId=null)
             {
-              $where = parent::findListWhere($skipOwnId);
+              $where = parent::findListWhere($skipOwnId,$linkType,$linkId);
               return $where;
             }
 
