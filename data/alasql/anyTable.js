@@ -295,9 +295,28 @@ anyTable.prototype.hasParentId = function()
 //////// finders ////////
 /////////////////////////
 
-anyTable.prototype.findDefaultHeader = function(type)
+anyTable.prototype.findHeader = function(inData)
 {
-  return "Other "+type+"s"; // TODO! i18n
+  let hdr = "";
+  let h = this.parameters.header;
+  if (h && h !== "false" && h !== "true" && h !== false && h !== true)
+    hdr = h; // Use the header provided in the in-parameter
+  else
+  if (!this.id || this.id == "") {
+    if (h === true || h === "true")
+      hdr = this.findDefaultListHeader(this.type);
+  }
+  else {
+    if (h !== false && h !== "false")
+      hdr = this.findDefaultItemHeader(this.type,inData);
+  }
+  return hdr;
+}; // findHeader
+
+anyTable.prototype.findDefaultHeader = function(type,skipOther)
+{
+  let other = skipOther ? "" : "Other "; // TODO: i18n
+  return other+type+"s";                 // TODO: i18n
 }; // findDefaultHeader
 
 anyTable.prototype.findDefaultListHeader = function(type)
@@ -305,7 +324,7 @@ anyTable.prototype.findDefaultListHeader = function(type)
   return type.charAt(0).toUpperCase() + type.slice(1) + " list"; // TODO! i18n
 }; // findDefaultListHeader
 
-anyTable.prototype.findDefaultItemHeader = function(type,inData)
+anyTable.prototype.findDefaultItemHeader = function(type,inData,linkId)
 {
   let hdr = "";
   if (!inData)
@@ -317,7 +336,7 @@ anyTable.prototype.findDefaultItemHeader = function(type,inData)
   if (inData[ix][this.nameKey])
     hdr = inData[ix][this.nameKey];
   else
-  if (this.linkId)
+  if (linkId)
     this.error = this.nameKey + " missing"; // TODO! i18n
   return hdr;
 }; // findDefaultItemHeader
@@ -328,6 +347,11 @@ anyTable.prototype.findDefaultItemListHeader = function(linkType)
   return s+"s"; // TODO! i18n
 }; // findDefaultItemListHeader
 
+anyTable.prototype.findDefaultNogroupHeader = function(type,skipOther)
+{
+  return this.findDefaultHeader(type,skipOther);
+}; // findDefaultNogroupHeader
+
 anyTable.prototype.findLinkTableName = function(linkType)
 {
   if (!linkType)
@@ -335,7 +359,7 @@ anyTable.prototype.findLinkTableName = function(linkType)
   if (linkType == this.type)
     return this.tableName;
   let ltn = [linkType,this.type].sort();
-  ltn = "any_"+ltn[0]+"_"+ltn[1];
+  ltn = this.tablePrefix+ltn[0]+"_"+ltn[1];
   return ltn;
 }; // findLinkTableName
 
@@ -405,9 +429,12 @@ anyTable.prototype._dbSearch = async function(groupId) // TODO! Is async needed 
   else {
     if (id || id === 0) {
       // Search for an item
-      return this.dbSearchItem(groupId,id)
+      return this.dbSearchItem(id,groupId)
       .then(function(data) {
-        self.data = data ? self.prepareData(data) : null;
+        if (!self.numResults)
+          return Promise.resolve(data);
+        if (data)
+          self.data = self.prepareData(data);
         return Promise.resolve(self.data);
       });
     }
@@ -415,7 +442,10 @@ anyTable.prototype._dbSearch = async function(groupId) // TODO! Is async needed 
       // Search for a list
       return this.dbSearchList(groupId,type)
       .then(function(data) {
-        self.data = data ? self.prepareData(data) : null;
+        if (!self.numResults)
+          return Promise.resolve(data);
+        if (data)
+          self.data = self.prepareData(data);
         return Promise.resolve(self.data);
       });
     }
@@ -452,10 +482,12 @@ anyTable.prototype.dbSearchParents = function()
 //
 // Search database for an item, including linked lists.
 //
-anyTable.prototype.dbSearchItem = async function(groupId,id) // TODO! Is async needed here?
+anyTable.prototype.dbSearchItem = async function(id,groupId) // TODO! Is async needed here?
 {
   if (!id)
     return Promise.resolve(false);
+  this.numResults = 0;
+  // Build and execute the query
   let stmt = this.dbPrepareSearchItemStmt(this.idKey,id);
   let self = this;
   //console.log("dbSearchItem:"+stmt);
@@ -466,7 +498,8 @@ anyTable.prototype.dbSearchItem = async function(groupId,id) // TODO! Is async n
     //console.log("dbSearchItem, grouped item data:"); console.log(self.data);
     if (!self.data || Object.keys(self.data).length === 0)
       return Promise.resolve(null);
-    return self.dbSearchItemLists(groupId,id,self.linking);
+    self.numResults = 1;
+    return self.dbSearchItemLists(id,groupId);
   });
 }; // dbSearchItem
 
@@ -482,44 +515,53 @@ anyTable.prototype.dbPrepareSearchItemStmt = function(key,val)
 //
 // Search for lists associated with the item
 //
-anyTable.prototype.dbSearchItemLists = async function(groupId,id,linking)
+anyTable.prototype.dbSearchItemLists = async function(id,groupId)
 {
-  if (!id || !linking) {
-    return Promise.resolve(null);
+  // If no link types found, return with no error
+  if (!this.linkTypes)
+    return Promise.resolve(this.data);
+  // Must have an id
+  if (!id && id !== 0) {
+    this.error = "No id while searching for linked lists. "; // TODO! i18n
+    return Promise.resolve(false);
   }
-  let factory = new anyTableFactory(this.connection);
-  let self = this;
-  for (let link_type in linking) {
-    if (linking.hasOwnProperty(link_type)) {
-      let link_object    = linking[link_type];
-      let link_tablename = link_object[0];
-      let link_classname = link_object[1];
-      //console.log(self.type+";"+link_type+":"+link_tablename+","+link_classname);
-      if (self.tableExists(link_tablename)) {
-        let tab = await factory.createClass(link_classname,true,true); // TODO!
-        //console.log("created "+link_classname);
-        await tab.dbSearchList(groupId,self.type,tab.type,id)
-        .then( function(data) {
-          let link_idx = "link-"+link_type;
-          let name_key = tab.nameKey;
-          if (!self.data[id])
-            self.data[id]              = { };
-          if (!self.data[id].data)
-            self.data[id].data         = { };
-          self.data[id].data[link_idx] = { data: { } };
-          self.data[id].data[link_idx]["head"] = link_type;
-          self.data[id].data[link_idx]["data"] = tab.data;
-          if (name_key)
-            self.data[id].data[link_idx][name_key] = self.findDefaultItemListHeader(link_type);
-          //console.log("item list "+link_type+":");
-          //console.log(self.data);
-          return Promise.resolve(data);
-        });
-      }
-    }
+  // Search through all registered link types/tables
+  for (let link_type in this.linkTypes) {
+    if (this.linkTypes.hasOwnProperty(link_type))
+      this.dbSearchItemListOfType(link_type,id,groupId);
   }
   return Promise.resolve(this.data);
 }; // dbSearchItemLists
+
+anyTable.prototype.dbSearchItemListOfType = async function(linkType,linkId,groupId)
+{
+  let link_tablename = this.linkTypes[linkType][0];
+  //console.log(this.type+";"+linkType+":"+link_tablename);
+  if (this.tableExists(link_tablename)) {
+    let factory = new anyTableFactory(this.connection);
+    let link_classname = this.linkTypes[linkType][1];
+    let table = await factory.createClass(link_classname,{type:linkType,header:true,path:this.parameters.path});
+    //console.log("created class "+link_classname);
+    let self = this;
+    return await table.dbSearchList(groupId,this.type,table.type,linkId)
+    .then( function(data) {
+      let link_idx = "link-"+linkType;
+      let name_key = table.nameKey;
+      if (!self.data[linkId])
+        self.data[linkId]              = {};
+      if (!self.data[linkId].data)
+        self.data[linkId].data         = {};
+      self.data[linkId].data[link_idx] = { data: {} };
+      self.data[linkId].data[link_idx]["head"] = linkType;
+      self.data[linkId].data[link_idx]["data"] = table.data;
+      if (name_key)
+        self.data[linkId].data[link_idx][name_key] = self.findDefaultItemListHeader(linkType);
+      //console.log("item list "+linkType+":");
+      //console.log(self.data);
+      return Promise.resolve(data);
+    });
+  }
+}; // dbSearchItemListOfType
 
 //////////////////////////////// List search ////////////////////////////////
 
@@ -532,23 +574,21 @@ anyTable.prototype.dbSearchList = async function(groupId,type,linkType,linkId)
     console.error(this.error);
     return Promise.resolve(null);
   }
+  let data = {};
+  this.numResults = 0;
   let group_data = null;
-  if (type != "group") {
-    let p = "./js/types/"; // TODO! Must be in-param/option
+  if (this.grouping && type != "group") {
     let factory     = new anyTableFactory(this.connection);
-    let group_table = await factory.createClass("groupTable",{header:true,path:p});
+    let group_table = await factory.createClass("groupTable",{type:"group",header:true,path:this.parameters.path});
     group_data  = await group_table.dbSearchGroupInfo(type);
   }
 
-  this.num_results = 0;
   let success = false;
-  let data = {};
   let self = this;
-
   if (groupId && type != "group") {
     // Query data from the given group (or "nogroup")
     return this.dbExecListStmt(data,groupId,type,linkType,linkId)
-    .then( function(data) {
+    .then( function(res) {
       self.data = self.buildGroupTreeAndAttach(data,group_data,linkId);
       //console.log("dbSearchList, tree list data:"); console.log(self.data);
       return Promise.resolve(self.data);
@@ -558,7 +598,7 @@ anyTable.prototype.dbSearchList = async function(groupId,type,linkType,linkId)
   if (!this.grouping || type == "group") {
     // Query all data, non-grouped
     return this.dbExecListStmt(data,null,type,linkType,linkId)
-    .then( function(data) {
+    .then( function(res) {
       self.data = self.buildGroupTreeAndAttach(data,group_data,linkId);
       //console.log("dbSearchList, tree list data:"); console.log(self.data);
       return Promise.resolve(self.data);
@@ -582,7 +622,7 @@ console.log("gid:"+gid);
     } // if
 /*
     return this.dbExecListStmt(data,groupId,type,linkType,linkId)
-    .then( function(data) {
+    .then( function(res) {
       self.data = self.buildGroupTreeAndAttach(data,group_data,linkId);
       //console.log("dbSearchList, tree list data:"); console.log(self.data);
       return Promise.resolve(self.data);
@@ -632,7 +672,7 @@ anyTable.prototype.findDefaultHeader = function(type,skipOther)
 } // findDefaultNogroupHeader
 
 // Build and execute the query
-anyTable.prototype.dbExecListStmt = async function(data,groupId,type,linkType,linkId,)
+anyTable.prototype.dbExecListStmt = async function(data,groupId,type,linkType,linkId)
 {
   let stmt = this.dbPrepareSearchListStmt(groupId,type,linkType,linkId);
   let success = false;
@@ -642,6 +682,7 @@ anyTable.prototype.dbExecListStmt = async function(data,groupId,type,linkType,li
   .then( function(rows) {
     //console.log("dbExecListStmt, raw list data:"); console.log(rows);
     success = self.getRowData(rows,"list",self.type,data);
+    self.numResults += rows.length;
     //console.log("dbExecListStmt, raw list data:"); console.log(data);
     return Promise.resolve(data);
   });
@@ -653,7 +694,7 @@ anyTable.prototype.dbPrepareSearchListStmt = function(groupId,type,linkType,link
 {
   let table = this.findLinkTableName(type);
    // Get query fragments
-  let select    = this.findListSelect  (table,groupId,type,linkType);
+  let select    = this.findListSelect  (table,groupId,type,linkType,linkId);
   let left_join = this.findListLeftJoin(table,groupId,type,linkType);
   let where     = this.findListWhere   (table,groupId,type,linkType,linkId);
   let order_by  = this.findListOrderBy();
@@ -667,30 +708,28 @@ anyTable.prototype.dbPrepareSearchListStmt = function(groupId,type,linkType,link
   return stmt;
 }; // dbPrepareSearchListStmt
 
-anyTable.prototype.findListSelect = function(linkTableName,groupId,type,linkType)
+anyTable.prototype.findListSelect = function(linkTableName,groupId,type,linkType,linkId)
 {
   // Select from own table
   let sl = "SELECT DISTINCT "+this.tableName+".* ";
 
   // Always select from group table, except if has parent_id while being a list-for list
-  if (groupId) {
-    if (this.type != "group" &&
+  if (groupId && this.type != "group" &&
         this.tableExists(this.tableNameGroup)) {
-      for (let idx in this.tableFieldsGroup) {
-        let field = this.tableFieldsGroup[idx];
-        sl += ", "+this.tableNameGroup+"."+field;
-      }
+    for (let idx in this.tableFieldsGroup) {
+      let field = this.tableFieldsGroup[idx];
+      sl += ", "+this.tableNameGroup+"."+field;
     }
   }
 
   // Select from link table
-  if (this.linkId && this.linkType) {
-    if (this.linkType != "group" &&
-        this.tableFieldsLeftJoin && this.tableFieldsLeftJoin[this.linkType]) {
-      let linktable = linkTableName ? linkTableName : this.findLinkTableName(this.linkType);
+  if (linkId && linkType) {
+    if (linkType != "group" &&
+        this.tableFieldsLeftJoin && this.tableFieldsLeftJoin[linkType]) {
+      let linktable = linkTableName ? linkTableName : this.findLinkTableName(linkType);
       if (this.tableExists(linktable)) {
-        for (let idx in this.tableFieldsLeftJoin[this.linkType]) {
-          let field = this.tableFieldsLeftJoin[this.linkType][idx];
+        for (let idx in this.tableFieldsLeftJoin[linkType]) {
+          let field = this.tableFieldsLeftJoin[linkType][idx];
           sl += ", "+linktable+"."+field;
         }
       }
@@ -746,16 +785,15 @@ anyTable.prototype.getRowData = function(rows,mode,type,data)
   }
   for (let i=0; i<rows.length; i++) {
     //console.log(i+":"+JSON.stringify(rows[i]));
-    let idKey = type+"_id";
-    let gid   = rows[i]["group_id"]
-                ? rows[i]["group_id"]
-                : "nogroup";
-    let gidx  = type != "group"
-                ? gid
-                : type;
-    let idx   = rows[i][idKey]
-                ? rows[i][idKey]
-                : null;
+    let gid  = rows[i]["group_id"]
+               ? rows[i]["group_id"]
+               : "nogroup";
+    let gidx = this.grouping && type != "group"
+               ? gid
+               : type;
+    let idx  = rows[i][this.idKey]
+               ? rows[i][this.idKey]
+               : null;
     if (!idx && idx !== 0)
       continue;
 
@@ -1010,29 +1048,11 @@ anyTable.prototype.prepareData = function(inData)
   data["data"][topidx]["data"] = inData;
 
   // Set link types
-  data["types"] = this.linking;
+  data["linkTypes"] = this.linkTypes;
 
   //console.log("data after prepare:"); console.log(data);
   return data;
 }; // prepareData
-
-anyTable.prototype.findHeader = function(inData)
-{
-  let hdr = "";
-  let h = this.parameters.header;
-  if (h && h !== "false" && h !== "true" && h !== false && h !== true)
-    hdr = h; // Use the header provided in the in-parameter
-  else
-  if (!this.id || this.id == "") {
-    if (h === true || h === "true")
-      hdr = this.findDefaultListHeader(this.type);
-  }
-  else {
-    if (h !== false && h !== "false")
-      hdr = this.findDefaultItemHeader(this.type,inData);
-  }
-  return hdr;
-}; // findHeader
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Insert //////////////////////////////////////
@@ -1475,8 +1495,8 @@ anyTable.prototype.dbDelete = async function(options)
         return Promise.resolve(null);
     }
     // Delete all links for an item with given id from associated tables (to avoid orphaned links)
-    if (self.linking) {
-      for (let link_type in self.linking) {
+    if (self.linkTypes) {
+      for (let link_type in self.linkTypes) {
         if (self.type !== link_type) {
           let link_table = self.findLinkTableName(link_type);
           let stmt = "DELETE FROM "+link_table+" WHERE "+self.idKey+"="+id;
