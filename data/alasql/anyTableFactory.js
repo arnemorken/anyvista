@@ -20,9 +20,8 @@ var anyTableFactory = function (connection)
 //
 // Creates a table class of type `type`.
 // Does not create the actual database table.
-// TODO! What if class already exists (script is loaded)?
 //
-anyTableFactory.prototype.createClass = async function(className,parameters,callback)
+anyTableFactory.prototype.createClass = function(className,parameters)
 {
   this.error = "";
   if (!className) {
@@ -30,48 +29,62 @@ anyTableFactory.prototype.createClass = async function(className,parameters,call
     console.error(this.error);
     return null;
   }
-  let res = await this._createClass(className,parameters,callback);
-  return res;
+  return this._createClass(className,parameters);
 }; // createClass
 
-anyTableFactory.prototype._createClass = function(className,parameters,callback)
+anyTableFactory.prototype._createClass = function(className,parameters)
 {
   try {
-    var head = document.getElementsByTagName("head")[0];
-    var js   = document.createElement("script");
-    var path = parameters.path
+    let head = document.getElementsByTagName("head")[0];
+    let js   = document.createElement("script");
+    let path = parameters.path
                ? parameters.path
                : gServer+gHomeFolder+"data/alasql/types/";
-    path += className + ".js";
-    //console.log("loading "+path);
-    let self = this;
+    let fullpath = path + className + ".js";
     js.async = false;
-    js.src   = path;
-    let res = new Promise( function(resolve) {
-      js.addEventListener("load", function() {
-        //console.log("creating class "+className);
-        let table_class = new window[className](self.connection,parameters);
-        table_class.className = className;
-        //if (callback)
-        //  callback(table_class);
-        return resolve(table_class);
-      });
-      js.onerror = function(e){
-        let errstr = "Could not find "+path;
-        //console.error(errstr);
-        self.error = errstr;
-        return resolve({error: errstr});
-      };
+    js.src   = fullpath;
+    let self = this;
+    if (!isScriptLoaded(js.src)) {
+      //console.log("loading "+js.src);
       head.appendChild(js);
-    });
-    return res;
+      return new Promise( function(resolve) {
+        js.addEventListener("load", function() {
+          let table_class = new window[className](self.connection,parameters);
+          table_class.className = className;
+          return resolve(table_class);
+        });
+        js.onerror = function(e){
+          let errstr = "Could not find "+fullpath;
+          console.error(errstr);
+          self.error = errstr;
+          return resolve({error: errstr});
+        };
+      });
+    }
+    else {
+      //console.log(js.src+" already loaded");
+      let table_class = new window[className](self.connection,parameters);
+      table_class.className = className;
+      return table_class;
+    }
   }
   catch (err) {
     console.log(err);
   }
 }; // _createClass
 
-function isScriptLoaded(src)
+function isScriptLoaded(fname)
 {
-  return Boolean(document.querySelector('script[src="' + src + '"]'));
+  let is_loaded = false;
+  if (fname) {
+    $('script').filter(function () {
+      let scr = $(this).attr('src');
+      if (scr) {
+        let filename = fname.replace(/^.*[\\/]/, '');
+        let scriptname = scr.replace(/^.*[\\/]/, '');
+        is_loaded = is_loaded || (scriptname == filename);
+      }
+    });
+  }
+  return is_loaded;
 }
