@@ -428,7 +428,7 @@ anyTable.prototype.dbSearch = async function(options) // TODO! Is async needed h
 }; // dbSearch
 
 // Internal method, do not call directly.
-anyTable.prototype._dbSearch = async function(groupId) // TODO! Is async needed here?
+anyTable.prototype._dbSearch = function(groupId)
 {
   let type = this.type;
   let id   = this.id;
@@ -443,21 +443,21 @@ anyTable.prototype._dbSearch = async function(groupId) // TODO! Is async needed 
   if (id == "max") {
     // Search for max id
     return this.dbSearchMaxId()
-    .then(function(data) {
+    .then( function(data) {
     });
   }
   else
   if (id == "par") {
     // Search for parents
     return this.dbSearchParents()
-    .then(function(data) {
+    .then( function(data) {
     });
   }
   else {
     if (id || id === 0) {
       // Search for an item
       return this.dbSearchItem(groupId,this.idKey,id)
-      .then(function(data) {
+      .then( function(data) {
         if (!self.numResults)
           return Promise.resolve(data);
         if (data)
@@ -468,7 +468,7 @@ anyTable.prototype._dbSearch = async function(groupId) // TODO! Is async needed 
     else {
       // Search for a list
       return this.dbSearchList(groupId,type)
-      .then(function(data) {
+      .then( function(data) {
         if (!self.numResults)
           return Promise.resolve(data);
         if (data)
