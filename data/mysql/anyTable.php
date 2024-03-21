@@ -1208,7 +1208,7 @@ class anyTable extends dbTable
         isset($linkId)   && $linkId != "nogroup" &&
         $this->tableExists($link_tablename)) {
       $where_id = $link_tablename.".".$linkType."_id='".$linkId."' "; // TODO! semi-hardcoded id of link table
-      $where = "WHERE ".$where_id;
+      $where .= "WHERE ".$where_id;
     }
     $has_group_linktable = $this->tableExists($this->mTableNameGroupLink);
     // If has parent_id while being a list-for list
