@@ -1429,7 +1429,7 @@ anyTable.prototype.dbUpdate = async function(options)
   let self = this;
   //console.log("dbUpdate:"+stmt);
   return await alasql.promise(stmt)
-  .then( async function(res) {
+  .then( function(res) {
     // numRowsChanged >= 1 if the update succeeded
     self.numRowsChanged = res;
     //console.log("upd res:"+res);
