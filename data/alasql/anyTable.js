@@ -528,7 +528,7 @@ anyTable.prototype.dbSearchItem = async function(groupId,key,val,skipLinks) // T
     if (!self.data || Object.keys(self.data).length === 0)
       return Promise.resolve(null);
     if (!skipLinks)
-      self.dbSearchItemLists(groupId,self.id);
+      await self.dbSearchItemLists(groupId,self.id);
     self.data[self.id]["item"] = self.type;
     self.data["id"] = self.id;
     self.numResults = 1;
@@ -592,7 +592,7 @@ anyTable.prototype.dbSearchItemLists = async function(groupId,id)
   // Search through all registered link types/tables
   for (let link_type in this.linkTypes) {
     if (this.linkTypes.hasOwnProperty(link_type))
-      this.dbSearchItemListOfType(groupId,link_type,id);
+      await this.dbSearchItemListOfType(groupId,link_type,id);
   }
   return Promise.resolve(this.data);
 }; // dbSearchItemLists
