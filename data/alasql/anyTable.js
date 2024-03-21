@@ -384,7 +384,9 @@ anyTable.prototype.findTypeTableName = function(type)
 {
   let str = (type == "user")
             ? ANY_DB_USER_TABLE
-            : this.linkTypes[type].tableName;
+            : this.linkTypes && this.linkTypes[type]
+              ? this.linkTypes[type].tableName
+              : "";
   return str;
 }; // findTypeTableName
 
