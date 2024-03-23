@@ -78,14 +78,6 @@ var anyTable = function (connection,paramOrType)
   this.orderDir = "DESC";
 
   /**
-  * Whether returned data should be grouped.
-  *
-  * @type       {Boolean}
-  * @default    true
-  */
-  this.grouping = true;
-
-  /**
   * Whether a header should be generated, or the header to return.
   *
   * @type       {Boolean|String}
@@ -241,7 +233,6 @@ anyTable.prototype.initProperties = function(paramOrType)
     if (paramOrType["nameKey"])               this.nameKey             = paramOrType["nameKey"];
     if (paramOrType["orderBy"])               this.orderBy             = paramOrType["orderBy"];
     if (paramOrType["orderDir"])              this.orderDir            = paramOrType["orderDir"];
-    if (paramOrType["grouping"] != undefined) this.grouping            = paramOrType["grouping"];
     if (paramOrType["header"]   != undefined) this.header              = paramOrType["header"];
     if (paramOrType["tableName"])             this.tableName           = paramOrType["tableName"];
     if (paramOrType["tableNameGroup"])        this.tableNameGroup      = paramOrType["tableNameGroup"];
@@ -258,7 +249,6 @@ anyTable.prototype.initProperties = function(paramOrType)
   if (!this.nameKey)             this.nameKey        = this.type + "_name";
   if (!this.orderBy)             this.orderBy        = this.nameKey;
   if (!this.orderDir)            this.orderDir       = "DESC";
-  if (this.grouping !== false)   this.grouping       = true;
   if (this.header === undefined) this.header         = false;
   if (!this.tableName)           this.tableName      = this.tablePrefix + this.type;
   if (!this.tableNameGroup)      this.tableNameGroup = this.tablePrefix + "group";
@@ -357,9 +347,9 @@ anyTable.prototype.findDefaultNogroupHeader = function(type,skipOther)
   return this.findDefaultHeader(type,skipOther);
 }; // findDefaultNogroupHeader
 
-anyTable.prototype.findLinkTableId = function(type)
+anyTable.prototype.findLinkTableId = function(linkType)
 {
-  let str = type+"_id";
+  let str = linkType+"_id";
   return str;
 }; // findLinkTableId
 
@@ -404,22 +394,17 @@ anyTable.prototype.findTypeTableName = function(type)
  *
  * @return array|null Data array, or null on error or no data
  */
-anyTable.prototype.dbSearch = async function(options) // TODO! Is async needed here?
+anyTable.prototype.dbSearch = function(options)
 {
-  let type = options && options.type ? options.type : this.type;
-  let id   = options && options.id   ? options.id   : this.id;
-  if (!type) {
-    this.error = "dbSearch: type missing. ";
-    return Promise.resolve(null);
-  }
-  this.type = type;
-  if (id)
-    this.id = id;
-  if (options && options.grouping)
-    this.grouping = options.grouping;
-  let groupId = options ? options.groupId : null;
   let self = this;
-  return this._dbSearch(groupId)
+  return this._dbSearch(options)
+  .then( function(data) {
+    if (self.error)
+      throw self.error;
+    if (data)
+      self.data = self.prepareData(data);
+    return Promise.resolve(self.data);
+  })
   .catch(function(err) {
     console.log(err);
     self.error = err;
@@ -428,89 +413,51 @@ anyTable.prototype.dbSearch = async function(options) // TODO! Is async needed h
 }; // dbSearch
 
 // Internal method, do not call directly.
-anyTable.prototype._dbSearch = function(groupId)
+anyTable.prototype._dbSearch = async function(options)
 {
-  let type = this.type;
-  let id   = this.id;
+  let type = options && options.type ? options.type : this.type;
+  let id   = options && options.id   ? options.id   : this.id;
   if (!type) {
-    // Error
     this.error = "dbSearch: type missing. ";
     return Promise.resolve(null);
   }
-  this.error = "";
+  this.type  = type;
+  this.id    = id;
   this.data  = null;
-  let self   = this;
-  if (id == "max") {
-    // Search for max id
-    return this.dbSearchMaxId()
-    .then( function(data) {
-    });
-  }
+  this.error = "";
+
+  if (id == "max")
+    return await this.dbSearchMaxId();
   else
-  if (id == "par") {
-    // Search for parents
-    return this.dbSearchParents()
-    .then( function(data) {
-    });
-  }
-  else {
-    if (id || id === 0) {
-      // Search for an item
-      return this.dbSearchItem(groupId,this.idKey,id)
-      .then( function(data) {
-        if (!self.numResults)
-          return Promise.resolve(data);
-        if (data)
-          self.data = self.prepareData(data);
-        return Promise.resolve(self.data);
-      });
-    }
-    else {
-      // Search for a list
-      return this.dbSearchList(groupId,type)
-      .then( function(data) {
-        if (!self.numResults)
-          return Promise.resolve(data);
-        if (data)
-          self.data = self.prepareData(data);
-        return Promise.resolve(self.data);
-      });
-    }
-  } // else
+  if (id == "par")
+    return await this.dbSearchParents();
+  else
+  if (id || id === 0)
+    return await this.dbSearchItem(options);
+  else
+    return await this.dbSearchList(options);
 }; // _dbSearch
-
-////////////////////////////// Misc. searches //////////////////////////////
-
-//
-// Find max id for a table.
-//
-anyTable.prototype.dbSearchMaxId = async function()
-{
-  let maxstr = "MAX("+this.idKey+")";
-  let stmt = "SELECT "+maxstr+" FROM "+this.tableName;
-  let self = this;
-  self.maxId = -1;
-  return await alasql.promise(stmt)
-  .then (function(data) {
-    if (data && data[0])
-      self.maxId = data[0][maxstr];
-    //console.log("max:"); console.log(self.maxId);
-    return {id:self.maxId};
-  });
-}; // dbSearchMaxId
-
-anyTable.prototype.dbSearchParents = function()
-{
-  // Not implemented yet
-}; // dbSearchParents
 
 //////////////////////////////// Item search ////////////////////////////////
 
 //
 // Search database for an item, including linked lists.
 //
-anyTable.prototype.dbSearchItem = async function(groupId,key,val,skipLinks) // TODO! Is async needed here?
+anyTable.prototype.dbSearchItem = async function(options) // TODO! Is async needed here?
 {
+  options.key = options ? this.idKey : null;
+  options.val = options ? options.id : null;
+  return this.dbSearchItemByKey(options);
+}; // dbSearchItem
+
+anyTable.prototype.dbSearchItemByKey = function(options)
+{
+  let key       = options ? options.key       : null;
+  let val       = options ? options.val       : null;
+  let groupId   = options ? options.groupId   : null;
+  let grouping  = options && typeof options.grouping  == "boolean" ? options.grouping  : true;
+  let skipLinks = options && typeof options.skipLinks == "boolean" ? options.skipLinks : false;
+
   if (!key || !val) {
     this.error = "Missing key or value. "; // TODO! i18n
     return Promise.resolve(false);
@@ -518,23 +465,23 @@ anyTable.prototype.dbSearchItem = async function(groupId,key,val,skipLinks) // T
   this.numResults = 0;
   // Build and execute the query
   let stmt = this.dbPrepareSearchItemStmt(key,val);
-  //console.log("dbSearchItem:"+stmt);
+  //console.log("dbSearchItemByKey:"+stmt);
   let self = this;
-  return await alasql.promise(stmt) // TODO! Is await needed here?
-  .then (async function(rows) {     // TODO! Is async needed here?
+  return alasql.promise(stmt)
+  .then (async function(rows) { // TODO! Is async needed here?
     // Get the data
-    self.getRowData(rows,"item",self.type,self.data);
-    //console.log("dbSearchItem, grouped item data:"); console.log(self.data);
-    if (!self.data || Object.keys(self.data).length === 0)
-      return Promise.resolve(null);
-    if (!skipLinks)
-      await self.dbSearchItemLists(groupId,self.id);
-    self.data[self.id]["item"] = self.type;
-    self.data["id"] = self.id;
-    self.numResults = 1;
+    if (self.getRowData(rows,"item",grouping)) {
+      if (!skipLinks)
+        await self.dbSearchItemLists(groupId,grouping); // TODO! Is await needed here?
+      if (self.id && self.data[self.id]) {
+        self.data[self.id]["item"] = self.type;
+        self.data["id"] = self.id;
+      }
+      self.numResults = 1;
+    }
     return Promise.resolve(self.data);
   });
-}; // dbSearchItem
+}; // dbSearchItemByKey
 
 anyTable.prototype.dbPrepareSearchItemStmt = function(key,val)
 {
@@ -579,93 +526,100 @@ anyTable.prototype.findItemWhere = function(key,val)
 //
 // Search for lists associated with the item
 //
-anyTable.prototype.dbSearchItemLists = async function(groupId,id)
+anyTable.prototype.dbSearchItemLists = async function(groupId,grouping)
 {
   // If no link types found, return with no error
   if (!this.linkTypes)
     return Promise.resolve(true);
   // Must have an id
-  if (!id && id !== 0) {
+  if (!this.id && this.id !== 0) {
     this.error = "No id while searching for linked lists. "; // TODO! i18n
     return Promise.resolve(false);
   }
   // Search through all registered link types/tables
   for (let link_type in this.linkTypes) {
     if (this.linkTypes.hasOwnProperty(link_type))
-      await this.dbSearchItemListOfType(groupId,link_type,id);
+      await this.dbSearchItemListOfType(link_type,groupId,grouping);
   }
   return Promise.resolve(this.data);
 }; // dbSearchItemLists
 
-anyTable.prototype.dbSearchItemListOfType = async function(groupId,linkType,linkId)
+anyTable.prototype.dbSearchItemListOfType = async function(linkType,groupId,grouping)
 {
   let link_tablename = this.findLinkTableName(linkType);
-  //console.log(this.type+";"+linkType+":"+link_tablename);
   if (this.tableExists(link_tablename)) {
     let factory = new anyTableFactory(this.connection);
     let link_classname = this.linkTypes[linkType].className;
     let table = await factory.createClass(link_classname,{type:linkType,header:true,path:this.path});
     //console.log("created class "+link_classname);
     let self = this;
-    return await table.dbSearchList(groupId,this.type,table.type,linkId)
+    return await table.dbSearchList({ linkType: self.type,
+                                      linkId:   self.id,
+                                      groupId:  groupId,
+                                      grouping: grouping })
     .then( function(data) {
-      let link_idx = "link-"+linkType;
-      let name_key = table.nameKey;
-      if (!self.data[linkId])
-        self.data[linkId]              = {};
-      if (!self.data[linkId].data)
-        self.data[linkId].data         = {};
-      self.data[linkId].data[link_idx] = { data: {} };
-      self.data[linkId].data[link_idx]["head"] = linkType;
-      self.data[linkId].data[link_idx]["data"] = table.data;
-      if (name_key)
-        self.data[linkId].data[link_idx][name_key] = self.findDefaultItemListHeader(linkType);
-      //console.log("item list "+linkType+":");
-      //console.log(self.data);
-      return Promise.resolve(data);
+      if (table.error)
+        self.error += table.error;
+      if (data) {
+        let idx      = self.id;
+        let link_idx = "link-"+linkType;
+        if (!self.data[idx]["data"])
+          self.data[idx]["data"] = {};
+        if (!self.data[idx]["data"][link_idx])
+          self.data[idx]["data"][link_idx] = {};
+        self.data[idx]["data"]["grouping"]           = grouping;
+        self.data[idx]["data"][link_idx]["grouping"] = grouping;
+        self.data[idx]["data"][link_idx]["head"]     = linkType;
+        self.data[idx]["data"][link_idx]["data"]     = table.data;
+        if (table.nameKey)
+          self.data[idx]["data"][link_idx][table.nameKey] = self.findDefaultItemListHeader(linkType);
+        //console.log("item list "+linkType+":");
+        //console.log(self.data);
+        return Promise.resolve(data);
+      }
     });
   }
 }; // dbSearchItemListOfType
 
 //////////////////////////////// List search ////////////////////////////////
 
-anyTable.prototype.dbSearchList = async function(groupId,type,linkType,linkId)
+anyTable.prototype.dbSearchList = async function(options)
 {
-  if (!type)
-    type = this.type;
-  if (!type) {
+  if (!this.type) {
     this.error = "dbSearchList: No type. ";
     console.error(this.error);
     return Promise.resolve(null);
   }
+  let linkType = options                                         ? options.linkType : null;
+  let linkId   = options                                         ? options.linkId   : null;
+  let groupId  = options                                         ? options.groupId  : null;
+  let grouping = options && typeof options.grouping == "boolean" ? options.grouping : true;
+  let simple   = options && typeof options.simple   == "boolean" ? options.simple   : false;
+
   let group_data = {};
   if (this.groupTable)
     group_data = this.groupTable.data; // We already have group data
   else
-  if (this.grouping && type != "group") {
+  if (grouping && this.type != "group") {
     // Get group data to a "flat" list
-    let my_grouping = this.grouping;
     let factory     = new anyTableFactory(this.connection);
     this.groupTable = await factory.createClass("groupTable",{type:"group",header:false,path:this.path});
-    this.groupTable.grouping = false;
-    group_data = await this.groupTable.dbSearchGroupInfo(type,groupId);
-    //console.log("dbSearchList,group_data("+type+","+groupId+"):"); console.log(group_data);
+    group_data = await this.groupTable.dbSearchGroupInfo(this.type,groupId,false);
+    //console.log("dbSearchList,group_data("+this.type+","+groupId+"):"); console.log(group_data);
     if (!group_data || !group_data["group"])
       this.error = this.groupTable.error;
-    if (type == "group") // TODO! Always false
-      this.grouping = my_grouping;
   }
   // Build and execute the query
   this.numResults = 0;
   let success = false;
-  if (groupId && type != "group") {
+  if ((groupId || groupId===0) && this.type != "group") {
     // Query data from the given group (or "nogroup")
-    success = await this.dbExecListStmt(this.data,groupId,type,linkType,linkId);
+    success = await this.dbExecListStmt(groupId,this.type,linkType,linkId,grouping,simple);
   }
   else
-  if (!this.grouping || type == "group") {
+  if (!grouping || this.type == "group") {
     // Query all data, non-grouped
-    success = await this.dbExecListStmt(this.data,null,type,linkType,linkId);
+    success = await this.dbExecListStmt(null,this.type,linkType,linkId,grouping,simple);
   }
   else {
     // Query grouped data
@@ -673,9 +627,9 @@ anyTable.prototype.dbSearchList = async function(groupId,type,linkType,linkId)
     if (group_data && group_data["group"]) {
       for (let gid in group_data["group"]) {
         let group = group_data["group"][gid];
-        if (group["group_type"] == type) {
+        if (group["group_type"] == this.type) {
           if (this.tableExists(this.tableNameGroupLink)) {
-            success = await this.dbExecListStmt(this.data,gid,type,linkType,linkId) || success;
+            success = await this.dbExecListStmt(gid,this.type,linkType,linkId,grouping,simple) || success;
             if (gid == "nogroup")
               has_nogroup = true;
           }
@@ -684,7 +638,7 @@ anyTable.prototype.dbSearchList = async function(groupId,type,linkType,linkId)
     } // if
     // Build and execute the query for ungrouped data (if not queried already)
     if (!has_nogroup)
-      success = await this.dbExecListStmt(this.data,"nogroup",type,linkType,linkId) || success;
+      success = await this.dbExecListStmt("nogroup",this.type,linkType,linkId,grouping,simple) || success;
 
     // Build and execute the query for grouped data that may have illegal group type (i.e. not same as list type).
     // TODO!
@@ -701,41 +655,40 @@ anyTable.prototype.dbSearchList = async function(groupId,type,linkType,linkId)
     this.groupTable = this;
     group_data = this.data;
   }
-  if (this.type != "group")
-    this.groupTable.grouping = true;
-  group_data["group"] = this.groupTable.buildDataTree(group_data["group"]);
-  this.data = this.buildGroupTreeAndAttach(this.data,group_data,linkId);
+  if (group_data && grouping) {
+    group_data["group"] = this.groupTable.buildDataTree(group_data["group"]);
+    this.data = this.buildGroupTreeAndAttach(this.data,group_data,linkId,grouping,simple);
+  }
   //console.log("dbSearchList, tree list data:"); console.log(this.data);
 
   return Promise.resolve(this.data);
 }; // dbSearchList
 
-anyTable.prototype.dbExecListStmt = async function(data,groupId,type,linkType,linkId)
+anyTable.prototype.dbExecListStmt = async function(groupId,type,linkType,linkId,grouping,simple,groupType,searchTerm)
 {
   // Build and execute the query for a group
   if (groupId == "nogroup")
     groupId = null;
-  let stmt = this.dbPrepareSearchListStmt(groupId,type,linkType,linkId);
+  let stmt = this.dbPrepareSearchListStmt(groupId,type,linkType,linkId,grouping,groupType,searchTerm);
   //console.log("dbExecListStmt1:"+stmt);
-  let success = false;
   let self = this;
-  data = await alasql.promise(stmt)
+  return await alasql.promise(stmt)
   .then( function(rows) {
-    success = self.getRowData(rows,"list",self.type,data);
+    let success = self.getRowData(rows,"list",grouping,simple);
     self.numResults += rows.length;
     //console.log("dbExecListStmt, raw list data:"); console.log(data);
-    return Promise.resolve(data);
+    return Promise.resolve(success);
   });
   return success;
 }; // dbExecListStmt
 
-anyTable.prototype.dbPrepareSearchListStmt = function(groupId,type,linkType,linkId)
+anyTable.prototype.dbPrepareSearchListStmt = function(groupId,type,linkType,linkId,grouping,groupType,searchTerm)
 {
-  let table = this.findLinkTableName(type);
+  let table = this.findLinkTableName(linkType);
    // Get query fragments
-  let select    = this.findListSelect  (table,groupId,type,linkType,linkId);
-  let left_join = this.findListLeftJoin(table,groupId,type,linkType,linkId);
-  let where     = this.findListWhere   (table,groupId,type,linkType,linkId);
+  let select    = this.findListSelect  (table,groupId,type,linkType,linkId,grouping);
+  let left_join = this.findListLeftJoin(table,groupId,type,linkType,linkId,grouping);
+  let where     = this.findListWhere   (table,groupId,type,linkType,linkId,grouping,groupType,searchTerm);
   let order_by  = this.findListOrderBy();
 
   // Build the query
@@ -747,7 +700,7 @@ anyTable.prototype.dbPrepareSearchListStmt = function(groupId,type,linkType,link
   return stmt;
 }; // dbPrepareSearchListStmt
 
-anyTable.prototype.findListSelect = function(linkTableName,groupId,type,linkType,linkId)
+anyTable.prototype.findListSelect = function(linkTableName,groupId,type,linkType,linkId,grouping)
 {
   // Select from own table
   let sl = "SELECT DISTINCT "+this.tableName+".* ";
@@ -779,20 +732,20 @@ anyTable.prototype.findListSelect = function(linkTableName,groupId,type,linkType
   return sl;
 }; // findListSelect
 
-anyTable.prototype.findListLeftJoin = function(linkTableName,groupId,type,linkType,linkId)
+anyTable.prototype.findListLeftJoin = function(linkTableName,groupId,type,linkType,linkId,grouping)
 {
   let lj = "";
   if (this.hasParentId())
     lj += "LEFT JOIN "+this.tableName+" temp ON "+this.tableName+".parent_id=temp."+this.idKey+" ";
   // Always left join group table, except if has parent_id while being a list-for list
   if (type != "group")
-    lj += this.findListLeftJoinOne(groupId,"group",linkId);
+    lj += this.findListLeftJoinOne(groupId,"group",linkId,grouping);
 
   // Left join link  table
   if (linkId || linkId === 0 && linkType) {
     if (linkType != "group" &&
         this.tableFieldsLeftJoin && this.tableFieldsLeftJoin[linkType]) {
-      lj += this.findListLeftJoinOne(groupId,linkType,linkId);
+      lj += this.findListLeftJoinOne(groupId,linkType,linkId,grouping);
     }
   }
   return lj;
@@ -802,7 +755,7 @@ function isNumeric(n) { // TODO! Put somewhere else
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
-anyTable.prototype.findListLeftJoinOne = function(groupId,linkType,linkId)
+anyTable.prototype.findListLeftJoinOne = function(groupId,linkType,linkId,grouping)
 {
   let linktable     = this.findLinkTableName(linkType);
   let typetable     = this.findTypeTableName(linkType);
@@ -824,7 +777,7 @@ anyTable.prototype.findListLeftJoinOne = function(groupId,linkType,linkId)
       }
     }
   }
-  if (has_typetable && linkType == "group" && groupId) {
+  if (has_typetable && linkType == "group" && (groupId || groupId === 0)) {
     let db_gid = isNumeric(groupId) ? "CAST("+groupId+" AS INT)" : "'"+groupId+"'";
     lj += "LEFT JOIN "+typetable+" ON CAST("+typetable+"."+typetable_id+" AS INT)="+db_gid+" ";
     lj += "AND "+this.tableNameGroup+".group_type='"+this.type+"' ";
@@ -832,7 +785,7 @@ anyTable.prototype.findListLeftJoinOne = function(groupId,linkType,linkId)
   return lj;
 }; // findListLeftJoinOne
 
-anyTable.prototype.findListWhere = function(linkTableName,groupId,type,linkType,linkId,groupType,search_term)
+anyTable.prototype.findListWhere = function(linkTableName,groupId,type,linkType,linkId,grouping,groupType,searchTerm)
 {
   let where = "";
   let skipOwnType = linkType == this.type;
@@ -841,7 +794,8 @@ anyTable.prototype.findListWhere = function(linkTableName,groupId,type,linkType,
       linkType &&
       (linkId || linkId === 0) && linkId != "nogroup" &&
       this.tableExists(linkTableName)) {
-    let where_id = linkTableName+"."+linkType+"_id='"+linkId+"' "; // TODO! semi-hardcoded id of link table
+    let db_id = linkType == "group" ? "'"+linkId+"'" : linkId;
+    let where_id = linkTableName+"."+linkType+"_id="+db_id+" "; // TODO! semi-hardcoded id of link table
     where += "WHERE "+where_id;
   }
   let has_group_linktable = this.tableExists(this.tableNameGroupLink);
@@ -865,14 +819,15 @@ anyTable.prototype.findListWhere = function(linkTableName,groupId,type,linkType,
   }
   if (skipOwnType &&
       this.id != "nogroup") {
-    let skip_str = this.tableName+"."+this.idKey+" != '"+this.id+"'";
+    let db_id = this.type == "group" ? "'"+this.id+"'" : this.id;
+    let skip_str = this.tableName+"."+this.idKey+" != "+db_id+"";
     if (where === "")
       where  = "WHERE ("+skip_str+") ";
     else
       where += " AND ("+skip_str+") ";
   }
-  if (search_term) { // TODO
-    let term_str = this.tableName+"."+this.mNameKey+" LIKE '%"+search_term+"%'";
+  if (searchTerm) { // TODO
+    let term_str = this.tableName+"."+this.mNameKey+" LIKE '%"+searchTerm+"%'";
     if (where === "")
       where  = "WHERE ("+term_str+") ";
     else
@@ -903,7 +858,7 @@ anyTable.prototype.findListWhere = function(linkTableName,groupId,type,linkType,
     }
   }
   else {
-    if (this.grouping && this.type != "group" && has_group_linktable &&
+    if (grouping && this.type != "group" && has_group_linktable &&
         !(this.hasParentId() && (linkType || (this.id && this.id != "")))) {
       let n_str = this.tableNameGroupLink+".group_id is null ";
       if (where === "")
@@ -924,6 +879,31 @@ anyTable.prototype.findListOrderBy = function()
   return ob;
 }; // findListOrderBy
 
+////////////////////////////// Misc. searches //////////////////////////////
+
+//
+// Find max id for a table.
+//
+anyTable.prototype.dbSearchMaxId = async function()
+{
+  let maxstr = "MAX("+this.idKey+")";
+  let stmt   = "SELECT "+maxstr+" FROM "+this.tableName;
+  let self   = this;
+  self.maxId = -1;
+  return await alasql.promise(stmt)
+  .then (function(data) {
+    if (data && data[0])
+      self.maxId = data[0][maxstr];
+    //console.log("max:"); console.log(self.maxId);
+    return {id:self.maxId};
+  });
+}; // dbSearchMaxId
+
+anyTable.prototype.dbSearchParents = function()
+{
+  // Not implemented yet
+}; // dbSearchParents
+
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Data retrieval //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
@@ -931,21 +911,19 @@ anyTable.prototype.findListOrderBy = function()
 //
 // Get the data from query result (rows) to data array.
 //
-anyTable.prototype.getRowData = function(rows,mode,type,data)
+anyTable.prototype.getRowData = function(rows,mode,grouping,simple)
 {
-  if (!data) {
-    if (!this.data)
-      this.data = {};
-    data = this.data;
-  }
+  if (!this.data)
+    this.data = {};
+
   for (let i=0; i<rows.length; i++) {
     //console.log(i+":"+JSON.stringify(rows[i]));
     let gid  = rows[i]["group_id"]
                ? rows[i]["group_id"]
                : "nogroup";
-    let gidx = this.grouping && type != "group"
+    let gidx = grouping && this.type != "group"
                ? gid
-               : type;
+               : this.type;
     let idx  = rows[i][this.idKey]
                ? rows[i][this.idKey]
                : null;
@@ -953,25 +931,25 @@ anyTable.prototype.getRowData = function(rows,mode,type,data)
       continue;
 
     if ((mode == "list" || mode == "head")) {
-      if (!data[gidx])
-        data[gidx] = {};
-      if (!data[gidx][idx])
-        data[gidx][idx] = {};
-      data[gidx][idx][mode] = type;
+      if (!this.data[gidx])
+        this.data[gidx] = {};
+      if (!this.data[gidx][idx])
+        this.data[gidx][idx] = {};
+      this.data[gidx][idx][mode] = this.type;
     }
     else {
-      if (!data[idx])
-        data[idx] = {};
-      data[idx] = {};
-      data[idx][mode] = type;
+      if (!this.data[idx])
+        this.data[idx] = {};
+      this.data[idx] = {};
+      this.data[idx][mode] = this.type;
     }
 
     // Main table
     if (this.tableFields) {
       for (let t=0; t<this.tableFields.length; t++) {
         let field = this.tableFields[t];
-        if (true || field == this.idKey || field == this.nameKey || field == "parent_id") // TODO!
-          this.getCellData(field,rows[i],data,idx,gidx,null/*filter*/,mode);
+        if (!simple || field == this.idKey || field == this.nameKey || field == "parent_id") // TODO!
+          this.getCellData(field,rows[i],this.data,idx,gidx,null/*filter*/,mode);
       } // for
     }
 
@@ -981,17 +959,17 @@ anyTable.prototype.getRowData = function(rows,mode,type,data)
         if (this.tableFieldsLeftJoin[link_type]) {
           for (let t=0; t<this.tableFieldsLeftJoin[link_type].length; t++) {
             let field = this.tableFieldsLeftJoin[link_type][t];
-            if (true || field == this.idKey || field == this.nameKey || field == "parent_id") // TODO!
-              this.getCellData(field,rows[i],data,idx,gidx,null/*filter*/,mode);
+            if (!simple || field == this.idKey || field == this.nameKey || field == "parent_id") // TODO!
+              this.getCellData(field,rows[i],this.data,idx,gidx,null/*filter*/,mode);
           } // for
         } // if
       } // for
     } // if
 
   } // for
-  //console.log("getRowData,data:"); console.log(data);
+  //console.log("getRowData ("+this.type+"),this.data:"); console.log(this.data);
 
-  if (!data)
+  if (!this.data)
     return false;
   return true;
 }; // getRowData
@@ -1024,7 +1002,7 @@ anyTable.prototype.getCellData = function(tablefield,nextrow,data,idx,gidx,filte
 //
 // Build the data group tree for all groups for a list search.
 //
-anyTable.prototype.buildGroupTreeAndAttach = function(data,group_data,linkId)
+anyTable.prototype.buildGroupTreeAndAttach = function(data,group_data,linkId,grouping,simple)
 {
   if (!data)
     return null;
@@ -1070,7 +1048,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,group_data,linkId)
   //console.log("buildGroupTreeAndAttach,group_data:");                console.log(group_data);
   //console.log("buildGroupTreeAndAttach,data before building tree:"); console.log(data);
   let data_tree = {};
-  data_tree["grouping"] = this.grouping;
+  data_tree["grouping"] = grouping;
   for (let gidx in data) {
     if (data.hasOwnProperty(gidx) && !gidx.startsWith("grouping")) {
       let ngidx = linkId
@@ -1080,7 +1058,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,group_data,linkId)
                     : gidx;
       if (!data_tree[ngidx]) // TODO! This may not be the correct solution
         data_tree[ngidx] = {};
-      if (this.grouping && data[gidx]) {
+      if (grouping && data[gidx]) {
         data_tree[ngidx]["head"] = "group";
         if (!linkId) {
           data_tree[ngidx]["group_type"] = this.type;
@@ -1106,12 +1084,14 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,group_data,linkId)
           if (data[gidx][idx])
             data_tree[ngidx][this.nameKey] = data[gidx][idx][this.nameKey];
         }
-      } // if this.grouping
+      } // if grouping
       if (!data_tree[ngidx]["data"]) { // TODO! This may not be the correct solution
         data_tree[ngidx]["data"] = this.buildDataTree(data[gidx],null);
+        if (data_tree[ngidx]["data"] && data_tree[ngidx]["data"].data)
+          data_tree[ngidx]["data"] = data_tree[ngidx]["data"].data; // TODO! Not the correct solution!
       }
       // Preserve "grouping_num_results" value
-      if (data[gidx]["grouping_num_results"])
+      if (data[gidx] && data[gidx]["grouping_num_results"])
         data_tree[ngidx]["data"]["grouping_num_results"] = data[gidx]["grouping_num_results"];
       if (data_tree[ngidx]["data"] && !Object.size(data_tree[ngidx]["data"]))
         delete data_tree[ngidx]["data"];
@@ -1121,7 +1101,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,group_data,linkId)
   //
   // If grouping is specified, build group tree and stick data tree to it
   //
-  if (this.grouping &&
+  if (grouping && !simple &&
       (!this.id && this.id !== 0) &&
       (!linkId && linkId !== 0)) {
     /*
@@ -1155,7 +1135,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(data,group_data,linkId)
 }; // buildGroupTreeAndAttach
 
 // Overridden in group table
-anyTable.prototype.dbSearchGroupInfo = async function(type,groupId)
+anyTable.prototype.dbSearchGroupInfo = async function(type,groupId,grouping)
 {
   // Get group tree and append data to it
   let data = {};
@@ -1183,10 +1163,9 @@ anyTable.prototype.buildDataTree = function(flatdata,parentId)
   let retval = {};
   let id_name = this.idKey;
   for (let idx in flatdata) {
-    if (flatdata.hasOwnProperty(idx) && typeof flatdata[idx] === "object") {
+    if (flatdata.hasOwnProperty(idx)) {
       let subdata = flatdata[idx];
-      let has_grouping_data = idx.startsWith("grouping");
-      if (!has_grouping_data) {
+      if (subdata && !idx.startsWith("grouping")) {
         let parent_not_in_group = subdata["parent_id"] && subdata["parent_id"] != "" &&
                                   !flatdata[subdata["parent_id"]] && !flatdata["+"+subdata["parent_id"]];
         let pid = null;
@@ -1194,26 +1173,26 @@ anyTable.prototype.buildDataTree = function(flatdata,parentId)
           pid = subdata["parent_id"];
           delete subdata["parent_id"];
         }
-        if (!subdata["parent_id"])
-          delete subdata["parent_id"]; // = null;
-        if (subdata["parent_id"] == parentId) {
-          let children = null;
-          if (subdata[id_name] && subdata[id_name] != "")
-            children = this.buildDataTree(flatdata,subdata[id_name]);
-          if (children && Object.size(children))
-            subdata["data"] = children;
-          if (parent_not_in_group && (pid || pid === 0))
-            subdata["parent_id"] = pid;
-          //if (subdata)
+        if (typeof subdata === "object" || typeof subdata === "array") {
+          if (!subdata["parent_id"])
+            delete subdata["parent_id"]; // = null;
+          if (subdata["parent_id"] == parentId) {
+            let children = null;
+            if (subdata[id_name] && subdata[id_name] != "")
+              children = this.buildDataTree(flatdata,subdata[id_name]);
+            if (children && Object.size(children))
+              subdata["data"] = children;
+            if (parent_not_in_group && (pid || pid === 0))
+              subdata["parent_id"] = pid;
             retval[idx] = subdata;
-          subdata = null;
-        }
-        else {
-          if (pid != null)
-            subdata["parent_id"] = pid;
-        }
-      } // if
-      //else console.log(subdata);
+            subdata = null;
+          }
+          else {
+            if (pid != null)
+              subdata["parent_id"] = pid;
+          }
+        } // if typeof
+      } // if subdata
     } // if
   } // for
   return retval;
