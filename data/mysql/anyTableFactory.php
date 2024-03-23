@@ -49,10 +49,10 @@ class anyTableFactory
       self::$mError = self::$mDBConn->mError;
       return null;
     }
+    $class_name = $type."Table";
     if (!array_key_exists($type,self::$mTables)) {
-      chdir(dirname(__FILE__)); // Make sure we are in the right place to include type files
-      $class_name = $type."Table";
       $file_name  = "types/".$type."/".$class_name.".php";
+      chdir(dirname(__FILE__)); // Make sure we are in the right place to include type files
       if (!file_exists($file_name)) {
         self::$mError = "anyTableFactory: Table file '$file_name' not found, using default table file 'anyTable.php'. ";
         error_log(self::$mError);
@@ -61,26 +61,26 @@ class anyTableFactory
       else {
         require_once $file_name;
       }
-      if (!class_exists($class_name)) {
-        self::$mError = "anyTableFactory: Class '$class_name' not found, using default table class 'anyTable'. ";
-        error_log(self::$mError);
-        $class_name = "anyTable";
-        self::$mTables[$type] = new $class_name(self::$mDBConn,$type);
-      }
+    }
+    if (!class_exists($class_name)) {
+      self::$mError = "anyTableFactory: Class '$class_name' not found, using default table class 'anyTable'. ";
+      error_log(self::$mError);
+      $class_name = "anyTable";
+      self::$mTables[$type] = new $class_name(self::$mDBConn,$type);
+    }
+    else
+      self::$mTables[$type] = new $class_name(self::$mDBConn);
+    if (self::$mTables[$type] == null) {
+      self::$mError = "Unknown table: ".$type;
+      error_log(self::$mError);
+    }
+    else {
+      if (self::$mTables[$type]->isError())
+        return null;
+      if ($hostTable == null)
+        self::$mTables[$type]->setHostTable(self::$mTables[$type]);
       else
-        self::$mTables[$type] = new $class_name(self::$mDBConn);
-      if (self::$mTables[$type] == null) {
-        self::$mError = "Unknown table: ".$type;
-        error_log(self::$mError);
-      }
-      else {
-        if (self::$mTables[$type]->isError())
-          return null;
-        if ($hostTable == null)
-          self::$mTables[$type]->setHostTable(self::$mTables[$type]);
-        else
-          self::$mTables[$type]->setHostTable($hostTable);
-      }
+        self::$mTables[$type]->setHostTable($hostTable);
     }
     return self::$mTables[$type];
   } // createClass
