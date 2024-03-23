@@ -197,11 +197,6 @@ class anyTable extends dbTable
   $mLinkTypes = null,
 
   /**
-  * @var boolean Whether returned data should be grouped (default = true).
-  */
-  $mGrouping = true,
-
-  /**
   * @var array Contains data for a list or an item. See "Data structure" above.
   */
   $mData = null,
@@ -226,7 +221,6 @@ class anyTable extends dbTable
   */
   $mTablePrefix  = "any_", // TODO! Give as param!
 
-  $mSimpleList   = false, // In a "simple" list search we get only the id, name and parent_id
   $mFilters      = null,
   $mPermission   = null,
   $mSortFunction = null;
@@ -322,10 +316,6 @@ class anyTable extends dbTable
     if ($par_id)
       $this->mId = $par_id;
 
-    $par_grouping = Parameters::get("grouping");
-    if ($par_grouping)
-      $this->mGrouping = $par_grouping;
-
     $par_table_fields = Parameters::get("tableFields");
     if ($par_table_fields)
       $this->mTableFields = $par_table_fields;
@@ -352,7 +342,6 @@ class anyTable extends dbTable
       if (paramOrType["metaId"])              $this->mMetaId              = paramOrType["metaId"];
       if (paramOrType["orderBy"])             $this->mOrderBy             = paramOrType["orderBy"];
       if (paramOrType["orderDir"])            $this->mOrderDir            = paramOrType["orderDir"];
-      if (isset(paramOrType["grouping"]))     $this->mGrouping            = paramOrType["grouping"];
       if (paramOrType["tableName"])           $this->mTableName           = paramOrType["tableName"];
       if (paramOrType["tableNameMeta"])       $this->mTableNameMeta       = paramOrType["tableNameMeta"];
       if (paramOrType["tableNameGroup"])      $this->mTableNameGroup      = paramOrType["tableNameGroup"];
@@ -378,7 +367,6 @@ class anyTable extends dbTable
     if (!$this->mMetaId)            $this->mMetaId         = "meta_id";
     if (!$this->mOrderBy)           $this->mOrderBy        = $this->mNameKey;
     if (!$this->mOrderDir)          $this->mOrderDir       = "DESC";
-    if ($this->mGrouping !== false) $this->mGrouping       = true;
     if (!$this->mTableName)    {
       $this->mTableName = $this->mTablePrefix.$this->mType;
       // No meta table for default (i.e. auto-generated) table
@@ -531,7 +519,7 @@ class anyTable extends dbTable
   //////// finders ////////
   /////////////////////////
 
-  protected function findHeader($inData)
+  protected function findHeader($type,$inData)
   {
     $hdr = "";
     $h = Parameters::get("header");
@@ -540,11 +528,11 @@ class anyTable extends dbTable
     else
     if (!isset($this->mId) || $this->mId == "") {
       if ($h === true || $h === "true")
-        $hdr = $this->findDefaultListHeader($this->mType);
+        $hdr = $this->findDefaultListHeader($type);
     }
     else {
       if ($h !== false && $h !== "false")
-        $hdr = $this->findDefaultItemHeader($this->mType,$inData);
+        $hdr = $this->findDefaultItemHeader($type,$inData);
     }
     return $hdr;
   } // findHeader
@@ -600,19 +588,19 @@ class anyTable extends dbTable
     return $str;
   } // findMetaTableName
 
-  protected function findLinkTableId($type)
+  protected function findLinkTableId($linkType)
   {
-    $str = $type."_id";
+    $str = $linkType."_id";
     return $str;
   } // findLinkTableId
 
-  protected function findLinkTableName($type)
+  protected function findLinkTableName($linkType)
   {
-    if ($type === null || $type === "")
+    if ($linkType === null || $linkType === "")
       return null;
-    if ($type == $this->mType)
+    if ($linkType == $this->mType)
       return $this->mTableName;
-    $ltn = [$type,$this->mType];
+    $ltn = [$linkType,$this->mType];
     sort($ltn);
     $ltn = $this->mTablePrefix.implode("_",$ltn);
     return $ltn;
@@ -652,123 +640,39 @@ class anyTable extends dbTable
    */
   public function dbSearch()
   {
-    $this->mError = "";
-    if (!$this->dbValidateSearch())
+    $type = Parameters::get("type"); if (!$type) $type = $this->mType;
+    $id   = Parameters::get("id");   if (!$id)   $id   = $this->mId;
+    if (!$type) {
+      $this->mError = "dbSearch: type missing. ";
       return null;
-
-    $this->mData = null;
+    }
+    $this->mType  = $type;
+    $this->mId    = $id;
+    $this->mData  = null;
+    $this->mError = "";
 
     $this->initFieldsFromParam();
     $this->initFiltersFromParam();
 
-    if ($this->mId == "max")
+    if ($id == "max")
       $ok = $this->dbSearchMaxId();
     else
-    if ($this->mId == "par")
+    if ($id == "par")
       $ok = $this->dbSearchParents();
     else
-    if ($this->mId || $this->mId === 0)
-      $ok = $this->dbSearchItem($this->mData,$this->mIdKeyTable,$this->mId);
+    if ($id || $id === 0)
+      $ok = $this->dbSearchItem($id);
     else
-      $ok = $this->dbSearchList($this->mData);
+      $ok = $this->dbSearchList();
+
     if (!$ok)
       return null;
 
-    if ($this->mId == "max" || $this->mId == "par")
+    if (!$this->mNumResults || $id == "max" || $id == "par")
       return ($this->mData); // dbSearchMaxId() and dbSearchParents() do not need to call prepareData()
 
-    return $this->mNumResults != 0
-           ? $this->prepareData($this->mData)
-           : $this->mData;
+    return $this->prepareData($type);
   } // dbSearch
-
-  protected function dbValidateSearch()
-  {
-    $this->mError = "";
-    if (!$this->mType || $this->mType == "")
-      $this->mError .= "Type missing. ";
-    if ($this->mError != "")
-      return false;
-    return true;
-  } // dbValidateSearch
-
-  ////////////////////////////// Misc. searches //////////////////////////////
-
-  //
-  // Find max id for a table. Will only work for tables with AUTO_INCREMENT rows.
-  //
-  protected function dbSearchMaxId()
-  {
-    $this->mError    = "";
-    $this->mData     = null;
-    $this->mGrouping = false;
-
-  //$stmt = "SELECT MAX(".$this->mIdKeyTable.") FROM ".$this->mTableName;
-    $stmt = "SELECT AUTO_INCREMENT FROM information_schema.tables ".
-            "WHERE table_name = '".$this->mTableName."' ".
-            "AND table_schema = DATABASE( )";
-    //elog("dbSearchMaxId query:".$stmt);
-    if (!$this->query($stmt))
-      return false;
-    $nextrow = $this->getNext(true);
-    $this->mMaxId = $nextrow !== null && isset($nextrow["AUTO_INCREMENT"])
-                    ? $nextrow["AUTO_INCREMENT"]
-                    : -1;
-    //elog("dbSearchMaxId,mMaxId:".$this->mMaxId);
-    if ($this->mMaxId == -1)
-      $this->setError("Max id not found, AUTO_INCREMENT missing from table? ");
-    $this->mData = [];
-    $this->mData["id"] = $this->mMaxId;
-    return $this->mData;
-  } // dbSearchMaxId
-
-  //
-  // Find all items of a certain type and return simple list of id/name pairs.
-  //
-  protected function dbSearchParents()
-  {
-    $this->mError      = "";
-    $this->mData       = null;
-    $this->mGrouping   = true;
-    $this->mSimpleList = true;
-    if (!$this->dbSearchList($this->mData))
-      return null;
-
-    // TODO! Untested code below.
-    /*
-    $this->mSimpleList = false;
-    $this->dbSearchList($items);
-    //elog("dbSearchParents,items:".var_export($items,true));
-    $sel_arr = array();
-    if ($items != null) {
-      $item_id       = Parameters::get($itemIdKey);
-      $item_id_key   = $itemIdKey;
-      $item_name_key = $itemNameKey;
-      $i = 0;
-      $children = array();
-      if ($item_id_key != null)
-      foreach ($items as $gid => $group) {
-        if ($group != null)
-        foreach ($group as $id => $item) {
-          if (isset($item[$item_id_key])) {
-            $sel_arr[$item[$item_id_key]] = $item[$item_name_key];
-            if (isset($item["parent_id"]) && $item["parent_id"] != "") {
-              // Check that (grand)child is not available as parent
-              if ($item["parent_id"] == $item_id || in_array($item_id,$children)) {
-                $children[$i++] = $item_id;
-                unset($sel_arr[$item[$item_id_key]]);
-              }
-            }
-          }
-        }
-      }
-    }
-    //elog(var_export($sel_arr,true));
-    $this->mData = $sel_arr;
-    */
-
-    return $this->mData;
-  } // dbSearchParents
 
   //////////////////////////////// Item search ////////////////////////////////
 
@@ -776,35 +680,44 @@ class anyTable extends dbTable
   // Search database for an item, including meta data and linked lists.
   // Returns true on success, false on error.
   //
-  protected function dbSearchItem(&$data,$key,$val,$skipLinks=false,$includeUser=true)
+  protected function dbSearchItem($id,$skipLinks=false,$includeUser=true)
   {
+    return $this->dbSearchItemByKey($this->mIdKeyTable,$id,$skipLinks,$includeUser);
+  } // dbSearchItem
+
+  protected function dbSearchItemByKey($key,$val,$skipLinks=false,$includeUser=true)
+  {
+    $grouping = Parameters::get("grouping");
+    $grouping = $grouping !== false && $grouping !== "false" && $grouping !== "0";
+
     if ($key === null || $key == "" || $val === null || $val == "") {
-      $this->setError("Missing key ($key) or value ($val). "); // TODO! i18n
+      $this->setError("Missing key or value. "); // TODO! i18n
       return false;
     }
     $this->mNumResults = 0;
     // Build and execute the query
     $stmt = $this->dbPrepareSearchItemStmt($key,$val,$includeUser);
-    //elog("dbSearchItem:".$stmt);
+    //elog("dbSearchItemByKey:".$stmt);
     if (!$this->query($stmt))
       return false; // An error occured
     // Get the data
-    if ($this->getRowData("item",$data)) {
-      $this->dbSearchMeta("item",$data); // Search and get the meta data
+    if ($this->getRowData("item")) {
+      $this->dbSearchMeta("item"); // Search and get the meta data
       if (!$skipLinks)
-        $this->dbSearchItemLists($data); // Get lists associated with the item
-      $data["+".$this->mId]["item"] = $this->mType;
-      $data["id"] = $this->mId;
+        $this->dbSearchItemLists($grouping); // Get lists associated with the item
+      if ($this->mId) {
+        $this->mData["+".$this->mId]["item"] = $this->mType;
+        $this->mData["id"] = $this->mId;
+      }
       $this->mNumResults = 1;
     }
     return !$this->isError();
-  } // dbSearchItem
+  } // dbSearchItemByKey
 
   protected function dbPrepareSearchItemStmt($key,$val,$includeUser=true)
   {
     // Get query fragments
-    $includeUser  = $includeUser &&
-                    $this->mType != "user" &&
+    $includeUser  = $includeUser && $this->mType != "user" &&
                     isset($this->mTableFieldsLeftJoin) &&
                     isset($this->mTableFieldsLeftJoin["user"]) &&
                     $this->tableExists($this->mTableNameUserLink);
@@ -861,7 +774,7 @@ class anyTable extends dbTable
   //
   // Search for lists associated with the item
   //
-  protected function dbSearchItemLists(&$data)
+  protected function dbSearchItemLists($grouping)
   {
     // If no link types found, return with no error
     if (!isset($this->mLinkTypes))
@@ -873,31 +786,28 @@ class anyTable extends dbTable
     }
     // Search through all registered link types/tables
     foreach ($this->mLinkTypes as $i => $link_type)
-      $this->dbSearchItemListOfType($data,$link_type);
+      $this->dbSearchItemListOfType($link_type,$grouping);
     return true;
   } // dbSearchItemLists
 
-  protected function dbSearchItemListOfType(&$data,$link_type)
+  protected function dbSearchItemListOfType($linkType,$grouping)
   {
-    $link_tablename = $this->findLinkTableName($link_type);
-    //elog($this->mType.";".$link_type.":".$link_tablename);
+    $link_tablename = $this->findLinkTableName($linkType);
     if ($this->tableExists($link_tablename)) {
-      $table = anyTableFactory::createClass($link_type,$this);
-      //elog("created class ".$link_type);
+      $table = anyTableFactory::createClass($linkType,$this);
+      //elog("created class ".$linkType);
       if ($table && ($table->mType != $this->mType || $this->hasParentId())) {
-        $table_data = null;
-        if (!$table->dbSearchList($table_data,$this->mType,$this->mId))
+        if (!$table->dbSearchList($this->mType,$this->mId))
           $this->mError .= $table->getError();
-        if ($table_data) {
+        if ($table->mData) {
           $idx      = "+".$this->mId;
-          $link_idx = "link-".$link_type;
-          $name_key = $table->getNameKey();
-          $data[$idx]["data"]["grouping"] = $table->mGrouping;
-          $data[$idx]["data"][$link_idx]["grouping"] = $table->mGrouping;
-          $data[$idx]["data"][$link_idx]["head"]     = $link_type;
-          $data[$idx]["data"][$link_idx]["data"]     = $table_data;
-          if ($name_key)
-            $data[$idx]["data"][$link_idx][$name_key] = $this->findDefaultItemListHeader($link_type,$table_data,true);
+          $link_idx = "link-".$linkType;
+          $this->mData[$idx]["data"]["grouping"]            = $grouping;
+          $this->mData[$idx]["data"][$link_idx]["grouping"] = $grouping;
+          $this->mData[$idx]["data"][$link_idx]["head"]     = $linkType;
+          $this->mData[$idx]["data"][$link_idx]["data"]     = $table->mData;
+          if ($table->mNameKey)
+            $this->mData[$idx]["data"][$link_idx][$table->mNameKey] = $this->findDefaultItemListHeader($linkType,$table->mData,true);
         }
       }
     }
@@ -913,41 +823,39 @@ class anyTable extends dbTable
   //
   // Returns true on success, false on error
   //
-  protected function dbSearchList(&$data,$linkType=null,$linkId=null)
+  protected function dbSearchList($linkType=null,$linkId=null)
   {
-    $g = Parameters::get("grouping");
-    $s = Parameters::get("simple");
-    $this->mGrouping   = $g !== false && $g !== "false" && $g !== "0";
-    $this->mSimpleList = $s === true  || $s === "true"  || $s === "1";
+    $simple   = Parameters::get("simple"); // In a "simple" list search we get only the id, name and parent_id
+    $simple   = $simple   === true  || $simple   === "true"  || $simple   === "1";
+    $grouping = Parameters::get("grouping");
+    $grouping = $grouping !== false && $grouping !== "false" && $grouping !== "0";
+    $groupId  = Parameters::get("group_id"); // If "groupId" is specified, we need only search in that group.
 
-    $groupId = Parameters::get("group_id"); // If "groupId" is specified, we need only search in that group.
     if ($this->mGroupTable != null)
       $group_data = $this->mGroupTable->mData; // We already have group data
     else
-    if ($this->mGrouping && $this->mType != "group") {
+    if ($grouping && $this->mType != "group") {
       // Get group data to a "flat" list
-      $my_grouping = $this->mGrouping;
       $this->mGroupTable = anyTableFactory::createClass("group",$this);
-      $this->mGroupTable->mGrouping = false;
+      Parameters::set("grouping",false);
       $group_data = $this->mGroupTable->dbSearchGroupInfo($this->mType,$groupId);
       //vlog("dbSearchList,group_data($this->mType,$groupId):",$group_data);
       if ((empty($group_data) || !isset($group_data["group"])))
         $this->setError($this->mGroupTable->mError);
-      if ($this->mType == "group") // TODO! Always false
-        $this->mGrouping = $my_grouping;
+      Parameters::set("grouping",$grouping);
     }
     // Build and execute the query
-    $limit = !$this->mSimpleList ? $this->findLimit() : ""; // Use same limit for all groups
+    $limit = !$simple ? $this->findLimit() : ""; // Use same limit for all groups
     $this->mNumResults = 0; // Init total number of results
     $success = false;
     if ($groupId && $this->mType != "group") {
       // Query data from the given group (or "nogroup")
-      $success = $this->dbExecListStmt($data,$groupId,$linkType,$linkId,$limit);
+      $success = $this->dbExecListStmt($groupId,$this->mType,$linkType,$linkId,$grouping,$simple,$limit);
     }
     else
-    if (!$this->mGrouping || $this->mType == "group") {
+    if (!$grouping || $this->mType == "group") {
       // Query all data, non-grouped
-      $success = $this->dbExecListStmt($data,null,$linkType,$linkId,$limit);
+      $success = $this->dbExecListStmt(null,$this->mType,$linkType,$linkId,$grouping,$simple,$limit);
     }
     else {
       // Query grouped data
@@ -956,7 +864,7 @@ class anyTable extends dbTable
         foreach ($group_data["group"] as $gid => $group) {
           if ($group["group_type"] == $this->mType) {
             if ($this->tableExists($this->mTableNameGroupLink)) {
-              $success = $this->dbExecListStmt($data,$gid,$linkType,$linkId,$limit) || $success;
+              $success = $this->dbExecListStmt($gid,$this->mType,$linkType,$linkId,$grouping,$simple,$limit) || $success;
               if ($gid == "nogroup")
                 $has_nogroup = true;
             }
@@ -965,12 +873,12 @@ class anyTable extends dbTable
       } // if
       // Build and execute the query for ungrouped data (if not queried already)
       if (!$has_nogroup)
-        $success = $this->dbExecListStmt($data,"nogroup",$linkType,$linkId,$limit) || $success;
+        $success = $this->dbExecListStmt("nogroup",$this->mType,$linkType,$linkId,$grouping,$simple,$limit) || $success;
 
       // Build and execute the query for grouped data that may have illegal group type (i.e. not same as list type).
       // Ideally this should not happen, but if it does, such data will not show up unless we do this.
       if ($group_data && isset($group_data["group"]) && $linkId == "") {
-        //$success = $this->dbExecListStmt($data,-1,$linkType,$linkId,$limit) || $success; // -1 signifies this special query
+        //$success = $this->dbExecListStmt(-1,$this->mType,$linkType,$linkId,$grouping,$simple,$limit) || $success; // -1 signifies this special query
         $linktable    = $this->findLinkTableName("group");
         $linktable_id = $this->findLinkTableId("group");
         $stmt =  "SELECT DISTINCT ".$this->mTableName.".*  ".
@@ -989,17 +897,16 @@ class anyTable extends dbTable
           //elog("dbSearchList:".$stmt);
           if (!(!$stmt || $stmt == "" || !$this->query($stmt) || $this->isError())) {
             // Get the data
-            $xdata = null;
-            $ok = $this->getRowData("list",$xdata);
+            $ok = $this->getRowData("list",$grouping,$simple);
             if ($ok) {
-              if ($xdata && $xdata["nogroup"]) {
-                $data["unknown"] = null;
+              if ($this->mData && $this->mData["nogroup"]) {
+                $this->mData["unknown"] = null;
                 $i = 0;
-                foreach ($xdata["nogroup"] as $key => $val) {
-                  $data["unknown"][$key] = $val;
+                foreach ($this->mData["nogroup"] as $key => $val) {
+                  $this->mData["unknown"][$key] = $val;
                   ++$i;
                 }
-                $data["unknown"]["grouping_num_results"] = $i;
+                $this->mData["unknown"]["grouping_num_results"] = $i;
               }
               $x=0;
             }
@@ -1012,8 +919,8 @@ class anyTable extends dbTable
       return !$this->isError();
 
     // Search and get the meta data
-    if (!$this->mSimpleList)
-      $this->dbSearchMeta("list",$data,$linkType,$linkId);
+    if (!$simple)
+      $this->dbSearchMeta("list",$linkType,$linkId);
 
     // Sort the list
     if ($this->mSortFunction)
@@ -1025,30 +932,32 @@ class anyTable extends dbTable
       $group_data  = $this->mData;
     }
     if ($this->mType != "group")
-      $this->mGroupTable->mGrouping = true;
+      Parameters::set("grouping",true);
     $group_data["group"] = $this->mGroupTable->buildDataTree($group_data["group"]);
-    $this->buildGroupTreeAndAttach($data,$group_data,$linkId);
+    $this->buildGroupTreeAndAttach($group_data,$this->mType,$linkId,$grouping,$simple);
+    if ($this->mType != "group")
+      Parameters::set("grouping",$grouping);
     //vlog("dbSearchList, tree list data:",$this->mData);
 
     return !$this->isError();
   } // dbSearchList
 
-  protected function dbExecListStmt(&$data,$gid=null,$linkType=null,$linkId=null,$limit="")
+  protected function dbExecListStmt($gid=null,$type=null,$linkType=null,$linkId=null,$grouping=true,$simple=false,$limit="")
   {
     // Build and execute the query for a group
     if ($gid == "nogroup")
       $gid = null;
-    $partial_stmt = $this->dbPrepareSearchListStmt($gid,$linkType,$linkId);
+    $partial_stmt = $this->dbPrepareSearchListStmt($gid,$type,$linkType,$linkId,$grouping);
     $stmt = $partial_stmt.$limit;
     //elog("dbExecListStmt1:".$stmt);
     if (!$this->query($stmt) || $this->isError())
       return false; // Something went wrong
     // Get the data
-    $success = $this->getRowData("list",$data);
+    $success = $this->getRowData("list",$grouping,$simple);
 
     if ($limit != "") {
       // Count how many rows would have been returned without LIMIT
-      $part_stmt = $this->dbPrepareSearchListStmt($gid,$linkType,$linkId);
+      $part_stmt = $this->dbPrepareSearchListStmt($gid,$type,$linkType,$linkId,$grouping);
       $count_stmt = "SELECT count(*) AS num_results FROM (".
                     $part_stmt.
                     ") AS dummy";
@@ -1058,8 +967,8 @@ class anyTable extends dbTable
       $row = $this->getNext(true);
       if ($row && isset($row["num_results"]) && $row["num_results"] != "0") {
         if (!$gid || $gid == "") {
-          if (!$this->mGrouping || $this->mSimpleList)
-            $gr_idx = $this->mType;
+          if (!$grouping || $simple)
+            $gr_idx = $type; // TODO! Check for null/undef type
           else
             $gr_idx = "nogroup";
         }
@@ -1068,7 +977,7 @@ class anyTable extends dbTable
           $gr_idx = intval($gid);
         else
           $gr_idx = $gid;
-        $data[$gr_idx]["grouping_num_results"] = $row["num_results"];
+        $this->mData[$gr_idx]["grouping_num_results"] = $row["num_results"];
         $this->mNumResults += $row["num_results"];
         //elog("num_res:".$this->mNumResults);
       }
@@ -1082,22 +991,24 @@ class anyTable extends dbTable
         $gr_idx = intval($gid);
       else
         $gr_idx = $gid;
-      if (array_key_exists($gr_idx,$data)) {
-        $n = sizeof($data[$gr_idx]);
-        $data[$gr_idx]["grouping_num_results"] = $n;
+      if (array_key_exists($gr_idx,$this->mData)) {
+        $n = sizeof($this->mData[$gr_idx]);
+        $this->mData[$gr_idx]["grouping_num_results"] = $n;
         $this->mNumResults += $n;
       }
     }
     return $success;
   } // dbExecListStmt
 
-  protected function dbPrepareSearchListStmt($gid=null,$linkType=null,$linkId=null)
+  protected function dbPrepareSearchListStmt($gid=null,$type=null,$linkType=null,$linkId=null,$grouping=true)
   {
     // Get query fragments
-    $select    = $this->findListSelect  ($gid,$linkType,$linkId);
-    $left_join = $this->findListLeftJoin($gid,$linkType,$linkId);
-    $where     = $this->findListWhere   ($gid,$linkType,$linkId);
-    $order_by  = $this->findListOrderBy ();
+    $search_term = Parameters::get("term");
+    $group_type  = Parameters::get("group_type");
+    $select      = $this->findListSelect  ($gid,$type,$linkType,$linkId,$grouping);
+    $left_join   = $this->findListLeftJoin($gid,$type,$linkType,$linkId,$grouping);
+    $where       = $this->findListWhere   ($gid,$type,$linkType,$linkId,$grouping,$group_type,$search_term);
+    $order_by    = $this->findListOrderBy ();
 
     // Build the query
     $stmt = $select.
@@ -1108,13 +1019,13 @@ class anyTable extends dbTable
     return $stmt;
   } // dbPrepareSearchListStmt
 
-  protected function findListSelect($gid,$linkType=null,$linkId=null)
+  protected function findListSelect($gid,$type=null,$linkType=null,$linkId=null,$grouping=true)
   {
     // Select from own table
     $sl = "SELECT DISTINCT ".$this->mTableName.".* ";
 
     // Always select from group table, except if has parent_id while being a list-for list
-    if (($gid || $gid === 0) && $this->mGroupTable && $this->mType != "group") {
+    if (($gid || $gid === 0) && $this->mGroupTable && $type != "group") {
       foreach ($this->mGroupTable->mTableFields as $field) {
         if ($field != "parent_id") // To avoid conflict with the current tables parent_id
           $sl .= ", ".$this->mTableNameGroup.".".$field;
@@ -1137,27 +1048,27 @@ class anyTable extends dbTable
     return $sl;
   } // findListSelect
 
-  protected function findListLeftJoin($gid,$linkType=null,$linkId=null)
+  protected function findListLeftJoin($gid,$type=null,$linkType=null,$linkId=null,$grouping=true)
   {
     $cur_uid = $this->mPermission["current_user_id"];
     $lj = "";
     if ($this->hasParentId())
       $lj .= "LEFT JOIN ".$this->mTableName." temp ON ".$this->mTableName.".parent_id=temp.".$this->mIdKey." ";
     // Always left join group table, except if has parent_id while being a list-for list
-    if ($this->mType != "group")
-      $lj .= $this->findListLeftJoinOne($cur_uid,$gid,"group",$linkId);
+    if ($type != "group")
+      $lj .= $this->findListLeftJoinOne($cur_uid,$gid,$type,"group",$linkId,$grouping);
 
     // Left join link  table
     if (isset($linkId) && $linkId != "" && isset($linkType)) {
       if ($linkType != "group" &&
           isset($this->mTableFieldsLeftJoin) && isset($this->mTableFieldsLeftJoin[$linkType])) {
-        $lj .= $this->findListLeftJoinOne($cur_uid,$gid,$linkType,$linkId);
+        $lj .= $this->findListLeftJoinOne($cur_uid,$gid,$type,$linkType,$linkId,$grouping);
       }
     }
     return $lj;
   } // findListLeftJoin
 
-  protected function findListLeftJoinOne($cur_uid,$gid,$linkType=null,$linkId=null)
+  protected function findListLeftJoinOne($cur_uid,$gid,$type=null,$linkType=null,$linkId=null,$grouping=true)
   {
     $linktable     = $this->findLinkTableName($linkType);
     $typetable     = $this->findTypeTableName($linkType);
@@ -1186,35 +1097,36 @@ class anyTable extends dbTable
         }
       }
     }
-    if ($has_typetable && $linkType == "group" && $gid) {
+    if ($has_typetable && $linkType == "group" && ($gid || $gid === 0)) {
       $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
       $lj .= "LEFT JOIN ".$typetable." ON CAST(".$typetable.".".$typetable_id." AS INT)=".$db_gid." ";
-      $lj .= "AND ".$this->mTableNameGroup.".group_type='".$this->mType."' ";
+      $lj .= "AND ".$this->mTableNameGroup.".group_type='".$type."' ";
       if ($has_metatable) {
         $lj .= "LEFT JOIN ".$metatable.  " ON CAST(".$metatable.".".$metatable_id." AS INT)=".$db_gid." ";
-        $lj .= "AND ".$this->mTableNameGroup.".group_type='".$this->mType."' ";
+        $lj .= "AND ".$this->mTableNameGroup.".group_type='".$type."' ";
       }
     }
     return $lj;
   } // findListLeftJoinOne
 
-  protected function findListWhere($gid,$linkType=null,$linkId=null)
+  protected function findListWhere($gid,$type=null,$linkType=null,$linkId=null,$grouping=true,$groupType=null,$searchTerm="")
   {
     $where = null;
-    $skipOwnType = $linkType == $this->mType;
+    $skipOwnType = $linkType == $type;
     $link_tablename = $this->findLinkTableName($linkType);
     if (!$skipOwnType &&
         isset($linkType) &&
         isset($linkId)   && $linkId != "nogroup" &&
         $this->tableExists($link_tablename)) {
-      $where_id = $link_tablename.".".$linkType."_id='".$linkId."' "; // TODO! semi-hardcoded id of link table
+      $db_id = $linkType == "group" ? "'"+$linkId+"'" : $linkId;
+      $where_id = $link_tablename.".".$linkType."_id=".$db_id." "; // TODO! semi-hardcoded id of link table
       $where .= "WHERE ".$where_id;
     }
     $has_group_linktable = $this->tableExists($this->mTableNameGroupLink);
     // If has parent_id while being a list-for list
     if ($this->hasParentId() && (isset($linkType) || (isset($this->mId) && $this->mId != ""))) {
       if (isset($this->mId) && $this->mId != "" && is_numeric($this->mId) &&
-          (!isset($linkType) || (isset($linkType) && $linkType == $this->mType))) {
+          (!isset($linkType) || (isset($linkType) && $linkType == $type))) {
         $gstr = $this->mTableName.".".$this->mIdKeyTable." IN ( ".
                 "SELECT ".$this->mTableName.".".$this->mIdKeyTable." ".
                 "FROM (SELECT @pv := '$this->mId') ".
@@ -1231,24 +1143,23 @@ class anyTable extends dbTable
     }
     if ($skipOwnType &&
         $this->mId != "nogroup") {
-      $skip_str = $this->mTableName.".".$this->mIdKeyTable." != '".$this->mId."'";
+      $db_id = $this->mType == "group" ? "'"+$this->mId+"'" : $this->mId;
+      $skip_str = $this->mTableName.".".$this->mIdKeyTable." != ".$db_id."";
       if ($where === null)
         $where  = "WHERE (".$skip_str.") ";
       else
         $where .= " AND (".$skip_str.") ";
     }
-    $search_term = Parameters::get("term");
-    if ($search_term) {
-      $term_str = $this->mTableName.".".$this->mNameKey." LIKE '%".$search_term."%'";
+    if ($searchTerm) {
+      $term_str = $this->mTableName.".".$this->mNameKey." LIKE '%".$searchTerm."%'";
       if ($where === null)
         $where  = "WHERE (".$term_str.") ";
       else
         $where .= " AND (".$term_str.") ";
     }
     if ($gid) {
-      $group_type = Parameters::get("group_type");
-      if ($group_type) {
-        $gt_str = $this->mTableNameGroup.".group_type='".$group_type."' ";
+      if ($groupType) {
+        $gt_str = $this->mTableNameGroup.".group_type='".$groupType."' ";
         if ($where === null)
           $where  = " WHERE ".$gt_str;
         else
@@ -1266,12 +1177,12 @@ class anyTable extends dbTable
         }
         else {
           if ($this->mMessage == "")
-            $this->mMessage .= "No link table for '$this->mType' group. ";
+            $this->mMessage .= "No link table for '$type' group. ";
         }
       }
     }
     else {
-      if ($this->mGrouping && $this->mType != "group" && $has_group_linktable &&
+      if ($grouping && $type != "group" && $has_group_linktable &&
           !($this->hasParentId() && (isset($linkType) || (isset($this->mId) && $this->mId != "")))) {
         $n_str = $this->mTableNameGroupLink.".group_id is null ";
         if ($where === null)
@@ -1286,11 +1197,11 @@ class anyTable extends dbTable
   protected function findListOrderBy()
   {
     $order = Parameters::get("order");
+    $dir   = Parameters::get("dir");
     if ($order)
-      $this->mOrderBy = ltrim($order);
-    if (Parameters::get("dir"))
-      $this->mOrderDir = ltrim(Parameters::get("dir"));
-
+      $this->mOrderBy  = ltrim($order);
+    if ($dir)
+      $this->mOrderDir = ltrim($dir);
     if (!isset($this->mOrderBy))
       return "";
     $dir = $this->mOrderDir ? $this->mOrderDir : "";
@@ -1302,11 +1213,12 @@ class anyTable extends dbTable
 
   protected function findLimit()
   {
-    $num = Parameters::get("num");
+    $num  = Parameters::get("num");
+    $from = Parameters::get("from");
     if (!$num || $num == "")
       return "";
     $lim = "LIMIT ".$num." ";
-    $from = Parameters::get("from");
+    $from = $from;
     if ($from)
       $lim .= "OFFSET ".$from." ";
     return $lim;
@@ -1320,7 +1232,7 @@ class anyTable extends dbTable
   //////////////////////////////// Metadata search ////////////////////////////////
 
   // Get the meta data
-  protected function dbSearchMeta($mode,&$data,$linkType=null,$linkId=null)
+  protected function dbSearchMeta($mode,$linkType=null,$linkId=null,$grouping=true)
   {
     if (!$this->tableExists($this->mTableNameMeta)) {
       //$this->mMessage .= "No meta table for '$this->mType' type. ";
@@ -1364,8 +1276,83 @@ class anyTable extends dbTable
       return false;
 
     // Get the data
-    return $this->getRowMetaData($mode,$data);
+    return $this->getRowMetaData($mode,$this->mData,$grouping);
   } // dbSearchMeta
+
+  ////////////////////////////// Misc. searches //////////////////////////////
+
+  //
+  // Find max id for a table. Will only work for tables with AUTO_INCREMENT rows.
+  //
+  protected function dbSearchMaxId()
+  {
+    $this->mError = "";
+    $this->mData  = null;
+
+  //$stmt = "SELECT MAX(".$this->mIdKeyTable.") FROM ".$this->mTableName;
+    $stmt = "SELECT AUTO_INCREMENT FROM information_schema.tables ".
+            "WHERE table_name = '".$this->mTableName."' ".
+            "AND table_schema = DATABASE( )";
+    //elog("dbSearchMaxId query:".$stmt);
+    if (!$this->query($stmt))
+      return false;
+    $nextrow = $this->getNext(true);
+    $this->mMaxId = $nextrow !== null && isset($nextrow["AUTO_INCREMENT"])
+                    ? $nextrow["AUTO_INCREMENT"]
+                    : -1;
+    //elog("dbSearchMaxId,mMaxId:".$this->mMaxId);
+    if ($this->mMaxId == -1)
+      $this->setError("Max id not found, AUTO_INCREMENT missing from table? ");
+    $this->mData = [];
+    $this->mData["id"] = $this->mMaxId;
+    return $this->mData;
+  } // dbSearchMaxId
+
+  //
+  // Find all items of a certain type and return simple list of id/name pairs.
+  //
+  protected function dbSearchParents()
+  {
+    $this->mError      = "";
+    $this->mData       = null;
+    Parameters::set("simple",true);
+    Parameters::set("grouping",true);
+    if (!$this->dbSearchList())
+      return null;
+
+    // TODO! Untested code below.
+    /*
+    $this->dbSearchList();
+    //elog("dbSearchParents,items:".var_export($this->mData,true));
+    $sel_arr = array();
+    if ($this->mData != null) {
+      $item_id       = Parameters::get($itemIdKey);
+      $item_id_key   = $itemIdKey;
+      $item_name_key = $itemNameKey;
+      $i = 0;
+      $children = array();
+      if ($item_id_key != null)
+      foreach ($this->mData as $gid => $group) {
+        if ($group != null)
+        foreach ($group as $id => $item) {
+          if (isset($item[$item_id_key])) {
+            $sel_arr[$item[$item_id_key]] = $item[$item_name_key];
+            if (isset($item["parent_id"]) && $item["parent_id"] != "") {
+              // Check that (grand)child is not available as parent
+              if ($item["parent_id"] == $item_id || in_array($item_id,$children)) {
+                $children[$i++] = $item_id;
+                unset($sel_arr[$item[$item_id_key]]);
+              }
+            }
+          }
+        }
+      }
+    }
+    //elog(var_export($sel_arr,true));
+    $this->mData = $sel_arr;
+    */
+    return $this->mData;
+  } // dbSearchParents
 
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Data retrieval //////////////////////////////
@@ -1374,15 +1361,15 @@ class anyTable extends dbTable
   //
   // Get the data from query result to array
   //
-  protected function getRowData($mode,&$data)
+  protected function getRowData($mode,$grouping=true,$simple=false)
   {
     $this->mLastNumRows = 0; // Used to break (theoretical) infinite recursion
     $filter = $mode == "list"
               ? $this->mFilters["list"]
               : $this->mFilters["item"];
     //elog("getRowData,filter:".var_export($filter,true));
-    if (!$data)
-      $data = array();
+    if (!$this->mData)
+      $this->mData = array();
     $has_meta_table  = $this->tableExists($this->mTableNameMeta);
     while (($nextrow = $this->getNext(true)) !== null) {
       //elog("getRowData,nextrow:".var_export($nextrow,true));
@@ -1390,7 +1377,7 @@ class anyTable extends dbTable
       $gid  = isset($nextrow["group_id"]) && $nextrow["group_type"] == $this->mType
               ? $nextrow["group_id"]
               : "nogroup";
-      $gidx = $this->mGrouping && $this->mType != "group"
+      $gidx = $grouping && $this->mType != "group"
               ? $gid
               : $this->mType;
       $idx = isset($nextrow[$this->mIdKeyTable])
@@ -1403,16 +1390,16 @@ class anyTable extends dbTable
       $idx = isInteger($idx) ? "+".$idx : $idx;
 
       if ($mode == "list" || $mode == "head")
-        $data[$gidx][$idx][$mode] = $this->mType; // TODO! Shouldnt it be data[gidx]["data"][idx] ?
+        $this->mData[$gidx][$idx][$mode] = $this->mType; // TODO! Shouldnt it be data[gidx]["data"][idx] ?
       else // mode == "item"
-        $data[$idx][$mode] = $this->mType;
+        $this->mData[$idx][$mode] = $this->mType;
 
       // Main table
       if (isset($this->mTableFields)) {
         for ($t=0; $t<count($this->mTableFields); $t++) {
           $field = $this->mTableFields[$t];
-          if (!$this->mSimpleList || $field == $this->mIdKeyTable || $field == $this->mNameKey || $field == "parent_id")
-            $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$mode);
+          if (!$simple || $field == $this->mIdKeyTable || $field == $this->mNameKey || $field == "parent_id")
+            $this->getCellData($field,$nextrow,$this->mData,$idx,$gidx,$filter,$mode);
         } // for
       }
 
@@ -1420,8 +1407,8 @@ class anyTable extends dbTable
       if (isset($this->mTableFieldsMeta) && $has_meta_table) {
         for ($t=0; $t<count($this->mTableFieldsMeta); $t++) {
           $field = $this->mTableFieldsMeta[$t];
-          if (!$this->mSimpleList || $field == $this->mIdKey || $field == $this->mNameKey || $field == "parent_id")
-            $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$mode);
+          if (!$simple || $field == $this->mIdKey || $field == $this->mNameKey || $field == "parent_id")
+            $this->getCellData($field,$nextrow,$this->mData,$idx,$gidx,$filter,$mode);
         } // for
       }
 
@@ -1431,16 +1418,16 @@ class anyTable extends dbTable
           if (isset($this->mTableFieldsLeftJoin[$link_type])) {
             for ($t=0; $t<count($this->mTableFieldsLeftJoin[$link_type]); $t++) {
               $field = $this->mTableFieldsLeftJoin[$link_type][$t];
-              if (!$this->mSimpleList || $field == $this->mIdKey || $field == $this->mNameKey || $field == "parent_id")
-                $this->getCellData($field,$nextrow,$data,$idx,$gidx,$filter,$mode);
+              if (!$simple || $field == $this->mIdKey || $field == $this->mNameKey || $field == "parent_id")
+                $this->getCellData($field,$nextrow,$this->mData,$idx,$gidx,$filter,$mode);
             } // for
           } // if
         } // foreach
       } // if
     } // while
-    //elog("getRowData1 ($this->mType),data:".var_export($data,true));
+    //elog("getRowData1 ($this->mType),data:".var_export($this->mData,true));
 
-    if ($data === null || empty($data))
+    if ($this->mData === null || empty($this->mData))
       return false;
     return true;
   } // getRowData
@@ -1532,7 +1519,7 @@ class anyTable extends dbTable
   //
   // Get the meta data from table row(s) to array
   //
-  protected function getRowMetaData($mode,&$data)
+  protected function getRowMetaData($mode,&$data,$grouping=true)
   {
     if (!$this->tableExists($this->mTableNameMeta))
       return false;
@@ -1549,7 +1536,7 @@ class anyTable extends dbTable
         $idx  = "+".$idx;
       $gidx = $this->mType == "group"
               ? "group"
-              : (!$this->mGrouping
+              : (!$grouping
                  ? $this->mType
                  : (isset($nextrow["group_id"])
                    ? $nextrow["group_id"]
@@ -1589,19 +1576,19 @@ class anyTable extends dbTable
   //
   // Build the data group tree for all groups for a list search.
   //
-  protected function buildGroupTreeAndAttach(&$data,$group_data,$linkId=null)
+  protected function buildGroupTreeAndAttach($group_data,$type,$linkId=null,$grouping=true,$simple=false)
   {
-    if (!$data || empty($data))
+    if (!$this->mData || empty($this->mData))
       return;
     $this->mRecurseDepth = 0;
 
     // Make sure parent/child items are present in all groups where parent exists
-    //vlog("buildGroupTreeAndAttach,data before copying parent/child:",$data);
-    foreach ($data as $gidx => $grp) {
+    //vlog("buildGroupTreeAndAttach,data before copying parent/child:",$this->mData);
+    foreach ($this->mData as $gidx => $grp) {
       foreach ($grp as $idx => $item) {
         if (isset($item["parent_id"])) {
           $pid = $item["parent_id"];
-          foreach ($data as $gidx2 => &$grp2) {
+          foreach ($this->mData as $gidx2 => &$grp2) {
             $item_parent = isset($grp2[$pid])
                            ? $grp2[$pid]
                            : ( isset($grp2["+".$pid])
@@ -1625,28 +1612,28 @@ class anyTable extends dbTable
 
     // Build data tree
     //vlog("buildGroupTreeAndAttach,group_data:",               $group_data);
-    //vlog("buildGroupTreeAndAttach,data before building tree:",$data);
+    //vlog("buildGroupTreeAndAttach,data before building tree:",$this->mData);
     $data_tree = array();
-    $data_tree["grouping"] = $this->mGrouping;
-    foreach ($data as $gidx => $grp) {
+    $data_tree["grouping"] = $grouping;
+    foreach ($this->mData as $gidx => $grp) {
       $ngidx = isset($linkId)
-               ? $this->mType
+               ? $type
                : ( isInteger($gidx)
                    ? "+".$gidx
                    : $gidx );
       if (!isset($data_tree[$ngidx])) // TODO! This may not be the correct solution
         $data_tree[$ngidx] = array();
-      if ($this->mGrouping && !empty($data[$gidx])) { // Add a head data layer
+      if ($grouping && !empty($this->mData[$gidx])) { // Add a head data layer
         $data_tree[$ngidx]["head"] = "group";
         if (!isset($this->mId) || $this->mId == "") {
-          $data_tree[$ngidx]["group_type"] = $this->mType;
+          $data_tree[$ngidx]["group_type"] = $type;
           $data_tree[$ngidx]["group_id"]   = $ngidx;
           $gname = isset($group_data) && isset($group_data["group"]) && isset($group_data["group"][$ngidx])
                    ? $group_data["group"][$ngidx]["group_name"]
                    : ucfirst($data_tree[$ngidx]["group_type"])." groups"; // TODO i18n
-          if ($this->mType != "group") {
+          if ($type != "group") {
             if (!$gname || $gname == "")
-              $gname = $this->findDefaultHeader($this->mType);
+              $gname = $this->findDefaultHeader($type);
           }
           else {
             if (!$gname || $gname == "")
@@ -1658,16 +1645,19 @@ class anyTable extends dbTable
           $data_tree[$ngidx]["group_name"] = $gname;
         }
         else {
-          $idx = isset($data[$gidx][$this->mId]) ? $this->mId : "+".$this->mId;
-          if (isset($data[$gidx][$idx]))
-            $data_tree[$ngidx][$this->mNameKey] = $data[$gidx][$idx][$this->mNameKey];
+          $idx = isset($this->mData[$gidx][$this->mId]) ? $this->mId : "+".$this->mId;
+          if (isset($this->mData[$gidx][$idx]))
+            $data_tree[$ngidx][$this->mNameKey] = $this->mData[$gidx][$idx][$this->mNameKey];
         }
-      } // if mGrouping
-      if (!isset($data_tree[$ngidx]["data"])) // TODO! This may not be the correct solution
-        $data_tree[$ngidx]["data"] = $this->buildDataTree($data[$gidx],null);
+      } // if grouping
+      if (!isset($data_tree[$ngidx]["data"])) { // TODO! This may not be the correct solution
+        $data_tree[$ngidx]["data"] = $this->buildDataTree($this->mData[$gidx],null);
+        if (isset($data_tree[$ngidx]["data"]) && isset($data_tree[$ngidx]["data"]["data"]))
+          $data_tree[$ngidx]["data"] = $data_tree[$ngidx]["data"]["data"]; // TODO! Not the correct solution!
+      }
       // Preserve "grouping_num_results" value
-      if (isset($data[$gidx]["grouping_num_results"]))
-        $data_tree[$ngidx]["data"]["grouping_num_results"] = $data[$gidx]["grouping_num_results"];
+      if (isset($this->mData[$gidx]["grouping_num_results"]))
+        $data_tree[$ngidx]["data"]["grouping_num_results"] = $this->mData[$gidx]["grouping_num_results"];
       if ($data_tree[$ngidx]["data"] === null)
         unset($data_tree[$ngidx]["data"]);
     } // foreach
@@ -1675,7 +1665,7 @@ class anyTable extends dbTable
     //
     // If grouping is specified, build group tree and stick data tree to it
     //
-    if ($this->mGrouping && !$this->mSimpleList &&
+    if ($grouping && !$simple &&
         (!isset($this->mId) || $this->mId == "") &&
         !isset($linkId)) {
       if (!isset($data_tree["unknown"]))
@@ -1684,25 +1674,25 @@ class anyTable extends dbTable
         $group_data["group"]["unknown"] = null;
         $group_data["group"]["unknown"]["group_id"]   = "unknown";
         $group_data["group"]["unknown"]["group_name"] = "Unknown"; // TODO! i18n
-        $group_data["group"]["unknown"]["group_description"] = ucfirst($this->mType)."s belonging to non-".$this->mType." group&nbsp;&nbsp;".
+        $group_data["group"]["unknown"]["group_description"] = ucfirst($type)."s belonging to non-".$type." group&nbsp;&nbsp;".
                                                                '<i style="color:red" class="fa fad fa-exclamation-triangle"></i>'; // TODO! i18n and CSS
       }
       if (!isset($group_data["group"]))
         $group_data["group"] = array();
-      $this->dbAttachToGroups($group_data["group"],$data_tree);
+      $this->dbAttachToGroups($group_data["group"],$data_tree,$type);
       $group_data["group"]["grouping"] = true;
       //vlog("buildGroupTreeAndAttach,group_data:",$group_data);
-      $data = $group_data["group"];
+      $this->mData = $group_data["group"];
     }
     else {
       if (isset($linkId))
-        $data = isset($data_tree[$this->mType]) && isset($data_tree[$this->mType]["data"])
-                ? $data_tree[$this->mType]["data"]
-                : $data_tree;
+        $this->mData = isset($data_tree[$type]) && isset($data_tree[$type]["data"])
+                       ? $data_tree[$type]["data"]
+                       : $data_tree;
       else
-        $data = $data_tree;
+        $this->mData = $data_tree;
     }
-    //vlog("buildGroupTreeAndAttach,data after building tree:",$data);
+    //vlog("buildGroupTreeAndAttach,data after building tree:",$this->mData);
   } // buildGroupTreeAndAttach
 
   // Overridden in group table
@@ -1766,12 +1756,12 @@ class anyTable extends dbTable
               $subdata["parent_id"] = $pid;
           }
         } // if is_array
-      } // if has_grouping_data
+      } // if isset
     } // foreach
     return $retval;
   } // buildDataTree
 
-  private function dbAttachToGroups(&$group_tree,$data_tree)
+  private function dbAttachToGroups(&$group_tree,$data_tree,$type)
   {
     //vlog("dbAttachToGroups,group_tree:",$group_tree);
     //vlog("dbAttachToGroups,data_tree:", $data_tree);
@@ -1782,7 +1772,7 @@ class anyTable extends dbTable
         if (isset($group["data"])) {
           // TODO! Not tested!
           $group["head"] = "group";
-          if ($this->mType != "group") {
+          if ($type != "group") {
             if ($group["list"]) unset($group["list"]);
             if ($group["item"]) unset($group["item"]);
           }
@@ -1796,7 +1786,7 @@ class anyTable extends dbTable
         if (isset($idx) && $data_tree[$idx] !== null) {
           if (isset($data_tree[$idx]["data"]) && $data_tree[$idx]["data"] != "") {
             $group["head"] = "group";
-            if ($this->mType != "group") {
+            if ($type != "group") {
               // TODO! Not tested!
               if (isset($group["list"])) unset($group["list"]);
               if (isset($group["item"])) unset($group["item"]);
@@ -1825,12 +1815,12 @@ class anyTable extends dbTable
    *
    * #### Example
    *```
-   *      $data = $myTable->prepareData($inData);
+   *      $data = $myTable->prepareData($type);
    *```
    */
-  public function prepareData(&$inData)
+  public function prepareData($type)
   {
-    //vlog("inData before prepare:",$inData);
+    //vlog("data before prepare:",$this->mData);
     // Make room for a top level header
     $topidx = "+0";
     if (($this->mId || $this->mId === 0) && $this->mId != "")
@@ -1838,9 +1828,9 @@ class anyTable extends dbTable
     $data = array("data" => array($topidx => null));
 
     // Set header and "head"
-    $hdr = $this->findHeader($inData);
+    $hdr = $this->findHeader($type,$this->mData);
     if (($this->mId || $this->mId === 0) && $this->mId != "") {
-      $data["data"][$topidx]["head"] = $this->mType;
+      $data["data"][$topidx]["head"] = $type;
       if (isset($hdr) && $hdr != "")
         $data["data"][$topidx][$this->mNameKey] = $hdr;
     }
@@ -1850,34 +1840,35 @@ class anyTable extends dbTable
         $data["data"][$topidx]["group_name"] = $hdr;
     }
     // Set group type
-    $data["data"][$topidx]["group_type"] = $this->mType;
+    $data["data"][$topidx]["group_type"] = $type;
 
     // Set data
-    $data["data"][$topidx]["data"] = $inData;
+    $data["data"][$topidx]["data"] = $this->mData;
 
     // Set link types
     $data["link_types"] = $this->mLinkTypes;
 
+    $this->mData = $data;
     //vlog("data after prepare:",$data);
-    return $data;
+
+    return $this->mData;
   } // prepareData
 
   public function prepareParents($type,$itemIdKey,$itemNameKey)
   {
     // TODO! Untested. See also searchParents()
     return null;
-    $this->mSimpleList = false;
-    $this->dbSearchList($items);
-    //elog("prepareParents,items:".var_export($items,true));
+    $this->dbSearchList();
+    //elog("prepareParents,items:".var_export($this->mData,true));
     $sel_arr = array();
-    if ($items != null) {
+    if ($this->mData != null) {
       $item_id       = Parameters::get($itemIdKey);
       $item_id_key   = $itemIdKey;
       $item_name_key = $itemNameKey;
       $i = 0;
       $children = array();
       if ($item_id_key != null)
-      foreach ($items as $gid => $group) {
+      foreach ($this->mData as $gid => $group) {
         if ($group != null)
         foreach ($group as $id => $item) {
           if (isset($item[$item_id_key])) {
@@ -2320,14 +2311,16 @@ class anyTable extends dbTable
     $this->setMessage($this->mUpdateSuccessMsg);
 
     // Get the (updated) list for the item
-    $ok = $this->dbSearchItemListOfType($data,$link_type);
+    $grouping = Parameters::get("grouping");
+    $grouping = $grouping !== false && $grouping !== "false" && $grouping !== "0";
+    $ok = $this->dbSearchItemListOfType($this->mType,$link_type,$grouping);
 
     if (!$ok)
       return null;
     $this->mData = array();
-    if ($data)
-      $this->mData = $data["+".$id];
-    return $this->mData; //$this->prepareData($this->mData);
+    if ($this->mData)
+      $this->mData = $this->mData["+".$id];
+    return $this->mData; //$this->prepareData($this->mType);
   } // dbUpdateLinkList
 
   // Update the fields of a link. The link must exist in the link table.
