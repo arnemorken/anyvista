@@ -1714,7 +1714,8 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
         let style_str = disp_str || pln_str ? "style='"+disp_str+pln_str+"'" : "";
         let td  = $("<td id='"+td_id+"' class='any-td any-list-td "+odd_even+" "+class_id+"' "+style_str+"></td>");
         tr.append(td);
-        let str = this.getCellEntryStr(id,type,mode,row_id_str,filter_id,filter_key,data[id],data.lists,edit,model_str,td);
+        let lists = filter_key.TYPE == "list" && data[id] && data[id].data ? data[id].data["link-"+filter_key.LIST] : null;
+        let str = this.getCellEntryStr(id,type,mode,row_id_str,filter_id,filter_key,data[id],lists,edit,model_str,td);
         if (typeof str == "string")
           td.append(str);
         this.initTableDataCell(td_id,type,mode,data,id,id_str,row_id_str,filter,filter_id,filter_key,edit,n,par_data,par_id);
@@ -1744,7 +1745,8 @@ $.any.anyView.prototype.refreshTableDataIngress = function (params)
   let filter_key = filter[filter_id];
 
   if (data[id] && data[id][filter_id]) {
-    let str = this.getCellEntryStr(id,type,mode,row_id_str,filter_id,filter_key,data[id],data.lists,edit);
+    let lists = filter_key.TYPE == "list" && data[id] && data[id].data ? data[id].data["link-"+filter_key.LIST] : null;
+    let str = this.getCellEntryStr(id,type,mode,row_id_str,filter_id,filter_key,data[id],lists,edit);
     let ncells = Object.size(data[id]);
     let odd_even = this.options.useOddEvenRows && params.row_no
                    ? params.row_no%2
@@ -1921,7 +1923,8 @@ $.any.anyView.prototype.refreshTableDataItemCells = function (params)
     td3 = $("<td id= '"+td_id+"' class='any-td any-item-val  "+class_id_val +"' colspan='2'>"+"<div class='"+class_id_name+"'>"+filter_key.HEADER+brk+"</div>"+"</td>");
   }
   tr.append(td3);
-  let str = this.getCellEntryStr(id,type,mode,row_id_str,filter_id,filter_key,data[id],data.lists,edit,model_str,view_str,td3);
+  let lists = filter_key.TYPE == "list" && data[id] && data[id].data ? data[id].data["link-"+filter_key.LIST] : null;
+  let str = this.getCellEntryStr(id,type,mode,row_id_str,filter_id,filter_key,data[id],lists,edit,model_str,view_str,td3);
   if (typeof str == "string")
     td3.append(str);
   this.initTableDataCell(td_id,type,mode,data,id,id_str,row_id_str,filter,filter_id,filter_key,edit,n,par_data,par_id);
@@ -3219,7 +3222,7 @@ $.any.anyView.prototype.getListView = function (type,mode,id,val,edit,filter_key
     m_str = def_str;
   }
   let list_model = new window[m_str](model_opt);
-  list_model.data = data_lists ? data_lists[filter_key.LIST] : null;
+  list_model.data = data_lists ? data_lists.data : null;
 
   // Create the list view
   let list_view_id = this.id_base+"_"+type+"_"+mode+"_"+id_str+"_"+list_type+"_list";
