@@ -150,7 +150,7 @@ class groupTable extends anyTable
     if (strtolower($name) == "admin" || strtolower($name) == "administrator")
       $this->mError .= $name."' is a reserved name. ";
     else {
-      if (!$this->dbSearchItem($this->mData,$this->mNameKey,$name)) // TODO! Allow for several groups with same name?
+      if (!$this->dbSearchItemByKey("group",$this->mNameKey,$name)) // TODO! Allow for several groups with same name?
         return false;
       if ($this->mData != null)
         $this->mError .= "Group '".$name."' already exists. ";
@@ -209,7 +209,9 @@ class groupTable extends anyTable
       } // while
     } // if group_id
     //vlog("dbSearchGroupInfo,data:",$data);
-    if ($this->mGrouping) {
+    $grouping = Parameters::get("grouping");
+    $grouping = $grouping !== false && $grouping !== "false" && $grouping !== "0";
+    if ($grouping) {
       // Get group tree and append data to it
       $data["group"] = $this->buildDataTree($data["group"]);
     }

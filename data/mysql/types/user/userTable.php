@@ -294,7 +294,7 @@ class userTable extends anyTable
   private function dbSearchUserByLogin($userLogin)
   {
     $id_name = $this->emailAsLogin ? "user_email" : ANY_DB_USER_LOGIN;
-    $res = $this->dbSearchItem($this->mData,$id_name,$userLogin,true);
+    $res = $this->dbSearchItemByKey("user",$id_name,$userLogin,true);
     return !empty($res);
   } // dbSearchUserByLogin
 

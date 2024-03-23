@@ -44,7 +44,7 @@ abstract class dbTable
   /////////////////////////////////////////////////////////////////
 
   abstract public    function dbSearch();
-  abstract protected function prepareData(&$inData);
+  abstract protected function prepareData($type);
   abstract public    function dbInsert();
   abstract public    function dbUpdate();
   abstract public    function dbUpdateLinkList();
