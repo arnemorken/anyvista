@@ -1510,15 +1510,15 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  *                                      Optional. Default: undefined.
  * @param {integer}  options.par_type
  *
+ * @param {boolean}  options.grouping   If specified, tells the server to group the data before returning.
+ *                                      If false, 0, null or undefined, data will not be grouped. Any other
+ *                                      value will specify grouping.
+ *                                      Optional. Default: undefined.
  * @param {boolean}  options.simple     If true, only values for _id and _name (e.g. "user_id" and "user_name")
  *                                      will be returned from the server.
  *                                      Optional. Default: undefined.
  * @param {boolean}  options.header     A parameter sent to the server to indicate whether a header should be
  *                                      auto-generated.
- *                                      Optional. Default: undefined.
- * @param {boolean}  options.grouping   If specified, tells the server to group the data before returning.
- *                                      If false, 0, null or undefined, data will not be grouped. Any other
- *                                      value will specify grouping.
  *                                      Optional. Default: undefined.
  * @param {integer}  options.from       The first element to display. Used in pagination.
  *                                      Optional. Default: 0.
@@ -1602,7 +1602,7 @@ anyModel.prototype._dbSearchLocal = async function (options)
     let table = await this.table_factory.createClass(table_name,{type:the_type,header:true,path:options.path});
     if (table && table.error == "") {
       let self = this;
-      return await table.dbSearch(options) // TODO! Is await needed here?
+      return table.dbSearch(options)
       .then( function(serverdata) {
         self.error   = table.error;
         self.message = table.message;
@@ -1640,9 +1640,9 @@ anyModel.prototype._dbSearchLocal = async function (options)
  * @param {integer} options.id
  * @param {integer} options.group_id
  * @param {integer} options.par_type
+ * @param {string}  options.grouping
  * @param {boolean} options.simple
  * @param {string}  options.header
- * @param {string}  options.grouping
  * @param {integer} options.from
  * @param {integer} options.num
  * @param {string}  options.order
@@ -1683,11 +1683,11 @@ anyModel.prototype.dbSearchGetURL = function (options)
                ? "&group_id="+the_gid // Search specific group
                : ""; // Search all groups
   param_str += the_type == "group" && the_par_type ? "&group_type="+the_par_type : "";
+  param_str += options.grouping                    ? "&grouping="  +options.grouping : "";
+  param_str += options.simple                      ? "&simple="    +options.simple : "";
   param_str += options.header === true  ||
                options.header === false ||
                typeof options.header == "string"   ? "&header="    +options.header : "";
-  param_str += options.grouping                    ? "&grouping="  +options.grouping : "";
-  param_str += options.simple                      ? "&simple="    +options.simple : "";
   param_str += options.from || options.from === 0  ? "&from="      +options.from : "";
   param_str += options.num                         ? "&num="       +options.num : "";
   param_str += options.order                       ? "&order="     +options.order : "";
