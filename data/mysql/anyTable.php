@@ -786,7 +786,7 @@ class anyTable extends dbTable
       return false;
     }
     // Search through all registered link types/tables
-    if (isset($this->mLinkType)) {
+    if (isset($this->mLinkTypes)) {
       foreach ($this->mLinkTypes as $i => $link_type)
         $this->dbSearchItemListOfType($link_type,$grouping);
     }
