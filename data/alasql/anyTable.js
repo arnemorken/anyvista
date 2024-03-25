@@ -228,19 +228,19 @@ anyTable.prototype.initProperties = function(paramOrType)
   // Override class properties from properties in paramOrType (if it is an array)
   //
   if (typeof paramOrType == "object") {
-    if (paramOrType["id"])                    this.id                  = paramOrType["id"];
-    if (paramOrType["idKey"])                 this.idKey               = paramOrType["idKey"];
-    if (paramOrType["nameKey"])               this.nameKey             = paramOrType["nameKey"];
-    if (paramOrType["orderBy"])               this.orderBy             = paramOrType["orderBy"];
-    if (paramOrType["orderDir"])              this.orderDir            = paramOrType["orderDir"];
-    if (paramOrType["header"]   != undefined) this.header              = paramOrType["header"];
-    if (paramOrType["tableName"])             this.tableName           = paramOrType["tableName"];
-    if (paramOrType["tableNameGroup"])        this.tableNameGroup      = paramOrType["tableNameGroup"];
-    if (paramOrType["tableNameGroupLink"])    this.tableNameGroupLink  = paramOrType["tableNameGroupLink"];
-    if (paramOrType["tableFields"])           this.tableFields         = paramOrType["tableFields"];
-    if (paramOrType["tableFieldsLeftJoin"])   this.tableFieldsLeftJoin = paramOrType["tableFieldsLeftJoin"];
-    if (paramOrType["linkTypes"])             this.linkTypes           = paramOrType["linkTypes"];
-    if (paramOrType["path"])                  this.path                = paramOrType["path"];
+    if (paramOrType["id"])                  this.id                  = paramOrType["id"];
+    if (paramOrType["idKey"])               this.idKey               = paramOrType["idKey"];
+    if (paramOrType["nameKey"])             this.nameKey             = paramOrType["nameKey"];
+    if (paramOrType["orderBy"])             this.orderBy             = paramOrType["orderBy"];
+    if (paramOrType["orderDir"])            this.orderDir            = paramOrType["orderDir"];
+    if (paramOrType["header"] != undefined) this.header              = paramOrType["header"];
+    if (paramOrType["tableName"])           this.tableName           = paramOrType["tableName"];
+    if (paramOrType["tableNameGroup"])      this.tableNameGroup      = paramOrType["tableNameGroup"];
+    if (paramOrType["tableNameGroupLink"])  this.tableNameGroupLink  = paramOrType["tableNameGroupLink"];
+    if (paramOrType["tableFields"])         this.tableFields         = paramOrType["tableFields"];
+    if (paramOrType["tableFieldsLeftJoin"]) this.tableFieldsLeftJoin = paramOrType["tableFieldsLeftJoin"];
+    if (paramOrType["linkTypes"])           this.linkTypes           = paramOrType["linkTypes"];
+    if (paramOrType["path"])                this.path                = paramOrType["path"];
   }
   //
   // Set defaults if not set yet
@@ -583,6 +583,10 @@ anyTable.prototype.dbSearchItemListOfType = async function(linkType,groupId,grou
 
 //////////////////////////////// List search ////////////////////////////////
 
+//
+// Search database for a list
+// Returns true on success, false on error
+//
 anyTable.prototype.dbSearchList = async function(options)
 {
   if (!this.type) {
@@ -664,7 +668,7 @@ anyTable.prototype.dbSearchList = async function(options)
   return Promise.resolve(this.data);
 }; // dbSearchList
 
-anyTable.prototype.dbExecListStmt = async function(groupId,type,linkType,linkId,grouping,simple,groupType,searchTerm)
+anyTable.prototype.dbExecListStmt = function(groupId,type,linkType,linkId,grouping,simple,groupType,searchTerm)
 {
   // Build and execute the query for a group
   if (groupId == "nogroup")
@@ -672,26 +676,25 @@ anyTable.prototype.dbExecListStmt = async function(groupId,type,linkType,linkId,
   let stmt = this.dbPrepareSearchListStmt(groupId,type,linkType,linkId,grouping,groupType,searchTerm);
   //console.log("dbExecListStmt1:"+stmt);
   let self = this;
-  return await alasql.promise(stmt)
+  return alasql.promise(stmt)
   .then( function(rows) {
     let success = self.getRowData(rows,"list",grouping,simple);
     self.numResults += rows.length;
     //console.log("dbExecListStmt, raw list data:"); console.log(data);
     return Promise.resolve(success);
   });
-  return success;
 }; // dbExecListStmt
 
+ // Get query fragments and build the query
 anyTable.prototype.dbPrepareSearchListStmt = function(groupId,type,linkType,linkId,grouping,groupType,searchTerm)
 {
-  let table = this.findLinkTableName(linkType);
-   // Get query fragments
-  let select    = this.findListSelect  (table,groupId,type,linkType,linkId,grouping);
-  let left_join = this.findListLeftJoin(table,groupId,type,linkType,linkId,grouping);
-  let where     = this.findListWhere   (table,groupId,type,linkType,linkId,grouping,groupType,searchTerm);
+  let link_tablename = this.findLinkTableName(linkType);
+
+  let select    = this.findListSelect  (link_tablename,groupId,type,linkType,linkId,grouping);
+  let left_join = this.findListLeftJoin(link_tablename,groupId,type,linkType,linkId,grouping);
+  let where     = this.findListWhere   (link_tablename,groupId,type,linkType,linkId,grouping,groupType,searchTerm);
   let order_by  = this.findListOrderBy();
 
-  // Build the query
   let stmt = select+
              "FROM "+this.tableName+" "+
              left_join+
@@ -759,10 +762,8 @@ anyTable.prototype.findListLeftJoinOne = function(groupId,linkType,linkId,groupi
 {
   let linktable     = this.findLinkTableName(linkType);
   let typetable     = this.findTypeTableName(linkType);
-
   let linktable_id  = this.findLinkTableId(linkType);
   let typetable_id  = this.findTypeTableId(linkType);
-
   let has_linktable = this.tableExists(linktable);
   let has_typetable = this.tableExists(typetable);
 
@@ -915,7 +916,6 @@ anyTable.prototype.getRowData = function(rows,mode,grouping,simple)
 {
   if (!this.data)
     this.data = {};
-
   for (let i=0; i<rows.length; i++) {
     //console.log(i+":"+JSON.stringify(rows[i]));
     let gid  = rows[i]["group_id"]
@@ -1173,7 +1173,7 @@ anyTable.prototype.buildDataTree = function(flatdata,parentId)
           pid = subdata["parent_id"];
           delete subdata["parent_id"];
         }
-        if (typeof subdata === "object" || typeof subdata === "array") {
+        if (typeof subdata === "object") {
           if (!subdata["parent_id"])
             delete subdata["parent_id"]; // = null;
           if (subdata["parent_id"] == parentId) {
@@ -1237,9 +1237,6 @@ anyTable.prototype.dbAttachToGroups = function(group_tree,data_tree)
           }
         } // if idx
       } // if group
-      else {
-        //console.log(gid); console.log(group);
-      }
     } // for
   } // if group_tree
 }; // dbAttachToGroups

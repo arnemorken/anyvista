@@ -862,7 +862,7 @@ $.any.anyView.prototype.refreshOne = function (params)
              edit:      edit,
              reset_rec: false,
            });
-      if ((mode == "list"))
+      if (mode == "list")
         --this.options.indent_level;
     } // if subdata
   } // if data
@@ -1366,7 +1366,7 @@ $.any.anyView.prototype.refreshThead = function (params)
     return null;
   }
   let add_opt = null;
-  if (this.options.showButtonAdd && !this.options.isSelectable /*&& !this.model.data*/) {
+  if (this.options.showButtonAdd && !this.options.isSelectable) {
     add_opt = {
       type:       type,
       mode:       mode,
@@ -2760,7 +2760,7 @@ $.any.anyView.prototype.createModel = function (params)
               : type+"Model"; // Use default model name derived from type
   try {
     if (!window[m_str]) {
-      console.warn("Model class "+m_str+" not found, using anyModel. "); // TODO! i18n
+      //console.warn("Model class "+m_str+" not found, using anyModel. "); // TODO! i18n
       m_str = "anyModel"; // Use fallback model name
     }
     model = new window[m_str](model_opt);
@@ -2834,11 +2834,11 @@ $.any.anyView.prototype.createView = function (params)
   try {
     if (!window[v_str]) {
       // Use fallback view name
-      console.warn("View class "+v_str+" not found, using anyView. "); // TODO! i18n
+      //console.warn("View class "+v_str+" not found, using anyView. "); // TODO! i18n
       let def_str = view_opt.grouping
                     ? "anyView"+view_opt.grouping.capitalize()
                     : "anyView";
-      console.warn(v_str+" is not a valid list view, using "+def_str+". ");
+      //console.warn(v_str+" is not a valid list view, using "+def_str+". ");
       v_str = def_str;
     }
     let elm = $("#"+view_opt.id);
@@ -3234,7 +3234,7 @@ $.any.anyView.prototype.getListView = function (type,mode,id,val,edit,filter_key
                 : list_type.capitalize()+"View";
   if (!window[v_str]) {
     // Use fallback view name
-    console.warn("View class "+v_str+" not found, using anyView. "); // TODO! i18n
+    //console.warn("View class "+v_str+" not found, using anyView. "); // TODO! i18n
     let def_str = view_opt.grouping
                   ? "anyView"+view_opt.grouping.capitalize()
                   : "anyView";

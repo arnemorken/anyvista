@@ -167,6 +167,9 @@ class groupTable extends anyTable
   // Return info of one or all groups of a given type
   protected function dbSearchGroupInfo($type=null,$group_id=null)
   {
+    if (!$this->tableExists($this->getTableName()))
+      return null;
+
     $data = array();
     if ($group_id != "nogroup") { // No need to search if we dont want a group!
       $stmt = "SELECT ".$this->getTableName().".group_id,".
@@ -188,8 +191,7 @@ class groupTable extends anyTable
       }
       $stmt .= $where."ORDER BY group_sort_order,group_id,group_type";
       //error_log("dbSearchGroupInfo:".$stmt);
-      if (!$this->tableExists($this->getTableName()) ||
-          !$this->query($stmt))
+      if (!$this->query($stmt))
         error_log("Warning: No group tree. ");
 
       while (($nextrow = $this->getNext(true)) != null) {

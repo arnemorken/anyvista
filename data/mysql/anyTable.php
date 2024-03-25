@@ -737,9 +737,10 @@ class anyTable extends dbTable
     $si = "SELECT DISTINCT ".$this->mTableName.".* ";
 
     // Select from left joined user table (if this is not a user table)
-    if ($includeUser)
+    if ($includeUser && isset($this->mTableFieldsLeftJoin["user"]))
       foreach ($this->mTableFieldsLeftJoin["user"] as $field)
-        $si .= ", ".$this->mTableNameUserLink.".".$field;
+        if (isset($field))
+          $si .= ", ".$this->mTableNameUserLink.".".$field;
     // Get parent name
     if ($this->hasParentId())
       $si .= ", temp.".$this->mNameKey." AS parent_name";
@@ -785,8 +786,10 @@ class anyTable extends dbTable
       return false;
     }
     // Search through all registered link types/tables
-    foreach ($this->mLinkTypes as $i => $link_type)
-      $this->dbSearchItemListOfType($link_type,$grouping);
+    if (isset($this->mLinkType)) {
+      foreach ($this->mLinkTypes as $i => $link_type)
+        $this->dbSearchItemListOfType($link_type,$grouping);
+    }
     return true;
   } // dbSearchItemLists
 
@@ -978,13 +981,12 @@ class anyTable extends dbTable
         else
           $gr_idx = $gid;
         $this->mData[$gr_idx]["grouping_num_results"] = $row["num_results"];
-        $this->mNumResults += $row["num_results"];
-        //elog("num_res:".$this->mNumResults);
+        $this->mNumResults .= $row["num_results"];
       }
     } // if
     else {
       // Report back number of elements in groups
-      if (!$gid || $gid == "")
+      if ((!$gid && $gid !== 0) || $gid == "")
         $gr_idx = "nogroup";
       else
       if (isInteger($gid))
@@ -994,23 +996,24 @@ class anyTable extends dbTable
       if (array_key_exists($gr_idx,$this->mData)) {
         $n = sizeof($this->mData[$gr_idx]);
         $this->mData[$gr_idx]["grouping_num_results"] = $n;
-        $this->mNumResults += $n;
+        $this->mNumResults .= $n;
       }
     }
     return $success;
   } // dbExecListStmt
 
+  // Get query fragments and build the query
   protected function dbPrepareSearchListStmt($gid=null,$type=null,$linkType=null,$linkId=null,$grouping=true)
   {
-    // Get query fragments
+    $linktable_name = $this->findLinkTableName($linkType);
+
     $search_term = Parameters::get("term");
     $group_type  = Parameters::get("group_type");
-    $select      = $this->findListSelect  ($gid,$type,$linkType,$linkId,$grouping);
-    $left_join   = $this->findListLeftJoin($gid,$type,$linkType,$linkId,$grouping);
-    $where       = $this->findListWhere   ($gid,$type,$linkType,$linkId,$grouping,$group_type,$search_term);
+    $select      = $this->findListSelect  ($linktable_name,$gid,$type,$linkType,$linkId,$grouping);
+    $left_join   = $this->findListLeftJoin($linktable_name,$gid,$type,$linkType,$linkId,$grouping);
+    $where       = $this->findListWhere   ($linktable_name,$gid,$type,$linkType,$linkId,$grouping,$group_type,$search_term);
     $order_by    = $this->findListOrderBy ();
 
-    // Build the query
     $stmt = $select.
             "FROM ".$this->mTableName." ".
             $left_join.
@@ -1019,7 +1022,7 @@ class anyTable extends dbTable
     return $stmt;
   } // dbPrepareSearchListStmt
 
-  protected function findListSelect($gid,$type=null,$linkType=null,$linkId=null,$grouping=true)
+  protected function findListSelect($linkTableName,$gid,$type=null,$linkType=null,$linkId=null,$grouping=true)
   {
     // Select from own table
     $sl = "SELECT DISTINCT ".$this->mTableName.".* ";
@@ -1048,7 +1051,7 @@ class anyTable extends dbTable
     return $sl;
   } // findListSelect
 
-  protected function findListLeftJoin($gid,$type=null,$linkType=null,$linkId=null,$grouping=true)
+  protected function findListLeftJoin($linkTableName,$gid,$type=null,$linkType=null,$linkId=null,$grouping=true)
   {
     $cur_uid = $this->mPermission["current_user_id"];
     $lj = "";
@@ -1073,18 +1076,16 @@ class anyTable extends dbTable
     $linktable     = $this->findLinkTableName($linkType);
     $typetable     = $this->findTypeTableName($linkType);
     $metatable     = $this->findMetaTableName($linkType);
-
     $linktable_id  = $this->findLinkTableId($linkType);
     $typetable_id  = $this->findTypeTableId($linkType);
     $metatable_id  = $this->findMetaTableId($linkType);
-
     $has_linktable = $this->tableExists($linktable);
     $has_typetable = $this->tableExists($typetable);
     $has_metatable = $this->tableExists($metatable);
 
     $lj = "";
     if ($has_linktable) {
-      $lj .= "LEFT JOIN ".$linktable." ON CAST(".$linktable.".".$this->mIdKey.  " AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ";
+      $lj .= "LEFT JOIN ".$linktable." ON CAST(".$linktable.".".$this->mIdKey." AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ";
       if ($this->hasParentId() && $linkId == null)
         $lj .= "OR ".$linktable.".".$this->mIdKeyTable."=temp.".$this->mIdKeyTable." ";
       if (!isset($linkType) && $linkType == "user" && $cur_uid)
@@ -1109,7 +1110,7 @@ class anyTable extends dbTable
     return $lj;
   } // findListLeftJoinOne
 
-  protected function findListWhere($gid,$type=null,$linkType=null,$linkId=null,$grouping=true,$groupType=null,$searchTerm="")
+  protected function findListWhere($linkTableName,$gid,$type=null,$linkType=null,$linkId=null,$grouping=true,$groupType=null,$searchTerm="")
   {
     $where = null;
     $skipOwnType = $linkType == $type;
@@ -1384,7 +1385,7 @@ class anyTable extends dbTable
              ? $nextrow[$this->mIdKeyTable]
              : null;
       if (!$idx && $idx !== 0)
-        continue;
+        continue; // Ignore element without id
 
       // Force idx to be a string in order to maintain ordering when sending JSON data to a json client
       $idx = isInteger($idx) ? "+".$idx : $idx;
@@ -1415,7 +1416,7 @@ class anyTable extends dbTable
       // Link tables for item
       if (isset($this->mLinkTypes)) {
         foreach ($this->mLinkTypes as $i => $link_type) {
-          if (isset($this->mTableFieldsLeftJoin[$link_type])) {
+          if (isset($link_type) && isset($this->mTableFieldsLeftJoin[$link_type])) {
             for ($t=0; $t<count($this->mTableFieldsLeftJoin[$link_type]); $t++) {
               $field = $this->mTableFieldsLeftJoin[$link_type][$t];
               if (!$simple || $field == $this->mIdKey || $field == $this->mNameKey || $field == "parent_id")
@@ -1585,30 +1586,34 @@ class anyTable extends dbTable
     // Make sure parent/child items are present in all groups where parent exists
     //vlog("buildGroupTreeAndAttach,data before copying parent/child:",$this->mData);
     foreach ($this->mData as $gidx => $grp) {
-      foreach ($grp as $idx => $item) {
-        if (isset($item["parent_id"])) {
-          $pid = $item["parent_id"];
-          foreach ($this->mData as $gidx2 => &$grp2) {
-            $item_parent = isset($grp2[$pid])
-                           ? $grp2[$pid]
-                           : ( isset($grp2["+".$pid])
-                               ? $grp2["+".$pid]
-                               : null );
-            if ($item_parent && $gidx2 != $gidx) {
-              //elog("found child $idx in group $gidx with parent $pid...");
-              if (!isset($grp2[$idx]) && !isset($grp2["+".$idx]))
-                $grp2[$idx] = $item;  // Copy child to other group
-              if (!isset($grp[$pid]) && !isset($grp["+".$pid])) {
-                $name = $item[$this->mNameKey];
-                $err = "Warning: Item $idx ($name) does not have parent in same group. "; // TODO i18n
-                $this->setMessage($err);
-                error_log($err);
+      if (isset($grp)) {
+        foreach ($grp as $idx => $item) {
+          if (isset($item["parent_id"])) {
+            $pid = $item["parent_id"];
+            foreach ($this->mData as $gidx2 => &$grp2) {
+              if (isset($grp2)) {
+                $item_parent = isset($grp2[$pid])
+                               ? $grp2[$pid]
+                               : ( isset($grp2["+".$pid])
+                                   ? $grp2["+".$pid]
+                                   : null );
+                if ($item_parent && $gidx2 != $gidx) {
+                  //elog("found child $idx in group $gidx with parent $pid...");
+                   if (!isset($grp2[$idx]) && !isset($grp2["+".$idx]))
+                    $grp2[$idx] = $item;  // Copy child to other group
+                  if (!isset($grp[$pid]) && !isset($grp["+".$pid])) {
+                    $name = $item[$this->mNameKey];
+                    $err = "Warning: Item $idx ($name) does not have parent in same group. "; // TODO i18n
+                    $this->setMessage($err);
+                    error_log($err);
+                  }
+                }
               }
-            }
+            } // foreach
           }
-        }
-      }
-    }
+        } // foreach
+      } // if grp
+    } // foreach
 
     // Build data tree
     //vlog("buildGroupTreeAndAttach,group_data:",               $group_data);
@@ -1787,12 +1792,10 @@ class anyTable extends dbTable
           if (isset($data_tree[$idx]["data"]) && $data_tree[$idx]["data"] != "") {
             $group["head"] = "group";
             if ($type != "group") {
-              // TODO! Not tested!
               if (isset($group["list"])) unset($group["list"]);
               if (isset($group["item"])) unset($group["item"]);
             }
-            if (array_key_exists("data",$group) && !isset($group["data"]) && $group["data"] != "")
-              $group["data"] = array();
+            if (array_key_exists("data",$group) && !isset($group["data"]) && $group["data"] != "") $group["data"] = array(); // TODO! Is this correct?
             foreach ($data_tree[$idx]["data"] as $id => $obj)
               $group["data"][$id] = $data_tree[$idx]["data"][$id];
           }
@@ -1850,7 +1853,6 @@ class anyTable extends dbTable
 
     $this->mData = $data;
     //vlog("data after prepare:",$data);
-
     return $this->mData;
   } // prepareData
 
