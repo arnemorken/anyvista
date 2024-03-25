@@ -335,27 +335,27 @@ class anyTable extends dbTable
     // Override class properties from properties in paramOrType (if it is an array)
     //
     if (gettype($paramOrType) == "array") {
-      if (paramOrType["idKey"])               $this->mIdKey               = paramOrType["idKey"];
-      if (paramOrType["idKeyTable"])          $this->mIdKeyTable          = paramOrType["idKeyTable"];
-      if (paramOrType["idKeyMetaTable"])      $this->mIdKeyMetaTable      = paramOrType["idKeyMetaTable"];
-      if (paramOrType["nameKey"])             $this->mNameKey             = paramOrType["nameKey"];
-      if (paramOrType["metaId"])              $this->mMetaId              = paramOrType["metaId"];
-      if (paramOrType["orderBy"])             $this->mOrderBy             = paramOrType["orderBy"];
-      if (paramOrType["orderDir"])            $this->mOrderDir            = paramOrType["orderDir"];
-      if (paramOrType["tableName"])           $this->mTableName           = paramOrType["tableName"];
-      if (paramOrType["tableNameMeta"])       $this->mTableNameMeta       = paramOrType["tableNameMeta"];
-      if (paramOrType["tableNameGroup"])      $this->mTableNameGroup      = paramOrType["tableNameGroup"];
-      if (paramOrType["tableNameUser"])       $this->mTableNameUser       = paramOrType["tableNameUser"];
-      if (paramOrType["tableNameGroupLink"])  $this->mTableNameGroupLink  = paramOrType["tableNameGroupLink"];
-      if (paramOrType["tableNameUserLink"])   $this->mTableNameUserLink   = paramOrType["tableNameUserLink"];
+      if ($paramOrType["idKey"])               $this->mIdKey               = $paramOrType["idKey"];
+      if ($paramOrType["idKeyTable"])          $this->mIdKeyTable          = $paramOrType["idKeyTable"];
+      if ($paramOrType["idKeyMetaTable"])      $this->mIdKeyMetaTable      = $paramOrType["idKeyMetaTable"];
+      if ($paramOrType["nameKey"])             $this->mNameKey             = $paramOrType["nameKey"];
+      if ($paramOrType["metaId"])              $this->mMetaId              = $paramOrType["metaId"];
+      if ($paramOrType["orderBy"])             $this->mOrderBy             = $paramOrType["orderBy"];
+      if ($paramOrType["orderDir"])            $this->mOrderDir            = $paramOrType["orderDir"];
+      if ($paramOrType["tableName"])           $this->mTableName           = $paramOrType["tableName"];
+      if ($paramOrType["tableNameMeta"])       $this->mTableNameMeta       = $paramOrType["tableNameMeta"];
+      if ($paramOrType["tableNameGroup"])      $this->mTableNameGroup      = $paramOrType["tableNameGroup"];
+      if ($paramOrType["tableNameUser"])       $this->mTableNameUser       = $paramOrType["tableNameUser"];
+      if ($paramOrType["tableNameGroupLink"])  $this->mTableNameGroupLink  = $paramOrType["tableNameGroupLink"];
+      if ($paramOrType["tableNameUserLink"])   $this->mTableNameUserLink   = $paramOrType["tableNameUserLink"];
       if (!$par_table_fields &&
-          paramOrType["tableFields"])         $this->mTableFields         = paramOrType["tableFields"];
+        $paramOrType["tableFields"])         $this->mTableFields         = $paramOrType["tableFields"];
       if (!$par_table_fields_meta &&
-          paramOrType["tableFieldsMeta"])     $this->mTableFieldsMeta     = paramOrType["tableFieldsMeta"];
+        $paramOrType["tableFieldsMeta"])     $this->mTableFieldsMeta     = $paramOrType["tableFieldsMeta"];
       if (!$par_table_fields_left_join &&
-          paramOrType["tableFieldsLeftJoin"]) $this->mTableFieldsLeftJoin = paramOrType["tableFieldsLeftJoin"];
+        $paramOrType["tableFieldsLeftJoin"]) $this->mTableFieldsLeftJoin = $paramOrType["tableFieldsLeftJoin"];
       if (!$par_link_types &&
-          paramOrType["linkTypes"])           $this->mLinkTypes           = paramOrType["linkTypes"];
+        $paramOrType["linkTypes"])           $this->mLinkTypes           = $paramOrType["linkTypes"];
     }
     //
     // Set defaults if not set yet
