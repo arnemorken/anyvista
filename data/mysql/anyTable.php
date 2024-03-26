@@ -665,7 +665,6 @@ class anyTable extends dbTable
 
   //
   // Search database for an item, including meta data and linked lists.
-  // Returns true on success, false on error.
   //
   protected function dbSearchItem($id,$skipLinks=false,$includeUser=true)
   {
@@ -692,10 +691,6 @@ class anyTable extends dbTable
       $this->dbSearchMeta("item"); // Search and get the meta data
       if (!$skipLinks)
         $this->dbSearchItemLists($grouping); // Get lists associated with the item
-      if ($this->mId) {
-        $this->mData["+".$this->mId]["item"] = $this->mType;
-        $this->mData["id"] = $this->mId;
-      }
       $this->mNumResults = 1;
     }
     return !$this->isError();
@@ -865,7 +860,7 @@ class anyTable extends dbTable
       if (!$has_nogroup)
         $success = $this->dbExecListStmt("nogroup",$this->mType,$linkType,$linkId,$grouping,$simple,$limit) || $success;
 
-      // Build and execute the query for grouped data that may have illegal group type (i.e. not same as list type).
+      // Get grouped data that may have illegal group type (i.e. not same as list type).
       // Ideally this should not happen, but if it does, such data will not show up unless we do this.
       if ($group_data && isset($group_data["group"]) && $linkId == "") {
         //$success = $this->dbExecListStmt(-1,$this->mType,$linkType,$linkId,$grouping,$simple,$limit) || $success; // -1 signifies this special query
@@ -1226,12 +1221,11 @@ class anyTable extends dbTable
       //$this->mMessage .= "No meta table for '$this->mType' type. ";
       return false;
     }
-
     $meta_id = Parameters::get($this->mIdKeyMetaTable);
     $is_list = (!isset($this->mId) || $this->mId == "");
     $where   = $meta_id !== null && $meta_id !== "" && !$is_list
-              ? "WHERE ".$this->mTableNameMeta.".".$this->mIdKeyMetaTable."='".$meta_id."' "
-              : "";
+               ? "WHERE ".$this->mTableNameMeta.".".$this->mIdKeyMetaTable."='".$meta_id."' "
+               : "";
     /* TODO! Untested (left join with link table)
     $left_join = null;
     if (isset($linkType) && $linkType != $this->mType && $linkType != "group" && isset($linkId)) {
@@ -1446,64 +1440,6 @@ class anyTable extends dbTable
     }
   } // getCellData
 
-  private function fixConflicts(&$data)
-  {
-    if (!$data)
-      return -1;
-    foreach ($data as $gidx => $grp) {
-      foreach ($data[$gidx] as $idx => $item) {
-        $pid = isset($data[$gidx][$idx]["parent_id"]) ? $data[$gidx][$idx]["parent_id"] : null;
-        if ($pid) {
-          if (!isset($data[$gidx]["+".$pid])) {
-            //vlog("illegal gid:",$data[$gidx][$idx]);
-            $item_name  = $this->mNameKey;
-            $gid_of_pid = $this->findGroupIdOfParent($data,$pid);
-            $warning  = "Warning: '$item[$item_name]' in group $gidx ";
-            if ($gid_of_pid) {
-              $warning .= "has its' parent in group $gid_of_pid. ";
-              $warning .= "Temporarily relocating $this->mType to parent's group. ";
-              $warning .= "Consider moving '$item[$item_name]' to group $gid_of_pid or give it another parent.";
-              $data[$gid_of_pid][$idx] = $data[$gidx][$idx];
-              if ($gidx != $gid_of_pid)
-                unset($data[$gidx][$idx]);
-            }
-            else {
-              $warning .= "has a non-existing parent ($pid). ";
-              $warning .= "Temporarily removing $this->mType's parent. ";
-              $warning .= "Consider giving $this->mType ".intval($idx)." another parent. ";
-              unset($data[$gidx][$idx]["parent_id"]);
-              //$gid_of_pid = "nogroup";
-              //$data[$gid_of_pid][$idx] = $data[$gidx][$idx];
-            }
-            error_log($warning);
-            $this->setMessage($warning);
-          }
-        }
-      }
-    }
-    if ($data && isset($data["nogroup"]))
-      return count($data["nogroup"]);
-    else
-      return 0;
-  } // fixConflicts
-
-  private function findGroupIdOfParent($data,$pid)
-  {
-    foreach ($data as $gidx => $grp) {
-      foreach ($data[$gidx] as $idx => $item) {
-        $type_id = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
-        if (isset($data[$gidx][$idx][$type_id]) &&
-            intval($data[$gidx][$idx][$type_id]) == intval($pid)) {
-          if (isset($data[$gidx][$idx]["group_id"])) {
-            return $data[$gidx][$idx]["group_id"];
-          }
-          return $gidx;
-        }
-      }
-    }
-    return null;
-  } // findGroupIdOfParent
-
   //
   // Get the meta data from table row(s) to array
   //
@@ -1539,8 +1475,7 @@ class anyTable extends dbTable
       if ($data && isset($data[$idx]) && isset($data[$idx]["item"]))
         $the_data = $data;
       //elog($gidx.",".$idx.",".$this->mIdKey.",data[$gidx][$idx]:".var_export($the_data[$idx],true));
-      if (isset($the_data[$idx]) &&
-          isset($the_data[$idx][$this->mIdKey])) {
+      if (isset($the_data[$idx]) && isset($the_data[$idx][$this->mIdKey])) {
         $meta_key   = isset($nextrow["meta_key"])   ? $nextrow["meta_key"]   : null;
         $meta_value = isset($nextrow["meta_value"]) ? $nextrow["meta_value"] : null;
         //elog($meta_key."(".$filter[$meta_key].")=".$meta_value.":");
@@ -1556,7 +1491,7 @@ class anyTable extends dbTable
         }
       }
     }
-    $this->purgeNull($data);
+    $this->purgeNull($data); // dbTable method
     //elog("(meta)data:".var_export($data,true));
     return true;
   } // getRowMetaData
@@ -1590,7 +1525,7 @@ class anyTable extends dbTable
                     $grp2[$idx] = $item;  // Copy child to other group
                   if (!isset($grp[$pid]) && !isset($grp["+".$pid])) {
                     $name = $item[$this->mNameKey];
-                    $err = "Warning: Item $idx ($name) does not have parent in same group. "; // TODO i18n
+                    $err = "Warning: The parent of '$name' ($idx) also belongs to a different group. "; // TODO i18n
                     $this->setMessage($err);
                     error_log($err);
                   }
@@ -1757,7 +1692,7 @@ class anyTable extends dbTable
   {
     //vlog("dbAttachToGroups,group_tree:",$group_tree);
     //vlog("dbAttachToGroups,data_tree:", $data_tree);
-    if ($group_tree !== null) {
+    if (isset($group_tree)) {
       foreach ($group_tree as $gid => &$group) { // Iterate over group ids
         if (isset($group["data"]) && $group["data"] !== null)
           $this->dbAttachToGroups($group["data"],$data_tree); // Recursive call
@@ -2469,6 +2404,68 @@ class anyTable extends dbTable
       return false;
     return true;
   } // dbValidateDelete
+
+  //
+  // Unused methods:
+  //
+
+  private function fixConflicts(&$data)
+  {
+    if (!$data)
+      return -1;
+    foreach ($data as $gidx => $grp) {
+      foreach ($data[$gidx] as $idx => $item) {
+        $pid = isset($data[$gidx][$idx]["parent_id"]) ? $data[$gidx][$idx]["parent_id"] : null;
+        if ($pid) {
+          if (!isset($data[$gidx]["+".$pid])) {
+            //vlog("illegal gid:",$data[$gidx][$idx]);
+            $item_name  = $this->mNameKey;
+            $gid_of_pid = $this->findGroupIdOfParent($data,$pid);
+            $warning  = "Warning: '$item[$item_name]' in group $gidx ";
+            if ($gid_of_pid) {
+              $warning .= "has its' parent in group $gid_of_pid. ";
+              $warning .= "Temporarily relocating $this->mType to parent's group. ";
+              $warning .= "Consider moving '$item[$item_name]' to group $gid_of_pid or give it another parent.";
+              $data[$gid_of_pid][$idx] = $data[$gidx][$idx];
+              if ($gidx != $gid_of_pid)
+                unset($data[$gidx][$idx]);
+            }
+            else {
+              $warning .= "has a non-existing parent ($pid). ";
+              $warning .= "Temporarily removing $this->mType's parent. ";
+              $warning .= "Consider giving $this->mType ".intval($idx)." another parent. ";
+              unset($data[$gidx][$idx]["parent_id"]);
+              //$gid_of_pid = "nogroup";
+              //$data[$gid_of_pid][$idx] = $data[$gidx][$idx];
+            }
+            error_log($warning);
+            $this->setMessage($warning);
+          }
+        }
+      }
+    }
+    if ($data && isset($data["nogroup"]))
+      return count($data["nogroup"]);
+    else
+      return 0;
+  } // fixConflicts
+
+  private function findGroupIdOfParent($data,$pid)
+  {
+    foreach ($data as $gidx => $grp) {
+      foreach ($data[$gidx] as $idx => $item) {
+        $type_id = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
+        if (isset($data[$gidx][$idx][$type_id]) &&
+            intval($data[$gidx][$idx][$type_id]) == intval($pid)) {
+          if (isset($data[$gidx][$idx]["group_id"])) {
+            return $data[$gidx][$idx]["group_id"];
+          }
+          return $gidx;
+        }
+      }
+    }
+    return null;
+  } // findGroupIdOfParent
 
 } // class anyTable
 ?>
