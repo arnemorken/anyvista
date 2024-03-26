@@ -193,46 +193,51 @@ class groupTable extends anyTable
       //error_log("dbSearchGroupInfo:".$stmt);
       if (!$this->query($stmt))
         error_log("Warning: No group tree. ");
-
-      while (($nextrow = $this->getNext(true)) != null) {
-        $idx = "+".$nextrow[$this->mIdKeyTable];
+/*
+      while (($nextrow = $this->getNext(true)) !== null) {
+        $idx  = isset($nextrow[$this->mIdKeyTable])
+                ? $nextrow[$this->mIdKeyTable]
+                : null;
         if ($this->mTableFields) {
           $len = count($this->mTableFields);
           for ($t=0; $t<$len; $t++) {
             $item_id_table = $this->mTableFields[$t];
-            $this->getCellData($item_id_table,$nextrow,$data,$idx,"group",null,"list");
+            $this->getCellData($item_id_table,$nextrow,$data,"group",$idx,null,"list");
           }
         }
         if ($type == "group" && $group_id == null)
           $mode = "list";
         else
           $mode = "head";
-        $data["group"][$idx][$mode] = "group";
+        $data[$idx][$mode] = "group";
       } // while
+*/
+      $this->getRowData($this->mData,"list");
     } // if group_id
-    //vlog("dbSearchGroupInfo,data:",$data);
+    //vlog("dbSearchGroupInfo,data:",$data);    
+
     $grouping = Parameters::get("grouping");
     $grouping = $grouping !== false && $grouping !== "false" && $grouping !== "0";
     if ($grouping) {
       // Get group tree and append data to it
-      $data["group"] = $this->buildDataTree($data["group"]);
+      $data = $this->buildDataTree($this->mData["nogroup"]);
     }
     //vlog("dbSearchGroupInfo,d1:",$data);
 
     // Add the default "nogroup" group
     $group_id = Parameters::get("group_id");
     if ((!$group_id || $group_id == "nogroup") && $type) {
-      $data["group"]["nogroup"]["group_name"] = $this->findDefaultHeader($type);
-      $data["group"]["nogroup"]["group_id"]   = "nogroup";
-      $data["group"]["nogroup"]["group_type"] = $type;
-      $data["group"]["nogroup"]["head"]       = "group";
+      $data["nogroup"]["group_name"] = $this->findDefaultHeader($type);
+      $data["nogroup"]["group_id"]   = "nogroup";
+      $data["nogroup"]["group_type"] = $type;
+      $data["nogroup"]["head"]       = "group";
     }
     //error_log("dbSearchGroupInfo,d2:".var_export($data,true));
     if ($group_id == null)
       $this->mData = $data;
     else
-    if (count($data) > 0 && isset($data["group"]))
-      $this->mData = $data["group"];
+    if (isset($data) && count($data) > 0)
+      $this->mData = $data;
     else
       error_log("Warning: No group data. ");
     return $data;

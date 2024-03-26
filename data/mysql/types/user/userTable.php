@@ -287,6 +287,20 @@ class userTable extends anyTable
     return true;
   } // dbValidateDeletePermission
 
+  /////////////////////////
+  //////// Finders ////////
+  /////////////////////////
+
+  protected function findMetaTableName($linkType)
+  {
+    return $this->mTableNameMeta;
+  } // findMetaTableName
+
+  protected function findMetaTableId($linkType)
+  {
+    return $this->mIdKeyMetaTable;
+  } // findMetaTableName
+
   /////////////////////////////////////////////////////////////////////////////
   //////////////////////////////// Search /////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
@@ -294,7 +308,7 @@ class userTable extends anyTable
   private function dbSearchUserByLogin($userLogin)
   {
     $id_name = $this->emailAsLogin ? "user_email" : ANY_DB_USER_LOGIN;
-    $res = $this->dbSearchItemByKey("user",$id_name,$userLogin,true);
+    $res = $this->dbSearchItemByKey($id_name,$userLogin,true,false);
     return !empty($res);
   } // dbSearchUserByLogin
 

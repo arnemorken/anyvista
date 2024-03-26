@@ -44,7 +44,7 @@ abstract class dbTable
   /////////////////////////////////////////////////////////////////
 
   abstract public    function dbSearch();
-  abstract protected function prepareData($type);
+  abstract protected function prepareData();
   abstract public    function dbInsert();
   abstract public    function dbUpdate();
   abstract public    function dbUpdateLinkList();
@@ -176,10 +176,10 @@ abstract class dbTable
       return false;
     }
     catch (Exception $e) {
-        $this->mError = "dbCreate::query: Exception: ".$e->getMessage();
-        $this->mError .= "\nQuery was: ".$sql;
-        error_log($this->mError);
-        return false;
+      $this->mError = "dbCreate::query: Exception: ".$e->getMessage();
+      $this->mError .= "\nQuery was: ".$sql;
+      error_log($this->mError);
+      return false;
     }
   } // dbCreate
 

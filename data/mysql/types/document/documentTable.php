@@ -117,9 +117,9 @@ class documentTable extends anyTable
   /////////////////////// Database query fragments ////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function findListWhere($linkTableName,$gid,$type=null,$linkType=null,$linkId=null,$grouping=true,$groupType=null,$searchTerm="")
+  protected function findListWhere($gid,$type=null,$linkType=null,$linkId=null,$grouping=true,$groupType=null,$searchTerm="")
   {
-    $where = parent::findListWhere($linkTableName,$gid,$type,$linkType,$linkId,$grouping,$groupType,$searchTerm);
+    $where = parent::findListWhere($gid,$type,$linkType,$linkId,$grouping,$groupType,$searchTerm);
     return $where;
   } // findListWhere
 

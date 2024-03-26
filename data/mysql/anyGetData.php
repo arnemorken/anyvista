@@ -78,7 +78,7 @@ Parameters::set("tableFields",array (
             Parameters::get($table->getIdKey()) === "") {
           $data = $table->getData();
           if ($data !== null && !empty($data))
-            $data = $table->prepareData($type);
+            $data = $table->prepareData();
         }
         $data["permission"] = $table->getPermission();
         $data["message"]    = $table->getMessage();
