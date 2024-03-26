@@ -550,7 +550,7 @@ class anyTable extends dbTable
 
   protected function findDefaultItemHeader($type,$inData)
   {
-    if (!$inData)
+    if (!$inData || (!$this->mId && $this->mId !== 0))
       return ucfirst($type);
     $ix = isset($inData["+".$this->mId])
           ? "+".$this->mId
@@ -573,26 +573,15 @@ class anyTable extends dbTable
     return $this->findDefaultHeader($type,$skipOther);
   } // findDefaultNogroupHeader
 
-  protected function findMetaTableId($type)
-  {
-    $str = $type."_id";
-    return $str;
-  } // findMetaTableId
-
   protected function findMetaTableName($linkType)
   {
-    if ($linkType == "user")
-      $str = ANY_DB_USERMETA_TABLE;
-    else
-      $str = $this->mTablePrefix.$linkType."meta";
-    return $str;
+    return $this->mTablePrefix.$linkType."meta";
   } // findMetaTableName
 
-  protected function findLinkTableId($linkType)
+  protected function findMetaTableId($type)
   {
-    $str = $linkType."_id";
-    return $str;
-  } // findLinkTableId
+    return $type."_id";
+  } // findMetaTableId
 
   protected function findLinkTableName($linkType)
   {
@@ -606,23 +595,21 @@ class anyTable extends dbTable
     return $ltn;
   } // findLinkTableName
 
-  protected function findTypeTableId($type)
+  protected function findLinkTableId($linkType)
   {
-    if ($type == "user")
-      $str = ANY_DB_USER_ID;
-    else
-      $str = $type."_id";
+    $str = $linkType."_id";
     return $str;
-  } // findTypeTableId
+  } // findLinkTableId
 
   protected function findTypeTableName($type)
   {
-    if ($type == "user")
-      $str = ANY_DB_USER_TABLE;
-    else
-      $str = $this->mTablePrefix.$type;
-    return $str;
+    return $this->mTablePrefix.$type;
   } // findTypeTableName
+
+  protected function findTypeTableId($type)
+  {
+    return $type."_id";
+  } // findTypeTableId
 
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Searches ////////////////////////////////////
