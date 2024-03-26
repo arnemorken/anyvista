@@ -179,6 +179,7 @@ abstract class dbTable
         $this->mError = "dbCreate::query: Exception: ".$e->getMessage();
         $this->mError .= "\nQuery was: ".$sql;
         error_log($this->mError);
+        return false;
     }
   } // dbCreate
 
