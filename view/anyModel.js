@@ -1737,8 +1737,11 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
       console.log("anyModel.dbSearchSuccess: "+self.message);
     if (self.error_server)
       console.error("anyModel.dbSearchSuccess: "+self.error_server);
-    if (self.auto_search && self.dataInit)
+    if (self.auto_search && self.dataInit) {
+      if (options.id || options.id === 0)
+        self.id = options.id;
       self.dataInit(serverdata);
+    }
   }
   if (self.cbExecute && self.auto_search && self.auto_refresh && options.auto_refresh !== false)
     self.cbExecute({clear:true});
