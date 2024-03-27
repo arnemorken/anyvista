@@ -880,38 +880,40 @@ class anyTable extends dbTable
       if (isset($group_data) && $linkId == "") {
         //$success = $this->dbExecListStmt(-1,$this->mType,$linkType,$linkId,$grouping,$simple,$limit) || $success; // -1 signifies this special query
         $linktable    = $this->findLinkTableName("group");
-        $linktable_id = $this->findLinkTableId("group");
-        $stmt =  "SELECT DISTINCT ".$this->mTableName.".*  ".
-                 "FROM ".$this->mTableName." ".
-                 "LEFT JOIN ".$linktable." ON CAST(".$linktable.".".$this->mIdKey." AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ".
-                 "WHERE (";
-        $part_stmt = "";
-        foreach ($group_data as $gid => $group) {
-          if ($gid != "nogroup") {
-            $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
-            $part_stmt .= $linktable.".".$linktable_id." != ".$db_gid." AND ";
+        if ($this->tableExists($linktable)) {
+          $linktable_id = $this->findLinkTableId("group");
+          $stmt =  "SELECT DISTINCT ".$this->mTableName.".*  ".
+                   "FROM ".$this->mTableName." ".
+                   "LEFT JOIN ".$linktable." ON CAST(".$linktable.".".$this->mIdKey." AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ".
+                   "WHERE (";
+          $part_stmt = "";
+          foreach ($group_data as $gid => $group) {
+            if ($gid != "nogroup") {
+              $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
+              $part_stmt .= $linktable.".".$linktable_id." != ".$db_gid." AND ";
+            }
           }
-        }
-        $part_stmt  = rtrim($part_stmt,"AND ");
-        if ($part_stmt != "") {
-          $part_stmt .= ") ";
-          $stmt .= $part_stmt."ORDER BY ". $this->mTableName.".".$this->mIdKeyTable." ";
-          //elog("dbSearchList:".$stmt);
-          if (!(!$stmt || $stmt == "" || !$this->query($stmt) || $this->isError())) {
-            // Get the data
-            $xdata = null;
-            $ok = $this->getRowData($xdata,"list",$grouping,$simple);
-            if ($ok) {
-              if (isset($xdata) && isset($xdata["nogroup"])) {
-                $this->mData["unknown"] = null;
-                $i = 0;
-                foreach ($xdata["nogroup"] as $key => $val) {
-                  $this->mData["unknown"][$key] = $val;
-                  ++$i;
+          $part_stmt  = rtrim($part_stmt,"AND ");
+          if ($part_stmt != "") {
+            $part_stmt .= ") ";
+            $stmt .= $part_stmt."ORDER BY ". $this->mTableName.".".$this->mIdKeyTable." ";
+            //elog("dbSearchList:".$stmt);
+            if (!(!$stmt || $stmt == "" || !$this->query($stmt) || $this->isError())) {
+              // Get the data
+              $xdata = null;
+              $ok = $this->getRowData($xdata,"list",$grouping,$simple);
+              if ($ok) {
+                if (isset($xdata) && isset($xdata["nogroup"])) {
+                  $this->mData["unknown"] = null;
+                  $i = 0;
+                  foreach ($xdata["nogroup"] as $key => $val) {
+                    $this->mData["unknown"][$key] = $val;
+                    ++$i;
+                  }
+                  $this->mData["unknown"]["grouping_num_results"] = $i;
                 }
-                $this->mData["unknown"]["grouping_num_results"] = $i;
+                $x=0;
               }
-              $x=0;
             }
           }
         }
