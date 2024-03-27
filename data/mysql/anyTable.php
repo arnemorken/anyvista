@@ -1460,26 +1460,19 @@ class anyTable extends dbTable
       // Force idx to be a string in order to maintain ordering when sending JSON data to a json client
       $idx = isInteger($idx) ? "+".$idx : $idx;
 
-      if ($data && isset($data[$gidx]) && isset($data[$gidx][$idx]) && isset($data[$gidx][$idx]["list"]))
-        $the_data = $data[$gidx];
-      else
-      if ($data && isset($data[$idx]) && isset($data[$idx]["item"]))
-        $the_data = $data;
+      if (!isset($data[$gidx]))       $data[$gidx]       = array();
+      if (!isset($data[$gidx][$idx])) $data[$gidx][$idx] = array();
+
+      $data[$gidx][$idx][$mode] = $this->mType;
+
       //elog($gidx.",".$idx.",".$this->mIdKey.",data[$gidx][$idx]:".var_export($the_data[$idx],true));
-      if (isset($the_data[$idx]) && isset($the_data[$idx][$this->mIdKey])) {
+      if (isset($data[$gidx][$idx]) && isset($data[$gidx][$idx][$this->mIdKey])) {
         $meta_key   = isset($nextrow["meta_key"])   ? $nextrow["meta_key"]   : null;
         $meta_value = isset($nextrow["meta_value"]) ? $nextrow["meta_value"] : null;
         //elog($meta_key."(".$filter[$meta_key].")=".$meta_value.":");
-        if ($filter === null || (isset($filter[$meta_key]) && $filter[$meta_key] == 1)) {
-          if ($meta_key !== null && $meta_key !== "" && $meta_value !== null && $meta_value !== "") {
-            $the_data[$idx][$meta_key] = $meta_value;
-          if ($data && isset($data[$gidx]) && isset($data[$gidx][$idx]) && isset($data[$gidx][$idx]["list"]))
-            $data[$gidx] = $the_data;
-          else
-          if ($data && isset($data[$idx]) && isset($data[$idx]["item"]))
-            $data = $the_data;
-          }
-        }
+        if ($filter === null || (isset($filter[$meta_key]) && $filter[$meta_key] == 1) &&
+            $meta_key !== null && $meta_key !== "" && $meta_value !== null && $meta_value !== "")
+          $data[$gidx][$idx][$meta_key] = $meta_value;
       }
     }
     $this->purgeNull($data); // dbTable method
