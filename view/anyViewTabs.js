@@ -90,7 +90,7 @@ $.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,mod
 
 $.any.anyViewTabs.prototype.postRefresh = function (params,skipName)
 {
-  if (Object.size(this.model.data) == 0) {
+  if (this.model && Object.size(this.model.data) == 0) {
     let elm = $("#"+this.current_id_base+"_data");
     elm.remove();
     elm = $("#"+this.current_id_base+"_data_tab_btn");
@@ -104,7 +104,7 @@ $.any.anyViewTabs.prototype.postRefresh = function (params,skipName)
 
 $.any.anyViewTabs.prototype.refreshHeader = function (params,skipName)
 {
-  if (!params || !params.data || !this.options || !this.options.showHeader)
+  if (!this.model || !params || !params.data || !this.options || !this.options.showHeader)
     return null;
 
   if (this.options.grouping == "tabs" && params.data.grouping) {
@@ -138,7 +138,7 @@ $.any.anyViewTabs.prototype.refreshHeader = function (params,skipName)
 
 $.any.anyViewTabs.prototype.refreshTabPanel = function (params)
 {
-  if (!params || !params.parent || !params.data || !this.options.showHeader)
+  if (!this.model || !params || !params.parent || !params.data || !this.options.showHeader)
     return null;
 
   let parent       = params.parent; // NOTE! Different parent than in anyView.refreshHeader!

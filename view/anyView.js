@@ -365,7 +365,7 @@ $.any.anyView.prototype._findType = function (data,id,otype)
     type = otype; // Set to previous type
   if (!type)
     type = this._findTypeFromData(data); // Find type from *_name element of data[0]
-  if (!type)
+  if (!type && this.model)
     type = this.model.type; // Set to model type
   return type;
 }; // _findType
@@ -638,7 +638,7 @@ $.any.anyView.prototype.refresh = function (params)
                   --row_no;
               }
             } // if view
-            if (id_str) {
+            if (id_str && view) {
               // Refresh bottom toolbar for this view
               let p_id = view.element.attr("id");
               let p    = $("#"+p_id);
@@ -700,7 +700,7 @@ $.any.anyView.prototype.refresh = function (params)
   if (!model)
     model = this.model;
   if (this.options && this.options.showToolbar && !this.options.isSelectable &&
-      this.options.data_level == 0 && this.id_stack.length == 0 &&
+      this.options.data_level == 0 && this.id_stack.length == 0 && this.model &&
       (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLinkItem || this.options.showButtonAddLinkGroup)) {
     this.refreshToolbarBottom({
            parent:   parent,
@@ -933,7 +933,7 @@ $.any.anyView.prototype.refreshToolbarForView = function (params)
 //
 $.any.anyView.prototype.refreshToolbarBottom = function (params)
 {
-  if (!params || !this.options)
+  if (!this.model || !params || !this.options)
     return null;
 
   let parent   = params.parent;
@@ -1062,7 +1062,7 @@ $.any.anyView.prototype.getOrCreateHeaderContainer = function (params)
 //
 $.any.anyView.prototype.refreshHeader = function (params,skipName)
 {
-  if (!params || !this.options || !this.options.showHeader)
+  if (!this.model || !params || !this.options || !this.options.showHeader)
     return null;
 
   let parent = params.parent;
@@ -1343,7 +1343,7 @@ $.any.anyView.prototype.getOrCreateDataFooter = function (table,type,mode,id_str
 //
 $.any.anyView.prototype.refreshThead = function (params)
 {
-  if (!params || ! params.parent || !this.options)
+  if (!this.model || !params || ! params.parent || !this.options)
     return null;
 
   let thead      = params.parent;
@@ -1583,7 +1583,7 @@ $.any.anyView.prototype.refreshTbodyRow = function (params)
 // Return table row, or null on error
 $.any.anyView.prototype.refreshListTableDataRow = function (params)
 {
-  if (!params || !this.options)
+  if (!this.model || !params || !this.options)
     return null;
 
   let tbody      = params.parent;
@@ -1762,7 +1762,7 @@ $.any.anyView.prototype.refreshTableDataIngress = function (params)
 // Return table body, or null on error
 $.any.anyView.prototype.refreshItemTableDataRow = function (params)
 {
-  if (!params || !this.options)
+  if (!this.model || !params || !this.options)
     return null;
 
   let tbody      = params.parent;
@@ -2784,12 +2784,12 @@ $.any.anyView.prototype.getCreateModelOptions = function(type,data,id,link_id)
     data:          data,
     id:            id,
     link_id:       link_id,
-    parent:        this.model, // TODO! Not always correct.
-    source:        this.model.source,
-    table_fields:  this.model.table_fields,
-    db_connection: this.model.db_connection,
-    db_last_term:  this.model.db_last_term,
-    permission:    this.model.permission,
+    parent:        this.model ? this.model               : null, // TODO! Not always correct.
+    source:        this.model ? this.model.source        : null,
+    table_fields:  this.model ? this.model.table_fields  : null,
+    db_connection: this.model ? this.model.db_connection : null,
+    db_last_term:  this.model ? this.model.db_last_term  : null,
+    permission:    this.model ? this.model.permission    : null,
   };
 }; // getCreateModelOptions
 
