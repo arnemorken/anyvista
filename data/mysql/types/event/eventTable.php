@@ -68,7 +68,7 @@ class eventTable extends anyTable
   protected $mTableFieldsLeftJoin = [
       "group" => [
         "group_id",
-        "main_event",
+        //"main_event", // TODO! To test error handling
       ],
       "user" => [
         "user_id",
