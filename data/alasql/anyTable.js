@@ -185,13 +185,13 @@ var anyTable = function (connection,paramOrType)
 
   // TODO! i18n
   this.insertSuccessMsg  = "Insert succeeded. ";
-  this.insertNothingToDo = "Nothing to insert. ";
+  this.deleteSuccessMsg  = "%% deleted. ";
   this.itemExists        = "Item already exist. ";
   this.itemUnexists      = "Item does not exist. ";
-  this.deleteSuccessMsg  = "%% deleted. ";
+  this.insertNothingToDo = "Nothing to insert. ";
   this.deleteNothingToDo = "Nothing to delete. ";
 
-  this.groupTable = null;
+  this.groupTable = null; // Set by dbSearchItemLists, dbSearchList and dbUpdateLinkList
 
   // Initiate the database connection
   dbTable.call(this,connection);
@@ -229,6 +229,7 @@ anyTable.prototype.initProperties = function(paramOrType)
   //
   if (typeof paramOrType == "object") {
     if (paramOrType["id"])                  this.id                  = paramOrType["id"];
+
     if (paramOrType["idKey"])               this.idKey               = paramOrType["idKey"];
     if (paramOrType["nameKey"])             this.nameKey             = paramOrType["nameKey"];
     if (paramOrType["orderBy"])             this.orderBy             = paramOrType["orderBy"];
@@ -240,6 +241,7 @@ anyTable.prototype.initProperties = function(paramOrType)
     if (paramOrType["tableFields"])         this.tableFields         = paramOrType["tableFields"];
     if (paramOrType["tableFieldsLeftJoin"]) this.tableFieldsLeftJoin = paramOrType["tableFieldsLeftJoin"];
     if (paramOrType["linkTypes"])           this.linkTypes           = paramOrType["linkTypes"];
+
     if (paramOrType["path"])                this.path                = paramOrType["path"];
   }
   //
@@ -274,6 +276,19 @@ anyTable.prototype.initProperties = function(paramOrType)
     this.linkTypes[this.type] = { [this.type]: { className:     this.type+"Table",
                                                  tableName:     this.type,
                                                  linkTableName: "group_"+this.type  } };
+
+  if (!this.insertSuccessMsg)
+    this.insertSuccessMsg = this.type.capitalize()+" created. ";
+  if (!this.updateSuccessMsg)
+    this.updateSuccessMsg = this.type.capitalize()+" updated. ";
+  if (!this.deleteSuccessMsg)
+    this.deleteSuccessMsg = this.type.capitalize()+" deleted. ";
+
+  // Make sure some vital fields exist
+  if (!this.tableFields.includes(this.orderBy))
+    this.orderBy = this.tableFields[0];
+  if (!this.tableFields.includes(this.idKeyTable))
+    this.idKeyTable = this.tableFields[0];
 
   return true;
 }; // initProperties
@@ -452,11 +467,11 @@ anyTable.prototype.dbSearchItem = async function(options) // TODO! Is async need
 
 anyTable.prototype.dbSearchItemByKey = function(options)
 {
-  let key       = options ? options.key       : null;
-  let val       = options ? options.val       : null;
-  let groupId   = options ? options.groupId   : null;
-  let grouping  = options && typeof options.grouping  == "boolean" ? options.grouping  : true;
+  let groupId   = options ? options.groupId : null; // If "groupId" is specified, search only in that group.
+  let grouping  = options && typeof options.grouping  == "boolean" ? options.grouping  : true; // Grouping of the lists of the item (currently not used)
   let skipLinks = options && typeof options.skipLinks == "boolean" ? options.skipLinks : false;
+  let key       = options ? options.key     : null;
+  let val       = options ? options.val     : null;
 
   if (!key || !val) {
     this.error = "Missing key or value. "; // TODO! i18n
@@ -483,6 +498,7 @@ anyTable.prototype.dbSearchItemByKey = function(options)
   });
 }; // dbSearchItemByKey
 
+// Get query fragments and build the query
 anyTable.prototype.dbPrepareSearchItemStmt = function(key,val)
 {
   let select    = this.findItemSelect();
@@ -497,10 +513,13 @@ anyTable.prototype.dbPrepareSearchItemStmt = function(key,val)
 
 anyTable.prototype.findItemSelect = function()
 {
+    // Select from own table
   let si = "SELECT DISTINCT "+this.tableName+".* ";
+
   // Get parent name
   if (this.hasParentId())
     si += ", temp."+this.nameKey+" AS parent_name";
+
   si += " ";
   return si;
 }; // findItemSelect
@@ -880,6 +899,12 @@ anyTable.prototype.findListOrderBy = function()
   return ob;
 }; // findListOrderBy
 
+anyTable.prototype.findLimit = function()
+{
+  // TODO! Not implemented
+  return "";
+}; // findLimit
+
 ////////////////////////////// Misc. searches //////////////////////////////
 
 //
@@ -1206,7 +1231,6 @@ anyTable.prototype.dbAttachToGroups = function(group_tree,data_tree)
     for (let gid in group_tree) { // Iterate over group ids
       let group = group_tree[gid];
       if (group) {
-        //console.log(Object.size(group["data"]));
         if (group["data"] && Object.size(group["data"]))
           this.dbAttachToGroups(group["data"],data_tree); // Recursive call
         if (group["data"]) {
