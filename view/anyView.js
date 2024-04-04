@@ -2874,7 +2874,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
     mode:                   mode,
     filters:                this._getOrCreateFilters(type,model?model.data:null), // Create filter if we don't already have one
     id:                     view_id,
-    view:                   this,
+    view:                   this, // Used by dbUpdate and dbDeleteDialog
     id_base:                this.id_base,
     data_level:             data_level   || data_level   === 0 ? data_level   : this.data_level,
     indent_level:           indent_level || indent_level === 0 ? indent_level : this.indent_level,
@@ -2909,6 +2909,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
     // Give same permissions to new view as the current one. This may not
     // always be the desired behaviour, in that case, override this method.
     isEditable:             this.options.isEditable,
+    isAddable:              this.options.isAddable,
     isRemovable:            this.options.isRemovable || mode == "item", // TODO! Not a good solution
     isDeletable:            this.options.isDeletable,
     isSelectable:           this.options.isSelectable,
@@ -3283,18 +3284,19 @@ $.any.anyView.prototype.getListViewOptions = function (model,view_id,edit,view)
 {
   return {
     model:           model,
-    filters:         this.options.filters,
     id:              view_id,
+    filters:         this.options.filters,
     grouping:        this.options.grouping,
     view:            view,
     isRemovable:     false,
+    isAddable:       false,
     isEditable:      false,
     isDeletable:     false,
     showSearch:      true,
-    showTableHeader: view ? view.options.showTableHeader : false,
-    showTableFooter: view ? view.options.showTableFooter : false,
+    showTableHeader: false,
+    showTableFooter: false,
     showToolbar:     false,
-    onEscEndEdit:    view ? view.options.onEscEndEdit : this.options.onEscEndEdit,
+    onEscEndEdit:    true,
     defaultMode:     "list",
   };
 }; // getListViewOptions
