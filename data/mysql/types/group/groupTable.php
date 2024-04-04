@@ -165,75 +165,59 @@ class groupTable extends anyTable
   /////////////////////////////////////////////////////////////////////////////
 
   // Return info of one or all groups of a given type
-  protected function dbSearchGroupInfo($type=null,$group_id=null)
+  protected function dbSearchGroupInfo($type=null,$grouping=true,$group_id=null)
   {
-    if (!$this->tableExists($this->getTableName()))
+    $tableName = $this->getTableName();
+    if (!$this->tableExists($tableName))
       return null;
 
     $data = array();
-    if ($group_id != "nogroup") { // No need to search if we dont want a group!
-      $stmt = "SELECT ".$this->getTableName().".group_id,".
-                        $this->getTableName().".group_type,".
-                        $this->getTableName().".group_name,".
-                        $this->getTableName().".group_description,".
-                        $this->getTableName().".group_sort_order,".
-                        $this->getTableName().".parent_id ".
-              "FROM ".$this->getTableName()." ";
-      $where = "";
-      if ($type && $type != "group")
-        $where = "WHERE group_type='".$type."' ";
-      if ($group_id) {
-        $db_gid = is_numeric($group_id) ? "CAST(".$group_id." AS INT)" : "'".$group_id."'";
-        if ($where == null)
-          $where .= "WHERE group_id=".$db_gid." ";
-        else
-          $where .= "AND group_id=".$db_gid." ";
-      }
-      $stmt .= $where."ORDER BY group_sort_order,group_id,group_type";
-      //error_log("dbSearchGroupInfo:".$stmt);
-      if (!$this->query($stmt))
-        error_log("Warning: No group tree. ");
-/*
-      while (($nextrow = $this->getNext(true)) !== null) {
-        $idx  = isset($nextrow[$this->mIdKeyTable])
-                ? $nextrow[$this->mIdKeyTable]
-                : null;
-        if ($this->mTableFields) {
-          $len = count($this->mTableFields);
-          for ($t=0; $t<$len; $t++) {
-            $item_id_table = $this->mTableFields[$t];
-            $this->getCellData($item_id_table,$nextrow,$data,"group",$idx,null,"list");
-          }
-        }
-        if ($type == "group" && $group_id == null)
-          $mode = "list";
-        else
-          $mode = "head";
-        $data[$idx][$mode] = "group";
-      } // while
-*/
-      $this->getRowData($this->mData,"list");
-    } // if group_id
-    //vlog("dbSearchGroupInfo,data:",$data);    
-
-    $grouping = Parameters::get("grouping");
-    $grouping = $grouping !== false && $grouping !== "false" && $grouping !== "0";
-    if ($grouping) {
-      // Get group tree and append data to it
-      $data = $this->buildDataTree($this->mData["nogroup"]);
+    if ($group_id == "nogroup") { // No need to search if we dont want a group!
+      $data["nogroup"] = $this->mData;
+      return null;
     }
+    $stmt = "SELECT ".$tableName.".group_id,".
+                      $tableName.".group_type,".
+                      $tableName.".group_name,".
+                      $tableName.".group_description,".
+                      $tableName.".group_sort_order,".
+                      $tableName.".parent_id ".
+            "FROM ".$tableName." ";
+    $where = "";
+    if ($type && $type != "group")
+      $where = "WHERE group_type='".$type."' ";
+    if ($group_id) {
+      $db_gid = is_numeric($group_id) ? "CAST(".$group_id." AS INT)" : "'".$group_id."'";
+      if ($where == "")
+        $where  = "WHERE group_id=".$db_gid." ";
+      else
+        $where .= "AND group_id=".$db_gid." ";
+    } // if group_id
+    $stmt .= $where."ORDER BY group_sort_order,group_id,group_type";
+    //error_log("dbSearchGroupInfo:".$stmt);
+    if (!$this->query($stmt))
+      error_log("Warning: No group tree. ");
+    $this->getRowData($this->mData,"list");
+
+    if ($grouping)
+      $data = $this->buildDataTree($this->mData["nogroup"]); // Get group tree and append data to it
+    else
+      $data = $this->mData;
     //vlog("dbSearchGroupInfo,d1:",$data);
 
     // Add the default "nogroup" group
-    $group_id = Parameters::get("group_id");
-    if ((!$group_id || $group_id == "nogroup") && $type) {
+    if (!$group_id && $group_id !== 0)
+      $group_id = Parameters::get("group_id");
+    if (((!$group_id && $group_id !== 0) || $group_id == "nogroup") && $type) {
+      if (!isset($data["nogroup"]))
+        $data["nogroup"] = array();
       $data["nogroup"]["group_name"] = $this->findDefaultHeader($type);
       $data["nogroup"]["group_id"]   = "nogroup";
       $data["nogroup"]["group_type"] = $type;
       $data["nogroup"]["head"]       = "group";
     }
     //error_log("dbSearchGroupInfo,d2:".var_export($data,true));
-    if ($group_id == null)
+    if (!$group_id && $group_id !== 0)
       $this->mData = $data;
     else
     if (isset($data) && count($data) > 0)
