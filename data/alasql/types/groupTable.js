@@ -15,8 +15,11 @@ var groupTable = function (connection,parameters)
                  };
   this.tableFields = [
     "group_id",
+    "group_type",
     "group_name",
     "group_description",
+    "group_sort_order",
+    "parent_id",
   ];
   this.sqlCreate = "\
     CREATE TABLE IF NOT EXISTS any_group (\
