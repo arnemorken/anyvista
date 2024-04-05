@@ -2920,6 +2920,18 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
 
     itemLinkClicked:        this.options.itemLinkClicked ? this.options.itemLinkClicked : null,
     clickContext:           this.options.clickContext    ? this.options.clickContext    : null,
+    closeContext:           this.options.closeContext    ? this.options.closeContext    : null,
+    addContext:             this.options.addContext      ? this.options.addContext      : null,
+    selectContext:          this.options.selectContext   ? this.options.selectContext   : null,
+    editContext:            this.options.editContext     ? this.options.editContext     : null,
+    updateContext:          this.options.updateContext   ? this.options.updateContext   : null,
+    deleteContext:          this.options.deleteContext   ? this.options.deleteContext   : null,
+    cancelContext:          this.options.cancelContext   ? this.options.cancelContext   : null,
+    removeContext:          this.options.removeContext   ? this.options.removeContext   : null,
+    newContext:             this.options.newContext      ? this.options.newContext      : null,
+    menuContext:            this.options.menuContext     ? this.options.menuContext     : null,
+    menulinkContext:        this.options.menulinkContext ? this.options.menulinkContext : null,
+
     preselected:            this.options.isSelectable    ? this.options.preselected     : null,
     select:                 this.options.isSelectable    ? this.options.select          : null,
     unselect:               this.options.isSelectable    ? this.options.unselect        : null,
