@@ -352,7 +352,7 @@ abstract class dbTable
       return false;
     }
     $row = $res->fetch(PDO::FETCH_ASSOC);
-    if (!$row || count($row) == 0 || $this->mDBConnection->isError()) { // TODO Error checking
+    if (!$row || count($row) === 0 || $this->mDBConnection->isError()) { // TODO Error checking
       if ($this->mDBConnection->isError()) {
         $this->mError = "dbTable::tableExists($tableName): Error fetching data:".$res->getMessage();
         $res->free();

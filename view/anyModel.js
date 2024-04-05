@@ -822,7 +822,7 @@ anyModel.prototype.dataSearchMaxId = function (data,type,_prev_type)
   if (!data)
     data = this.data;
   // If empty dataset, start with 0
-  if (!data || Object.size(data) == 0) {
+  if (!data || Object.size(data) === 0) {
     this.max = 0;
     return 0;
   }
@@ -1476,7 +1476,7 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
   if (serverdata) {
     if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
       serverdata = serverdata.JSON_CODE;
-    if (Object.size(serverdata.data) == 0)
+    if (Object.size(serverdata.data) === 0)
       serverdata.data = null;
     self.message = serverdata.message;
     if (serverdata.error) {
@@ -1720,7 +1720,7 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
       serverdata.is_new = options.is_new;
       self.max     = parseInt(serverdata.id);
     }
-    if (Object.size(serverdata.data) == 0)
+    if (Object.size(serverdata.data) === 0)
       serverdata.data = null;
     self.message = serverdata.message;
     if (serverdata.error) {
@@ -2174,7 +2174,7 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
       console.error("anyModel.dbUpdateSuccess: Illegal server data, check server log. "); // TODO! i18n
       return context;
     }
-    if (Object.size(serverdata.data) == 0)
+    if (Object.size(serverdata.data) === 0)
       serverdata.data = null;
     self.message = serverdata.message;
     if (serverdata.error) {
@@ -2435,7 +2435,7 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
-    if (Object.size(serverdata.data) == 0)
+    if (Object.size(serverdata.data) === 0)
       serverdata.data = options.data ? options.data : self.data;
     self.message = serverdata.message;
     if (serverdata.error) {
@@ -2779,7 +2779,7 @@ anyModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
-    if (Object.size(serverdata.data) == 0)
+    if (Object.size(serverdata.data) === 0)
       serverdata.data = null;
     self.message = serverdata.message;
     if (serverdata.error) {

@@ -29,14 +29,14 @@ groupValidator.prototype.validateUpdate = function (opt,view)
 
   let nameid1 = elem_id_base+"_group_name .itemEdit";
   let nameid2 = elem_id_base+"_group_name .itemUnedit";
-  if (($("#"+nameid1).length != 0 && !$("#"+nameid1).val()) &&
-      ($("#"+nameid2).length != 0 && !$("#"+nameid2).val()))
+  if (($("#"+nameid1).length !== 0 && !$("#"+nameid1).val()) &&
+      ($("#"+nameid2).length !== 0 && !$("#"+nameid2).val()))
       err += "Group name missing. ";
 
   let typeid1 = elem_id_base+"_group_type .itemEdit";
   let typeid2 = elem_id_base+"_group_type .itemUnedit";
-  if (($("#"+typeid1).length != 0 && !$("#"+typeid1).val()) &&
-      ($("#"+typeid2).length != 0 && !$("#"+typeid2).val()))
+  if (($("#"+typeid1).length !== 0 && !$("#"+typeid1).val()) &&
+      ($("#"+typeid2).length !== 0 && !$("#"+typeid2).val()))
       err += "Group type missing. ";
 
   return err;

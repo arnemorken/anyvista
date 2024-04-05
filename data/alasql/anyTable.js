@@ -1293,7 +1293,7 @@ anyTable.prototype.dbInsert = async function(options)
     // numRowsChanged == 1 if the insert succeeded
     self.numRowsChanged = res;
     //console.log("ins res:"+res);
-    if (self.numRowsChanged == 0) {
+    if (self.numRowsChanged === 0) {
       self.message = self.insertNothingToDo;
       return Promise.resolve(self);
     }
@@ -1409,7 +1409,7 @@ anyTable.prototype.dbUpdate = async function(options)
     // numRowsChanged >= 1 if the update succeeded
     self.numRowsChanged = res;
     //console.log("upd res:"+res);
-    if (self.numRowsChanged == 0) {
+    if (self.numRowsChanged === 0) {
       self.message = self.updateNothingToDo; // TODO! updateNothingToDo
       return Promise.resolve(self);
     }

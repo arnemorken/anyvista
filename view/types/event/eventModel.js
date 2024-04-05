@@ -49,7 +49,7 @@ eventModel.prototype.dbSetAttended = function (options)
     if (is_me || is_admin)
       options.link_id = this.permission.current_user_id;
   }
-  let user_attended = (options.user_attended==0 ? 1 : 0);
+  let user_attended = (options.user_attended === 0 ? 1 : 0);
   let item = this.dataSearch({type:"event",id:options.id});
   if (item)
     item["user_attended"] = user_attended;

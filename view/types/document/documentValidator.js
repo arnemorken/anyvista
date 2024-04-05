@@ -26,7 +26,7 @@ documentValidator.prototype.validateUpdate = function (opt,view)
   let elem_id_base = view.getIdBase()+"_"+opt.type+"_"+opt.mode+"_"+opt.id_str;
 
   let nameid = elem_id_base+"_document_name";
-  if ($("#"+nameid).length == 0 || !$("#"+nameid).text())
+  if ($("#"+nameid).length === 0 || !$("#"+nameid).text())
     err += "Document name missing. ";
 
   return err;

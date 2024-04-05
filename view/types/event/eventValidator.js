@@ -29,8 +29,8 @@ eventValidator.prototype.validateUpdate = function (opt,view)
 
   let nameid1 = elem_id_base+"_event_name .itemEdit";
   let nameid2 = elem_id_base+"_event_name .itemUnedit";
-  if (($("#"+nameid1).length != 0 && !$("#"+nameid1).val()) &&
-      ($("#"+nameid2).length != 0 && !$("#"+nameid2).val()))
+  if (($("#"+nameid1).length !== 0 && !$("#"+nameid1).val()) &&
+      ($("#"+nameid2).length !== 0 && !$("#"+nameid2).val()))
       err += "Event name missing. ";
 
   let date_start_id = elem_id_base+"event_date_start .itemEdit";

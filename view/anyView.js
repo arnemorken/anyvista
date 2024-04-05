@@ -555,7 +555,7 @@ $.any.anyView.prototype.refresh = function (params)
     this.preRefresh(params);
 
   if (data) {
-    if (Object.size(data) != 0) {
+    if (Object.size(data) !== 0) {
       let row_no     = 0;
       let prev_type  = type;
       let prev_mode  = mode;
@@ -1117,7 +1117,7 @@ $.any.anyView.prototype.refreshHeaderEntry = function (parent,data_item,filter_i
   if (!parent || !data_item)
     return null;
 
-  let stylestr = n == 0 ? "style='display:inline-block;'" : "";
+  let stylestr = (n === 0) ? "style='display:inline-block;'" : "";
   let div = $("<div class='"+filter_id+"' "+stylestr+">"+data_item[filter_id]+"</div>");
   parent.append(div);
   return div;
@@ -3857,7 +3857,7 @@ $.any.anyView.prototype._addListEntry = function (opt)
                  id:       opt.id,
                  new_data: indata,
                });
-  opt.new_id = null; // Important! To make addListEntry work with id == 0
+  opt.new_id = null; // Important! To make addListEntry work with id === 0
 
   this.refreshData({
          table_div:  table_div,
@@ -4382,7 +4382,7 @@ $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
-    if (Object.size(serverdata.data) == 0)
+    if (Object.size(serverdata.data) === 0)
       serverdata.data = null;
     self.message = serverdata.message;
     if (serverdata.error) {
@@ -4640,7 +4640,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
-    if (Object.size(serverdata.data) == 0)
+    if (Object.size(serverdata.data) === 0)
       serverdata.data = null;
     model.message = serverdata.message;
     if (serverdata.error) {

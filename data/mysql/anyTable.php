@@ -966,7 +966,7 @@ class anyTable extends dbTable
     // Get the data
     $success = $this->getRowData($this->mData,"list",$simple);
     $gr_idx = isInteger($gid) ? intval($gid) : $gid;
-    if ((!$gr_idx && $gr_idx != 0) || $gr_idx == "")
+    if ((!$gr_idx && $gr_idx !== 0) || $gr_idx == "")
       $gr_idx = "nogroup";
       if ($limit != "") {
       // Count how many rows would have been returned without LIMIT
@@ -1836,7 +1836,7 @@ class anyTable extends dbTable
       return null;
 
     // Number of rows changed == 1 if the insert succeeded
-    if ($this->getNumRowsChanged() == 0) {
+    if ($this->getNumRowsChanged() === 0) {
       $this->setMessage($this->mInsertNothingToDo);
       return null;
     }
@@ -1850,7 +1850,7 @@ class anyTable extends dbTable
 
     // Insert in group table, if group id is given and we have a group table
     $gid = Parameters::get("group_id");
-    if (($gid || $gid==0)&& $gid != "" && $gid != "nogroup" && $this->mType != "group") {
+    if (($gid || $gid === 0)&& $gid != "" && $gid != "nogroup" && $this->mType != "group") {
       if ($this->tableExists($this->mTableNameGroupLink)) {
         $stmt = "INSERT INTO ".$this->mTableNameGroupLink." (group_id,".$this->mType."_id) ".
                 "VALUES ('".$gid."','".$this->mId."')";
@@ -1861,7 +1861,7 @@ class anyTable extends dbTable
     }
     // Insert in link table, if link id is given
     $link_id = Parameters::get("link_id");
-    if (($link_id || $link_id==0) && $link_id != "") {
+    if (($link_id || $link_id === 0) && $link_id != "") {
         Parameters::set("add",$link_id);
         $this->dbUpdateLinkList();
     }
@@ -1915,7 +1915,7 @@ class anyTable extends dbTable
     $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
     $stmt.= ")";
     //elog("dbPrepareInsertStmt:".$stmt);
-    if ($n == 0) {
+    if ($n === 0) {
       $this->setMessage($this->mInsertNothingToDo);
       return null;
     }
@@ -2014,7 +2014,7 @@ class anyTable extends dbTable
       return null;
     $to_set[strlen($to_set)-1] = " "; // Replace last "," with " "
     $stmt.= $to_set." WHERE ".$this->mIdKeyTable."='".$this->mId."' ";
-    if ($n == 0) {
+    if ($n === 0) {
       $this->setMessage($this->mUpdateNothingToDo);
       return null;
     }

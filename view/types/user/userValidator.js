@@ -41,7 +41,7 @@ userValidator.prototype.validateUpdate = function (opt,view)
   // Validate display name
   let nameid0 = elem_id_base+"_display_name .itemEdit";
   let v0 = $("#"+nameid0).val();
-  if ($("#"+nameid0).length != 0 && !v0)
+  if ($("#"+nameid0).length !== 0 && !v0)
       err += "Display name missing. ";
 
   // Validate login/email
@@ -79,12 +79,12 @@ userValidator.prototype.validateUpdate = function (opt,view)
 
   // Validate gender
   let nameid1 = elem_id_base+"_gender .itemEdit";
-  if ($("#"+nameid1).length != 0 && !$("#"+nameid1).val())
+  if ($("#"+nameid1).length !== 0 && !$("#"+nameid1).val())
       err += "Gender missing. ";
 
   // Validate date of birth
   let nameid2 = elem_id_base+"_date_birth .itemEdit";
-  if ($("#"+nameid2).length != 0 && !$("#"+nameid2).val())
+  if ($("#"+nameid2).length !== 0 && !$("#"+nameid2).val())
       err += "Birth date missing. ";
 
   // Validate password

@@ -90,7 +90,7 @@ $.any.anyViewTabs.prototype.getOrCreateTabsContainer = function (parent,type,mod
 
 $.any.anyViewTabs.prototype.postRefresh = function (params,skipName)
 {
-  if (this.model && Object.size(this.model.data) == 0) {
+  if (this.model && Object.size(this.model.data) === 0) {
     let elm = $("#"+this.current_id_base+"_data");
     elm.remove();
     elm = $("#"+this.current_id_base+"_data_tab_btn");

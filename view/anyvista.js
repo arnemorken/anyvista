@@ -874,8 +874,8 @@
             let elem_id_base = view.getIdBase()+"_"+opt.type+"_"+opt.mode+"_"+opt.id_str;
             let nameid1 = elem_id_base+"_task_name .itemEdit";
             let nameid2 = elem_id_base+"_task_name .itemUnedit";
-            if (($("#"+nameid1).length != 0 && !$("#"+nameid1).val()) &&
-                ($("#"+nameid2).length != 0 && !$("#"+nameid2).val()))
+            if (($("#"+nameid1).length !== 0 && !$("#"+nameid1).val()) &&
+                ($("#"+nameid2).length !== 0 && !$("#"+nameid2).val()))
                 err += "Task name missing. ";
             return err;
           };
@@ -968,9 +968,9 @@
               return true;
             }
 
-            protected function findListWhere($linkTableName,$gid,$type=null,$linkType=null,$linkId=null,$grouping=true,$groupType=null,$searchTerm="")
+            protected function findListWhere($gid,$type=null,$linkType=null,$linkId=null,$grouping=true,$groupType=null,$searchTerm="")
             {
-              $where = parent::findListWhere($linkTableName,$gid,$type,$linkType,$linkId,$grouping,$groupType,$searchTerm);
+              $where = parent::findListWhere($gid,$type,$linkType,$linkId,$grouping,$groupType,$searchTerm);
               return $where;
             }
 
