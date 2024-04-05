@@ -112,6 +112,7 @@ var anyViewWidget = $.widget("any.anyView", {
     showTableFooter:        true,
     showTableIngress:       true,
     showRowIngress:         false,
+    showSublists:           true,
     showSearcher:           true,
     showPaginator:          true,
     showToolbar:            true,
@@ -565,7 +566,7 @@ $.any.anyView.prototype.refresh = function (params)
         ++this.data_level;
       // Display data: Loop over all entries and refresh views
       for (let id in data) {
-        if (data.hasOwnProperty(id) && id != "id" && !id.startsWith("grouping")) {
+        if (data.hasOwnProperty(id) && id != "id" && !id.startsWith("grouping") && !(id.startsWith("link-") && !this.options.showSublists)) {
           if (view) {
             // Find the type and mode of the current data item (default is the previous type/mode)
             let curr_type = view._findType(data,id,prev_type);
@@ -700,7 +701,7 @@ $.any.anyView.prototype.refresh = function (params)
   if (!model)
     model = this.model;
   if (this.options && this.options.showToolbar && !this.options.isSelectable &&
-      this.options.data_level == 0 && this.id_stack.length == 0 && this.model &&
+      this.options.data_level === 0 && this.id_stack.length === 0 && this.model &&
       (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLinkItem || this.options.showButtonAddLinkGroup)) {
     this.refreshToolbarBottom({
            parent:   parent,
@@ -2888,6 +2889,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
     showTableFooter:        params && params.showTableFooter  !== undefined ? params.showTableFooter  : this.options.showTableFooter,
     showTableIngress:       this.options.showTableIngress,
     showRowIngress:         this.options.showRowIngress,
+    showSublists:           this.options.showSublists,
     showButtonEdit:         params && params.showButtonEdit   !== undefined ? params.showButtonEdit   : this.options.showButtonEdit,
     showButtonUpdate:       params && params.showButtonUpdate !== undefined ? params.showButtonUpdate : this.options.showButtonUpdate,
     showButtonCancel:       params && params.showButtonCancel !== undefined ? params.showButtonCancel : this.options.showButtonCancel,
