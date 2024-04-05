@@ -586,9 +586,11 @@ $.any.anyView.prototype.refresh = function (params)
             let new_view   = false;
             // Create new view whenever we encounter a new type or a new mode
             if ((prev_type != "" && prev_type != curr_type) ||
-                (prev_mode != "" && prev_mode != curr_mode)) {
+                (/*prev_mode != "" &&*/ prev_mode != curr_mode)) {
               // If the new type/mode is contained within a list, create a new row to contain a new parent container
-              if (prev_mode == "list" && prev_type != curr_type)
+              if (prev_mode == "list" && prev_type != curr_type &&
+                  params.par_id != "+0" && params.par_id !== 0 // TODO! Not a good test
+                  )
                 the_parent = view._addContainerRow(parent,prev_type,prev_mode,curr_type,curr_mode,id_str);
               model = this.createModel({
                              type:     curr_type,
