@@ -421,17 +421,9 @@ anyTable.prototype.dbSearch = function(options)
 // Internal method, do not call directly.
 anyTable.prototype._dbSearch = async function(options)
 {
-  let type = options && options.type ? options.type : this.type;
-  let id   = options && options.id   ? options.id   : this.id;
-  if (!type) {
-    this.error = "dbSearch: type missing. ";
+  let id = this._initSearch(options);
+  if (id == -1)
     return Promise.resolve(null);
-  }
-  this.type  = type;
-  this.id    = id;
-  this.data  = null;
-  this.error = "";
-  this.numResults = 0;
 
   //this.initFieldsFromParam();  // TODO! Not implemented yet
   //this.initFiltersFromParam(); // TODO! Not implemented yet
@@ -448,6 +440,24 @@ anyTable.prototype._dbSearch = async function(options)
     return await this.dbSearchList(options);
 }; // _dbSearch
 
+anyTable.prototype._initSearch = function(options)
+{
+  let type = options && options.type ? options.type : this.type;
+  let id   = options && options.id   ? options.id   : this.id;
+  if (!type) {
+    this.error = "_initSearch: type missing. ";
+    console.error(this.error);
+    return -1;
+  }
+  this.type  = type;
+  this.id    = id;
+  this.data  = null;
+  this.error = "";
+  this.numResults = 0;
+
+  return id;
+}; // _initSearch
+
 //////////////////////////////// Item search ////////////////////////////////
 
 //
@@ -457,6 +467,11 @@ anyTable.prototype.dbSearchItem = async function(options) // TODO! Is async need
 {
   options.key = options ? this.idKey : null;
   options.val = options ? options.id : null;
+
+  let id = this._initSearch(options);
+  if (id == -1)
+    return Promise.resolve(null);
+
   return this.dbSearchItemByKey(options);
 }; // dbSearchItem
 
@@ -604,11 +619,10 @@ anyTable.prototype.dbSearchItemListOfType = async function(linkType,grouping,gro
 //
 anyTable.prototype.dbSearchList = async function(options)
 {
-  if (!this.type) {
-    this.error = "dbSearchList: No type. ";
-    console.error(this.error);
+  let id = this._initSearch(options);
+  if (id == -1)
     return Promise.resolve(null);
-  }
+
   let linkType = options                                         ? options.linkType : null;
   let linkId   = options                                         ? options.linkId   : null;
   let groupId  = options                                         ? options.groupId  : null;
