@@ -500,6 +500,9 @@ anyTable.prototype.dbSearchItemByKey = function(options)
         await self.dbSearchItemLists(grouping,groupId); // Get lists associated with the item
       self.numResults = 1;
     }
+    if (self.data && self.data["nogroup"])
+      self.data = self.data["nogroup"];
+
     return Promise.resolve(self.data);
   });
 }; // dbSearchItemByKey
@@ -680,10 +683,13 @@ anyTable.prototype.dbSearchList = async function(options)
       group_data = this.data;
     else
       group_data = {};
-  /*if (grouping || this.type == "group")*/ {
+  if (grouping || this.type == "group") {
     group_data = this.groupTable.buildDataTree(group_data);
     this.buildGroupTreeAndAttach(group_data,this.type,linkId,grouping);
   }
+  else
+  if (this.data["nogroup"])
+    this.data = this.data["nogroup"];
   //console.log("dbSearchList, tree list data:"); console.log(this.data);
 
   return Promise.resolve(this.data);
@@ -1262,9 +1268,6 @@ anyTable.prototype.prepareData = function()
   if ((this.id || this.id === 0) && this.id != "")
     topidx = "+"+this.id;
   let data = {"data": { [topidx]: {} }};
-
-  if (this.id || this.id === 0)
-    this.data = this.data["nogroup"];
 
   // Set header and "head"
   let hdr = this.findHeader(this.type,this.data);

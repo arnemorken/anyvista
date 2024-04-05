@@ -694,6 +694,9 @@ class anyTable extends dbTable
         $this->dbSearchItemLists($grouping,$groupId); // Get lists associated with the item
       $this->mNumResults = 1;
     }
+    if ($this->mData && $this->mData["nogroup"])
+      $this->mData = $this->mData["nogroup"];
+
     return !$this->isError();
   } // dbSearchItemByKey
 
@@ -946,10 +949,13 @@ class anyTable extends dbTable
         $group_data = $this->mData;
       else
         $group_data = array();
-    /*if ((!$groupId && $groupId !== 0) || $this->mType == "group")*/ {
+    if ((!$groupId && $groupId !== 0) || $this->mType == "group") {
       $group_data = $this->mGroupTable->buildDataTree($group_data);
       $this->buildGroupTreeAndAttach($group_data,$this->mType,$linkId,$grouping);
     }
+    else
+    if ($this->$mData["nogroup"])
+      $this->mData = $this->mData["nogroup"];
     //vlog("dbSearchList, tree list data:",$this->mData);
 
     return !$this->isError();
@@ -1745,9 +1751,6 @@ class anyTable extends dbTable
     if (($this->mId || $this->mId === 0) && $this->mId != "")
       $topidx = "+".$this->mId;
     $data = array("data" => array($topidx => array()));
-
-    if ($this->mId || $this->mId === 0)
-      $this->mData = $this->mData["nogroup"];
 
     // Set header and "head"
     $hdr = $this->findHeader($this->mType,$this->mData);
