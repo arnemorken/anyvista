@@ -674,7 +674,7 @@ $.any.anyView.prototype.refresh = function (params)
     }
     else {
       let elm = $("#"+this.element[0].id);
-      elm.remove();
+      elm.empty();
     }
   } // if data
   else {
