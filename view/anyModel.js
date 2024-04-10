@@ -1602,7 +1602,7 @@ anyModel.prototype._dbSearchLocal = async function (options)
     let table = await this.table_factory.createClass(table_name,{type:the_type,header:true,path:options.path});
     if (table && table.error == "") {
       let self = this;
-      return table.dbSearch(options)
+      return await table.dbSearch(options)
       .then( function(serverdata) {
         self.error   = table.error;
         self.message = table.message;

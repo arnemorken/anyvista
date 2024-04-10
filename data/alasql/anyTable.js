@@ -463,7 +463,7 @@ anyTable.prototype._initSearch = function(options)
 //
 // Search database for an item, including linked lists.
 //
-anyTable.prototype.dbSearchItem = async function(options) // TODO! Is async needed here?
+anyTable.prototype.dbSearchItem = function(options)
 {
   options.key = options ? this.idKey : null;
   options.val = options ? options.id : null;
@@ -493,7 +493,7 @@ anyTable.prototype.dbSearchItemByKey = function(options)
   //console.log("dbSearchItemByKey:"+stmt);
   let self = this;
   return alasql.promise(stmt)
-  .then (async function(rows) { // TODO! Is async needed here?
+  .then (async function(rows) {
     // Get the data
     if (self.getRowData(rows,self.data,"item")) {
       if (!skipLinks)

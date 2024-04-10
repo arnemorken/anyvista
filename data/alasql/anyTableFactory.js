@@ -32,7 +32,7 @@ anyTableFactory.prototype.createClass = function(className,parameters)
   return this._createClass(className,parameters);
 }; // createClass
 
-anyTableFactory.prototype._createClass = function(className,parameters)
+anyTableFactory.prototype._createClass = async function(className,parameters)
 {
   try {
     let head = document.getElementsByTagName("head")[0];
@@ -47,7 +47,7 @@ anyTableFactory.prototype._createClass = function(className,parameters)
     if (!isScriptLoaded(js.src)) {
       //console.log("loading "+js.src);
       head.appendChild(js);
-      return new Promise( function(resolve) {
+      return new Promise( await function(resolve) {
         js.addEventListener("load", function() {
           let table_class = new window[className](self.connection,parameters);
           table_class.className = className;
