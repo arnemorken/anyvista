@@ -608,6 +608,7 @@ $.any.anyView.prototype.refresh = function (params)
                              par_mode: par_mode,
                            });
               if (view) {
+                view.empty();
                 this.views[id_str] = view;
                 new_view = true;
               }
