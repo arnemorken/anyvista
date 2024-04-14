@@ -25,7 +25,7 @@ abstract class dbTable
   private   $mDBConnection   = null;
   private   $mDBResult       = null;
   private   $mNumRowsChanged = 0;
-  private   $mHostTable      = null;
+  protected $mHostTable      = null;
   protected $mError          = "";
   protected $mMessage        = "";
 
@@ -44,7 +44,7 @@ abstract class dbTable
   /////////////////////////////////////////////////////////////////
 
   abstract public    function dbSearch();
-  abstract protected function prepareData();
+  abstract protected function prepareData($id=null);
   abstract public    function dbInsert();
   abstract public    function dbUpdate();
   abstract public    function dbUpdateLinkList();
