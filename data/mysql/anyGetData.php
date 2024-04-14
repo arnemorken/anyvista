@@ -73,6 +73,7 @@ Parameters::set("tableFields",array (
         }
         //$time_elapsed_secs = microtime(true) - $start;
         //error_log("anyGetData: time_elapsed_secs: $time_elapsed_secs");
+/*
         if ($table->isError() ||
             Parameters::get("search") === "no" || Parameters::get("search") === "false" ||
             Parameters::get($table->getIdKey()) === "") {
@@ -80,6 +81,7 @@ Parameters::set("tableFields",array (
           if ($data !== null && !empty($data))
             $data = $table->prepareData();
         }
+*/
         $data["permission"] = $table->getPermission();
         $data["message"]    = $table->getMessage();
         $data["error"]      = $table->getError();
