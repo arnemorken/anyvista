@@ -589,7 +589,7 @@ $.any.anyView.prototype.refresh = function (params)
                 (/*prev_mode != "" &&*/ prev_mode != curr_mode)) {
               // If the new type/mode is contained within a list, create a new row to contain a new parent container
               if (prev_mode == "list" && prev_type != curr_type &&
-                  params.par_id != "+0" && params.par_id !== 0 // TODO! Not a good test
+                  params.par_id != "+0" && params.par_id != "0" && params.par_id !== 0 // TODO! Not a good test
                   )
                 the_parent = view._addContainerRow(parent,prev_type,prev_mode,curr_type,curr_mode,id_str);
               model = this.createModel({
@@ -3618,13 +3618,13 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     from:      from,
     num:       num,
     context:   this.model,
-    group_id:  pager.options.div_info.group_id,
     type:      pager.options.div_info.type,
+    group_id:  pager.options.div_info.group_id,
     grouping:  this.options.grouping,
     simple:    this.options.grouping === null,
-    header:    "All "+pager.options.div_info.type+"s", // TODO! Not a good solution
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
+    header:    "All "+pager.options.div_info.type+"s", // TODO! Not a good solution
   };
   this.options.data_level = 0;
   this.data_level = 0; // TODO! Why is this in 2 places?
