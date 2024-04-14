@@ -899,7 +899,7 @@ $.any.anyView.prototype.refreshToolbarForView = function (params)
   let par_data = params.par_data;
   let par_id   = params.par_id;
 
-  if (!parent || !parent.length || !type ||
+  if (!parent || !parent.length || !type || mode != "item" ||
       par_type !== "group" || par_id === "nogroup" || par_id === "unknown" ||
       (type == "group" && par_type == "group"))
     return null;
@@ -988,7 +988,14 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
          });
     this.showMessages();
   }
-  let new_type = data && data["+0"] ? data["+0"].group_type : this.model.type;
+  let new_type = null;
+  if (data && data["+0"])
+    new_type = data["+0"].group_type;
+  else
+  if (data && data[0])
+    new_type = data[0].group_type;
+  else
+    new_type = this.model.type;
   if (!new_type)
     new_type = this.model.type;
   if (this.options.showButtonNew && new_type) {
