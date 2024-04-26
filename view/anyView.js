@@ -2087,6 +2087,8 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
 // Helper function for refreshListTableDataRow and refreshItemTableDataRow
 $.any.anyView.prototype._rowHasData = function (data,filter)
 {
+  if (data.data)
+    return true; // We have subdata
   let row_has_data = false;
   for (let filter_id in filter) {
     if (filter.hasOwnProperty(filter_id)) {
