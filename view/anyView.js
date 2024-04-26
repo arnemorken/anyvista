@@ -1803,7 +1803,7 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
     return null;
   }
 
-  let d = data[id] ? data[id] : data["+"+id];
+  let d = data[id] ? data[id] : data[""+id] ? data[""+id] : data["+"+id];
   let row_has_data = this._rowHasData(d,filter);
   if (!row_has_data)
     return null; // Nothing to display
