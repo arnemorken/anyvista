@@ -1754,8 +1754,10 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
       self.dataInit(serverdata);
     }
   }
-  if (self.cbExecute && self.auto_search && self.auto_refresh && options.auto_refresh !== false)
-    self.cbExecute({clear:true});
+  if (self.cbExecute && self.auto_search && self.auto_refresh && options.auto_refresh !== false) {
+    let clr = options && options.clear === false ? false : true;
+    self.cbExecute({clear:clr});
+  }
   return context;
 }; // dbSearchSuccess
 
