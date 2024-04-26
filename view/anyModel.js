@@ -1147,7 +1147,7 @@ anyModel.prototype.dataUpdate = function (options)
     return null;
   }
   let item = this.dataSearch({data:the_data,id:the_id,type:the_type});
-  if (!item || (!item[the_id] && !item["+"+the_id])) {
+  if (!item || (!item[the_id] && !item[""+the_id] && !item["+"+the_id])) {
     let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type);
     errstr = errstr.replace("&&",""+the_id);
     console.warn("anyModel.dataUpdate: "+errstr);
@@ -1157,7 +1157,7 @@ anyModel.prototype.dataUpdate = function (options)
     item[the_id].dirty = {};
   for (let filter_id in new_data) {
     if (new_data.hasOwnProperty(filter_id)) {
-      // Only send data that have changed to server
+      // Only update data that have changed
       if (item[the_id][filter_id] != new_data[filter_id]) {
         item[the_id][filter_id] = new_data[filter_id];
         if (filter_id != "parent_name")
