@@ -4597,18 +4597,15 @@ $.any.anyView.prototype.dbUpdate = function (event)
     this.refresh();
   }
   // Update database
-  if (this.model.source == "remote") {
-    // Spinner
-    let icid = event.currentTarget.id.replace("update","edit");
-    if (icid && icid != "") {
-      let icdiv = $("#"+icid);
-      let res = icdiv.find($(".fas"));
-      res.toggleClass('fa-pencil-alt').toggleClass('fa-solid fa-spinner fa-spin'); // TODO! CSS
-    }
-    if (par_id && par_data && par_data[par_id] && (par_data[par_id].head == "group" || par_data[par_id].item == "group" || par_data[par_id].list == "group"))
-      event.data.group_id = par_id;
-    return this.model.dbUpdate(event.data);
+  let icid = event.currentTarget.id.replace("update","edit");
+  if (icid && icid != "") {
+    let icdiv = $("#"+icid);
+    let res = icdiv.find($(".fas"));
+    res.toggleClass('fa-pencil-alt').toggleClass('fa-solid fa-spinner fa-spin'); // TODO! CSS
   }
+  if (par_id && par_data && par_data[par_id] && (par_data[par_id].head == "group" || par_data[par_id].item == "group" || par_data[par_id].list == "group"))
+    event.data.group_id = par_id;
+  return this.model.dbUpdate(event.data);
 
   if (item && item[id]) {
     delete item[id].is_new;
