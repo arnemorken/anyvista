@@ -1931,32 +1931,32 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
  * @method anyModel.dbUpdate
  * @param {Object} options An object which may contain these elements:
  *
- * @param {Object}   options.new_data   The data structure from which comes the data to insert/update. If null
- *                                      or not specified, data from `this.data` is used for the update. A data
- *                                      item matching id/type, must exist in the data structure. If no such
- *                                      item can be found, it is an error.
- *                                      Optional. Default: `this.data`.
- * @param {integer}  options.type       Type of the datem to update.
- *                                      Optional. Default: `this.type`.
- * @param {integer}  options.id         The data item's id. If given, an existing item in the database will be
- *                                      updated. If not given, a new item will be inserted into the database.
- *                                      Mandatory if updating, null or undefined if inserting.
- * @param {boolean}  options.is_new     true if the item is new (does not exist in database) and should be inserted
- *                                      rather than updated. Note: If set, an insert operation will be performed
- *                                      even if `options.id` has a value.
- *                                      Optional. Default: false.
+ * @param {Object}   options.new_data     The data structure from which comes the data to insert/update. If null
+ *                                        or not specified, data from `this.data` is used for the update. An item
+ *                                        matching id/type, must exist in the data structure. If no such item can
+ *                                        be found, it is an error.
+ *                                        Optional. Default: `this.data`.
+ * @param {integer}  options.type         Type of the datem to update.
+ *                                        Optional. Default: `this.type`.
+ * @param {integer}  options.id           The data item's id. If given, an existing item in the database will be
+ *                                        updated. If not given, a new item will be inserted into the database.
+ *                                        Mandatory if updating, undefined if inserting.
+ * @param {boolean}  options.is_new       true if the item is new (does not exist in database) and should be inserted
+ *                                        rather than updated. Note: If set, an insert operation will be performed
+ *                                        even if `options.id` has a value.
+ *                                        Optional. Default: false.
  * @param {Object}   options.table_fields An array of strings to be sent to the server, indicating which columns
  *                                        of the table should be used in the update/insert. These fields are only
  *                                        applied if the server fails to find a filter corresponding to `type`.
  *                                        Optional. Default: undefined.
- * @param {integer}  options.timeoutSec Number of seconds before timing out.
- *                                      Optional. Default: 10.
- * @param {Function} options.onSuccess  Method to call on success.
- *                                      Optional. Default: `this.dbUpdateSuccess`.
- * @param {Function} options.onFail     Method to call on error or timeout.
- *                                      Optional. Default: `this._dbFail`.
- * @param {Function} options.context    The context of the success and fail methods.
- *                                      Optional. Default: `this`.
+ * @param {integer}  options.timeoutSec   Number of seconds before timing out.
+ *                                        Optional. Default: 10.
+ * @param {Function} options.onSuccess    Method to call on success.
+ *                                        Optional. Default: `this.dbUpdateSuccess`.
+ * @param {Function} options.onFail       Method to call on error or timeout.
+ *                                        Optional. Default: `this._dbFail`.
+ * @param {Function} options.context      The context of the success and fail methods.
+ *                                        Optional. Default: `this`.
  *
  * @return true if the database call was made, false otherwise.
  */
