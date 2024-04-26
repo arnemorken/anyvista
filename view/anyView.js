@@ -1989,6 +1989,7 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
     id_str:     id_str,
     row_id_str: row_id_str,
     filter:     filter,
+    edit:       edit,
   };
   if (this.options.isSelectable && this.options.showButtonSelect==1 && mode == "list") {
     let checked = this.options.select.has(parseInt(id));
@@ -2000,12 +2001,8 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
     if (this.options.isEditable && this.options.showButtonEdit==1 && !edit) {
       this.refreshEditButton(first_opt);
     }
-    if (this.options.isEditable && this.options.showButtonUpdate==1 && edit) {
-      first_opt.is_new   = data && data[id] ? data[id].is_new : false;
-      first_opt.new_data = data;
-      first_opt.data     = null;
+    if (this.options.showButtonUpdate==1)
       this.refreshUpdateButton(first_opt);
-    }
     if (this.options.isEditable || edit ||
         (this.options.isRemovable && this.options.showButtonRemove==1) ||
         (this.options.isDeletable && this.options.showButtonDelete==1)) {
@@ -2074,6 +2071,8 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
         edit:       edit,
         filter:     filter,
       };
+      if (this.options.showButtonUpdate==2)
+        this.refreshUpdateButton(last_opt);
       if (this.options.showButtonRemove==2 && this.options.isRemovable && id && mode == "list" && !edit)
         this.refreshRemoveButton(last_opt);
       if (this.options.showButtonDelete==2 && this.options.isDeletable && id)
@@ -2409,8 +2408,15 @@ $.any.anyView.prototype.refreshEditButton = function (opt)
 // By default calls dbUpdate
 $.any.anyView.prototype.refreshUpdateButton = function (opt)
 {
+  if (!this.options.isEditable || !opt.edit)
+    return null;
+
   if (!opt)
     return null;
+
+  opt.is_new   = opt.data && opt.data[parseInt(opt.id)] ? opt.data[parseInt(opt.id)].is_new : false;
+  opt.new_data = opt.data;
+  opt.data     = null;
 
   let parent  = opt.parent;
   let id_str  = opt.row_id_str;
