@@ -1987,25 +1987,30 @@ anyModel.prototype.dbUpdate = function (options) // TODO! Should this be an asyn
                                type: the_type,
                                id:   the_id,
                             });
-  if (!item || (!item[the_id] && !item["+"+the_id])) {
+  if (!item || (!item[this.id_key] && !item[the_id] && !item["+"+the_id])) {
     let errstr = i18n.error.ITEM_NOT_FOUND.replace("%%",""+the_type);
     errstr = errstr.replace("&&",""+the_id);
     console.error("anyModel.dbUpdate: "+errstr);
     return false;
   }
-  if (!item[the_id])
-    the_id = "+"+the_id;
-  if (!options.is_new && !item[the_id].is_new && !Object.size(item[the_id].dirty)) {
+  let it = item; // Return this
+  if (!item[this.id_key]) {
+    if (item[the_id])
+      item = item[the_id];
+     else
+      item = item["+"+the_id];
+  }
+  if (!options.is_new && !item.is_new && !Object.size(item.dirty)) {
     this.message = i18n.error.NOTHING_TO_UPDATE;
     console.log("anyModel.dbUpdate: "+this.message);
     this.cbExecute();
     return false;
   }
   // Data to update or insert
-  let item_to_send = item[the_id].is_new || options.is_new
-                     ? item[the_id]         // insert
-                     : item[the_id].dirty
-                       ? item[the_id].dirty // update
+  let item_to_send = item.is_new || options.is_new
+                     ? item         // insert
+                     : item.dirty
+                       ? item.dirty // update
                        : {};
   // Data used in dbUpdateSuccess method
   options.client_id = the_id;   // Update this id in existing data structure with new id from server
