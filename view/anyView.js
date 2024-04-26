@@ -185,7 +185,7 @@ var anyViewWidget = $.widget("any.anyView", {
 
     if (this.options.id)
       if ($("#"+this.options.id).length)
-        this.element = $("#"+this.options.id);
+        this.element = $("#"+this.options.id); // TODO! This removes parent classes, etc.!
       else
         this.element.attr("id",this.options.id);
 
@@ -249,7 +249,6 @@ var anyViewWidget = $.widget("any.anyView", {
 
   // Destructor
   _destroy: function() {
-    this.element.removeClass("any-data-view");
     this.options.top_view = null;
     this.options          = null;
     this.model            = null;
@@ -4163,9 +4162,10 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
         for (let filter_id in opt.filter) {
           if (opt.filter.hasOwnProperty(filter_id)) {
             let input_id = prefix+"_"+filter_id;
-            let val = $("#"+input_id).find(".itemText").val();
+            let elm = $("#"+input_id);
+            let val = elm.find(".itemText").val();
             if (!val || val == "")
-              val = $("#"+input_id).find(".itemText").text();
+              val = elm.find(".itemText").text();
             if (val) {
               is_empty = false;
               break;
