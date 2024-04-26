@@ -4493,20 +4493,31 @@ $.any.anyView.prototype.dbUpdate = function (event)
   for (let filter_id in filter) {
     if (filter.hasOwnProperty(filter_id)) {
       let val = null;
-      let input_id = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id+" .itemEdit";
-      if ($("#"+input_id).length)
-        val = $("#"+input_id).val();
+      let inp_id   = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id;
+      let input_id = inp_id+" .itemEdit";
+      let elm = $("#"+input_id);
+      let cls = elm.attr("class");
+      if (cls && cls.includes("tinymce")) {
+        let jq_id = inp_id+" > textarea";
+        let jq    = $("#"+jq_id);
+        jq_id     = jq.attr("id");
+        val       = tinymce.get(jq_id) ? tinymce.get(jq_id).getContent() : "";
+        val       = val ? val.replace(/'/g, "\\'") : "";
+      }
+      else
+      if (elm.length)
+        val = elm.val();
       else {
         // Send values marked as dirty to server even if they are not editable
         input_id = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id+"[dirty='true']";
-        if ($("#"+input_id).length)
-          val = $("#"+input_id).val();
+        if (elm.length)
+          val = elm.val();
       }
       if (val || val == "") {
         data_values[filter_id] = val;
         if (filter_id == "parent_id") {
           let input_id = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id+" .itemSelect option:selected";
-          let pname = $("#"+input_id).text();
+          let pname = elm.text();
           data_values["parent_name"] = pname;
         }
       }
