@@ -2214,11 +2214,6 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
                                      data: options.data,
                                   });
         if (item) {
-          if (options.id == options.client_id && (!item || (!item[options.client_id] && !item["+"+options.client_id]))) {
-            // Should never happen
-            console.error("anyModel.dbUpdateSuccess: System error: Could not find item with id "+options.client_id);
-            return false;
-          }
           if (!["head","item","list"].includes(serverdata.id)) { // head, item and list are illegal as ids
             self.last_insert_id = serverdata.id; // Id of the item inserted/updated, as provided by server
             if ((options.client_id || options.client_id === 0) && (serverdata.id || serverdata.id === 0) && parseInt(options.client_id) != parseInt(serverdata.id)) {
