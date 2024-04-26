@@ -2840,9 +2840,11 @@ $.any.anyView.prototype.createView = function (params)
   if (params && params.showHeader === false)
     view_opt.showHeader = false;
   let view  = null;
-  let v_str = view_opt.grouping
-              ? type+"View"+view_opt.grouping.capitalize()
-              : type+"View"; // Use default view name derived from type
+  let v_str = view_str && typeof view_str === "string"
+              ? view_str
+              : view_opt.grouping
+                ? type+"View"+view_opt.grouping.capitalize()
+                : type+"View"; // Use default view name derived from type
   try {
     if (!window[v_str]) {
       // Use fallback view name
