@@ -3311,7 +3311,7 @@ $.any.anyView.prototype.getListViewOptions = function (model,view_id,edit,view)
     filters:         this.options.filters,
     grouping:        this.options.grouping,
     view:            view,
-    isRemovable:     false,
+    isRemovable:     edit,
     isAddable:       false,
     isEditable:      false,
     isDeletable:     false,
