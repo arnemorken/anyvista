@@ -680,21 +680,28 @@ anyModel.prototype.dataSearch = function (options,
     console.error("anyModel.dataSearch: "+i18n.error.TYPE_MISSING);
     return null;
   }
-  if (((!id && id !== 0) || (Number.isInteger(parseInt(id)) && id < 0)) && !type) {
-    console.error("anyModel.dataSearch: "+i18n.error.ID_MISSING+" ("+id+") ");
+  if (!id && id !== 0 && !type) {
+    console.error("anyModel.dataSearch: "+i18n.error.ID_TYPE_MISSING+" ("+id+","+type+") ");
     return null;
   }
 
+  // See if item is found at top level
+  if (isInt(id) && data[this.id_key] == id ||
+      parseInt(id) != NaN && parseInt(data[this.id_key]) != NaN && parseInt(id) == parseInt(data[this.id_key]))
+    return data;
+
   let name_key = type == this.type
-                 ? ( this.name_key
-                     ? this.name_key
-                     : type+"_name" )
+                 ? this.name_key
+                   ? this.name_key
+                   : type+"_name"
                  : type+"_name";
   let data_ptr = data[id]
                  ? data[id]
-                 : data["+"+id]
-                   ? data["+"+id]
-                   : null;
+                 : data[""+id]
+                   ? data[""+id]
+                   : data["+"+id]
+                     ? data["+"+id]
+                     : null;
   let dp_type  = data_ptr
                  ? data_ptr.list
                    ? data_ptr.list
@@ -709,6 +716,8 @@ anyModel.prototype.dataSearch = function (options,
       _parent_data[_parent_id].id = _parent_id; // Hack
       return _parent_data[_parent_id];
     }
+    if (data[id] && data[id].data && data[id].data[id])
+      return data[id].data; // TODO! Not very elegant
     return data;
   }
   let itemlist = [];
@@ -750,11 +759,13 @@ anyModel.prototype.dataSearch = function (options,
       if (!item && data[idc].data) { // subdata
         let p_data = options.parent ? data : null;
         let p_idc  = options.parent ? idc  : null;
-        let data_ptr  = data[id]
+        let data_ptr = data[id]
                        ? data[id]
-                       : data["+"+id]
-                         ? data["+"+id]
-                         : null;
+                       : data[""+id]
+                         ? data[""+id]
+                         : data["+"+id]
+                           ? data["+"+id]
+                           : null;
         let _prev_type = data_ptr
                          ? data_ptr.list
                            ? data_ptr.list
