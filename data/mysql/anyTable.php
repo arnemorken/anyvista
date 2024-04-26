@@ -960,7 +960,10 @@ class anyTable extends dbTable
       else
         $group_data = array();
     if ($grouping || $this->mType == "group") {
-      $group_data = $this->mGroupTable->buildDataTree($group_data);
+      if ($this->mType == "group")
+        $group_data = $this->mGroupTable->buildDataTree($group_data["nogroup"]);
+      else
+        $group_data = $this->mGroupTable->buildDataTree($group_data);
       $this->buildGroupTreeAndAttach($group_data,$this->mType,$linkId,$grouping);
     }
     else
@@ -1228,6 +1231,14 @@ class anyTable extends dbTable
         $where .= "AND ".$this->mTableNameGroupLink.".group_id=".$db_gid." ";
       }
     } // if grouping
+    else
+    if ($this->mType == "group" && $groupType) {
+      $gt_str = $this->mTableNameGroup.".group_type='".$groupType."' ";
+      if ($where === "")
+        $where  = " WHERE "+gt_str;
+      else
+        $where .= " AND "+gt_str;
+    }
 
     // Match search term
     if ($searchTerm) {

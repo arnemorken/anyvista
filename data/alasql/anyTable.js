@@ -623,10 +623,11 @@ anyTable.prototype.dbSearchList = async function(options)
   if (this._initSearch(options) == -1)
     return Promise.resolve(null);
 
-  let linkType = options                                         ? options.linkType : null;
-  let linkId   = options                                         ? options.linkId   : null;
-  let groupId  = options                                         ? options.groupId  : null; // If "groupId" is specified, we need only search in that group.
-  let grouping = options && typeof options.grouping == "boolean" ? options.grouping : true;
+  let linkType  = options                                         ? options.linkType  : null;
+  let linkId    = options                                         ? options.linkId    : null;
+  let groupId   = options                                         ? options.groupId   : null; // If "groupId" is specified, we need only search in that group
+  let groupType = options                                         ? options.groupType : null; // If "groupType" is specified, search only for groups of that type
+  let grouping  = options && typeof options.grouping == "boolean" ? options.grouping  : true;
   grouping = grouping !== false && grouping !== "false" && grouping !== "0";
   let simple   = options && typeof options.simple   == "boolean" ? options.simple   : false;
   simple = simple === true || simple === "true" || simple   === "1";
@@ -654,7 +655,7 @@ anyTable.prototype.dbSearchList = async function(options)
 
   // If a group id is given, query data from the given group only
   if (groupId || groupId === 0) {
-    success = await this.dbExecListStmt(groupId,this.type,linkType,linkId,grouping,simple,limit);
+    success = await this.dbExecListStmt(groupId,this.type,linkType,linkId,grouping,simple,limit,groupType);
   }
   else
   // If a 'LIMIT' operator applies, we need to search for results for each group separately
@@ -663,7 +664,7 @@ anyTable.prototype.dbSearchList = async function(options)
   }
   // Query data from all groups
   else {
-    success = await this.dbExecListStmt(null,this.type,linkType,linkId,grouping,simple,limit);
+    success = await this.dbExecListStmt(null,this.type,linkType,linkId,grouping,simple,limit,groupType);
   }
 
   if (!success)
@@ -681,7 +682,10 @@ anyTable.prototype.dbSearchList = async function(options)
     else
       group_data = {};
   if (grouping || this.type == "group") {
-    group_data = this.groupTable.buildDataTree(group_data);
+    if (this.type == "group")
+      group_data = this.groupTable.buildDataTree(group_data["nogroup"]);
+    else
+      group_data = this.groupTable.buildDataTree(group_data);
     this.buildGroupTreeAndAttach(group_data,this.type,linkId,grouping);
   }
   else
@@ -928,6 +932,14 @@ anyTable.prototype.findListWhere = function(groupId,type,linkType,linkId,groupin
       where += "AND "+this.tableNameGroupLink+".group_id="+db_gid+" ";
     }
   } // if grouping
+  else
+  if (this.type == "group" && groupType) {
+    let gt_str = this.tableNameGroup+".group_type='"+groupType+"' ";
+    if (where === "")
+      where  = " WHERE "+gt_str;
+    else
+      where += " AND "+gt_str;
+  }
 
   // Match search term TODO!
   if (searchTerm) {
