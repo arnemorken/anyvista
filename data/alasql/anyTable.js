@@ -1611,23 +1611,32 @@ anyTable.prototype.dbItemExists = async function(id)
 /////////////////////////// Insert or update link ///////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-// Add or remove a link
+/**
+ * Add or remove a link
+ *
+ * options.link_type:
+ * options.id:
+ * options.add:
+ * options.rem:
+ *
+ * @return
+ */
 anyTable.prototype.dbUpdateLinkList = async function(options)
 {
   if (!options)
-    return Promise.resolve(null);
+    return Promise.resolve(false);
 
   let link_type = options.link_type;
   if (!link_type) {
     this.error = "Link type missing. "; // TODO! i18n
-    return Promise.resolve(null);
+    return Promise.resolve(false);
   }
   let id_key      = this.idKey;
   let id_key_link = link_type + "_id"; // TODO! Not general enough
   let id          = options.id;
   if ((!id && id !== 0) || id == "") {
     this.error = this.type+" id missing. "; // TODO! i18n
-    return Promise.resolve(null);
+    return Promise.resolve(false);
   }
   let inslist = options.add;
   let dellist = options.rem;
@@ -1637,7 +1646,7 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
     let link_table = this.findLinkTableName(link_type);
     if (!link_table) {
       this.error = "Link table not found. "; // TODO! i18n
-      return Promise.resolve(null);
+      return Promise.resolve(false);
     }
     if (dellist) {
       // Remove elements from the item's list
@@ -1708,6 +1717,7 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
       }
     }
   }
+  return Promise.resolve(true);
 }; // dbUpdateLinkList
 
 // Update the fields of a link. The link must exist in the link table.
