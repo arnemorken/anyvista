@@ -694,7 +694,7 @@ class anyTable extends dbTable
     if (!$this->query($stmt))
       return false; // An error occured
     // Get the data
-    if ($this->getRowData($this->mData,"item")) {
+    if ($this->getRowData($this->mData,"item",false,$grouping)) {
       $this->dbSearchMeta("item",$id); // Get meta data for the item
       if ($this->mData && $this->mData["nogroup"]) {
         // Remove unneccessary "nogroup" group at top
@@ -1004,11 +1004,10 @@ class anyTable extends dbTable
     if (!$this->query($stmt) || $this->isError())
       return false; // Something went wrong
     // Get the data
-    $success = $this->getRowData($this->mData,"list",$simple);
-
-    $gr_idx = isInteger($gid) ? intval($gid) : $gid;
-    if ((!$gr_idx && $gr_idx !== 0) || $gr_idx == "")
-      $gr_idx = "nogroup";
+    $success = $this->getRowData($this->mData,"list",$simple,$grouping);
+    $group_idx = isInteger($gid) ? intval($gid) : $gid;
+    if ((!$group_idx && $group_idx !== 0) || $group_idx == "")
+      $group_idx = "nogroup";
     if ($limit != "") {
       // Count how many rows would have been returned without LIMIT
       $part_stmt = $this->dbPrepareSearchListStmt($gid,$type,$linkType,$linkId,$grouping);
@@ -1020,15 +1019,15 @@ class anyTable extends dbTable
         return false; // An error occured
       $row = $this->getNext(true);
       if ($row && isset($row["num_results"]) && $row["num_results"] != "0") {
-        $this->mData[$gr_idx]["grouping_num_results"] = $row["num_results"];
+        $this->mData[$group_idx]["grouping_num_results"] = $row["num_results"];
         $this->mNumResults .= $row["num_results"];
       }
     } // if
     else {
       // Report back number of elements in groups
-      if (array_key_exists($gr_idx,$this->mData)) {
-        $n = sizeof($this->mData[$gr_idx]);
-        $this->mData[$gr_idx]["grouping_num_results"] = $n;
+      if (array_key_exists($group_idx,$this->mData)) {
+        $n = sizeof($this->mData[$group_idx]);
+        $this->mData[$group_idx]["grouping_num_results"] = $n;
         $this->mNumResults .= $n;
       }
     }
@@ -1400,6 +1399,11 @@ class anyTable extends dbTable
     return $this->mData;
   } // dbSearchParents
 
+  protected function dbSearchNameExists()
+  {
+    // TODO! Not implemented
+  } // dbSearchNameExists
+
   /////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// Data retrieval //////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
@@ -1410,7 +1414,7 @@ class anyTable extends dbTable
   // specified by this.idKey. If the data element does not contain an id or has an illegal id, it is
   // silently ignored.
   //
-  protected function getRowData(&$data,$mode,$simple=false)
+  protected function getRowData(&$data,$mode,$simple=false,$grouping=true)
   {
     $this->mLastNumRows = 0; // Used to break (theoretical) infinite recursion
     $filter = $mode == "list"
@@ -1422,7 +1426,7 @@ class anyTable extends dbTable
     while (($nextrow = $this->getNext(true)) !== null) {
       //elog("getRowData,nextrow:".var_export($nextrow,true));
       ++$this->mLastNumRows;
-      $gidx = !$simple && $this->mType != "group" && isset($nextrow["group_id"])
+      $gidx = $grouping && !$simple && $this->mType != "group" && isset($nextrow["group_id"])
               ? $nextrow["group_id"]
               : "nogroup";
       $idx  = isset($nextrow[$this->mIdKeyTable])
