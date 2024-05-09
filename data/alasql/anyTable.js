@@ -729,20 +729,19 @@ anyTable.prototype.dbExecListStmt = function(groupId,type,linkType,linkId,groupi
   let self = this;
   return alasql.promise(stmt)
   .then( function(rows) {
-    let success = self.getRowData(rows,self.data,"list",simple);
-
-    let gr_idx = isInt(groupId) ? parseInt(groupId) : groupId;
-    if ((!gr_idx && gr_idx !== 0) || gr_idx == "")
-      gr_idx = "nogroup";
+    let success = self.getRowData(rows,self.data,"list",simple,grouping);
+    let group_idx = isInt(groupId) ? parseInt(groupId) : groupId;
+    if ((!group_idx && group_idx !== 0) || group_idx == "")
+      group_idx = "nogroup";
     if (limit != "") {
       // Count how many rows would have been returned without LIMIT
       // TODO! Not implemented
     } // if
     else {
       // Report back number of elements in groups
-      if (gr_idx in self.data) {
-        let n = Object.size(self.data[gr_idx]);
-        self.data[gr_idx]["grouping_num_results"] = n;
+      if (group_idx in self.data) {
+        let n = Object.size(self.data[group_idx]);
+        self.data[group_idx]["grouping_num_results"] = n;
         self.numResults += n;
       }
     }
@@ -1007,14 +1006,14 @@ anyTable.prototype.dbSearchParents = function()
 // specified by this.idKey. If the data element does not contain an id or has an illegal id, it is
 // silently ignored.
 //
-anyTable.prototype.getRowData = function(rows,data,mode,simple)
+anyTable.prototype.getRowData = function(rows,data,mode,simple,grouping)
 {
   if (!data)
     data = {};
   for (let i=0; i<rows.length; i++) {
     //console.log(i+":"+JSON.stringify(rows[i]));
     if (rows[i]) {
-      let gidx = !simple && this.type != "group" && rows[i]["group_id"]
+      let gidx = grouping && !simple && this.type != "group" && rows[i]["group_id"]
                  ? rows[i]["group_id"]
                  : "nogroup";
       let idx  = rows[i][this.idKey]
