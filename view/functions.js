@@ -73,13 +73,25 @@ var doUploadFile = function (url,file,uid,local_fname)
 //
 function w3_autocomplete(fieldOrFieldId,type,id,arr,onSelect,context)
 {
-  var inp = typeof fieldOrFieldId == "string" ? document.getElementById(fieldOrFieldId) : fieldOrFieldId;
+  if (typeof fieldOrFieldId == "string") {
+    fieldOrFieldId = fieldOrFieldId.split(/(?<=^\S+)\s/)[0]; // Remove css class selector, if given
+    if (fieldOrFieldId.startsWith("#"))
+      fieldOrFieldId = fieldOrFieldId.substring(1);
+  }
+  let inp = typeof fieldOrFieldId == "string" ? $("#"+fieldOrFieldId).find(".itemEdit") : fieldOrFieldId;
+  if (inp.length)
+    inp = inp[0];
+  else
+    inp = typeof fieldOrFieldId == "string" ? document.getElementById(fieldOrFieldId) : fieldOrFieldId;
   if (!inp) {
     console.error("autocomplete: input field missing");
     return;
   }
-  if (!inp.id)
+  if (!inp.id) {
+    if (!inp.parentElement)
+      return false;
     inp.id = inp.parentElement.id+"_autoinput";
+  }
   // the autocomplete function takes two arguments,
   // the text field element and an array of possible
   // autocompleted values
