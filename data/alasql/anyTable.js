@@ -1357,10 +1357,16 @@ anyTable.prototype.prepareData = function(id)
   }
 
   // Set data
-  if ((id || id === 0) && id != "")
-    data["data"][topidx]["data"] = this.data["nogroup"]["data"];
+  if (this.data) {
+    if ((id || id === 0) && id != "") {
+      let gidx = Object.keys(this.data)[0];
+      data["data"][topidx]["data"] = this.data[gidx]["data"];
+    }
+    else
+      data["data"][topidx]["data"] = this.data;
+  }
   else
-    data["data"][topidx]["data"] = this.data;
+    data["data"][topidx]["data"] = null;
 
   // Set link types
   data["linkTypes"] = this.linkTypes;
