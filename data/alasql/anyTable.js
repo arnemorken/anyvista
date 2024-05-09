@@ -996,6 +996,39 @@ anyTable.prototype.dbSearchParents = function()
   // Not implemented yet
 }; // dbSearchParents
 
+anyTable.prototype.dbSearchNameExists = function(tableName,name)
+{
+  if (tableName == "group")
+    tableName = "acugroup";
+  this.err = "";
+  if (!this.tableExists(tableName)) {
+    this.err = "anyTable: Table does not exist:"+tableName+". "; // TODO! i18n
+    console.error(this.err);
+    return Promise.resolve(null);
+  }
+  let illegal_char = (/^[\u3400-\u9FBFa-zæøåA-ZÆØÅ0-9������/(),.;:\-+_! ]*$/.test(name) === false); // Allow chinese chars
+  if (!name || illegal_char) {
+    this.err = "Missing or illegal file name. "; // TODO! i18n
+    console.error(this.err);
+    return Promise.resolve(null);
+  }
+  let query_str = "SELECT * FROM "+tableName+" WHERE "+tableName+"_name='"+name+"'";
+  let self = this;
+  return alasql.promise(query_str)
+    .then (function(rows) {
+      if (!rows || rows.length <= 0)
+        return false;
+      let dataType = tableName == "acugroup" ? "group" : tableName;
+      self.exist_id = rows[0][dataType+"_id"];
+      return true;
+    })
+    .catch(function(err) {
+      self.err = err;
+      console.error(self.err);
+      return null;
+    });
+}; // dbSearchNameExists
+
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Data retrieval //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
