@@ -4467,6 +4467,56 @@ $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,
   }
 }; // createParentDropdownMenu
 
+// Override this in derived classes
+$.any.anyView.prototype.validateUpdate = function (data)
+{
+  return "";
+}; // validateUpdate
+
+// Get values from input fields
+$.any.anyView.prototype.getInputValues = function (type,mode,id,row_id_str)
+{
+  if (typeof tinyMCE != "undefined")
+    tinyMCE.triggerSave(); // To avoid NS_ERROR_UNEXPECTED. TODO! Neccessary?
+  let data_values = {};
+  let filter = this.getFilter(type,mode);
+  for (let filter_id in filter) {
+    if (filter.hasOwnProperty(filter_id)) {
+      let val      = null;
+      let inp_id   = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id;
+      let input_id = inp_id+" .itemEdit";
+      let elm      = $("#"+input_id);
+      let cls      = elm.attr("class");
+      if (cls && cls.includes("tinymce")) {
+        let jq_id  = inp_id+" > textarea";
+        let jq     = $("#"+jq_id);
+        jq_id      = jq.attr("id");
+        val        = tinymce.get(jq_id) ? tinymce.get(jq_id).getContent() : "";
+        val        = val ? val.replace(/'/g, "\\'") : "";
+      }
+      else
+      if (elm.length)
+        val = elm.val();
+      else {
+        // Send values marked as dirty to server even if they are not editable
+        input_id = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id+"[dirty='true']";
+        if (elm.length)
+          val = elm.val();
+      }
+      if (val || val == "") {
+        data_values[filter_id] = val;
+        if (filter_id == "parent_id") {
+          let input_id = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id+" .itemSelect option:selected";
+          let pname = elm.text();
+          data_values["parent_name"] = pname;
+        }
+      }
+    }
+  } // for
+  data_values[this.model.id_key] = id;
+  return data_values;
+}; // getInputValues
+
 $.any.anyView.prototype.dbUpdate = function (event)
 {
   if (!this.model)
@@ -4505,41 +4555,9 @@ $.any.anyView.prototype.dbUpdate = function (event)
     return false;
   }
   // Update model with contents of input fields
-  let filter = this.getFilter(type,mode);
-  let data_values = {};
-  for (let filter_id in filter) {
-    if (filter.hasOwnProperty(filter_id)) {
-      let val = null;
-      let inp_id   = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id;
-      let input_id = inp_id+" .itemEdit";
-      let elm = $("#"+input_id);
-      let cls = elm.attr("class");
-      if (cls && cls.includes("tinymce")) {
-        let jq_id = inp_id+" > textarea";
-        let jq    = $("#"+jq_id);
-        jq_id     = jq.attr("id");
-        val       = tinymce.get(jq_id) ? tinymce.get(jq_id).getContent() : "";
-        val       = val ? val.replace(/'/g, "\\'") : "";
-      }
-      else
-      if (elm.length)
-        val = elm.val();
-      else {
-        // Send values marked as dirty to server even if they are not editable
-        input_id = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id+"[dirty='true']";
-        if (elm.length)
-          val = elm.val();
-      }
-      if (val || val == "") {
-        data_values[filter_id] = val;
-        if (filter_id == "parent_id") {
-          let input_id = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id+" .itemSelect option:selected";
-          let pname = elm.text();
-          data_values["parent_name"] = pname;
-        }
-      }
-    }
-  }
+  let data_values = this.getInputValues(type,mode,row_id_str);
+  if (data_values == {})
+    return true; // Nothing to update
   this.model.dataUpdate({
      type:     type,
      id:       id,
@@ -4641,12 +4659,6 @@ $.any.anyView.prototype.dbUpdate = function (event)
   }
   return true;
 }; // dbUpdate
-
-// Override this in derived classes
-$.any.anyView.prototype.validateUpdate = function (data)
-{
-  return "";
-}; // validateUpdate
 
 /**
  * Search for the list of items to select from.
