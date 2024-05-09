@@ -2082,6 +2082,7 @@ anyModel.prototype._dbUpdateLocal = async function (options,item_to_send)
         console.log(this.error);
       }
       console.warn("anyModel._dbUpdateLocal: "+"Could not update table "+table_name+". "); // TODO! i18n
+      return false;
     }
   } // if table_factory
   else
