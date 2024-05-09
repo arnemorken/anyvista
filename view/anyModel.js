@@ -1838,7 +1838,7 @@ anyModel.prototype._dbSearchNextIdLocal = async function (options)
       let self = this;
       return await table.dbSearchMaxId(options)
       .then( async function(serverdata) {
-        self.max = serverdata.id;
+        self.max = serverdata.id + 1;
         if (self.success)
           return self.success(self.context,serverdata,options);
         self.message = i18n.error.SUCCCESS_CB_MISSING;
