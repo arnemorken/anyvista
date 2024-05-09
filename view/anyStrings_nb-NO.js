@@ -25,7 +25,7 @@ var i18n = {
   message: {
     newType:        "Ny %%",
     removeByName:   "Vil du fjerne %%",
-    deleteByName:   "Vil du slette '%%'?\n\n<br/>Du kan ikke angre denne handlingen.",
+    deleteByName:   "Vil du slette '%%'? Du kan ikke angre denne handlingen.",
     addRemove:      "Legg til / fjern...",
   },
 

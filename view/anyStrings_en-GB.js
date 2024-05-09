@@ -25,7 +25,7 @@ var i18n = {
   message: {
     newType:        "New %%",
     removeByName:   "Do you want to remove %%",
-    deleteByName:   "Do you want to delete '%%'?\n\n<br/>You can not undo this action.",
+    deleteByName:   "Do you want to delete '%%'? You cannot undo this action.",
     addRemove:      "Add / remove...",
   },
 
