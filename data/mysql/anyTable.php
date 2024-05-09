@@ -350,6 +350,7 @@ class anyTable extends dbTable
       if ($paramOrType["metaId"])              $this->mMetaId              = $paramOrType["metaId"];
       if ($paramOrType["orderBy"])             $this->mOrderBy             = $paramOrType["orderBy"];
       if ($paramOrType["orderDir"])            $this->mOrderDir            = $paramOrType["orderDir"];
+    //if ($paramOrType["header"])              $this->mHeader              = $paramOrType["header"];
       if ($paramOrType["tableName"])           $this->mTableName           = $paramOrType["tableName"];
       if ($paramOrType["tableNameMeta"])       $this->mTableNameMeta       = $paramOrType["tableNameMeta"];
       if ($paramOrType["tableNameGroup"])      $this->mTableNameGroup      = $paramOrType["tableNameGroup"];
@@ -364,6 +365,7 @@ class anyTable extends dbTable
         $paramOrType["tableFieldsLeftJoin"]) $this->mTableFieldsLeftJoin = $paramOrType["tableFieldsLeftJoin"];
       if (!$par_link_types &&
         $paramOrType["linkTypes"])           $this->mLinkTypes           = $paramOrType["linkTypes"];
+    //if ($paramOrType["path"])              $this->mPath                = $paramOrType["path"];
     }
     //
     // Set defaults if not set yet
@@ -375,6 +377,7 @@ class anyTable extends dbTable
     if (!$this->mMetaId)            $this->mMetaId         = "meta_id";
     if (!$this->mOrderBy)           $this->mOrderBy        = $this->mNameKey;
     if (!$this->mOrderDir)          $this->mOrderDir       = "DESC";
+  //if (!$this->mHeader)            $this->mHeader         = false;
     if (!$this->mTableName)    {
       $this->mTableName = $this->mTablePrefix.$this->mType;
       // No meta table for default (i.e. auto-generated) table
@@ -608,6 +611,8 @@ class anyTable extends dbTable
 
   protected function findTypeTableName($type)
   {
+    //if (type == "group")
+    //  return $this->mTableNameGroup;
     return $this->mTablePrefix.$type;
   } // findTypeTableName
 
@@ -1928,6 +1933,7 @@ class anyTable extends dbTable
   protected function dbPrepareInsertStmt()
   {
     // TODO! Check for all fields empty
+    // TODO! Compare to .js method
     $unique_table_fields = array_unique($this->mTableFields);
     $stmt = "INSERT IGNORE INTO ".$this->mTableName." (";
     $auto_id = Parameters::get("auto_id");
@@ -2162,7 +2168,16 @@ class anyTable extends dbTable
   /////////////////////////// Insert or update link ///////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  // Add or remove a link
+  /**
+   * Add or remove a link
+   *
+   * options.link_type:
+   * options.id:
+   * options.add:
+   * options.rem:
+   *
+   * @return
+   */
   public function dbUpdateLinkList()
   {
     $this->mError = "";
@@ -2280,7 +2295,16 @@ class anyTable extends dbTable
     return $this->mData; //$this->prepareData();
   } // dbUpdateLinkList
 
-  // Update the fields of a link. The link must exist in the link table.
+  /**
+   * Update the fields of a link. The link must exist in the link table.
+   *
+   * options.link_type:
+   * options.idKey:
+   * options.id:
+   * options.link_id:
+   *
+   * @return
+   */
   public function dbUpdateLink()
   {
     $link_type = Parameters::get("link_type");
