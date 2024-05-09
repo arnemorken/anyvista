@@ -1484,7 +1484,7 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
   self.db_last_command = "cre";
-  if (serverdata) {
+  if (serverdata && typeof serverdata === "object") {
     if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
       serverdata = serverdata.JSON_CODE;
     if (Object.size(serverdata.data) === 0)
@@ -1724,7 +1724,7 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
   let self = context ? context : this;
   self.db_last_command = "sea";
 
-  if (serverdata) {
+  if (serverdata && typeof serverdata === "object") {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
     if (options.id == "max") {
@@ -1907,7 +1907,7 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
 {
   let self = context ? context : this;
   self.db_last_command = "sea";
-  if (serverdata) {
+  if (serverdata && typeof serverdata === "object") {
     if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
       serverdata = serverdata.JSON_CODE;
     serverdata.is_new = options.is_new;
@@ -2445,7 +2445,7 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
 {
   let self = context ? context : this;
   self.db_last_command = "updlink";
-  if (serverdata) {
+  if (serverdata && typeof serverdata === "object") {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
     if (Object.size(serverdata.data) === 0)
@@ -2789,7 +2789,7 @@ anyModel.prototype.dbDeleteSuccess = function (context,serverdata,options)
   let self = context ? context : this;
   self.db_last_command = "del";
 
-  if (serverdata) {
+  if (serverdata && typeof serverdata === "object") {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
     if (Object.size(serverdata.data) === 0)
