@@ -1498,10 +1498,10 @@ anyTable.prototype.dbUpdate = async function(options)
   if (!options || !this.dbValidateUpdate(options))
     return Promise.resolve(null);
 
-  if ((!options.id && options.id !== 0) || options.id == "" || options.is_new)
+  let id            = options.id;
+  let should_insert = options.is_new || (!options.id && options.id !== 0) || options.id == "";
+  if (should_insert)
     return await this.dbInsert(options); // Assume it is a new item to be inserted // TODO! Is await needed here?
-
-  let id = options.id;
 
   if (options.add || options.rem)
     return this.dbUpdateLinkList();
