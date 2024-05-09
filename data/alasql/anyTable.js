@@ -489,12 +489,13 @@ anyTable.prototype.dbSearchItemByKey = function(options)
   return alasql.promise(stmt)
   .then (async function(rows) {
     // Get the data
-    if (self.getRowData(rows,self.data,"item")) {
-      if (self.data && self.data["nogroup"]) {
-        // Remove unneccessary "nogroup" group at top
-        self.data["nogroup"]["data"] = {};
-        $.extend(true,self.data["nogroup"]["data"],self.data["nogroup"]);
-        delete self.data["nogroup"][id];
+    if (self.getRowData(rows,self.data,"item",false,grouping)) {
+      if (self.data) {
+        // Organize group at top
+        let idx = Object.keys(self.data)[0];
+        self.data[idx]["data"] = {};
+        $.extend(true,self.data[idx]["data"],self.data[idx]);
+        delete self.data[idx][id];
       }
       if (!skipLinks)
         await self.dbSearchItemLists(id,grouping,groupId); // Get lists associated with the item
@@ -589,12 +590,14 @@ anyTable.prototype.dbSearchItemListOfType = async function(id,linkType,grouping,
         if (table.error)
           self.error += table.error;
         if (data) {
-          let gidx = "nogroup";
+          let gidx = Object.keys(self.data)[0];
           let idx  = id;
           let lidx = "link-"+linkType;
           let tgidx = idx;
           if (table.type == "group" || ((id || id === 0) && self.type != "group"))
             tgidx = gidx;
+          if (!self.data || !self.data[gidx] || !self.data[gidx]["data"])
+            return Promise.resolve(null); // Should never happen
           if (!self.data[gidx]["data"][idx])               self.data[gidx]["data"][idx]               = {};
           if (!self.data[gidx]["data"][idx]["data"])       self.data[gidx]["data"][idx]["data"]       = {};
           if (!self.data[gidx]["data"][idx]["data"][lidx]) self.data[gidx]["data"][idx]["data"][lidx] = {};
