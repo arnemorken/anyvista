@@ -525,9 +525,9 @@ $.any.anyView.prototype.refresh = function (params)
   let model    = params && params.model    ? params.model    : this.model;
   let type     = params && params.type     ? params.type     : model                 ? model.type        : "";
   let data     = params && params.data     ? params.data     : model                 ? model.data        : null;
-  let par_id   = params && params.par_id   ? params.par_id   : model                 ? model.link_id     : "";
   let mode     = params && params.mode     ? params.mode     : "";
-  let par_type = params && params.par_type ? params.par_type : model && model.parent ? model.parent.type : "";
+  let par_id   = params && params.par_id   ? params.par_id   : model && model.parent ? model.parent.id   : model ? model.link_id   : "";
+  let par_type = params && params.par_type ? params.par_type : model && model.parent ? model.parent.type : model ? model.link_type : "";
   let par_data = params && params.par_data ? params.par_data : model && model.parent ? model.parent.data : null;
   let par_mode = params && params.par_mode ? params.par_mode : "";
   let edit     = params && params.edit     ? params.edit     : false;
@@ -596,8 +596,8 @@ $.any.anyView.prototype.refresh = function (params)
                              data:     data,
                              id:       curr_mode=="item" ? id : "",
                              par_type: par_type,
-                             par_data: par_data,
                              par_id:   par_id,
+                             par_data: par_data,
                            });
               view  = this.createView({
                              model:    model,
@@ -2087,7 +2087,7 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
 // Helper function for refreshListTableDataRow and refreshItemTableDataRow
 $.any.anyView.prototype._rowHasData = function (data,filter)
 {
-  if (data.data)
+  if (data.data) // TODO! Is this correct?
     return true; // We have subdata
   let row_has_data = false;
   for (let filter_id in filter) {
@@ -5013,7 +5013,7 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
     let the_name = item[id][name_key] ? item[id][name_key] : "";
     let msgstr = event.data.message
                  ? event.data.message
-                 : i18n.message.deleteByName.replace("%%", the_name);
+                 : i18n.message.deleteByName.replace("%%", "<strong>"+the_name+"</strong>");
     let msg = "<div class='any-confirm-delete-dialog' id='"+this.id_base+"_confirm_delete' style='padding:1em;'>"+
               msgstr+
               "</div>";
@@ -5153,14 +5153,13 @@ $.any.anyView.prototype.initComponents = function ()
       statusbar:  false,
       force_br_newlines: false,
       forced_root_block: 'p',
-      plugins: ["link", "image", "media", "autoresize", "lists"],
+      plugins: ["link", "image", "media", "autoresize", "lists", "table"],
       autoresize_bottom_margin: 0,
       toolbar_items_size: "small",
       theme:      "silver",
       skin: "tinymce-5",
       content_style: "body { margin: .5em; line-height: 1; }",
-      toolbar1: "undo redo | cut copy paste | link unlink anchor image media code | bullist numlist | outdent indent blockquote | alignleft aligncenter alignright alignjustify | hr",
-      toolbar2: "bold italic underline strikethrough subscript superscript | styleselect formatselect fontselect fontsizeselect | searchreplace",
+      toolbar1: "bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist | outdent indent blockquote | table hr link unlink anchor image media code | undo redo | cut copy paste",
 
   /* enable title field in the Image dialog*/
   image_title: true,
