@@ -1441,14 +1441,16 @@ anyTable.prototype.dbPrepareInsertStmt = async function(id,keys,values)
     return null;
   let stmt = "INSERT INTO "+this.tableName+" (";
   let at_least_one = false;
+  let has_id       = false;
   if (id) {
     stmt += this.idKey+",";
     at_least_one = true;
+    has_id       = true;
   }
   for (let i=0; i<keys.length; i++) {
     let key = keys[i];
     let val = values[i];
-    if (["head","item","list"].includes(key))
+    if (["head","item","list"].includes(key) || key == "is_new" || key == "dirty" || (key == this.idKey && has_id))
       continue;
     if (val && val !== "") {
       at_least_one = true;
@@ -1473,12 +1475,13 @@ anyTable.prototype.dbPrepareInsertStmt = async function(id,keys,values)
   for (let i=0; i<keys.length; i++) {
     let key = keys[i];
     let val = values[i];
-    if (["head","item","list"].includes(key))
+    if (["head","item","list"].includes(key) || key == "is_new" || key == "dirty" || (key == this.idKey && has_id))
       continue;
-    if (val && val !== "" && typeof val === "string")
-      stmt += "'"+val+"',";
-    else
-      stmt += val+",";
+    if (val && val !== "")
+      if (typeof val === "string")
+        stmt += "'"+val+"',";
+      else
+        stmt += val+",";
   }
   pos = stmt.length-1;
   stmt = stmt.substring(0,pos) + "" + stmt.substring(pos+1); // Replace last "," with ""
