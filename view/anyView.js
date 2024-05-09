@@ -2759,18 +2759,19 @@ $.any.anyView.prototype.addGroupLink = function (event)
  */
 $.any.anyView.prototype.createModel = function (params)
 {
-  let type      = params && params.type                            ? params.type      : null;
-  let data      = params && params.data                            ? params.data      : null;
-  let id        = params && (params.id     || params.id     === 0) ? params.id        : "";
-  let par_id    = params && (params.par_id || params.par_id === 0) ? params.par_id    : "";
-  let modelName = params && typeof params.modelName === "string"   ? params.modelName : null;
+  let type      = params && params.type                                 ? params.type      : null;
+  let data      = params && params.data                                 ? params.data      : null;
+  let id        = params && (params.id       || params.id       === 0)  ? params.id        : "";
+  let par_id    = params && (params.par_id   || params.par_id   === 0)  ? params.par_id    : "";
+  let par_type  = params && params.par_type                             ? params.par_type  : "";
+  let modelName = params && typeof params.modelName === "string"        ? params.modelName : null;
 
   type = type ? type : this._findType(data,id,null);
   if (!type)
     return null;
 
   // Create a new model if we dont already have one or if the caller asks for it
-  let model_opt = this.getCreateModelOptions(type,data,id,par_id);
+  let model_opt = this.getCreateModelOptions(type,data,id,par_id,par_type);
   let model = null;
   let m_str = modelName
               ? modelName     // Use supplied model name
@@ -2795,13 +2796,14 @@ $.any.anyView.prototype.createModel = function (params)
  * @method anyView.getCreateModelOptions
  * @return opt
  */
-$.any.anyView.prototype.getCreateModelOptions = function(type,data,id,link_id)
+$.any.anyView.prototype.getCreateModelOptions = function(type,data,id,link_id,link_type)
 {
   return {
     type:          type,
     data:          data,
     id:            id,
     link_id:       link_id,
+    link_type:     link_type,
     parent:        this.model ? this.model               : null, // TODO! Not always correct.
     source:        this.model ? this.model.source        : null,
     table_fields:  this.model ? this.model.table_fields  : null,
@@ -3248,7 +3250,7 @@ $.any.anyView.prototype.getListView = function (type,mode,id,val,edit,filter_key
 
   // Create the list model
   let list_type = filter_key.LIST;
-  let model_opt = this.getListModelOptions(type,list_type,val);
+  let model_opt = this.getListModelOptions(type,id,list_type,val);
   let m_str     = model_str && typeof model_str === "string"
                   ? model_str
                   : list_type.capitalize()+"Model";
@@ -3302,13 +3304,15 @@ $.any.anyView.prototype.getListView = function (type,mode,id,val,edit,filter_key
 }; // getListView
 
 // May be overidden by derived classes
-$.any.anyView.prototype.getListModelOptions = function (type,list_type,data)
+$.any.anyView.prototype.getListModelOptions = function (link_type,link_id,list_type,data)
 {
   return {
     type:       list_type,
     data:       data,
-    par_type:   type,
-    par_id:     "???", // TODO!
+    par_type:   link_type, // TODO! Dont need both par_type and link_type
+    par_id:     link_id,   // TODO!
+    link_type:  link_type,
+    link_id:    link_id,
     db_search:  false,
     source:     this.model.source,
     permission: this.model.permission,
