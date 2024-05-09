@@ -1006,7 +1006,7 @@ anyTable.prototype.dbSearchNameExists = function(tableName,name)
     console.error(this.err);
     return Promise.resolve(null);
   }
-  let illegal_char = (/^[\u3400-\u9FBFa-zæøåA-ZÆØÅ0-9������/(),.;:\-+_! ]*$/.test(name) === false); // Allow chinese chars
+  let illegal_char = (/^[\u3400-\u9FBFa-zæøåA-ZÆØÅ0-9������/(),.;:\-+_! ]*$/.test(name) === false); // Allow chinese chars
   if (!name || illegal_char) {
     this.err = "Missing or illegal file name. "; // TODO! i18n
     console.error(this.err);
@@ -1720,7 +1720,16 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
   return Promise.resolve(true);
 }; // dbUpdateLinkList
 
-// Update the fields of a link. The link must exist in the link table.
+/**
+ * Update the fields of a link. The link must exist in the link table.
+ *
+ * options.link_type:
+ * options.idKey:
+ * options.id:
+ * options.link_id:
+ *
+ * @return
+ */
 anyTable.prototype.dbUpdateLink = async function(options)
 {
   if (!options)
@@ -1871,7 +1880,7 @@ anyTable.prototype.dbValidateDelete = function(options)
     this.error += "Table name missing. "; // TODO! i18n
   if (!idKey)
     this.error += "Id key missing. "; // TODO! i18n
-  if ((!id && id !== 0) || id == "" || !Number.isInteger(id))
+  if ((!id && id !== 0) || id == "" || !Number.isInteger(parseInt(id)))
     this.error += this.type+" id missing or not an integer. "; // TODO! i18n
 
   if (this.error != "")
