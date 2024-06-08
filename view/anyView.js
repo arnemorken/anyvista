@@ -2829,10 +2829,12 @@ $.any.anyView.prototype.createView = function (params)
   let data_level   = params && (params.data_level   || params.data_level   === 0) ? params.data_level   : this.data_level   ? this.data_level   : 0;
   let indent_level = params && (params.indent_level || params.indent_level === 0) ? params.indent_level : this.indent_level ? this.indent_level : 0;
   let id_str       = params && params.id_str                                      ? params.id_str       : "";
-  let cls_arr      = this.element.attr("class").split(/\s+/);
-  let view_str     = cls_arr && cls_arr[cls_arr.length-1] && cls_arr[cls_arr.length-1].startsWith(type)
-                     ? cls_arr[cls_arr.length-1]
-                     : null;
+  let viewClass    = params.viewClass
+                     ? params.viewClass
+                     : this.options.viewClass
+                       ? this.options.viewClass
+                       : null;
+  let view_str     = viewClass && viewClass.toLowerCase().startsWith(type) ? viewClass : null;
   if (!model)
     return null;
   type = type ? type : this._findType(data,id);
