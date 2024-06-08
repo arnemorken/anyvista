@@ -845,13 +845,11 @@ class anyTable extends dbTable
     }
     if (!isset($groupId))
       $groupId = Parameters::get("group_id"); // If "groupId" is specified, we need only search in that group.
-
-    if (!isset($grouping))
+    if ($grouping == null)
       $grouping = Parameters::get("grouping");
-    $grouping = $grouping !== false && $grouping !== "false" && $grouping !== "0";
-
-    if (!isset($simple))
-      $simple= Parameters::get("simple"); // In a "simple" list search we get only the id, name and parent_id
+    $grouping = $grouping && $grouping !== "false" && $grouping !== "0";
+    if ($simple == null)
+      $simple = Parameters::get("simple"); // In a "simple" list search we get only the id, name and parent_id
     $simple = $simple === true || $simple === "true" || $simple   === "1";
 
     // Get group data, unless we are searching in a specific group

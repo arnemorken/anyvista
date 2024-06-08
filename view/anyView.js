@@ -1538,10 +1538,9 @@ $.any.anyView.prototype.refreshDataFooter = function (params)
                    hideGoto:     true,
                    // Set in paginator options that are sent to onClick handler:
                    div_info: {
-                     type:     type,
-                     mode:     mode,
-                     group_id: params.par_id, // TODO! Is this used?
-                     id_str:   JSON.parse(JSON.stringify(this.id_stack)),
+                     type:   type,
+                     mode:   mode,
+                     id_str: JSON.parse(JSON.stringify(this.id_stack)),
                    },
                 });
         pager.numItems(num_results);
@@ -3635,9 +3634,8 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     num:       num,
     context:   this.model,
     type:      pager.options.div_info.type,
-    group_id:  pager.options.div_info.group_id,
-    grouping:  this.options.grouping,
-    simple:    this.options.grouping === null,
+    grouping:  false,
+    simple:    true,
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
     header:    "All "+pager.options.div_info.type+"s", // TODO! Not a good solution
@@ -4122,7 +4120,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
                  type:     type,
                  id:       the_id,
                  header:   true,
-                 grouping: this.options.grouping,
+                 grouping: false, //this.options.grouping,
                  context:  view.model,
                });
   }
