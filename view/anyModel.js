@@ -186,6 +186,15 @@ var anyModel = function (options)
   this.link_id = null;
 
   /**
+  * If this model is linked to an item in the parent model, `link_type` is
+  * the type of the parent data.
+  *
+  * @type       {String}
+  * @default    null
+  */
+  this.link_type = null;
+
+  /**
   * The model's source, e.g. `"local"` or `remote"`.
   *
   * @type       {String}
@@ -409,6 +418,7 @@ anyModel.prototype._dataInitDefault = function ()
   this.id              = null;
   this.parent          = null;
   this.link_id         = null;
+  this.link_type       = null;
   this.source          = typeof gSource !== 'undefined' ? gSource : "local";
   this.db_connection   = null;
   this.table_factory   = null;
@@ -499,6 +509,7 @@ anyModel.prototype.dataInit = function (options)
     if (!this.name_key && this.type)                   { this.name_key       = this.type+"_name"; }
     if (options.parent)                                { this.parent         = options.parent; }
     if (options.link_id)                               { this.link_id        = options.link_id; }
+    if (options.link_type)                             { this.link_type      = options.link_type; }
     if (options.source)                                { this.source         = options.source; }
     if (options.db_connection)                         { this.db_connection  = options.db_connection; }
     if (options.table_factory)                         { this.table_factory  = options.table_factory; }
