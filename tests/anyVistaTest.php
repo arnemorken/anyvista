@@ -20,7 +20,7 @@
 <script src="<?php print gjQuery_js;?>"></script>
 
 <!-- anyVista -->
-<script src="<?php print gAnyvistaURL;?>/data/alasql/alasql.min.js"></script>
+<script src="<?php print gAnyvistaURL;?>/data/alasql/alasql-4.3.3.min.js"></script>
 <script src="<?php print gAnyvistaURL;?>/data/alasql/db/dbConnection.js"></script>
 <script src="<?php print gAnyvistaURL;?>/data/alasql/db/dbTable.js"></script>
 <script src="<?php print gAnyvistaURL;?>/data/alasql/anyTable.js"></script>

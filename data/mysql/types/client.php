@@ -40,7 +40,8 @@
 <script src="<?php print gAnyvistaURL;?>view/anyViewTabs.js"></script>
 <script src="<?php print gAnyvistaURL;?>view/anyFilter.js"></script>
 
-<script src="<?php print gAnyvistaURL;?>data/alasql/alasql.min.js"></script>
+<!-- Only needed if using the client side AlaSQL database -->
+<script src="<?php print gAnyvistaURL;?>data/alasql/alasql-4.3.3.min.js"></script>
 <script src="<?php print gAnyvistaURL;?>data/alasql/db/dbConnection.js"></script>
 <script src="<?php print gAnyvistaURL;?>data/alasql/db/dbTable.js"></script>
 <script src="<?php print gAnyvistaURL;?>data/alasql/anyTable.js"></script>
