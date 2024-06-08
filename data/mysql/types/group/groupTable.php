@@ -165,7 +165,7 @@ class groupTable extends anyTable
   /////////////////////////////////////////////////////////////////////////////
 
   // Return info of one or all groups of a given type
-  protected function dbSearchGroupInfo($type=null,$grouping=true,$group_id=null)
+  protected function dbSearchGroupInfo($type=null,$group_id=null,$grouping=true)
   {
     $tableName = $this->getTableName();
     if (!$this->tableExists($tableName))

@@ -968,9 +968,9 @@
               return true;
             }
 
-            protected function findListWhere($gid,$type=null,$linkType=null,$linkId=null,$grouping=true,$groupType=null,$searchTerm="")
+            protected function findListWhere($groupType=null,$groupId=null,$linkType=null,$linkId=null,$grouping=true,$searchTerm="",$linktable_name="",$has_linktable=false)
             {
-              $where = parent::findListWhere($gid,$type,$linkType,$linkId,$grouping,$groupType,$searchTerm);
+              $where = parent::findListWhere($groupType,$groupId,$linkType,$linkId,$grouping,$searchTerm,$linktable_name,$has_linktable);
               return $where;
             }
 

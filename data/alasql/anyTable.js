@@ -23,8 +23,9 @@
  *
  * @class anyTable
  * @constructor
- * @param {Object} connection Info about the database connection. See `db/dbConnection.js`
- * @param {Object} parameters An object which may contain the following properties:
+ * @param {Object}        connection  Info about the database connection. See `db/dbConnection.js`
+ * @param {Object|string} paramOrType A parameter object OR a type overriding the one set by deriving class.
+ *                                    If an object, paramOrType may contain the following properties:
  *
  * @param {String}     parameters.type       Type of the table, e.g. "event".
  * @param {String}     parameters.idKey      The id key used in the table, e.g. "event_id".
@@ -268,7 +269,7 @@ anyTable.prototype.initProperties = function(paramOrType)
                                 linkTableName: "group_"+this.type  } };
   if (!this.linkTypes[this.type]) // Add the current type as a "link" in order to work with sub-items
     this.linkTypes[this.type] = { [this.type]: { className:     this.type+"Table",
-                                                 tableName:     this.type,
+                                                 tableName:     this.type, // TODO! Not general enough
                                                  linkTableName: "group_"+this.type  } };
 
   if (!this.insertSuccessMsg)
@@ -286,6 +287,26 @@ anyTable.prototype.initProperties = function(paramOrType)
 
   return true;
 }; // initProperties
+
+  /**
+   * initFilters
+   *
+   * Extra initialization of filters, override this in deriving classes if needed
+   */
+anyTable.prototype.initFilters = function(filters)
+{
+  // TODO! Not implemented yet
+} // initFilters
+
+anyTable.prototype.initFiltersFromParam = function()
+{
+  // TODO! Not implemented yet
+} // initFiltersFromParam
+
+anyTable.prototype.initFieldsFromParam = function()
+{
+  // TODO! Not implemented yet
+} // initFieldsFromParam
 
 /**
  * Override and return true in table classes which have parent_id.
@@ -389,7 +410,7 @@ anyTable.prototype.findTypeTableId = function(type)
  * If options.id == "max", search for max id.
  * If options.id == "par", search for parent list.
  * If options.id has another non-null value, search for the item with the given id.
- * Otherwise, search for a list.
+ * Otherwise, search for a list of the given type.
  *
  * @return array|null Data array, or null on error or no data
  */
@@ -400,20 +421,24 @@ anyTable.prototype.dbSearch = function(options)
   .then( function(data) {
     if (self.error)
       throw self.error;
-    if (data)
-      self.data = self.prepareData(options.id);
-    return Promise.resolve(self.data);
+    return Promise.resolve(self.prepareData(options?options.id:null));
   })
-  .catch(function(err) {
-    console.log(err);
+  .catch( function(err) {
     self.error = err;
+    console.error(err);
     return Promise.resolve(null);
   });
 }; // dbSearch
 
-// Internal method, do not call directly.
+// Internal method called by dbSearch(), do not call directly.
 anyTable.prototype._dbSearch = async function(options)
 {
+  if (!options)
+    options = {};
+
+  if (options.type)
+    this.type = options.type;
+
   let id = this._initSearch(options);
   if (id == -1)
     return Promise.resolve(null);
@@ -432,14 +457,12 @@ anyTable.prototype._dbSearch = async function(options)
 
 anyTable.prototype._initSearch = function(options)
 {
-  let id   = options && options.id   ? options.id   : null;
-  let type = options && options.type ? options.type : this.type;
+  let type = options &&  options.type ? options.type : this.type;
   if (!type) {
     this.error = "_initSearch: type missing. ";
-    console.error(this.error);
+    console.log(this.error);
     return -1;
   }
-  this.type  = type;
   this.data  = null;
   this.error = "";
   this.numResults = 0;
@@ -447,6 +470,7 @@ anyTable.prototype._initSearch = function(options)
   //this.initFieldsFromParam();  // TODO! Not implemented yet
   //this.initFiltersFromParam(); // TODO! Not implemented yet
 
+  let id = options && (options.id || options.id === 0) ? options.id   : null;
   return id;
 }; // _initSearch
 
@@ -454,33 +478,34 @@ anyTable.prototype._initSearch = function(options)
 
 //
 // Search database for an item, including linked lists.
+// Return data structure on success, null on error.
 //
 anyTable.prototype.dbSearchItem = function(options)
 {
-  if (options) {
-    options.key = this.idKey;
-    options.val = options.id;
-  }
   let id = this._initSearch(options);
   if (id == -1)
     return Promise.resolve(null);
 
+  if (options) {
+    options.key = this.idKey;
+    options.val = id;
+  }
   return this.dbSearchItemByKey(options);
 }; // dbSearchItem
 
 anyTable.prototype.dbSearchItemByKey = function(options)
 {
-  let id        = options ? options.id      : null; // The id of the item to search for.
-  let groupId   = options ? options.groupId : null; // If "groupId" is specified, search only in that group.
-  let grouping  = options && typeof options.grouping  == "boolean" ? options.grouping  : true; // Grouping of the lists of the item
-  let skipLinks = options && typeof options.skipLinks == "boolean" ? options.skipLinks : false;
-  let key       = options ? options.key     : null;
-  let val       = options ? options.val     : null;
-
+  let key = options ? options.key : null;
+  let val = options ? options.val : null;
   if (!key || !val) {
     this.error = "Missing key or value. "; // TODO! i18n
-    return Promise.resolve(false);
+    return Promise.resolve(null);
   }
+  let id        = options ? options.id      : null; // The id of the item to search for.
+  let skipLinks = options && typeof options.skipLinks == "boolean" ? options.skipLinks : false;
+  let groupId   = options ? options.groupId : null; // If "groupId" is specified, search only in that group.
+  let grouping  = options && typeof options.grouping  == "boolean" ? options.grouping  : true; // Grouping of the lists of the item
+
   this.numResults = 0;
   // Build and execute the query
   let stmt = this.dbPrepareSearchItemStmt(key,val);
@@ -490,11 +515,11 @@ anyTable.prototype.dbSearchItemByKey = function(options)
   .then (async function(rows) {
     // Get the data
     if (self.getRowData(rows,self.data,"item",false,grouping)) {
-      if (self.data) {
+      if (self.data && Object.keys(self.data).length > 0) {
         // Organize group at top
         let idx = Object.keys(self.data)[0];
         self.data[idx]["data"] = {};
-        $.extend(true,self.data[idx]["data"],self.data[idx]);
+        $.extend(true,self.data[idx]["data"],self.data[idx]); // TODO! Could slow down execution if large data structure
         delete self.data[idx][id];
       }
       if (!skipLinks)
@@ -525,7 +550,7 @@ anyTable.prototype.findItemSelect = function()
 
   // Get parent name
   if (this.hasParentId())
-    si += ", temp."+this.nameKey+" AS parent_name";
+    si += ", tmp."+this.nameKey+" AS parent_name";
 
   si += " ";
   return si;
@@ -536,8 +561,8 @@ anyTable.prototype.findItemLeftJoin = function()
   let lj = "";
   // Get parent name
   if (this.hasParentId())
-      lj += "LEFT JOIN "+this.tableName+" temp "+
-            "ON "       +this.tableName+".parent_id=temp."+this.idKey+" ";
+      lj += "LEFT JOIN "+this.tableName+" AS tmp "+
+            "ON "       +this.tableName+".parent_id=tmp."+this.idKey+" ";
   return lj;
 }; // findItemLeftJoin
 
@@ -552,20 +577,18 @@ anyTable.prototype.findItemWhere = function(key,val)
 //
 anyTable.prototype.dbSearchItemLists = async function(id,grouping,groupId)
 {
-  // If no link types found, return with no error
+  // If no link types found, return immediately
   if (!this.linkTypes)
-    return Promise.resolve(true);
+    return Promise.resolve(null);
   // Must have an id
   if (!id && id !== 0) {
     this.error = "No id while searching for linked lists. "; // TODO! i18n
-    return Promise.resolve(false);
+    return Promise.resolve(null);
   }
   // Search through all registered link types/tables
-  if (this.linkTypes) {
-    for (let link_type in this.linkTypes) {
-      if (this.linkTypes.hasOwnProperty(link_type))
-        await this.dbSearchItemListOfType(id,link_type,grouping,groupId);
-    }
+  for (let link_type in this.linkTypes) {
+    if (this.linkTypes.hasOwnProperty(link_type))
+      await this.dbSearchItemListOfType(id,link_type,grouping,groupId);
   }
   return Promise.resolve(this.data);
 }; // dbSearchItemLists
@@ -576,7 +599,7 @@ anyTable.prototype.dbSearchItemListOfType = async function(id,linkType,grouping,
   if (this.tableExists(link_tablename)) {
     let factory = new anyTableFactory(this.connection);
     let link_classname = this.linkTypes[linkType].className;
-    let table = await factory.createClass(link_classname,{type:linkType,header:true,path:this.path});
+    let table = await factory.createClass(link_classname,{type:linkType, header:true, path:this.path});
     //console.log("created class "+link_classname);
     if (table && (table.type != this.type || this.hasParentId())) {
       grouping = false; // Do not group
@@ -584,32 +607,32 @@ anyTable.prototype.dbSearchItemListOfType = async function(id,linkType,grouping,
       return await table.dbSearchList({ linkType: self.type,
                                         linkId:   id,
                                         grouping: grouping,
-                                        groupId:  groupId
+                                        groupId:  groupId,
                                      })
       .then( function(data) {
         if (table.error)
           self.error += table.error;
-        if (data) {
-          let gidx = Object.keys(self.data)[0];
-          let idx  = id;
-          let lidx = "link-"+linkType;
-          let tgidx = idx;
-          if (table.type == "group" || ((id || id === 0) && self.type != "group"))
-            tgidx = gidx;
-          if (!self.data || !self.data[gidx] || !self.data[gidx]["data"])
-            return Promise.resolve(null); // Should never happen
-          if (!self.data[gidx]["data"][idx])               self.data[gidx]["data"][idx]               = {};
-          if (!self.data[gidx]["data"][idx]["data"])       self.data[gidx]["data"][idx]["data"]       = {};
-          if (!self.data[gidx]["data"][idx]["data"][lidx]) self.data[gidx]["data"][idx]["data"][lidx] = {};
-          self.data[gidx]["data"][idx]["data"]["grouping"]       = true;  // Group different link types by default.
-          self.data[gidx]["data"][idx]["data"][lidx]["grouping"] = false; // The lists themselves are not grouped. TODO! Is this neccessary?
-          self.data[gidx]["data"][idx]["data"][lidx]["head"]     = linkType;
-          self.data[gidx]["data"][idx]["data"][lidx]["data"]     = table.data;
-          if (table.nameKey)
-            self.data[gidx]["data"][idx]["data"][lidx][table.nameKey] = self.findDefaultItemListHeader(linkType);
-          //console.log("item list "+linkType+":"); console.log(self.data);
-          return Promise.resolve(data);
-        }
+        if (!data)
+          return Promise.resolve(null);
+        let gidx = Object.keys(self.data)[0];
+        let idx  = id;
+        let lidx = "link-"+linkType;
+        let tgidx = idx;
+        if (table.type == "group" || ((id || id === 0) && self.type != "group"))
+          tgidx = gidx;
+        if (!self.data || !self.data[gidx] || !self.data[gidx]["data"])
+          return Promise.resolve(null); // Should never happen
+        if (!self.data[gidx]["data"][idx])               self.data[gidx]["data"][idx]               = {};
+        if (!self.data[gidx]["data"][idx]["data"])       self.data[gidx]["data"][idx]["data"]       = {};
+        if (!self.data[gidx]["data"][idx]["data"][lidx]) self.data[gidx]["data"][idx]["data"][lidx] = {};
+        self.data[gidx]["data"][idx]["data"]["grouping"]       = true;  // Group different link types by default.
+        self.data[gidx]["data"][idx]["data"][lidx]["grouping"] = false; // The lists themselves are not grouped. TODO! Is this neccessary?
+        self.data[gidx]["data"][idx]["data"][lidx]["head"]     = linkType;
+        self.data[gidx]["data"][idx]["data"][lidx]["data"]     = table.data;
+        if (table.nameKey)
+          self.data[gidx]["data"][idx]["data"][lidx][table.nameKey] = self.findDefaultItemListHeader(linkType);
+        //console.log("item list "+linkType+":"); console.log(self.data);
+        return Promise.resolve(data);
       });
     } // if
   }
@@ -618,22 +641,22 @@ anyTable.prototype.dbSearchItemListOfType = async function(id,linkType,grouping,
 //////////////////////////////// List search ////////////////////////////////
 
 //
-// Search database for a list
-// Returns true on success, false on error
+// Search database for a list.
+// Return data structure on success, null on error.
 //
 anyTable.prototype.dbSearchList = async function(options)
 {
   if (this._initSearch(options) == -1)
     return Promise.resolve(null);
 
-  let linkType  = options                                         ? options.linkType  : null;
   let linkId    = options                                         ? options.linkId    : null;
+  let linkType  = options                                         ? options.linkType  : null;
   let groupId   = options                                         ? options.groupId   : null; // If "groupId" is specified, we need only search in that group
   let groupType = options                                         ? options.groupType : null; // If "groupType" is specified, search only for groups of that type
   let grouping  = options && typeof options.grouping == "boolean" ? options.grouping  : true;
-  grouping = grouping !== false && grouping !== "false" && grouping !== "0";
-  let simple   = options && typeof options.simple   == "boolean" ? options.simple   : false;
-  simple = simple === true || simple === "true" || simple   === "1";
+  grouping      = grouping !== false && grouping !== "false" && grouping !== "0";
+  let simple    = options && typeof options.simple   == "boolean" ? options.simple   : false; // In a "simple" list search we get only the id, name and parent_id
+  simple        = simple === true || simple === "true" || simple   === "1";
 
   // Get group data, unless we are searching in a specific group
   let group_data = null;
@@ -645,9 +668,11 @@ anyTable.prototype.dbSearchList = async function(options)
       // Get a "flat" group list, make it into a tree below
       let factory     = new anyTableFactory(this.connection);
       this.groupTable = await factory.createClass("groupTable",{type:"group",header:false,path:this.path});
-      group_data = this.groupTable ? await this.groupTable.dbSearchGroupInfo(this.type,true,groupId) : null;
+      group_data = this.groupTable && (!this.groupTable.error || this.groupTable.error == "")
+                   ? await this.groupTable.dbSearchGroupInfo(this.type,groupId,true)
+                   : null;
       if (!group_data)
-        this.error = this.groupTable.error;
+        this.message = this.groupTable.error; // Failing to find group data table is not an error
     }
   }
 
@@ -658,7 +683,7 @@ anyTable.prototype.dbSearchList = async function(options)
 
   // If a group id is given, query data from the given group only
   if (groupId || groupId === 0) {
-    success = await this.dbExecListStmt(groupId,this.type,linkType,linkId,grouping,simple,limit,groupType);
+    success = await this.dbExecListStmt(groupType,groupId,linkType,linkId,grouping,simple,limit);
   }
   else
   // If a 'LIMIT' operator applies, we need to search for results for each group separately
@@ -667,7 +692,7 @@ anyTable.prototype.dbSearchList = async function(options)
   }
   // Query data from all groups
   else {
-    success = await this.dbExecListStmt(null,this.type,linkType,linkId,grouping,simple,limit,groupType);
+    success = await this.dbExecListStmt(groupType,null,linkType,linkId,grouping,simple,limit);
   }
 
   if (!success)
@@ -677,7 +702,7 @@ anyTable.prototype.dbSearchList = async function(options)
   // TODO! Not implemented yet
 
   // Group the data and build the data tree
-  if (!this.groupTable)
+  if (!this.groupTable || (this.groupTable.error && this.groupTable.error != ""))
     this.groupTable = this;
   if (!group_data)
     if (this.type == "group")
@@ -689,16 +714,20 @@ anyTable.prototype.dbSearchList = async function(options)
       group_data = this.groupTable.buildDataTree(group_data["nogroup"]);
     else
       group_data = this.groupTable.buildDataTree(group_data);
-    this.buildGroupTreeAndAttach(group_data,this.type,linkId,grouping);
+    this.buildGroupTreeAndAttach(group_data,linkId,grouping);
   }
   else
   if (!grouping) {
     let gtype = null;
-    if (this.hostTable && this.hostTable.data && this.hostTable.data["nogroup"] &&
-        this.hostTable.data["nogroup"]["data"] && this.hostTable.data["nogroup"]["data"][linkId])
+    if (this.hostTable &&
+        this.hostTable.data &&
+        this.hostTable.data["nogroup"] &&
+        this.hostTable.data["nogroup"]["data"] &&
+        this.hostTable.data["nogroup"]["data"][linkId] &&
+        this.hostTable.data["nogroup"]["data"][linkId]["group_type"])
       gtype = this.hostTable.data["nogroup"]["data"][linkId]["group_type"];
     if (gtype && gtype != this.type) {
-      // TODO! An item in an illegal group. Ignore it for now, just log a warning
+      // We have an item in an illegal group. Ignore it, but log a warning.
       this.data = null;
       let gn = this.hostTable.data["nogroup"]["data"][linkId]["group_name"];
       let err = "Warning: One or more items of type "+this.type+" is in "+gtype+" group '"+gn+"' with id "+linkId; // TODO i18n
@@ -707,11 +736,11 @@ anyTable.prototype.dbSearchList = async function(options)
     }
     else
     if (linkType != "group") {
-      if (this.data["nogroup"])
+      if (this.data && this.data["nogroup"])
         this.data = this.data["nogroup"];
     }
     else {
-      if (this.data[linkId])
+      if (this.data && this.data[linkId])
         this.data = this.data[linkId];
     }
   }
@@ -720,17 +749,18 @@ anyTable.prototype.dbSearchList = async function(options)
   return Promise.resolve(this.data);
 }; // dbSearchList
 
-anyTable.prototype.dbExecListStmt = function(groupId,type,linkType,linkId,grouping,simple,limit,groupType,searchTerm)
+anyTable.prototype.dbExecListStmt = function(groupType,groupId,linkType,linkId,grouping,simple,limit,searchTerm)
 {
   // Build and execute the query for a group
-  let partial_stmt = this.dbPrepareSearchListStmt(groupId,type,linkType,linkId,grouping,groupType,searchTerm);
+  let partial_stmt = this.dbPrepareSearchListStmt(groupType,groupId,linkType,linkId,grouping,searchTerm);
   let stmt = partial_stmt+limit;
   //console.log("dbExecListStmt1:"+stmt);
   let self = this;
   return alasql.promise(stmt)
   .then( function(rows) {
+    // Get the data
     let success = self.getRowData(rows,self.data,"list",simple,grouping);
-    let group_idx = isInt(groupId) ? parseInt(groupId) : groupId;
+    let group_idx = Number.isInteger(groupId) ? parseInt(groupId) : groupId;
     if ((!group_idx && group_idx !== 0) || group_idx == "")
       group_idx = "nogroup";
     if (limit != "") {
@@ -739,7 +769,7 @@ anyTable.prototype.dbExecListStmt = function(groupId,type,linkType,linkId,groupi
     } // if
     else {
       // Report back number of elements in groups
-      if (group_idx in self.data) {
+      if (self.data && group_idx in self.data) {
         let n = Object.size(self.data[group_idx]);
         self.data[group_idx]["grouping_num_results"] = n;
         self.numResults += n;
@@ -752,14 +782,14 @@ anyTable.prototype.dbExecListStmt = function(groupId,type,linkType,linkId,groupi
 }; // dbExecListStmt
 
  // Get query fragments and build the query
-anyTable.prototype.dbPrepareSearchListStmt = function(groupId,type,linkType,linkId,grouping,groupType,searchTerm)
+anyTable.prototype.dbPrepareSearchListStmt = function(groupType,groupId,linkType,linkId,grouping,searchTerm)
 {
   let linktable_name = this.findLinkTableName(linkType);
   let has_linktable  = this.tableExists(linktable_name);
-  let select         = this.findListSelect  (groupId,type,linkType,linkId,grouping,linktable_name,has_linktable);
-  let left_join      = this.findListLeftJoin(groupId,type,linkType,linkId,grouping,linktable_name,has_linktable);
-  let where          = this.findListWhere   (groupId,type,linkType,linkId,grouping,groupType,searchTerm,linktable_name,has_linktable);
-  let order_by       = this.findListOrderBy();
+  let select         = this.findListSelect  (groupId,linkType,linkId,grouping,linktable_name,has_linktable);
+  let left_join      = this.findListLeftJoin(groupId,linkType,linkId,grouping,linktable_name,has_linktable);
+  let where          = this.findListWhere   (groupType,groupId,linkType,linkId,grouping,searchTerm,linktable_name,has_linktable);
+  let order_by       = this.findListOrderBy ();
 
   let stmt = select+
              "FROM "+this.tableName+" "+
@@ -769,7 +799,7 @@ anyTable.prototype.dbPrepareSearchListStmt = function(groupId,type,linkType,link
   return stmt;
 }; // dbPrepareSearchListStmt
 
-anyTable.prototype.findListSelect = function(groupId,type,linkType,linkId,grouping,linktable_name,has_linktable)
+anyTable.prototype.findListSelect = function(groupId,linkType,linkId,grouping,linktable_name,has_linktable)
 {
   // Select from own table
   let sl = "SELECT DISTINCT "+this.tableName+".* ";
@@ -785,7 +815,7 @@ anyTable.prototype.findListSelect = function(groupId,type,linkType,linkId,groupi
           sl += ", "+linktable_name+"."+field;
       }
       if (this.hasParentId())
-        sl += ", temp."+this.nameKey+" AS parent_name";
+        sl += ", tmp."+this.nameKey+" AS parent_name";
     }
   }
   // Select from group table
@@ -806,34 +836,30 @@ anyTable.prototype.findListSelect = function(groupId,type,linkType,linkId,groupi
   return sl;
 }; // findListSelect
 
-anyTable.prototype.findListLeftJoin = function(groupId,type,linkType,linkId,grouping,linktable_name,has_linktable)
+anyTable.prototype.findListLeftJoin = function(groupId,linkType,linkId,grouping,linktable_name,has_linktable)
 {
   let lj = "";
 
   // Left join own table to get parent name
   if (this.hasParentId())
-    lj += "LEFT JOIN "+this.tableName+" temp ON "+this.tableName+".parent_id=temp."+this.idKey+" ";
+    lj += "LEFT JOIN "+this.tableName+" AS tmp ON "+this.tableName+".parent_id=tmp."+this.idKey+" ";
 
   // Left join link  table
-  if ((linkId || linkId === 0) && linkType && linkType != type)
-    lj += this.findListLeftJoinOne(groupId,type,linkType,linkId,grouping,linktable_name,has_linktable);
+  if ((linkId || linkId === 0) && linkType && linkType != this.type)
+    lj += this.findListLeftJoinOne(groupId,linkType,linkId,grouping,linktable_name,has_linktable);
 
   // Left join group table
   if (grouping && this.type != "group" && groupId != "nogroup" &&
       this.groupTable) {
     let linktable_name_grp = this.findLinkTableName("group");
     let has_linktable_grp  = this.tableExists(linktable_name_grp);
-    lj += this.findListLeftJoinOne(groupId,type,"group",linkId,grouping,linktable_name_grp,has_linktable_grp);
+    lj += this.findListLeftJoinOne(groupId,"group",linkId,grouping,linktable_name_grp,has_linktable_grp);
   }
 
   return lj;
 }; // findListLeftJoin
 
-function isNumeric(n) { // TODO! Put somewhere else
-  return !isNaN(parseFloat(n)) && isFinite(n);
-}
-
-anyTable.prototype.findListLeftJoinOne = function(groupId,type,linkType,linkId,grouping,linktable_name,has_linktable)
+anyTable.prototype.findListLeftJoinOne = function(groupId,linkType,linkId,grouping,linktable_name,has_linktable)
 {
   let typetable_name = this.findTypeTableName(linkType);
   let typetable_id   = this.findTypeTableId(linkType);
@@ -846,7 +872,7 @@ anyTable.prototype.findListLeftJoinOne = function(groupId,type,linkType,linkId,g
 
     // Also left join on parent id:
     if (this.hasParentId() && linkId == null)
-      lj += "OR "+linktable_name+"."+this.idKey+"=temp."+this.idKey+" ";
+      lj += "OR "+linktable_name+"."+this.idKey+"=tmp."+this.idKey+" ";
 
     if (has_typetable) {
       if (linkType != "group")
@@ -854,21 +880,21 @@ anyTable.prototype.findListLeftJoinOne = function(groupId,type,linkType,linkId,g
     }
   }
   let db_gid = !groupId && groupId !== 0 // No gid specified
-            ? has_linktable
-              ? "CAST("+linktable_name+"."+linktable_id+" AS INT)"
-              : null
-            : isNumeric(groupId) // Only left join with specified group
-              ? "CAST("+groupId+" AS INT)"
-              : "'"+groupId+"'";
+               ? has_linktable
+                 ? "CAST("+linktable_name+"."+linktable_id+" AS INT)"
+                 : null
+               : isNumeric(groupId) // Only left join with specified group
+                 ? "CAST("+groupId+" AS INT)"
+                 : "'"+groupId+"'";
   let has_grouptable = this.tableExists(this.tableNameGroup);
   if (db_gid && has_grouptable && has_typetable && typetable_name == this.tableNameGroup && this.type != "group"&& groupId != "nogroup") {
     lj += "LEFT JOIN "+typetable_name+" ON CAST("+typetable_name+"."+typetable_id+" AS INT)="+db_gid+" ";
-    lj += "AND "+this.tableNameGroup+".group_type='"+type+"' ";
+    lj += "AND "+this.tableNameGroup+".group_type='"+this.type+"' ";
   }
   return lj;
 }; // findListLeftJoinOne
 
-anyTable.prototype.findListWhere = function(groupId,type,linkType,linkId,grouping,groupType,searchTerm,linktable_name,has_linktable)
+anyTable.prototype.findListWhere = function(groupType,groupId,linkType,linkId,grouping,searchTerm,linktable_name,has_linktable)
 {
   let where = "";
 
@@ -905,7 +931,7 @@ anyTable.prototype.findListWhere = function(groupId,type,linkType,linkId,groupin
   }
 
   // TODO! What's this for?
-  if (linkType == type && linkId != "nogroup") {
+  if (linkType == this.type && linkId != "nogroup") {
     let db_id = this.type == "group" ? "'"+linkId+"'" : linkId;
     let skip_str = this.tableName+"."+this.idKey+" != "+db_id+"";
     if (where === "")
@@ -915,7 +941,7 @@ anyTable.prototype.findListWhere = function(groupId,type,linkType,linkId,groupin
   }
 
   // Match with group table
-  if (grouping && this.type != "group" && groupId != "nogroup" && groupId !== null && groupId !== undefined &&
+  if (grouping && this.type != "group" && (groupId || groupId === 0) && groupId != "nogroup" &&
       has_grouptable && this.groupTable) {
     if (groupType) {
       let gt_str = this.tableNameGroup+".group_type='"+groupType+"' ";
@@ -943,7 +969,7 @@ anyTable.prototype.findListWhere = function(groupId,type,linkType,linkId,groupin
       where += " AND "+gt_str;
   }
 
-  // Match search term TODO!
+  // Match search term
   if (searchTerm) {
     let term_str = this.tableName+"."+this.nameKey+" LIKE '%"+searchTerm+"%'";
     if (where === "")
@@ -956,12 +982,13 @@ anyTable.prototype.findListWhere = function(groupId,type,linkType,linkId,groupin
 
 anyTable.prototype.findListOrderBy = function()
 {
-  if (!this.orderBy)
+  let orderBy = this.orderBy;
+  if (!this.tableFields.includes(orderBy))
+    orderBy = this.tableFields[0];
+  if (!orderBy)
     return "";
   let dir = this.orderDir ? this.orderDir : "";
-  if (!this.tableFields.includes(this.orderBy))
-    this.orderBy = this.tableFields[0];
-  let ob = "ORDER BY " + this.tableName + "." + this.orderBy + " " + dir + " ";
+  let ob = "ORDER BY " + this.tableName + "." + orderBy + " " + dir + " ";
   return ob;
 }; // findListOrderBy
 
@@ -978,15 +1005,18 @@ anyTable.prototype.findLimit = function()
 //
 anyTable.prototype.dbSearchMaxId = async function()
 {
+  this.maxId = -1;
+
   let maxstr = "MAX("+this.idKey+")";
   let stmt   = "SELECT "+maxstr+" FROM "+this.tableName;
   let self   = this;
-  self.maxId = -1;
   return await alasql.promise(stmt)
   .then (function(data) {
     if (data && data[0])
       self.maxId = data[0][maxstr];
-    //console.log("max:"); console.log(self.maxId);
+    //console.log("max:"+self.maxId);
+    if (self.maxId == -1)
+      self.error = "Max id not found. "; // TODO! i18n
     return {id:self.maxId};
   });
 }; // dbSearchMaxId
@@ -1004,13 +1034,13 @@ anyTable.prototype.dbSearchNameExists = function(tableName,name)
   if (!this.tableExists(tableName)) {
     this.err = "anyTable: Table does not exist:"+tableName+". "; // TODO! i18n
     console.error(this.err);
-    return Promise.resolve(null);
+    return Promise.resolve(false);
   }
-  let illegal_char = (/^[\u3400-\u9FBFa-zæøåA-ZÆØÅ0-9������/(),.;:\-+_! ]*$/.test(name) === false); // Allow chinese chars
+  let illegal_char = (/^[\u3400-\u9FBFa-zæøåA-ZÆØÅ0-9������/(),.;:\-+_! ]*$/.test(name) === false); // Allow chinese chars
   if (!name || illegal_char) {
     this.err = "Missing or illegal file name. "; // TODO! i18n
     console.error(this.err);
-    return Promise.resolve(null);
+    return Promise.resolve(false);
   }
   let query_str = "SELECT * FROM "+tableName+" WHERE "+tableName+"_name='"+name+"'";
   let self = this;
@@ -1029,6 +1059,56 @@ anyTable.prototype.dbSearchNameExists = function(tableName,name)
     });
 }; // dbSearchNameExists
 
+/*
+// TODO! Not tested!
+anyTable.prototype.dbSearchIdExists = function(tableName,id)
+{
+  if (id == "new")
+    return Promise.resolve(false);
+
+  if (tableName == "group")
+    tableName = "acugroup";
+  this.err = "";
+  if (!this.tableExists(tableName)) {
+    this.err = "anyTable: Table does not exist:"+tableName+". "; // TODO! i18n
+    console.error(this.err);
+    return Promise.resolve(false);
+  }
+  let query_str = "SELECT "+tableName+"_id FROM "+tableName+" WHERE "+tableName+"_id="+id;
+  let self = this;
+  return alasql.promise(query_str)
+    .then (function(rows) {
+      if (!rows)
+        return false;
+      return (rows.length > 0);
+    })
+    .catch(function(err) {
+      self.err = err;
+      console.error(self.err);
+      return null;
+    });
+}; // dbSearchIdExists
+*/
+// Check if item exists
+anyTable.prototype.dbItemExists = async function(id)
+{
+  let stmt = "SELECT * FROM " + this.tableName + " WHERE " + this.idKey + "=" + id + " ";
+  //console.log("dbItemExists:"+stmt);
+  try {
+    return await alasql.promise(stmt)
+    .then( function(res) {
+      return (res.length > 0);
+    })
+    .catch(error => {
+       console.error(error);
+       return false;
+    });
+  }
+  catch (err) {
+    console.log("dbItemExists: "+err);
+  }
+}; // dbItemExists
+
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Data retrieval //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
@@ -1041,10 +1121,12 @@ anyTable.prototype.dbSearchNameExists = function(tableName,name)
 //
 anyTable.prototype.getRowData = function(rows,data,mode,simple,grouping)
 {
-  if (!data)
+  if (!data) {
     data = {};
+    this.data = data;
+  }
   for (let i=0; i<rows.length; i++) {
-    //console.log(i+":"+JSON.stringify(rows[i]));
+    //console.log("getRowData,row "+i+":"+JSON.stringify(rows[i]));
     if (rows[i]) {
       let gidx = grouping && !simple && this.type != "group" && rows[i]["group_id"]
                  ? rows[i]["group_id"]
@@ -1052,7 +1134,7 @@ anyTable.prototype.getRowData = function(rows,data,mode,simple,grouping)
       let idx  = rows[i][this.idKey]
                  ? rows[i][this.idKey]
                  : null;
-      if (idx === null || idx === undefined || (typeof idx != "number" && typeof idx != "string"))
+      if (!idx && idx !== 0 || (typeof idx != "number" && typeof idx != "string"))
         continue; // Ignore element without id
 
       if (!data[gidx])      data[gidx]      = {};
@@ -1072,7 +1154,7 @@ anyTable.prototype.getRowData = function(rows,data,mode,simple,grouping)
       // Link tables for item
       if (this.linkTypes) {
         for (let link_type in this.linkTypes) {
-          if (this.tableFieldsLeftJoin[link_type]) {
+          if (link_type && link_type != "" && this.tableFieldsLeftJoin[link_type]) {
             for (let t=0; t<this.tableFieldsLeftJoin[link_type].length; t++) {
               let tablefield = this.tableFieldsLeftJoin[link_type][t];
               if (!simple || tablefield == this.idKey || tablefield == this.nameKey || tablefield == "parent_id")
@@ -1084,8 +1166,6 @@ anyTable.prototype.getRowData = function(rows,data,mode,simple,grouping)
     } // if rows
   } // for
   //console.log("getRowData ("+this.type+"),data:"); console.log(data);
-
-  this.data = data;
 
   if (!data)
     return false;
@@ -1114,7 +1194,7 @@ anyTable.prototype.getCellData = function(tablefield,nextrow,data,gidx,idx,filte
 //
 // Build the data group tree for all groups for a list search.
 //
-anyTable.prototype.buildGroupTreeAndAttach = function(group_data,type,linkId,grouping)
+anyTable.prototype.buildGroupTreeAndAttach = function(group_data,linkId,grouping)
 {
   if (!this.data)
     return null;
@@ -1128,7 +1208,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(group_data,type,linkId,gro
         for (let idx in grp) {
           if (grp.hasOwnProperty(idx)) {
             let item = grp[idx];
-            if (item && item["parent_id"]) {
+            if (item && item["parent_id"] && item["parent_id"] != "") {
               let pid = item["parent_id"];
               for (let gidx2 in this.data) {
                 if (this.data.hasOwnProperty(gidx2)) {
@@ -1166,7 +1246,8 @@ anyTable.prototype.buildGroupTreeAndAttach = function(group_data,type,linkId,gro
   for (let gidx in this.data) {
     if (this.data.hasOwnProperty(gidx) && !gidx.startsWith("grouping")) {
       let ngidx = gidx;
-      if (!data_tree[ngidx]) data_tree[ngidx] = {};
+      if (!data_tree[ngidx])
+        data_tree[ngidx] = {};
       if (grouping && this.data[gidx]) { // Add a head data layer
         data_tree[ngidx]["head"]       = "group";
         data_tree[ngidx]["group_type"] = this.type;
@@ -1177,7 +1258,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(group_data,type,linkId,gro
                       ? group_data[ngidx]["group_name"]
                       : data_tree[ngidx]["group_type"].capitalize()+" groups"; // TODO i18n
           if (!gname || gname == "")
-            gname = this.findDefaultHeader(type);
+            gname = this.findDefaultHeader(this.type);
         } // if linkId
         else {
           let idx = linkId;
@@ -1194,7 +1275,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(group_data,type,linkId,gro
       // Preserve "grouping_num_results" value
       if (this.data[gidx] && this.data[gidx]["grouping_num_results"])
         data_tree[ngidx]["data"]["grouping_num_results"] = this.data[gidx]["grouping_num_results"];
-      if (data_tree[ngidx]["data"] && !Object.size(data_tree[ngidx]["data"]))
+      if (data_tree[ngidx]["data"] && Object.size(data_tree[ngidx]["data"]) == 0)
         delete data_tree[ngidx]["data"];
     } // if hasOwnProperty
   } // for
@@ -1202,19 +1283,19 @@ anyTable.prototype.buildGroupTreeAndAttach = function(group_data,type,linkId,gro
   //
   // If grouping is specified, build group tree and stick data tree to it
   //
-  if (grouping && (!linkId && linkId !== 0 || linkId == "") && (!linkId && linkId !== 0)) {
+  if (grouping && (!linkId && linkId !== 0 || linkId == "")) {
     if (!data_tree["unknown"])
       data_tree["unknown"] = null;
     if (data_tree["unknown"]) {
       group_data["unknown"] = null;
       group_data["unknown"]["group_id"]   = "unknown";
       group_data["unknown"]["group_name"] = "Unknown"; // TODO! i18n
-      group_data["unknown"]["group_description"] = type.capitalize()+"s belonging to non-"+this.type+" group&nbsp;&nbsp;"+
+      group_data["unknown"]["group_description"] = this.type.capitalize()+"s belonging to non-"+this.type+" group&nbsp;&nbsp;"+
                                                    '<i style="color:red" class="fa fad fa-exclamation-triangle"></i>'; // TODO! i18n and CSS
     }
     if (!group_data)
       group_data = {};
-    this.dbAttachToGroups(group_data,data_tree,type);
+    this.dbAttachToGroups(group_data,data_tree,this.type);
     group_data["grouping"] = true;
     //console.log("buildGroupTreeAndAttach,group_data:"); console.log(group_data);
     if (Object.size(group_data) > 1)
@@ -1226,9 +1307,9 @@ anyTable.prototype.buildGroupTreeAndAttach = function(group_data,type,linkId,gro
     }
   }
   else {
-    if (linkId)
-      this.data = data_tree[type] && data_tree[type]["data"]
-                  ? data_tree[type]["data"]
+    if (linkId || linkId === 0)
+      this.data = data_tree[this.type] && data_tree[this.type]["data"]
+                  ? data_tree[this.type]["data"]
                   : data_tree;
     else
       this.data = data_tree;
@@ -1238,7 +1319,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(group_data,type,linkId,gro
 }; // buildGroupTreeAndAttach
 
 // Overridden in group table
-anyTable.prototype.dbSearchGroupInfo = async function(type,grouping,groupId)
+anyTable.prototype.dbSearchGroupInfo = async function(type,groupId,grouping)
 {
   // Get group tree and append data to it
   let data = {};
@@ -1268,7 +1349,7 @@ anyTable.prototype.buildDataTree = function(flatdata,parentId)
     if (flatdata.hasOwnProperty(idx)) {
       let subdata = flatdata[idx];
       if (subdata && !idx.startsWith("grouping")) {
-        let parent_not_in_group = subdata["parent_id"] && subdata["parent_id"] != "" &&
+        let parent_not_in_group = (subdata["parent_id"] || subdata["parent_id"] === 0) && subdata["parent_id"] != "" &&
                                   !flatdata[subdata["parent_id"]] && flatdata[subdata["parent_id"]] !== 0;
         let pid = null;
         if (parent_not_in_group) {
@@ -1276,13 +1357,13 @@ anyTable.prototype.buildDataTree = function(flatdata,parentId)
           delete subdata["parent_id"];
         }
         if (typeof subdata === "object") {
-          if (!subdata["parent_id"])
+          if (!subdata["parent_id"] && subdata["parent_id"] !== 0)
             delete subdata["parent_id"]; // = null;
           if (subdata["parent_id"] == parentId) {
             let children = null;
             if (subdata[id_name] && subdata[id_name] != "")
               children = this.buildDataTree(flatdata,subdata[id_name]);
-            if (children && Object.size(children))
+            if (children && Object.size(children) > 0)
               subdata["data"] = children;
             if (parent_not_in_group && (pid || pid === 0))
               subdata["parent_id"] = pid;
@@ -1308,7 +1389,7 @@ anyTable.prototype.dbAttachToGroups = function(group_tree,data_tree,type)
     for (let gid in group_tree) { // Iterate over group ids
       let group = group_tree[gid];
       if (group) {
-        if (group["data"] && Object.size(group["data"]))
+        if (group["data"] && Object.size(group["data"]) > 0)
           this.dbAttachToGroups(group["data"],data_tree,type); // Recursive call
         if (group["data"]) {
           group["head"] = "group";
@@ -1344,7 +1425,7 @@ anyTable.prototype.prepareData = function(id)
 {
   //console.log("data before prepare:"); console.log(this.data);
   // Make room for a top level header
-  let topidx = "+0";
+  let topidx = "0";
   if ((id || id === 0) && id != "")
     topidx = id;
   let data = {"data": { [topidx]: {} }};
@@ -1357,7 +1438,7 @@ anyTable.prototype.prepareData = function(id)
   }
 
   // Set data
-  if (this.data) {
+  if (this.data && Object.keys(this.data).length > 0) {
     if ((id || id === 0) && id != "") {
       let gidx = Object.keys(this.data)[0];
       data["data"][topidx]["data"] = this.data[gidx]["data"];
@@ -1373,7 +1454,7 @@ anyTable.prototype.prepareData = function(id)
 
   this.data = data;
   //console.log("data after prepare:"); console.log(this.data);
-  return data;
+  return this.data;
 }; // prepareData
 
 anyTable.prototype.prepareParents = function(type,itemIdKey,itemNameKey)
@@ -1385,32 +1466,60 @@ anyTable.prototype.prepareParents = function(type,itemIdKey,itemNameKey)
 /////////////////////////////// Insert //////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
+  /**
+   * Insert data in table.
+   * Also sets last_insert_id if a the new id was auto-created by the database.
+   *
+   * @return array|null Data object on success, null on error
+   */
 anyTable.prototype.dbInsert = async function(options)
 {
-  if (!options || !options.keys || !options.values || !this.dbValidateInsert(options))
+  // Validate
+  if (!this.dbValidateInsert(options))
     return Promise.resolve(null);
-
-  let id = options.id ? options.id : null;
 
   // Insert in normal table
-  let stmt = await this.dbPrepareInsertStmt(id,options.keys,options.values);
+  let stmt = await this.dbPrepareInsertStmt(options);
   if (!stmt)
     return Promise.resolve(null);
-  stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
   let self = this;
-  //console.log("dbInsert:"+stmt);
   return await alasql.promise(stmt)
-  .then( async function(res) {
-    // numRowsChanged == 1 if the insert succeeded
-    self.numRowsChanged = res;
-    //console.log("ins res:"+res);
+  .then( async function(nrc) {
+    // Number of rows changed == 1 if the insert succeeded
+    self.numRowsChanged = nrc;
     if (self.numRowsChanged === 0) {
       self.message = self.insertNothingToDo;
       return Promise.resolve(self);
     }
     // An id will have been auto-created if the insert succeeded
     self.last_insert_id = await self.queryMaxId(self.tableName);
+    self.id = self.last_insert_id;
 
+    // Insert in group table
+    let group_id = options.group_id;
+    if (group_id || group_id === 0 && group_id != "" && group_id != "nogroup" && self.type != "group") {
+      if (self.tableExists(self.tableNameGroupLink)) {
+        stmt = "INSERT INTO " + self.tableNameGroupLink + " (group_id," + self.type + "_id) " +
+               "VALUES ('" + group_id + "','" + self.last_insert_id + "')";
+        //console.log("stmt:"+stmt);
+        await alasql.promise(stmt)
+        .then( async function(res) {
+          if (!res)
+            throw "Error while inserting into group table. "; // TODO i18n
+        })
+        .catch(error => {
+          self.error = error;
+          console.error(error);
+          return Promise.resolve(self);
+        });
+      }
+    }
+    // Insert in link table
+    let link_id = options.link_id;
+    if ((link_id || link_id === 0) && link_id != "") {
+      options.add = link_id;
+      await this.dbUpdateLinkList(options);
+    }
     // Set result message
     self.message = self.insertSuccessMsg;
 
@@ -1421,7 +1530,7 @@ anyTable.prototype.dbInsert = async function(options)
     return Promise.resolve(self);
   })
   .catch(error => {
-     console.error("Insert error: "+error);
+     console.error(error);
      return Promise.resolve(null);
   });
 }; // dbInsert
@@ -1429,63 +1538,73 @@ anyTable.prototype.dbInsert = async function(options)
 anyTable.prototype.dbValidateInsert = function(options)
 {
   this.error = "";
-  // Validate here, set this.error
+
+  if (!options)
+    this.error += "Options missing. "; // TODO! i18n
+  if (options && (!options.keys || !options.values))
+    this.error += "Missing keys/values for insert. ";
+
   if (this.error != "")
     return false;
   return true;
 }; // dbValidateInsert
 
-anyTable.prototype.dbPrepareInsertStmt = async function(id,keys,values)
+anyTable.prototype.dbPrepareInsertStmt = async function(options)
 {
-  if (!keys || !values)
-    return null;
-  let stmt = "INSERT INTO "+this.tableName+" (";
+  let id     = options.id;
+  let keys   = options.keys;
+  let values = options.values;
+  let stmt = "INSERT INTO " + this.tableName + " (";
   let at_least_one = false;
-  let has_id       = false;
-  if (id) {
-    stmt += this.idKey+",";
+  let has_id       = id || id === 0;
+  if (has_id) {
+    stmt += this.idKey + ",";
     at_least_one = true;
-    has_id       = true;
   }
   for (let i=0; i<keys.length; i++) {
     let key = keys[i];
-    let val = values[i];
-    if (["head","item","list"].includes(key) || key == "is_new" || key == "dirty" || (key == this.idKey && has_id))
+    if (key == this.idKey && has_id || key == "is_new" || key == "dirty" || ["head","item","list"].includes(key)) // Do not update the id key field, unless told to do so
       continue;
-    if (val && val !== "") {
+    let val = values[i];
+    if (val || val === 0 || val === "") { // Only allow values that are set (or blank)
+      stmt += key + ",";
       at_least_one = true;
-      stmt += key+",";
     }
-    if (key == this.idKey) {
-      // Check if item with this id key exists
+    if (has_id && key == this.idKey) {
+      // Check if item with this id key already exists
       let res = await this.dbItemExists(val);
       if (res) {
-        this.error = this.type + this.itemExists;
+        this.error = this.type+" "+id+": "+this.itemExists;
         return null;
       }
     }
-  }
-  if (!at_least_one)
+  } // for
+  if (!at_least_one) {
+    this.message = this.insertNothingToDo;
     return null;
+  }
   let pos = stmt.length-1;
-  stmt = stmt.substring(0,pos) + "" + stmt.substring(pos+1); // Replace last "," with ""
+  stmt    = stmt.substring(0,pos) + "" + stmt.substring(pos+1); // Replace last "," with ""
   stmt += ") VALUES (";
-  if (id)
-    stmt += id+",";
+  if (has_id)
+    stmt += id + ",";
   for (let i=0; i<keys.length; i++) {
     let key = keys[i];
     let val = values[i];
-    if (["head","item","list"].includes(key) || key == "is_new" || key == "dirty" || (key == this.idKey && has_id))
+    if (key == this.idKey && has_id || key == "is_new" || key == "dirty" || ["head","item","list"].includes(key)) // Do not update the id key field, unless told to do so
       continue;
-    if (val && val !== "")
+    if (val || val === 0 || val === "") { // Only allow values that are set (or blank)
       if (typeof val === "string")
-        stmt += "'"+val+"',";
+        stmt += "'" + val + "',";
       else
-        stmt += val+",";
+        stmt += val + ",";
+    }
   }
-  pos = stmt.length-1;
+  pos  = stmt.length-1;
   stmt = stmt.substring(0,pos) + "" + stmt.substring(pos+1); // Replace last "," with ""
   stmt += ")";
+  stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
+  //console.log("dbPrepareInsertStmt:"+stmt);
   return stmt;
 }; // dbPrepareInsertStmt
 
@@ -1493,86 +1612,114 @@ anyTable.prototype.dbPrepareInsertStmt = async function(id,keys,values)
 /////////////////////////////// Update //////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Update data, either an existing item or a link to one.
+ *
+ * @return array|null Data array, or null on error or no data
+ */
 anyTable.prototype.dbUpdate = async function(options)
 {
-  if (!options || !this.dbValidateUpdate(options))
+  // Validate
+  if (!this.dbValidateUpdate(options))
     return Promise.resolve(null);
 
-  let id            = options.id;
-  let should_insert = options.is_new || (!options.id && options.id !== 0) || options.id == "";
-  if (should_insert)
-    return await this.dbInsert(options); // Assume it is a new item to be inserted // TODO! Is await needed here?
+  let id = options.id;
 
+    // If no id, assume it is a new item
+  if ((!options.id && options.id !== 0) || options.id == "" || options.is_new)
+    return await this.dbInsert(options);
+
+    // Add or remove to/from list
   if (options.add || options.rem)
-    return this.dbUpdateLinkList();
+    return this.dbUpdateLinkList(options);
 
-  if (options.cha) // TODO! Not tested
+  // Change a link TODO! Not tested
+  if (options.cha)
     return this.dbUpdateLink();
 
   // Update normal table
-  let stmt = await this.dbPrepareUpdateStmt(id,options.keys,options.values);
-  if (!stmt)
+  let stmt = await this.dbPrepareUpdateStmt(options);
+  if (this.error)
     return Promise.resolve(null);
-
-  stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
-  let self = this;
-  //console.log("dbUpdate:"+stmt);
-  return await alasql.promise(stmt)
-  .then( function(res) {
-    // numRowsChanged >= 1 if the update succeeded
-    self.numRowsChanged = res;
-    //console.log("upd res:"+res);
-    if (self.numRowsChanged === 0) {
-      self.message = self.updateNothingToDo; // TODO! updateNothingToDo
+  if (stmt) { // May be null if we only update link fields for item lists
+    let self = this;
+    await alasql.promise(stmt)
+    .then( function(nrc) {
+      self.numRowsChanged = nrc;
+      self.id = options.id;
       return Promise.resolve(self);
-    }
-    // Set result message
-    self.message = self.updateSuccessMsg; // TODO! updateSuccessMsg
+    })
+    .catch(error => {
+       console.error(error);
+       return Promise.resolve(null);
+    });
+  } // if stmt
 
-    // Call success handler
-    if (options.onSuccess && options.context)
-      options.onSuccess.call(options.context,options.context,self,options);
+  // Update link table(s) if any of the link fields (left join fields) are changed
+  let link_id = options.link_id;
+  if ((link_id || link_id === 0) && link_id != "" && options.link_type)
+    await this.dbUpdateLink();
 
-    return Promise.resolve(self);
-  })
-  .catch(error => {
-     console.error("Update error: "+error);
-     return Promise.resolve(null);
-  });
+  // Set result message
+  if (this.numRowsChanged === 0) {
+    this.message = this.updateNothingToDo;
+    return Promise.resolve(this);
+  }
+  this.message = this.updateSuccessMsg;
+
+  // Call success handler
+  if (options.onSuccess && options.context)
+    options.onSuccess.call(options.context,options.context,this,options);
+
+  return Promise.resolve(this);
 }; // dbUpdate
 
 anyTable.prototype.dbValidateUpdate = function(options)
 {
   this.error = "";
-  // Validate here, set this.error
+
+  if (!options)
+    this.error += "Options missing. "; // TODO! i18n
+
   if (this.error != "")
     return false;
   return true;
 }; // dbValidateUpdate
 
-anyTable.prototype.dbPrepareUpdateStmt = async function(id,keys,values)
+anyTable.prototype.dbPrepareUpdateStmt = async function(options)
 {
+  let id     = options.id;
+  let keys   = options.keys;
+  let values = options.values;
   let res = await this.dbItemExists(id);
   if (!res) {
-    this.error = this.type + this.itemUnexists + " ("+id+") ";
+    this.error = this.type+" "+id+": "+this.itemUnexists;
     return null;
   }
-  if (!keys || !values)
-    return null;
   let stmt = "UPDATE "+this.tableName+" SET ";
+  let at_least_one = false;
   let to_set = "";
   for (let i=0; i<keys.length; i++) {
     let key = keys[i];
     let val = values[i];
-    if (val && val !== "") {
+    if (key == this.idKey || key == "is_new" || key == "dirty" || ["head","item","list"].includes(key)) // Do not update the id key field, unless told to do so
+      continue;
+    if (val || val === 0 || val === "") { // Only allow values that are set (or blank)
       to_set += this.dbPrepareUpdateStmtKeyVal(key,val);
-    }
+      at_least_one = true;
+  }
   }
   if (to_set == "")
     return null;
   let pos = to_set.length-1;
   to_set = to_set.substring(0,pos) + "" + to_set.substring(pos+1); // Replace last "," with ""
   stmt += to_set + " WHERE " + this.idKey + "=" + id + " ";
+  stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
+  if (!at_least_one) {
+    this.message = this.updateNothingToDo;
+    return null;
+  }
+  //console.log("dbUpdate:"+stmt);
   return stmt;
 }; // dbPrepareUpdateStmt
 
@@ -1585,27 +1732,6 @@ anyTable.prototype.dbPrepareUpdateStmtKeyVal = function(key,val)
              : "=" + val + ",";
   return key + kstr;
 }; // dbPrepareUpdateStmtKeyVal
-
-anyTable.prototype.dbItemExists = async function(id)
-{
-  let stmt = "SELECT * FROM " + this.tableName + " WHERE " + this.idKey + "=" + id + " ";
-  //console.log("dbItemExists:"+stmt);
-  try {
-    return await alasql.promise(stmt)
-    .then( function(res) {
-      if (res.length)
-        return true;
-      return false;
-    })
-    .catch(error => {
-       console.error("dbItemExists error: "+error);
-       return false;
-    });
-  }
-  catch (err) {
-    console.log("dbItemExists: "+err);
-  }
-}; // dbItemExists
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////// Insert or update link ///////////////////////////
@@ -1623,62 +1749,55 @@ anyTable.prototype.dbItemExists = async function(id)
  */
 anyTable.prototype.dbUpdateLinkList = async function(options)
 {
-  if (!options)
-    return Promise.resolve(false);
+  // Validate
+  if (!this.dbValidateUpdateLinkList(options))
+    return Promise.resolve(null);
 
-  let link_type = options.link_type;
-  if (!link_type) {
-    this.error = "Link type missing. "; // TODO! i18n
-    return Promise.resolve(false);
-  }
+  let link_type   = options.link_type;
   let id_key      = this.idKey;
   let id_key_link = link_type + "_id"; // TODO! Not general enough
   let id          = options.id;
-  if ((!id && id !== 0) || id == "") {
-    this.error = this.type+" id missing. "; // TODO! i18n
-    return Promise.resolve(false);
-  }
-  let inslist = options.add;
-  let dellist = options.rem;
+  let inslist     = options.add;
+  let dellist     = options.rem;
 
   if (link_type != this.type) {
     // Link with different type (sublist of item)
-    let link_table = this.findLinkTableName(link_type);
-    if (!link_table) {
+    let link_tablename = this.findLinkTableName(link_type);
+    if (!link_tablename || link_tablename == "") {
       this.error = "Link table not found. "; // TODO! i18n
-      return Promise.resolve(false);
+      return Promise.resolve(null);
     }
     if (dellist) {
       // Remove elements from the item's list
       for (let i=0; i<dellist.length; i++) {
         let delval = dellist[i];
         if (delval) {
-          let stmt = "DELETE FROM "+link_table+" "+
-                     "WHERE "+
-                     id_key_link+"="+delval+" "+
-                     "AND "+
-                     id_key+     "="+id+"";
+          let stmt = "DELETE FROM " + link_tablename + " " +
+                     "WHERE " +
+                     id_key_link + "=" + delval + " " +
+                     "AND " +
+                     id_key +      "=" + id + "";
           //console.log("dbUpdateLinkList(1):"+stmt);
           await alasql.promise(stmt);
         }
       }
     }
     if (inslist) {
-      // Add elements to the item's list (delete, then insert to avoid error if element already exists in list)
+      // Add elements to the item's list (delete before insert to avoid error if element already exists in list)
       for (let i=0; i<inslist.length; i++) {
         let insval = inslist[i];
         if (insval) {
-          let stmt = "DELETE FROM "+link_table+" "+
-                     "WHERE "+
-                     id_key_link+"="+insval+" "+
-                     "AND "+
-                     id_key+     "="+id+"";
+          let stmt = "DELETE FROM " + link_tablename + " " +
+                     "WHERE " +
+                     id_key_link + "=" + insval + " " +
+                     "AND " +
+                     id_key +      "=" + id + "";
           //console.log("dbUpdateLinkList(2):"+stmt);
           await alasql.promise(stmt);
-          stmt = "INSERT INTO "+link_table+" ("+
-                 id_key_link+","+id_key+
-                 ") VALUES ("+
-                 insval+","+id+
+          stmt = "INSERT INTO " + link_tablename + " (" +
+                 id_key_link + "," + id_key +
+                 ") VALUES (" +
+                 insval + "," + id +
                  ")";
           //console.log("dbUpdateLinkList(3):"+stmt);
           await alasql.promise(stmt);
@@ -1694,9 +1813,9 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
         for (let i=0; i<dellist.length; i++) {
           let delval = dellist[i];
           if (delval) {
-            let stmt = "UPDATE "+this.tableName+" "+
-                       "SET parent_id=NULL "+
-                       "WHERE "+id_key+"="+delval+"";
+            let stmt = "UPDATE " + this.tableName + " " +
+                       "SET parent_id=NULL " +
+                       "WHERE " + id_key + "=" + delval + "";
             //console.log("dbUpdateLinkList(4):"+stmt);
             await alasql.promise(stmt);
           }
@@ -1707,9 +1826,9 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
         for (let i=0; i<inslist.length; i++) {
           let updval = inslist[i];
           if (updval && updval != id) {
-            let stmt = "UPDATE "+this.tableName+" "+
-                       "SET parent_id="+id+" "+
-                       "WHERE "+id_key+"="+updval+"";
+            let stmt = "UPDATE " + this.tableName + " " +
+                       "SET parent_id=" + id + " " +
+                       "WHERE " + id_key + "=" + updval + "";
             //console.log("dbUpdateLinkList(5):"+stmt);
             await alasql.promise(stmt);
           }
@@ -1717,8 +1836,31 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
       }
     }
   }
-  return Promise.resolve(true);
+  this.message = this.updateSuccessMsg;
+
+  // Get the (updated) list for the item
+  await this.dbSearchItemListOfType(link_type);
+
+  if (this.error)
+    return Promise.resolve(null);
+  return Promise.resolve(this);
 }; // dbUpdateLinkList
+
+anyTable.prototype.dbValidateUpdateLinkList = function(options)
+{
+  this.error = "";
+
+  if (!options)
+    this.error += "Options missing. "; // TODO! i18n
+  if (!options.link_type || options.link_type == "")
+    this.error += "Link type missing. "; // TODO! i18n
+  if ((!options.id && options.id !== 0) || options.id == "")
+    this.error += this.type+" id missing. "; // TODO! i18n
+
+  if (this.error != "")
+    return false;
+  return true;
+}; // dbValidateUpdateLinkList
 
 /**
  * Update the fields of a link. The link must exist in the link table.
@@ -1732,63 +1874,82 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
  */
 anyTable.prototype.dbUpdateLink = async function(options)
 {
-  if (!options)
+  // Validate
+  if (!this.dbValidateUpdateLink(options))
     return Promise.resolve(null);
 
-  let link_type = options.link_type;
-  if (!link_type || link_type == "") {
-    this.error = "Link type missing. "; // TODO! i18n
-    return Promise.resolve(null);
-  }
-  let idKey = options.idKey ? options.idKey : this.idKey;
-  let id    = options.id    ? options.id    : null;
-  if ((!id && id !== 0) || id == "") {
-    this.error = this.type+" id missing. "; // TODO! i18n
-    return Promise.resolve(null);
-  }
-  let link_id = options.link_id;
-  if ((!link_id && link_id !== 0) || link_id == "") {
-    this.error = link_type+" id missing. "; // TODO! i18n
-    return Promise.resolve(null);
-  }
-  // Check if exists
-  let link_table = this.findLinkTableName(link_type);
-  if (link_table === null) {
-    this.error = "Link table not found";
-    return Promise.resolve(null);
-  }
-  /*
-  let id_key_link = link_type+"_id"; // TODO! Not general enough
-  if (!this.dbTableHasLink(link_table,id_key_link,link_id,this.idKey,id)) {
-    this.message = "Link not found"; // TODO! i18n
-    return Promise.resolve(null);
-  }
-  */
   // Link found, we can update it
+  let id_key         = options.idKey ? options.idKey : this.idKey;
+  let id             = options.id    ? options.id    : null;
+  let link_type      = options.link_type;
+  let link_id        = options.link_id;
+  let link_tablename = this.findLinkTableName(link_type);
   if (this.tableFieldsLeftJoin && this.tableFieldsLeftJoin[link_type]) {
     let val_found = false;
-    let stmt = "UPDATE "+link_table+" SET ";
+    let stmt = "UPDATE " + link_tablename + " SET ";
     for (let t=0; t<this.tableFieldsLeftJoin[link_type].length; t++) {
       let str = this.tableFieldsLeftJoin[link_type][t];
-      let par = options[str];
-      if (par || par===0) {
-        let pstr = typeof par === "string"
-                   ? "='"+par+"',"
-                   : "="+par+",";
+      let val = options[str];
+      if ((val || val===0) && val != "") {
+        let pstr = typeof val === "string"
+                   ? "='"+val+"',"
+                   : "="+val+",";
         stmt += str + pstr;
         val_found = true;
       }
     }
     if (!val_found)
       return Promise.resolve(null);
-    stmt = stmt.substring(0,stmt.length-1)+' '; // Replace last char (',') with ' *
-    stmt += "WHERE "+idKey+"="+id;
+    stmt = stmt.substring(0,stmt.length-1) + ""; // Replace last  "," with ""
+    stmt += "WHERE " + id_key + "=" + id;
     //console.log("dbUpdateLink:"+stmt);
     if (!this.query(stmt,false,true))
       return Promise.resolve(null);
   }
-  return Promise.resolve(null);
+  return Promise.resolve(this);
 }; // dbUpdateLink
+
+anyTable.prototype.dbValidateUpdateLink = function(options)
+{
+  this.error = "";
+
+  if (!options)
+    this.error += "Options missing. "; // TODO! i18n
+  if ((!options.id && options.id !== 0) || options.id == "")
+    this.error += this.type+" id missing. "; // TODO! i18n
+  if (!options.link_type || options.link_type == "")
+    this.error += "Link type missing. "; // TODO! i18n
+  if ((!options.link_id && options.link_id !== 0) || options.link_id == "")
+    this.error += options.link_type + " id missing. "; // TODO! i18n
+  if (options.link_type) {
+    // Check if exists
+    let link_tablename = this.findLinkTableName(options.link_type);
+    if (!link_tablename)
+      this.error += "Link table "+link_tablename+" not found";
+    let id_key_link = options.link_type+"_id"; // TODO! Not general enough
+    if (!this.dbTableHasLink(link_tablename,id_key_link,options.link_id,this.idKey,options.id))
+      this.message = "Link not found in "+link_tablename; // TODO! i18n
+  }
+  if (this.error != "")
+    return false;
+  return true;
+}; // dbValidateUpdateLink
+
+// TODO! Not tested!
+anyTable.prototype.dbTableHasLink = async function(tableName,idName1,id1,idName2,id2)
+{
+  let cntstr = "COUNT(*)";
+  let stmt = "SELECT " + cntstr + " AS num_rows FROM " + tableName + " " +
+             "WHERE " + idName1 + "='" + id1 + "' AND " + idName2 + "='" + id2 + "'";
+  //console.log("dbTableHasLink:"+stmt);
+  let cnt = 0;
+  await alasql.promise(stmt)
+  .then (function(data) {
+    if (data && data[0])
+      cnt = data[0][cntstr];
+  });
+  return (cnt > 0);
+}; // dbTableHasLink
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////// Delete //////////////////////////////////////
@@ -1802,8 +1963,9 @@ anyTable.prototype.dbUpdateLink = async function(options)
  */
 anyTable.prototype.dbDelete = async function(options)
 {
-  if (!options)
-    Promise.resolve(null);
+  // Validate
+  if (!this.dbValidateDelete(options))
+    return Promise.resolve(null);
 
   // Delete item(s) from table or file from disk
   if (options.del == "ulf") {
@@ -1816,8 +1978,6 @@ anyTable.prototype.dbDelete = async function(options)
     return Promise.resolve(true);
   }
   // Delete item(s) from table
-  if (!this.dbValidateDelete(options))
-    return Promise.resolve(null);
   let tableName = options.tableName ? options.tableName : this.tableName;
   let idKey     = options.idKey     ? options.idKey     : this.idKey;
   let id        = options.id        ? options.id        : null;
@@ -1829,28 +1989,30 @@ anyTable.prototype.dbDelete = async function(options)
     //console.log("del res:"+res);
     self.numRowsChanged = res; // numRowsChanged >= 1 if the delete succeeded
     if (self.numRowsChanged > 0) {
-      let tstr = options.type ? options.type.capitalize() : "unknown type"; // TODO! i18n
-      self.message = self.deleteSuccessMsg.replace("%%",""+tstr);
+      let msg = self.deleteSuccessMsg.replace("%%",""+this.type);
+      self.message = msg;
     }
     else
       self.message = self.deleteNothingToDo;
 
     // Update parent_id of children
     if (self.hasParentId()) {
-      stmt = "UPDATE "+tableName+" SET parent_id=NULL WHERE parent_id="+id;
+      stmt = "UPDATE "+tableName+" SET parent_id=NULL WHERE parent_id="+id; // TODO! Check for id not integer!
       //console.log("dbDelete(2):"+stmt);
-      if (!self.query(stmt,false,true)) // TODO! alasql.promise...
+      if (!self.query(stmt,false,true)) // TODO! Use alasql.promise!
         return Promise.resolve(null);
     }
     // Delete all links for an item with given id from associated tables (to avoid orphaned links)
     if (self.linkTypes) {
       for (let link_type in self.linkTypes) {
         if (self.type !== link_type) {
-          let link_table = self.findLinkTableName(link_type);
-          let stmt = "DELETE FROM "+link_table+" WHERE "+self.idKey+"="+id;
-          //console.log("dbDelete(3):"+stmt);
-          if (!self.query(stmt))
-            return Promise.resolve(null);
+          let link_tablename = self.findLinkTableName(link_type);
+          if (self.tableExists(link_tablename)) {
+            let stmt = "DELETE FROM "+link_tablename+" WHERE "+self.idKey+"="+id;
+            //console.log("dbDelete(3):"+stmt);
+            if (!self.query(stmt)) // TODO! Use alasql.promise!
+              self.error += "Delete from "+link_tablename+" failed. ";
+          }
         }
       }
     }
@@ -1858,6 +2020,8 @@ anyTable.prototype.dbDelete = async function(options)
     if (options.onSuccess && options.context)
       options.onSuccess.call(options.context,options.context,self,options);
 
+    if (self.error)
+      return Promise.resolve(null);
     return Promise.resolve(self);
   })
   .catch(error => {
@@ -1869,21 +2033,24 @@ anyTable.prototype.dbDelete = async function(options)
 anyTable.prototype.dbValidateDelete = function(options)
 {
   this.error = "";
-  if (!options) {
-    this.error = "Options missing. "; // TODO! i18n
-    return false;
-  }
-  let tableName = options.tableName ? options.tableName : this.tableName;
-  let idKey     = options.idKey     ? options.idKey     : this.idKey;
-  let id        = options.id        ? options.id        : null;
+
+  if (!options)
+    this.error += "Options missing. "; // TODO! i18n
+  let tableName = options && options.tableName ? options.tableName : this.tableName;
   if (!tableName)
     this.error += "Table name missing. "; // TODO! i18n
+  let idKey = options && options.idKey ? options.idKey : this.idKey;
   if (!idKey)
     this.error += "Id key missing. "; // TODO! i18n
-  if ((!id && id !== 0) || id == "" || !Number.isInteger(parseInt(id)))
-    this.error += this.type+" id missing or not an integer. "; // TODO! i18n
+  let id = options && options.id ? options.id : null;
+  if ((!id && id !== 0) || id == "")
+    this.error += this.type+" id missing. "; // TODO! i18n
 
   if (this.error != "")
     return false;
   return true;
 }; // dbValidateDelete
+
+function isNumeric(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}

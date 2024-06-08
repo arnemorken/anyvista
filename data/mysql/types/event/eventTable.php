@@ -205,10 +205,9 @@ class eventTable extends anyTable
   /////////////////////// Database query fragments ////////////////////////////
   /////////////////////////////////////////////////////////////////////////////
 
-  protected function findListWhere($gid,$type=null,$linkType=null,$linkId=null,$grouping=true,$groupType=null,$searchTerm="",
-                                   $linktable_name="",$has_linktable=false)
+  protected function findListWhere($groupType=null,$groupId=null,$linkType=null,$linkId=null,$grouping=true,$searchTerm="",$linktable_name="",$has_linktable=false)
   {
-    $where = parent::findListWhere($gid,$type,$linkType,$linkId,$grouping,$groupType,$searchTerm,$linktable_name,$has_linktable);
+    $where = parent::findListWhere($groupType,$groupId,$linkType,$linkId,$grouping,$searchTerm,$linktable_name,$has_linktable);
     $w = "";
     $event_date_start = Parameters::get("event_date_start");
     $event_date_end   = Parameters::get("event_date_end");
