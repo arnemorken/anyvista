@@ -58,7 +58,9 @@
  *                                          Default: "[type]_name" if type is set, "" otherwise.
  * @param {anyModel} options.parent         The model's "parent" model, if any.
  *                                          Default: null.
- * @param {String}   options.link_id        Links to to an item in the parent model (if any).
+ * @param {String}   options.link_id        Links to an item in the parent model (if any).
+ *                                          Default: null.
+ * @param {String}   options.link_type      Type of an item in the parent model (if any).
  *                                          Default: null.
  * @param {String}   options.source         Indicates whether db* operations should be performed by
  *                                          a locally defined method ("local") or call a database
