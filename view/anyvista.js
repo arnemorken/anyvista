@@ -56,13 +56,13 @@
   <a href="#client_db_api">Client database API (AlaSQL)</a><br/>
   <a href="#client_db_api_anyVista_classes">- Classes</a><br/>
   <a href="#client_db_api_data_format">- Data format</a><br/>
-  <a href="#client_db_api_data_filter">- Data filter</a><br/>
+  <a href="#client_db_api_data_filter">- Data filters</a><br/>
   <a href="#client_db_api_anyDefs">- Configuration files</a><br/>
 
   <a href="#server_db_api">Server database API (MySQL)</a><br/>
   <a href="#server_db_api_anyVista_classes">- Classes</a><br/>
   <a href="#server_db_api_data_format">- Data format</a><br/>
-  <a href="#server_db_api_data_filter">- Data filter</a><br/>
+  <a href="#server_db_api_data_filter">- Data filters</a><br/>
   <a href="#server_db_api_anyDefs">- Configuration files</a><br/>
 
   <a href="#api_type_classes">User defined types</a><br/>
@@ -422,12 +422,16 @@
 
   Coming soon.
 
+  <a name="client_db_api_anyVista_classes"></a>
   <h3>Basic classes</h3>
 
+  <a name="client_db_api_data_format"></a>
   <h3>Data format</h3>
 
-  <h3>Data filter</h3>
+  <a name="client_db_api_data_filter"></a>
+  <h3>Data filters</h3>
 
+  <a name="client_db_api_anyDefs"></a>
   <h3>Configuration files</h3>
 
   <hr/>
@@ -477,8 +481,8 @@
   <a name="server_db_api_data_format"></a>
   <h3>Data format</h3>
 
-  On the server side, data from the database is handled by the `anyTable` abstract class. Some
-  important points to note:
+  On the server side, data from the database is handled by the `anyTable` abstract class.
+  Some important points to note:
 
   - Each class that derive from `anyTable` corresponds to a type and a database table.
 
@@ -493,21 +497,63 @@
   Data is organized by the `anyTable` class into a hierarchical tree structure that can be used
   by the `anyModel` and `anyView` classes on the client. This structure is exactly the same as
   for the client <a href="#client_mv_api_data_format">described above</a> (except that it is
-  encoded in PHP of course). The data is transferred from the server to the client in JSON format.
+  encoded in PHP of course).
+
+  Data read from tables are transferred from the server to the client in the following JSON format:
+
+      {
+        'head': '[type]',                                // Optional.
+        'data': {                                        // Optional.
+          'grouping': 'true',                            // Optional.
+          '+[id]': {                                     // Optional.
+            'head' | 'item' | 'list': '[type]',          // Mandatory.
+            '[type]_name':            '[value]',         // Mandatory.
+            '[type]_id':              '[value]',         // Mandatory if 'list' or 'item'.
+            'group_type':             '[group_type]',    // Optional. Only valid if [type] == 'group'.
+            'group_sort_order':       '[integer]',       // Optional. Only valid if [type] == 'group'.
+            '[key]':       '[value]',                    // Optional. One or more key / value pairs.
+            ...
+            'data': {                                    // Optional.
+              'grouping': 'true',                        // Optional.
+              '+[id]': {                                 // Optional.
+                'head' | 'item' | 'list': '[type]',      // Mandatory.
+                '[type]_name': '[value]',                // Mandatory.
+                '[type]_id':              '[value]',     // Mandatory if 'list' or 'item'.
+                'group_type':             '[group_type]',// Optional. Only valid if [type] == 'group'.
+                'group_sort_order':       '[integer]',   // Optional. Only valid if [type] == 'group'.
+                'parent_id':              '[id]',        // Optional. The id of the level above, if of the same type.
+                '[key]':                  '[value]',     // Optional. One or more key / value pairs.
+                ...
+              },
+              ...
+            }, // data
+          }
+          ...
+        } // data
+        'link_types': {                    // Optional
+          [integer]: '[type name]',        // Optional. One or more type names.
+          ...
+        },
+        'permission': {                    // Mandatory
+          'current_user_id': '[id]',       // Mandatory
+          'is_logged_in':    true | false, // Mandatory
+          'is_admin':        true | false, // Mandatory
+        },
+        'message': '[string]',             // Optional
+        'error':   '[string]',             // Optional
+      }
 
   <div style="border:1px solid #888; padding:5px;padding-bottom:0px;">
   <b>A NOTE ON INDEXES:</b>
 
-  When using Ajax to transfer a JSON data object from a PHP server to a Javascript client, the
-  indexes of the data object will automatically be converted to integers even if they are
-  specified as strings on the server (PHP) side (i.e. the string "38" on the server side will be
-  converted to the integer 38 on the client side). When received on the client (Javascript) side,
-  the items in the data structure will therefore be ordered numerically. This may not be the
-  desired behaviour (we may want to preserve the ordering from the server). In order to get around
-  this problem, numeric indexes  are prefixed with a "+" on the server side so that the code on
-  the client side will interpret them as strings. The ordering of the items can then be
-  maintained as intended by the server (the client code is able to handle data indexed both as
-  data[38], data["38"] and data["+38"]).
+  When using Ajax to transfer the data structure (a JSON data object) from a PHP server to the Javascript client,
+  the indices of the object will automatically be converted to integers even if they are specified as strings on
+  the server (PHP) side. I.e. "38"  on the server side will be converted to integer 38 on the client side.
+  When received on the client (Javascript) side, the items in the data structured will therefore be ordered numerically.
+  This may not be the desired behaviour (we may want to preserve the ordering from the server). In order to get around
+  this problem, numeric indexes are prefixed with a "+" on the server side so that the code on the client side will
+  interpret them as strings. The clienyt code can then maintain the ordering of the items as intended by the server
+  (the client code is able to handle data indexed both as data[38], data["38"] and data["+38"]).
   </div>
 
   The minimal possible data structure for an __item__ on the server side may look like this:
@@ -567,18 +613,26 @@
   <hr style="color:#eee;"/>
 
   <a name="server_db_api_data_filter"></a>
-  <h3>Data filter</h3>
+  <h3>Data filters</h3>
 
-  The filters on the server side are used to indicate
+  Each type of data must have a corresponding filter which specifies which data should be included in database
+  operations `SEARCH`, `INSERT`, `UPDATE` and `DELETE`, i.e.  which keys of the type should be included in database
+  operations. The keys (e.g. "event_status") should be the same as those in the corresponding filter, though not
+  every name in the filter has to be present  as a key. Only the data specified in the filter are transferred to
+  the client.
 
-    - which data should be included in database operations `SEARCH`, `INSERT`, `UPDATE` and `DELETE`,
-    - which data should be transferred to the client.
+  Keys that are not described in the filter will be ignored. The filters are not part of the data structure sent to
+  the client, which uses its own filters for display.
 
-  Filters are defined for each anyVista type in the type's table file (e.g. `eventTable.php`).
-  There is one filter for items and one for lists and they are defined in the `createFilters()`
-  method.
+  The server filters have the following format:
 
-  Example:
+       [key]: 1 | 0
+
+  Filters are defined for each anyVista type in the type's table file (e.g. `eventTable.php`). There is one filter
+  for items and one for lists and they are defined in the `createFilters()` method.
+
+  Example: List and item filters for type "event", where the fields "event_date_end" and "user_result" will be
+  ignored for lists and event_status will be ignored for items:
 
       $this->mFilters["list"] = array(
         "event_id"          => 1,
@@ -586,6 +640,7 @@
         "event_place"       => 1,
         "event_date_start"  => 1,
         "event_date_end"    => 0,
+        "user_result"       => 0,
       };
       $this->mFilters["item"] = array(
         "event_id"          => 1,
@@ -596,7 +651,6 @@
         "event_status"      => 0,
         "event_price"       => 1,
       };
-
 
   <hr style="color:#eee;"/>
 
