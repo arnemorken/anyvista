@@ -2181,9 +2181,8 @@ class anyTable extends dbTable
       return null;
 
     $link_type   = Parameters::get("link_type");
-    $id_key      = $this->mIdKey;
     $id_key_link = $link_type."_id"; // TODO! Not general enough
-    $id          = Parameters::get($id_key);
+    $id          = Parameters::get($this->mIdKey);
     $inslist     = explode(",",Parameters::get("add"));
     $dellist     = explode(",",Parameters::get("rem"));
 
@@ -2200,9 +2199,9 @@ class anyTable extends dbTable
           if ($delval) {
             $stmt = "DELETE FROM " . $link_tablename . " " .
                     "WHERE " .
-                    $id_key_link . "='" . $delval . "' " .
+                    $id_key_link   . "='" . $delval . "' " .
                     "AND " .
-                    $id_key .      "='" . $id . "'";
+                    $this->mIdKey  . "='" . $id . "'";
             //elog("dbUpdateLinkList(1):".$stmt);
             if (!$this->query($stmt))
               return null; // TODO! Give warning and continue instead?
@@ -2213,14 +2212,11 @@ class anyTable extends dbTable
         // Add elements to the item's list
         foreach ($inslist as $insval) {
           if ($insval) {
-            // Dont add if element already exists in list
-            // (or should we just delete before insert to avoid error if element already exists in list?)
-            if ($this->dbTableHasLink($link_tablename,$id_key_link,$insval,$id_key,$id))
-              $this->setMessage("Link already exists. ",true); // TODO! i18n
-            else {
+            // Check if element already exists in list
+            if (!$this->dbTableHasLink($link_tablename,$id_key_link,$insval,$this->mIdKey,$id)) {
               // Link does not exist, we can add it
               $stmt = "INSERT INTO " . $link_tablename . " (" .
-                      $id_key_link . "," . $id_key .
+                      $id_key_link . "," . $this->mIdKey .
                       ") VALUES (" .
                       $insval . "," . $id .
                       ")";
@@ -2241,7 +2237,7 @@ class anyTable extends dbTable
             if ($delval) {
               $stmt = "UPDATE " . $this->mTableName . " " .
                       "SET parent_id=NULL " .
-                      "WHERE " . $id_key . "='" . $delval . "'";
+                      "WHERE " . $this->mIdKey . "='" . $delval . "'";
               //elog("dbUpdateLinkList(4):".$stmt);
               if (!$this->query($stmt))
                 return null;
@@ -2254,7 +2250,7 @@ class anyTable extends dbTable
             if ($updval && $updval != $id) {
               $stmt = "UPDATE " . $this->mTableName . " " .
                       "SET parent_id='" . $updval . "' " .
-                      "WHERE " . $id_key . "='" . $id . "'";
+                      "WHERE " . $this->mIdKey . "='" . $id . "'";
               //elog("dbUpdateLinkList(5):".$stmt);
               if (!$this->query($stmt))
                 return null;
@@ -2266,7 +2262,7 @@ class anyTable extends dbTable
     $this->setMessage($this->mUpdateSuccessMsg);
 
     // Get the (updated) list for the item
-    $this->dbSearchItemListOfType($link_type);
+    $this->dbSearchItemListOfType($id,$link_type);
     if ($this->isError())
       return null;
 
@@ -2280,7 +2276,7 @@ class anyTable extends dbTable
     $link_type = Parameters::get("link_type");
     if (!$link_type || $link_type == "")
       $this->mError .= "Link type missing. "; // TODO! i18n
-    $id = Parameters::get($id_key);
+    $id = Parameters::get($this->mIdKey);
     if ((!$id && $id !== 0) || $id == "")
       $this->mError .= $this->mType." id missing. "; // TODO! i18n
 
