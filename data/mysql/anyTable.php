@@ -657,7 +657,7 @@ class anyTable extends dbTable
     // Get the data
     if ($this->getRowData($this->mData,"item",false,$grouping)) {
       $this->dbSearchMeta("item",$id); // Get meta data for the item
-      if ($this->mData && $this->mData["nogroup"]) {
+      if (isset($this->mData) && $this->mData["nogroup"]) {
         // Organize group at top
         $idx = array_key_first($this->mData);
         $this->mData[$idx]["data"] = $this->mData[$idx];
@@ -765,7 +765,7 @@ class anyTable extends dbTable
           $this->mError .= $table->getError();
         if (!$table->mData)
           return null;
-        $gidx  = array_key_first($this->mData);
+        $gidx  = isset($this->mData) ? array_key_first($this->mData) : "nogroup";
         $idx   = "+".$id;
         $lidx  = "link-".$linkType;
         $tgidx = $idx;
@@ -1782,9 +1782,9 @@ class anyTable extends dbTable
     }
 
     // Set data
-    if ($this->mData) {
+    if (isset($this->mData)) {
       if (($id || $id === 0) && $id != "") {
-        $gidx = array_key_first ($this->mData);
+        $gidx = array_key_first($this->mData);
         $data["data"][$topidx]["data"] = $this->mData[$gidx]["data"];
       }
       else
