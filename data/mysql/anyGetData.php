@@ -53,7 +53,7 @@ Parameters::set("tableFields",array (
   $type = ltrim(Parameters::get("type"));
   $cmd  = ltrim(Parameters::get("cmd"));
 
-  // Uncomment to log the data received from the client to the error log:
+  // Uncomment the next line to log data received from the client
   //Parameters::debugLog(Parameters::getStrArr());
 
   $table = null;
@@ -73,15 +73,6 @@ Parameters::set("tableFields",array (
         }
         //$time_elapsed_secs = microtime(true) - $start;
         //error_log("anyGetData: time_elapsed_secs: $time_elapsed_secs");
-/*
-        if ($table->isError() ||
-            Parameters::get("search") === "no" || Parameters::get("search") === "false" ||
-            Parameters::get($table->getIdKey()) === "") {
-          $data = $table->getData();
-          if ($data !== null && !empty($data))
-            $data = $table->prepareData();
-        }
-*/
         $data["permission"] = $table->getPermission();
         $data["message"]    = $table->getMessage();
         $data["error"]      = $table->getError();
