@@ -1243,7 +1243,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
   let the_link_data = options.link_data;
   let the_link_type = options.link_type;
   let the_link_id   = options.link_id;
-  let the_new_data  = options.new_data ? options.new_data : this.data;
+  let the_new_data  = options.new_data;
 
   if (!the_data)
     return false;
@@ -1260,7 +1260,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
     return true;
   } // if
 
-  if (options.unselect) {
+  if (options.unselect && options.unselect.size) {
     // Remove links in `unselect`
     for (let rem_id of options.unselect) {
       // Remove (delete) the link data with id 'id'
@@ -1275,7 +1275,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
   } // if
 
   // Insert or update link in `select`
-  if (options.select && the_id && the_type) {
+  if (options.select && options.select.size && the_id && the_type) {
     for (let sel_id of options.select) {
       // Only insert item if it is not already in model
       if (!this.dataSearch({ data: the_data,
@@ -1298,15 +1298,14 @@ anyModel.prototype.dataUpdateLinkList = function (options)
               the_ins_data[the_id].data = {};
             the_ins_data = the_ins_data[the_id].data;
             let ins_id = "link-"+the_link_type; // See if we have "link-" index (created by server)
-            if (!the_new_data[ins_id])
-              ins_id = sel_id;
             if (!the_ins_data[ins_id])
               the_ins_data[ins_id] = {};
-            $.extend(true, the_ins_data[ins_id], the_new_data[ins_id]);
+            the_ins_data[ins_id].data = item;
+            this.data = item;
           }
         }
         else
-          console.warn("Could not add "+the_link_type+" item with id "+the_id+" (not found in data). "); // TODO! i18n
+          console.warn("Could not add "+the_link_type+" item with id "+sel_id+" (not found in data). "); // TODO! i18n
       } // if
       else {
         // Link item exists, update it with data in `the_new_data`
@@ -2424,12 +2423,12 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
     param_str += "&rem="+the_link_id;
   else {
     let has_add_or_rem = false;
-    if (options.select) {
+    if (options.select && options.select.size) {
       let sel = [...options.select];
       param_str += "&add="+sel;
       has_add_or_rem = true;
     }
-    if (options.unselect) {
+    if (options.unselect && options.unselect.size) {
       let unsel = [...options.unselect];
       param_str += "&rem="+unsel;
       has_add_or_rem = true;
@@ -2476,8 +2475,13 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
     if (serverdata.error == "") {
       options.new_data = serverdata.data;
       self.dataUpdateLinkList({
+             data:      options.data,
+             id:        options.id,
+             type:      options.type,
+             select:    options.select,
              unselect:  options.unselect,
              link_type: options.link_type,
+             new_data:  options.new_data,
            }); // Remove data
       if (serverdata.data && serverdata.data["link-"+options.link_type]) // TODO! Not an ideal solution, depends on server side index
         $.extend(true, self.data, serverdata.data["link-"+options.link_type].data);
@@ -2840,3 +2844,4 @@ anyModel.prototype._dbFail = function (context,jqXHR)
   }
   return context;
 }; // _dbFail
+//@ sourceURL=anyModel.js

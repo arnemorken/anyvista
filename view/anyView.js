@@ -4717,7 +4717,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
       let parent_view = options.parent_view ? options.parent_view : null;
       if (parent_view) {
         let type        = options.par_type ? options.par_type : model.type;
-        let data        = options.par_data ? options.par_data : serverdata.data;
+        let data        = options.par_data ? options.par_data : model.data;
         let id          = options.par_id   ? options.par_id   : model.id;
         let new_id_base = parent_view._createIdBase();
         let link_type   = options.type;
@@ -4787,15 +4787,12 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             // Used by okFunction:
             data:       data,
             type:       type,
-            mode:       "item",
             id:         id,
-            link_data:  select_list_view.model.data,
+            link_data:  null,
             link_type:  select_list_view.model.type,
-            link_mode:  "list",
             link_id:    null,
             select:     select_list_view.options.select,
             unselect:   select_list_view.options.unselect,
-            name_key:   select_list_view.model.name_key,
           };
           w3_modaldialog(mod_opt);
           select_list_view.refresh();
@@ -4929,13 +4926,10 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         // Sent to okFunction:
         data:       link_data,
         type:       link_type,
-        mode:       link_mode,
         id:         link_id,
         link_data:  data,
         link_type:  type,
-        link_mode:  mode,
         link_id:    id,
-        name_key:   name_key,
         select:     new Set(),
         unselect:   new Set().add(id),
       };
@@ -4946,13 +4940,10 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
     let opt = {
         data:      link_data,
         type:      link_type,
-        mode:      link_mode,
         id:        link_id,
         link_data: data,
         link_type: type,
-        link_mode: mode,
         link_id:   id,
-        name_key:  name_key,
         select:    new Set(),
         unselect:  new Set().add(id),
     };

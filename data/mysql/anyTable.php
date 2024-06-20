@@ -771,8 +771,9 @@ class anyTable extends dbTable
         $tgidx = $idx;
         if ($table->mType == "group" || (isset($id) && $id !== "" && $this->mType != "group"))
           $tgidx = $gidx;
-        if (!isset($this->mData) || !isset($this->mData[$gidx]) || !isset($this->mData[$gidx]["data"]))
-          return null; // Should never happen
+        if (!isset($this->mData))                                     $this->mData                                     = array();
+        if (!isset($this->mData[$gidx]))                              $this->mData[$gidx]                              = array();
+        if (!isset($this->mData[$gidx]["data"]))                      $this->mData[$gidx]["data"]                      = array();
         if (!isset($this->mData[$gidx]["data"][$idx]))                $this->mData[$gidx]["data"][$idx]                = array();
         if (!isset($this->mData[$gidx]["data"][$idx]["data"]))        $this->mData[$gidx]["data"][$idx]["data"]        = array();
         if (!isset($this->mData[$gidx]["data"][$idx]["data"][$lidx])) $this->mData[$gidx]["data"][$idx]["data"][$lidx] = array();
@@ -2265,6 +2266,9 @@ class anyTable extends dbTable
     $this->dbSearchItemListOfType($id,$link_type);
     if ($this->isError())
       return null;
+
+    $this->mData["data"] = $this->mData;
+    $this->mData["nogroup"] = null;
 
     return $this->mData;
   } // dbUpdateLinkList

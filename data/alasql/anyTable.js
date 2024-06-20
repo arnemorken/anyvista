@@ -620,8 +620,9 @@ anyTable.prototype.dbSearchItemListOfType = async function(id,linkType,grouping,
         let tgidx = idx;
         if (table.type == "group" || ((id || id === 0) && self.type != "group"))
           tgidx = gidx;
-        if (!self.data || !self.data[gidx] || !self.data[gidx]["data"])
-          return Promise.resolve(null); // Should never happen
+        if (!self.data)                                  self.data                                  = {};
+        if (!self.data[gidx])                            self.data[gidx]                            = {};
+        if (!self.data[gidx]["data"])                    self.data[gidx]["data"]                    = {};
         if (!self.data[gidx]["data"][idx])               self.data[gidx]["data"][idx]               = {};
         if (!self.data[gidx]["data"][idx]["data"])       self.data[gidx]["data"][idx]["data"]       = {};
         if (!self.data[gidx]["data"][idx]["data"][lidx]) self.data[gidx]["data"][idx]["data"][lidx] = {};
@@ -1840,6 +1841,9 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
 
   // Get the (updated) list for the item
   await this.dbSearchItemListOfType(link_type);
+
+  this.data["data"] = this.data;
+  this.data["nogroup"] = null;
 
   if (this.error)
     return Promise.resolve(null);
