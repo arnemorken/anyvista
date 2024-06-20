@@ -2453,7 +2453,7 @@ class anyTable extends dbTable
     return $this->mData;
   } // dbDelete
 
-  protected function dbValidateDelete($id)
+  protected function dbValidateDelete()
   {
     $this->mError = "";
 
@@ -2461,6 +2461,7 @@ class anyTable extends dbTable
       $this->mError .= "Table name missing. "; // TODO! i18n
     if (!isset($this->mIdKeyTable) || $this->mIdKeyTable == "")
       $this->mError .= "Id key missing. "; // TODO! i18n
+    $id = ltrim(Parameters::get($this->mIdKeyTable));
     if ((!$id && $id !== 0) || $id == "")
       $this->mError .= $this->mType." id missing. "; // TODO! i18n
 
