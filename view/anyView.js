@@ -4491,7 +4491,7 @@ $.any.anyView.prototype.getInputValues = function (type,mode,id,row_id_str)
         let jq_id  = inp_id+" > textarea";
         let jq     = $("#"+jq_id);
         jq_id      = jq.attr("id");
-        val        = tinymce.get(jq_id) ? tinymce.get(jq_id).getContent() : "";
+        val        = typeof tinyMCE !== "undefined" && tinymce.get(jq_id) ? tinymce.get(jq_id).getContent() : "";
         val        = val ? val.replace(/'/g, "\\'") : "";
       }
       else
