@@ -4555,7 +4555,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
     return false;
   }
   // Update model with contents of input fields
-  let data_values = this.getInputValues(type,mode,row_id_str);
+  let data_values = this.getInputValues(type,mode,id,row_id_str);
   if (data_values == {})
     return true; // Nothing to update
   this.model.dataUpdate({
