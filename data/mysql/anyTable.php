@@ -2071,7 +2071,7 @@ class anyTable extends dbTable
       return null;
     $to_set[strlen($to_set)-1] = " "; // Replace last "," with " "
     $stmt .= $to_set . " WHERE " . $this->mIdKeyTable . "='" . $id . "' ";
-    $stmt = trim(preg_replace("/\s+/", "", $stmt)); // Remove all newlines
+    $stmt = trim(preg_replace("/\s+/", " ", $stmt)); // Remove all newlines
     if (!$at_least_one) {
       $this->setMessage($this->mUpdateNothingToDo);
       return null;
