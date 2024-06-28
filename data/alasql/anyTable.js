@@ -1842,11 +1842,13 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
   // Get the (updated) list for the item
   await this.dbSearchItemListOfType(link_type);
 
-  this.data["data"] = this.data;
-  this.data["nogroup"] = null;
-
   if (this.error)
     return Promise.resolve(null);
+
+  if (this.data) {
+    this.data["data"] = this.data;
+    this.data["nogroup"] = null;
+  }
   return Promise.resolve(this);
 }; // dbUpdateLinkList
 

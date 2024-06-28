@@ -2264,12 +2264,14 @@ class anyTable extends dbTable
 
     // Get the (updated) list for the item
     $this->dbSearchItemListOfType($id,$link_type);
+
     if ($this->isError())
       return null;
 
-    $this->mData["data"] = $this->mData;
-    $this->mData["nogroup"] = null;
-
+    if (isset($this->mData)) {
+      $this->mData["data"] = $this->mData;
+      $this->mData["nogroup"] = null;
+    }
     return $this->mData;
   } // dbUpdateLinkList
 
