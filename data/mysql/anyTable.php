@@ -573,6 +573,8 @@ class anyTable extends dbTable
       $ok = $this->_dbSearch($id);
       if (!$ok || (isset($this->mError) && $this->mError != ""))
         throw new Exception($this->mError);
+      if ($this->mMaxId >= 0)
+        return $this->mData;
       return $this->prepareData(Parameters::get($this->mIdKey));
     }
     catch (Exception $e) {
