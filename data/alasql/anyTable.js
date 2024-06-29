@@ -904,7 +904,7 @@ anyTable.prototype.findListWhere = function(groupType,groupId,linkType,linkId,gr
    // Match with linktable
   if (linkType && linkType != this.type && (linkId || linkId === 0) && linkId != "nogroup") {
     if (has_linktable) {
-      let db_lid = linkType == "group" ? "'"+linkId+"'" : linkId;
+      let db_lid = linkType == "group" ? "'"+linkId+"'" : parseInt(linkId);
       let where_id = linktable_name+"."+linkType+"_id="+db_lid+" "; // TODO! semi-hardcoded name of link table id
       where += "WHERE "+where_id;
     }
