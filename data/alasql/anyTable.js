@@ -1715,6 +1715,7 @@ anyTable.prototype.dbPrepareUpdateStmt = async function(options)
   }
   if (to_set == "")
     return null;
+  let idval = this.type == "group" ? id : parseInt(id);
   let pos = to_set.length-1;
   to_set = to_set.substring(0,pos) + "" + to_set.substring(pos+1); // Replace last "," with ""
   stmt += to_set + " WHERE " + this.idKey + "=" + id + " ";
