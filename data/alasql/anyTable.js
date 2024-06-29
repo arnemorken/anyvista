@@ -1606,7 +1606,7 @@ anyTable.prototype.dbPrepareInsertStmt = async function(options)
   pos  = stmt.length-1;
   stmt = stmt.substring(0,pos) + "" + stmt.substring(pos+1); // Replace last "," with ""
   stmt += ")";
-  stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
+  stmt = stmt.replace(/(?:\r\n|\r|\n)/g," "); // Remove all newlines
   //console.log("dbPrepareInsertStmt:"+stmt);
   return stmt;
 }; // dbPrepareInsertStmt
