@@ -1718,7 +1718,7 @@ anyTable.prototype.dbPrepareUpdateStmt = async function(options)
   let pos = to_set.length-1;
   to_set = to_set.substring(0,pos) + "" + to_set.substring(pos+1); // Replace last "," with ""
   stmt += to_set + " WHERE " + this.idKey + "=" + id + " ";
-  stmt = stmt.replace(/(?:\r\n|\r|\n)/g,""); // Remove all newlines
+  stmt = stmt.replace(/(?:\r\n|\r|\n)/g," "); // Remove all newlines
   if (!at_least_one) {
     this.message = this.updateNothingToDo;
     return null;
