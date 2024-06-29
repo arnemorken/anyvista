@@ -1144,7 +1144,7 @@ class anyTable extends dbTable
     // Match with linktable
     if (isset($linkType) && $linkType != "" && $linkType != $this->mType && ($linkId || $linkId === 0) && $linkId != "nogroup") {
       if ($has_linktable) {
-        $db_lid = $linkType == "group" ? "'".$linkId."'" : $linkId;
+        $db_lid = $linkType == "group" ? "'".$linkId."'" : intval($linkId);
         $where_id = $linktable_name.".".$linkType."_id=".$db_lid." "; // TODO! semi-hardcoded name of link table id
         $where .= "WHERE ".$where_id;
       }
@@ -2071,6 +2071,7 @@ class anyTable extends dbTable
     }
     if ($to_set == "")
       return null;
+    $idval = $this->mType == "group" ? $id : intval($id);
     $to_set[strlen($to_set)-1] = " "; // Replace last "," with " "
     $stmt .= $to_set . " WHERE " . $this->mIdKeyTable . "='" . $id . "' ";
     $stmt = trim(preg_replace("/\s+/", " ", $stmt)); // Remove all newlines
