@@ -2018,6 +2018,8 @@ class anyTable extends dbTable
       if (!$this->query($stmt))
         return null;
     }
+    $nrc = $this->getNumRowsChanged();
+
     // Update meta table
     $this->dbMetaInsertOrUpdate($id);
 
@@ -2027,7 +2029,7 @@ class anyTable extends dbTable
       $this->dbUpdateLink();
 
     // Set result message
-    if ($this->getNumRowsChanged() === 0) {
+    if ($nrc === 0) {
       $this->setMessage($this->mUpdateNothingToDo);
       return $this->mData;
     }
