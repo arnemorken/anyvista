@@ -1705,13 +1705,13 @@ anyTable.prototype.dbPrepareUpdateStmt = async function(options)
   let to_set = "";
   for (let i=0; i<keys.length; i++) {
     let key = keys[i];
-    let val = values[i];
     if (key == this.idKey || key == "is_new" || key == "dirty" || ["head","item","list"].includes(key)) // Do not update the id key field, unless told to do so
       continue;
-    if (val || val === 0 || val === "") { // Only allow values that are set (or blank)
+    let val = values[i]; // TODO! html entities
+    if (val || val === 0 || val === "0" || val === "") { // Only allow values that are set (or blank)
       to_set += this.dbPrepareUpdateStmtKeyVal(key,val);
       at_least_one = true;
-  }
+    }
   }
   if (to_set == "")
     return null;
