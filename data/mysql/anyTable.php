@@ -1971,7 +1971,7 @@ class anyTable extends dbTable
     }
     $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
     $stmt .= ")";
-    $stmt = trim(preg_replace("/\s+/", "", $stmt)); // Remove all newlines
+    $stmt = trim(preg_replace("/\s+/", " ", $stmt)); // Remove all newlines
     //elog("dbPrepareInsertStmt:".$stmt);
     return $stmt;
   } // dbPrepareInsertStmt
