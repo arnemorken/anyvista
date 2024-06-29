@@ -1718,7 +1718,7 @@ anyTable.prototype.dbPrepareUpdateStmt = async function(options)
   let idval = this.type == "group" ? id : parseInt(id);
   let pos = to_set.length-1;
   to_set = to_set.substring(0,pos) + "" + to_set.substring(pos+1); // Replace last "," with ""
-  stmt += to_set + " WHERE " + this.idKey + "=" + id + " ";
+  stmt += to_set + " WHERE " + this.idKey + "=" + idval + " ";
   stmt = stmt.replace(/(?:\r\n|\r|\n)/g," "); // Remove all newlines
   if (!at_least_one) {
     this.message = this.updateNothingToDo;
@@ -1730,7 +1730,7 @@ anyTable.prototype.dbPrepareUpdateStmt = async function(options)
 
 anyTable.prototype.dbPrepareUpdateStmtKeyVal = function(key,val)
 {
-  if (!val || val === "")
+  if (!val && val !== 0 && val !== "0")
     return key + "=NULL,";
   let kstr = typeof val === "string"
              ? "='" + val + "',"
