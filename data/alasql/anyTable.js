@@ -421,6 +421,8 @@ anyTable.prototype.dbSearch = function(options)
   .then( function(data) {
     if (self.error)
       throw self.error;
+    if (self.maxId >= 0)
+      return Promise.resolve(self.data);
     return Promise.resolve(self.prepareData(options?options.id:null));
   })
   .catch( function(err) {
