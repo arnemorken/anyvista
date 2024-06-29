@@ -1657,6 +1657,7 @@ anyTable.prototype.dbUpdate = async function(options)
        return Promise.resolve(null);
     });
   } // if stmt
+  let nrc = this.numRowsChanged;
 
   // Update link table(s) if any of the link fields (left join fields) are changed
   let link_id = options.link_id;
@@ -1664,7 +1665,7 @@ anyTable.prototype.dbUpdate = async function(options)
     await this.dbUpdateLink();
 
   // Set result message
-  if (this.numRowsChanged === 0) {
+  if (nrc === 0) {
     this.message = this.updateNothingToDo;
     return Promise.resolve(this);
   }
