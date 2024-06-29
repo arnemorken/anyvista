@@ -2065,8 +2065,9 @@ class anyTable extends dbTable
       if ($key == $this->mIdKeyTable || $key == "is_new") // Do not update the id key field, unless told to do so
         continue;
       $val = Parameters::get($key);
-      $val = htmlentities((string)$val,ENT_QUOTES,'utf-8',FALSE);
-      if ($val || $val === 0 || $val === "") { // Only allow values that are set (or blank)
+      if ($val !== null)
+        $val = htmlentities((string)$val,ENT_QUOTES,'utf-8',FALSE);
+      if ($val || $val === 0 || $val === "0" || $val === "") { // Only allow values that are set (or blank)
         $to_set .= $this->dbPrepareUpdateStmtKeyVal($key,$val);
         $at_least_one = true;
       }
@@ -2075,7 +2076,7 @@ class anyTable extends dbTable
       return null;
     $idval = $this->mType == "group" ? $id : intval($id);
     $to_set[strlen($to_set)-1] = " "; // Replace last "," with " "
-    $stmt .= $to_set . " WHERE " . $this->mIdKeyTable . "='" . $id . "' ";
+    $stmt .= $to_set . " WHERE " . $this->mIdKeyTable . "='" . $idval . "' ";
     $stmt = trim(preg_replace("/\s+/", " ", $stmt)); // Remove all newlines
     if (!$at_least_one) {
       $this->setMessage($this->mUpdateNothingToDo);
@@ -2087,7 +2088,7 @@ class anyTable extends dbTable
 
   protected function dbPrepareUpdateStmtKeyVal($key,$val)
   {
-    if (!$val && $val !== 0)
+    if (!$val && $val !== 0 && $val != "0")
       return $key . "=NULL,";
     return $key . "='" . $val . "',";
   } // dbPrepareUpdateStmtKeyVal
