@@ -18,6 +18,9 @@
 <!-- W3.CSS and Font Awesome -->
 <link href="<?php print gW3CSS_css;?>"       rel="stylesheet"/>
 <link href="<?php print gFontAwesome_css;?>" rel="stylesheet"/>
+<link href="<?php print gFontAwesomeURL;?>brands.min.css"  rel="stylesheet">
+<link href="<?php print gFontAwesomeURL;?>regular.min.css" rel="stylesheet">
+<link href="<?php print gFontAwesomeURL;?>solid.min.css"   rel="stylesheet">
 
 <!-- TinyMCE -->
 <script src="<?php print gTinyMCE_js;?>"></script>

@@ -10,10 +10,10 @@
 //
 // User-editable "constants" that define some basic properties of the anyVista API.
 //
-define("gServer",       "//localhost/");
-define("gHomeFolder",   "Prosjekter/testserver/wp-content/plugins/anyvista/");
-define("gThirdpartyJS", "Prosjekter/testserver/javascript/");
-define("gSkin",         "default");
+define("gServer",           "//localhost/");
+define("gHomeFolder",       "Prosjekter/testserver/wp-content/plugins/anyvista/");
+define("gThirdpartyFolder", "Prosjekter/thirdparty/");
+define("gSkin",             "default");
 
 //////////////////////////////////////////////////////////////////
 // Do not edit below unless you really know what you are doing. //
@@ -40,26 +40,26 @@ define("gUploadPath",   $docroot . "/" . gHomeFolder . "/" . gUploadFolder);
 //
 
 // anyPaginator
-define("gAnyPaginatorURL",  gServer          . gThirdpartyJS . "anyPaginator/");
+define("gAnyPaginatorURL",  gServer          . gThirdpartyFolder . "anypaginator/");
 define("gAnyPaginator_css", gAnyPaginatorURL . "anypaginator-1.1.0.min.css");
 define("gAnyPaginator_js",  gAnyPaginatorURL . "anypaginator-1.1.0.min.js");
 
 // jQuery / jQuery widget factory
-define("gjQueryURL",        gServer          . gThirdpartyJS . "jquery/");
+define("gjQueryURL",        gServer          . gThirdpartyFolder . "jquery/");
 define("gjQuery_js",        gjQueryURL       . "jquery-3.7.0.min.js");
-define("gjQueryWidgetURL",  gServer          . gThirdpartyJS . "jquery/");
+define("gjQueryWidgetURL",  gServer          . gThirdpartyFolder . "jquery/");
 define("gjQueryWidget_js",  gjQueryWidgetURL . "jquery-widget-1.12.1.min.js");
 
 // W3CSS
-define("gW3CSSURL",         gServer          . gThirdpartyJS . "w3css/");
+define("gW3CSSURL",         gServer          . gThirdpartyFolder . "w3css/");
 define("gW3CSS_css",        gW3CSSURL        . "w3.css");
 
 // Font Awesome
-define("gFontAwesomeURL",   gServer          . gThirdpartyJS . "fontawesome/css/");
+define("gFontAwesomeURL",   gServer          . gThirdpartyFolder . "fontawesome/css/");
 define("gFontAwesome_css",  gFontAwesomeURL  . "fontawesome.css");
 
 // TinyMCE
-define("gTinyMCEURL",       gServer          . gThirdpartyJS . "tinymce/js/tinymce/");
+define("gTinyMCEURL",       gServer          . gThirdpartyFolder . "tinymce/");
 define("gTinyMCE_js",       gTinyMCEURL      . "tinymce.min.js");
 
 //
