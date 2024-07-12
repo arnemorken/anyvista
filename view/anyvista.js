@@ -1022,9 +1022,9 @@
               return true;
             }
 
-            protected function findListWhere($groupType=null,$groupId=null,$linkType=null,$linkId=null,$grouping=true,$searchTerm="",$linktable_name="",$has_linktable=false)
+            protected function findListWhere($groupType=null,$groupId=null,$linkType=null,$linkId=null,$grouping=true,$linktable_name="",$has_linktable=false,$searchTerm="")
             {
-              $where = parent::findListWhere($groupType,$groupId,$linkType,$linkId,$grouping,$searchTerm,$linktable_name,$has_linktable);
+              $where = parent::findListWhere($groupType,$groupId,$linkType,$linkId,$grouping,$linktable_name,$has_linktable,$searchTerm);
               return $where;
             }
 
