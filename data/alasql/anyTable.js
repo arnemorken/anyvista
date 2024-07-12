@@ -791,7 +791,7 @@ anyTable.prototype.dbPrepareSearchListStmt = function(groupType,groupId,linkType
   let has_linktable  = this.tableExists(linktable_name);
   let select         = this.findListSelect  (groupId,linkType,linkId,grouping,linktable_name,has_linktable);
   let left_join      = this.findListLeftJoin(groupId,linkType,linkId,grouping,linktable_name,has_linktable);
-  let where          = this.findListWhere   (groupType,groupId,linkType,linkId,grouping,searchTerm,linktable_name,has_linktable);
+  let where          = this.findListWhere   (groupType,groupId,linkType,linkId,grouping,linktable_name,has_linktable,searchTerm);
   let order_by       = this.findListOrderBy ();
 
   let stmt = select+
@@ -897,7 +897,7 @@ anyTable.prototype.findListLeftJoinOne = function(groupId,linkType,linkId,groupi
   return lj;
 }; // findListLeftJoinOne
 
-anyTable.prototype.findListWhere = function(groupType,groupId,linkType,linkId,grouping,searchTerm,linktable_name,has_linktable)
+anyTable.prototype.findListWhere = function(groupType,groupId,linkType,linkId,grouping,linktable_name,has_linktable,searchTerm)
 {
   let where = "";
 
