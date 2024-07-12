@@ -755,7 +755,7 @@ anyTable.prototype.dbSearchList = async function(options)
 anyTable.prototype.dbExecListStmt = function(groupType,groupId,linkType,linkId,grouping,simple,limit,searchTerm)
 {
   // Build and execute the query for a group
-  let partial_stmt = this.dbPrepareSearchListStmt(groupType,groupId,linkType,linkId,grouping,searchTerm);
+  let partial_stmt = this.dbPrepareSearchListStmt(groupType,groupId,linkType,linkId,grouping,limit,searchTerm);
   let stmt = partial_stmt+limit;
   //console.log("dbExecListStmt1:"+stmt);
   let self = this;
@@ -785,7 +785,7 @@ anyTable.prototype.dbExecListStmt = function(groupType,groupId,linkType,linkId,g
 }; // dbExecListStmt
 
  // Get query fragments and build the query
-anyTable.prototype.dbPrepareSearchListStmt = function(groupType,groupId,linkType,linkId,grouping,searchTerm)
+anyTable.prototype.dbPrepareSearchListStmt = function(groupType,groupId,linkType,linkId,grouping,limit,searchTerm)
 {
   let linktable_name = this.findLinkTableName(linkType);
   let has_linktable  = this.tableExists(linktable_name);
