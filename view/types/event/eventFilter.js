@@ -28,7 +28,7 @@ var eventFilter = function (options)
         event_id:            { HEADER:"Event id",           DISPLAY:0,       TYPE:"label_nolink" },
         group_id:            { HEADER:"Group",              DISPLAY:0,       TYPE:"label" },
         event_name:          { HEADER:"Event&nbsp;name",    DISPLAY:1,       TYPE:"link" },
-        event_ingress:       { HEADER:"",                   DISPLAY:0,       TYPE:"textarea" },
+        event_ingress:       { HEADER:"Ingress",            DISPLAY:1,       TYPE:"textarea" },
       //event_place:         { HEADER:"Place",              DISPLAY:1,       TYPE:"select", FUNCTION: "getPlaces" },
         event_date_start:    { HEADER:"Start&nbsp;date",    DISPLAY:1,       TYPE:"date" },
         event_date_end:      { HEADER:"End date",           DISPLAY:1,       TYPE:"date" },
