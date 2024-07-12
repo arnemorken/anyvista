@@ -1076,8 +1076,7 @@ class anyTable extends dbTable
       $lj .= $this->findListLeftJoinOne($cur_uid,$groupId,$linkType,$linkId,$grouping,$linktable_name,$has_linktable);
 
     // Left join group table
-    if ($grouping && $this->mType != "group" && $groupId != "nogroup" &&
-        isset($this->mGroupTable)) {
+    if ($grouping && $this->mType != "group" && isset($this->mGroupTable)) {
       $linktable_name_grp = $this->findLinkTableName("group");
       $has_linktable_grp  = $this->tableExists($linktable_name_grp);
       $lj .= $this->findListLeftJoinOne($cur_uid,$groupId,"group",$linkId,$grouping,$linktable_name_grp,$has_linktable_grp);
@@ -1173,8 +1172,17 @@ class anyTable extends dbTable
     }
 
     // Match with group table
-    if ($grouping && $this->mType != "group" && ($groupId || $groupId === 0) && $groupId != "nogroup" &&
-        $has_grouptable && isset($this->mGroupTable)) {
+    if ($groupId == "nogroup") {
+      // Search items not belonging to any group
+      $ng_str = $this->mTableNameGroupLink.".".$this->mIdKey." IS NULL ";
+      if ($where === "")
+        $where  = " WHERE ".$ng_str;
+      else
+        $where .= " AND ".$ng_str;
+    }
+    else
+    if ($grouping && $this->mType != "group" && ($groupId || $groupId === 0) && $has_grouptable && isset($this->mGroupTable)) {
+      // Search items belonging to a group
       if ($groupType) {
         $gt_str = $this->mTableNameGroup.".group_type='".$groupType."' ";
         if ($where === "")
