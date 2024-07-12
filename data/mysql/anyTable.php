@@ -1042,7 +1042,7 @@ class anyTable extends dbTable
             $sl .= ", ".$linktable_name.".".$field;
         }
         if ($this->hasParentId())
-          $sl .= ", tmp.".$this->mNameKey." AS parent_name";
+          $sl .= ", tmp.".$this->mNameKey." AS parent_name ";
       }
     }
     // Select from group table
@@ -1122,15 +1122,15 @@ class anyTable extends dbTable
     }
     $db_gid = !$groupId && $groupId !== 0 // No gid specified
               ? ($has_linktable
-                 ? "CAST(".$linktable_name.".".$linktable_id." AS INT)"
+                 ? "CAST(".$linktable_name.".".$linktable_id." AS INT) "
                  : null
                 )
               : (is_numeric($groupId) // Only left join with specified group
-                ? "CAST(".$groupId." AS INT)"
-                : "'".$groupId."'"
+                ? "CAST(".$groupId." AS INT) "
+                : "'".$groupId."' "
                 );
     $has_grouptable = $this->tableExists($this->mTableNameGroup);
-    if ($db_gid && $has_grouptable && $has_typetable && $typetable_name == $this->mTableNameGroup && $this->mType != "group"&& $groupId != "nogroup") {
+    if ($db_gid && $has_grouptable && $has_typetable && $typetable_name == $this->mTableNameGroup && $this->mType != "group") {
       $lj .= "LEFT JOIN ".$typetable_name." ON CAST(".$typetable_name.".".$typetable_id." AS INT)=".$db_gid." ";
       $lj .= "AND ".$this->mTableNameGroup.".group_type='".$this->mType."' ";
     }
@@ -1214,7 +1214,7 @@ class anyTable extends dbTable
 
     // Match search term
     if ($searchTerm) {
-      $term_str = $this->mTableName.".".$this->mNameKey." LIKE '%".$searchTerm."%'";
+      $term_str = $this->mTableName.".".$this->mNameKey." LIKE '%".$searchTerm."%' ";
       if ($where === "")
         $where  = "WHERE (".$term_str.") ";
       else
