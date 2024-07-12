@@ -1058,10 +1058,6 @@ class anyTable extends dbTable
         }
       }
     }
-    // Select from meta table
-    $mt = $this->findMetaTableName($linkType);
-    if ($this->tableExists($mt))
-      $sl .= ", ".$mt.".".$this->mMetaId.", ".$mt.".meta_value, ".$mt.".meta_key ";
     $sl .= " ";
     return $sl;
   } // findListSelect
@@ -1085,13 +1081,6 @@ class anyTable extends dbTable
       $linktable_name_grp = $this->findLinkTableName("group");
       $has_linktable_grp  = $this->tableExists($linktable_name_grp);
       $lj .= $this->findListLeftJoinOne($cur_uid,$groupId,"group",$linkId,$grouping,$linktable_name_grp,$has_linktable_grp);
-    }
-
-    // Left join meta table
-    $mt = $this->findMetaTableName($linkType);
-    if ($this->tableExists($mt)) {
-      $mt_id = $this->findMetaTableId($linkType);
-      $lj .= "LEFT JOIN ".$mt." ON CAST(".$mt.".".$mt_id." AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ";
     }
     return $lj;
   } // findListLeftJoin
