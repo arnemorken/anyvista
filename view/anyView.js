@@ -3636,8 +3636,7 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     num:       num,
     context:   this.model,
     type:      pager.options.div_info.type,
-    grouping:  false,
-    simple:    true,
+    grouping:  true,
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
     header:    "All "+pager.options.div_info.type+"s", // TODO! Not a good solution
