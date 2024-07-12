@@ -1207,9 +1207,9 @@ class anyTable extends dbTable
     if ($this->mType == "group" && $groupType) {
       $gt_str = $this->mTableNameGroup.".group_type='".$groupType."' ";
       if ($where === "")
-        $where  = " WHERE "+gt_str;
+        $where  = " WHERE ".$gt_str;
       else
-        $where .= " AND "+gt_str;
+        $where .= " AND ".$gt_str;
     }
 
     // Match search term
