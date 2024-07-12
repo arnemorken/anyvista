@@ -852,13 +852,11 @@ anyTable.prototype.findListLeftJoin = function(groupId,linkType,linkId,grouping,
     lj += this.findListLeftJoinOne(groupId,linkType,linkId,grouping,linktable_name,has_linktable);
 
   // Left join group table
-  if (grouping && this.type != "group" && groupId != "nogroup" &&
-      this.groupTable) {
+  if (grouping && this.type != "group" && this.groupTable) {
     let linktable_name_grp = this.findLinkTableName("group");
     let has_linktable_grp  = this.tableExists(linktable_name_grp);
     lj += this.findListLeftJoinOne(groupId,"group",linkId,grouping,linktable_name_grp,has_linktable_grp);
   }
-
   return lj;
 }; // findListLeftJoin
 
@@ -890,7 +888,7 @@ anyTable.prototype.findListLeftJoinOne = function(groupId,linkType,linkId,groupi
                  ? "CAST("+groupId+" AS INT) "
                  : "'"+groupId+"' ";
   let has_grouptable = this.tableExists(this.tableNameGroup);
-  if (db_gid && has_grouptable && has_typetable && typetable_name == this.tableNameGroup && this.type != "group"&& groupId != "nogroup") {
+  if (db_gid && has_grouptable && has_typetable && typetable_name == this.tableNameGroup && this.type != "group") {
     lj += "LEFT JOIN "+typetable_name+" ON CAST("+typetable_name+"."+typetable_id+" AS INT)="+db_gid+" ";
     lj += "AND "+this.tableNameGroup+".group_type='"+this.type+"' ";
   }
@@ -944,8 +942,17 @@ anyTable.prototype.findListWhere = function(groupType,groupId,linkType,linkId,gr
   }
 
   // Match with group table
-  if (grouping && this.type != "group" && (groupId || groupId === 0) && groupId != "nogroup" &&
-      has_grouptable && this.groupTable) {
+  if (groupId == "nogroup") {
+    // Search items not belonging to any group
+    let ng_str = this.tableNameGroupLink+"."+this.idKey+" IS NULL ";
+    if (where === "")
+      where  = " WHERE "+ng_str;
+    else
+      where += " AND "+ng_str;
+  }
+  else
+  if (grouping && this.type != "group" && (groupId || groupId === 0) && has_grouptable && this.groupTable) {
+    // Search items belonging to a group
     if (groupType) {
       let gt_str = this.tableNameGroup+".group_type='"+groupType+"' ";
       if (where === "")
