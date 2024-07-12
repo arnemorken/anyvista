@@ -346,6 +346,19 @@ class anyTable extends dbTable
     if (!in_array($this->mType,$this->mLinkTypes))
       array_unshift($this->mLinkTypes,$this->mType); // Add the current type as a "link" in order to work with sub-items
 
+    // Check whether columns with same name exists in both main and meta table, and if so, write a warning
+    if ($this->mTableFields && $this->mTableFieldsMeta) {
+      $res = array_intersect($this->mTableFields,$this->mTableFieldsMeta);
+      if (count($res)) {
+        if (($key = array_search($this->mIdKey,$res)) !== false)
+          unset($res[$key]);
+        $elm = implode(',',$res);
+        $str = "Warning: Some elements exists in both main and meta tables; this may give unexpected results: ".$elm;
+        error_log($str);
+        $this->mMessage .= $str;
+      }
+    }
+
     if (!isset($this->mInsertSuccessMsg))
       $this->mInsertSuccessMsg = ucfirst($this->mType)." created. ";
     if (!isset($this->mUpdateSuccessMsg))

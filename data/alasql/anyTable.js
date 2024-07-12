@@ -272,6 +272,21 @@ anyTable.prototype.initProperties = function(paramOrType)
                                                  tableName:     this.type, // TODO! Not general enough
                                                  linkTableName: "group_"+this.type  } };
 
+  // Check whether columns with same name exists in both main and meta table, and if so, write a warning
+  if (this.tableFields && this.tableFieldsMeta) {
+    // TODO! Untested code!
+    let res = this.tableFields(value => this.tableFieldsMeta.includes(value));
+    if (res.length) {
+      let key = res.indexOf(this.idKey);
+      if (key > -1)
+        res.splice(key,1);
+      let elm = res.join(",");
+      let str = "Warning: Some elements exists in both main and meta tables; this may give unexpected results: "+elm;
+      console.warn(str);
+      this.message += str;
+    }
+  }
+
   if (!this.insertSuccessMsg)
     this.insertSuccessMsg = this.type.capitalize()+" created. ";
   if (!this.updateSuccessMsg)
