@@ -969,7 +969,7 @@ class anyTable extends dbTable
   private function dbExecListStmt($groupType=null,$groupId=null,$linkType=null,$linkId=null,$grouping=true,$simple=false,$limit="")
   {
     // Build and execute the query for a group
-    $partial_stmt = $this->dbPrepareSearchListStmt($groupType,$groupId,$linkType,$linkId,$grouping);
+    $partial_stmt = $this->dbPrepareSearchListStmt($groupType,$groupId,$linkType,$linkId,$grouping,$limit);
     $stmt = $partial_stmt.$limit;
     //elog("dbExecListStmt1:".$stmt);
     if (!$this->query($stmt))
@@ -981,7 +981,7 @@ class anyTable extends dbTable
       $group_idx = "nogroup";
     if ($limit != "") {
       // Count how many rows would have been returned without LIMIT
-      $part_stmt = $this->dbPrepareSearchListStmt(null,$groupId,$linkType,$linkId,$grouping);
+      $part_stmt = $this->dbPrepareSearchListStmt(null,$groupId,$linkType,$linkId,$grouping,$limit);
       $count_stmt = "SELECT count(*) AS num_results FROM (".
                     $part_stmt.
                     ") AS dummy";
@@ -1006,7 +1006,7 @@ class anyTable extends dbTable
   } // dbExecListStmt
 
   // Get query fragments and build the query
-  protected function dbPrepareSearchListStmt($groupType=null,$groupId=null,$linkType=null,$linkId=null,$grouping=true,$search_term="")
+  protected function dbPrepareSearchListStmt($groupType=null,$groupId=null,$linkType=null,$linkId=null,$grouping=true,$limit="",$search_term="")
   {
     if (!$groupType)
       $groupType    = Parameters::get("group_type");
@@ -1016,7 +1016,7 @@ class anyTable extends dbTable
     $has_linktable  = $this->tableExists($linktable_name);
     $select         = $this->findListSelect  ($groupId,$linkType,$linkId,$grouping,$linktable_name,$has_linktable);
     $left_join      = $this->findListLeftJoin($groupId,$linkType,$linkId,$grouping,$linktable_name,$has_linktable);
-    $where          = $this->findListWhere   ($groupType,$groupId,$linkType,$linkId,$grouping,$search_term,$linktable_name,$has_linktable);
+    $where          = $this->findListWhere   ($groupType,$groupId,$linkType,$linkId,$grouping,$linktable_name,$has_linktable,$search_term);
     $order_by       = $this->findListOrderBy ();
 
     $stmt = $select.
