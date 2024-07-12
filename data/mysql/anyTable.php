@@ -1125,7 +1125,7 @@ class anyTable extends dbTable
     return $lj;
   } // findListLeftJoinOne
 
-  protected function findListWhere($groupType=null,$groupId=null,$linkType=null,$linkId=null,$grouping=true,$searchTerm="",$linktable_name="",$has_linktable=false)
+  protected function findListWhere($groupType=null,$groupId=null,$linkType=null,$linkId=null,$grouping=true,$linktable_name="",$has_linktable=false,$searchTerm="")
   {
     $where = "";
 
