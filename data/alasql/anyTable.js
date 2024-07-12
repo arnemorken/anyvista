@@ -818,7 +818,7 @@ anyTable.prototype.findListSelect = function(groupId,linkType,linkId,grouping,li
           sl += ", "+linktable_name+"."+field;
       }
       if (this.hasParentId())
-        sl += ", tmp."+this.nameKey+" AS parent_name";
+        sl += ", tmp."+this.nameKey+" AS parent_name ";
     }
   }
   // Select from group table
@@ -884,11 +884,11 @@ anyTable.prototype.findListLeftJoinOne = function(groupId,linkType,linkId,groupi
   }
   let db_gid = !groupId && groupId !== 0 // No gid specified
                ? has_linktable
-                 ? "CAST("+linktable_name+"."+linktable_id+" AS INT)"
+                 ? "CAST("+linktable_name+"."+linktable_id+" AS INT) "
                  : null
                : isNumeric(groupId) // Only left join with specified group
-                 ? "CAST("+groupId+" AS INT)"
-                 : "'"+groupId+"'";
+                 ? "CAST("+groupId+" AS INT) "
+                 : "'"+groupId+"' ";
   let has_grouptable = this.tableExists(this.tableNameGroup);
   if (db_gid && has_grouptable && has_typetable && typetable_name == this.tableNameGroup && this.type != "group"&& groupId != "nogroup") {
     lj += "LEFT JOIN "+typetable_name+" ON CAST("+typetable_name+"."+typetable_id+" AS INT)="+db_gid+" ";
@@ -974,7 +974,7 @@ anyTable.prototype.findListWhere = function(groupType,groupId,linkType,linkId,gr
 
   // Match search term
   if (searchTerm) {
-    let term_str = this.tableName+"."+this.nameKey+" LIKE '%"+searchTerm+"%'";
+    let term_str = this.tableName+"."+this.nameKey+" LIKE '%"+searchTerm+"%' ";
     if (where === "")
       where  = "WHERE ("+term_str+") ";
     else
