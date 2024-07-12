@@ -991,7 +991,7 @@ class anyTable extends dbTable
       $row = $this->getNext(true);
       if ($row && isset($row["num_results"]) && $row["num_results"] != "" && $row["num_results"] != "0") {
         $this->mData[$group_idx]["grouping_num_results"] = intval($row["num_results"]);
-        $this->mNumResults .= intval($row["num_results"]);
+        $this->mNumResults += intval($row["num_results"]);
       }
     } // if
     else {
