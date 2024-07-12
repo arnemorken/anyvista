@@ -62,6 +62,10 @@ define("gFontAwesome_css",  gFontAwesomeURL  . "fontawesome.css");
 define("gTinyMCEURL",       gServer          . gThirdpartyFolder . "tinymce/");
 define("gTinyMCE_js",       gTinyMCEURL      . "tinymce.min.js");
 
+// AlaSQL
+define("gAlaSQLURL",        gServer          . gThirdpartyFolder . "alasql/");
+define("gAlaSQL_js",        gAlaSQLURL       . "alasql.min.js");
+
 //
 // Wordpress stuff
 //

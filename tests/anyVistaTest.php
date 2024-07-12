@@ -16,25 +16,24 @@
   require_once dirname(__FILE__)."/../data/mysql/anyDefs.php";
 ?>
 
-<!-- jQuery -->
+<!-- Thirdparty libraries -->
 <script src="<?php print gjQuery_js;?>"></script>
-
-<!-- anyVista -->
-<script src="<?php print gAnyvistaURL;?>/data/alasql/alasql-4.3.3.min.js"></script>
-<script src="<?php print gAnyvistaURL;?>/data/alasql/db/dbConnection.js"></script>
-<script src="<?php print gAnyvistaURL;?>/data/alasql/db/dbTable.js"></script>
-<script src="<?php print gAnyvistaURL;?>/data/alasql/anyTable.js"></script>
-<script src="<?php print gAnyvistaURL;?>/data/alasql/anyTableFactory.js"></script>
-
-<script src="<?php print gAnyvistaURL;?>view/functions.js"></script>
-<script src="<?php print gAnyvistaURL;?>view/anyDefs.js"></script>
-<script src="<?php print gAnyvistaURL;?>view/anyStrings_en-GB.js"></script>
-<script src="<?php print gAnyvistaURL;?>view/anyModel.js"></script>
+<script src="<?php print gAlaSQL_js;?>"></script>
 
 <!-- QUnit -->
 <title>anyVista QUnit test suite</title>
 <link  href="http://localhost/Prosjekter/testserver/javascript/jquery/qunit/qunit-1.23.1.css" rel="stylesheet"/>
 <script src="http://localhost/Prosjekter/testserver/javascript/jquery/qunit/qunit-1.23.1.js"></script>
+
+<!-- anyVista -->
+<script src="<?php print gAnyvistaURL;?>data/alasql/db/dbConnection.js"></script>
+<script src="<?php print gAnyvistaURL;?>data/alasql/db/dbTable.js"></script>
+<script src="<?php print gAnyvistaURL;?>data/alasql/anyTable.js"></script>
+<script src="<?php print gAnyvistaURL;?>data/alasql/anyTableFactory.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/functions.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/anyDefs.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/anyStrings_en-GB.js"></script>
+<script src="<?php print gAnyvistaURL;?>view/anyModel.js"></script>
 
 <!-- Test files -->
 <script src="TestModel.js"></script>
