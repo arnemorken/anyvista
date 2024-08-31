@@ -1757,7 +1757,7 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
         self.message = "No "+self.type+"s found. "; // TODO! i18n
     }
     if (self.message)
-      console.log("anyModel.dbSearchSuccess: "+self.message);
+      console.warn("anyModel.dbSearchSuccess: "+self.message);
     if (self.error_server)
       console.error("anyModel.dbSearchSuccess: "+self.error_server);
     if (self.auto_search && self.dataInit) {

@@ -330,7 +330,7 @@ class userTable extends anyTable
         $stmt  = "UPDATE any_event_user SET ";
         $stmt .= $stmt_par;
         $stmt[strlen($stmt)-1] = " "; // Replace last "," with " "
-        $stmt.= "WHERE user_id='".$this->mId."' ";
+        $stmt.= "WHERE user_id='".$this->mId."' "; // TODO! mId
         //error_log("userTable dbUpdateAssociation:".$stmt);
         if (!$this->query($stmt))
           return false;
@@ -347,10 +347,10 @@ class userTable extends anyTable
   {
     if ($key == "user_pass") {
       if ($val && defined("WP_PLUGIN")) {
-        wp_set_password($val,$this->mId);
+        wp_set_password($val,$this->mId); // TODO! mId
         $has_perm = is_object($this->mPermission) && $this->mPermission;
         if ($has_perm && !$this->mPermission->is_admin)
-          wp_set_auth_cookie($this->mId); // Stay logged in
+          wp_set_auth_cookie($this->mId); // Stay logged in // TODO! mId
         $this->pw_change = true;
       }
     }

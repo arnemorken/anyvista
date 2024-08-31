@@ -4401,7 +4401,7 @@ $.any.anyView.prototype.dbSearchParents = function (type,mode,id,val,edit,par_id
    context:   this,
   };
   if (edit) {
-    this.showMessages("",true);
+    this.showMessages("");
     return this.model.dbSearch(options); // TODO! What if source == "local"?
   }
   else {
@@ -4650,13 +4650,17 @@ $.any.anyView.prototype.dbUpdate = function (event)
   }
   if (par_id && par_data && par_data[par_id] && (par_data[par_id].head == "group" || par_data[par_id].item == "group" || par_data[par_id].list == "group"))
     event.data.group_id = par_id;
+  if (mode == "item")
+    this.showMessages("",true);
   return this.model.dbUpdate(event.data);
 
+/* Never reached!
   if (item && item[id]) {
     delete item[id].is_new;
     delete item[id].dirty;
   }
   return true;
+*/
 }; // dbUpdate
 
 /**
@@ -4904,7 +4908,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
     if (mode == "list") {
       let lfname = linkdata && linkdata[this.model.name_key]
                    ? "from the "+linkdata[this.model.name_key]+" list"
-                   : "from this "+link_type; // TODO! i18n
+                   : "from this list"/*+link_type*/; // TODO! i18n TODO! link_type is always blank
       msgstr += " "+lfname;
     }
     let msg = "<div class='any-confirm-remove-dialog' id='"+this.id_base+"_confirm_remove' style='padding:.8em;'>"+
