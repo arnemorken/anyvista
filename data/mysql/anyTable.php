@@ -822,7 +822,7 @@ class anyTable extends dbTable
       $groupType = Parameters::get("group_type"); // If "groupType" is specified, search only for groups of that type
     if ($grouping == null)
       $grouping = Parameters::get("grouping");
-    $grouping = $grouping && $grouping !== "false" && $grouping !== "0";
+    $grouping = $this->mType == "group" ? false : $grouping && $grouping !== "false" && $grouping !== "0";
     if ($simple == null)
       $simple = Parameters::get("simple"); // In a "simple" list search we get only the id, name and parent_id
     $simple = $simple === true || $simple === "true" || $simple   === "1";
@@ -1598,7 +1598,7 @@ class anyTable extends dbTable
         $ngidx = isInteger($gidx) ? "+".$gidx : $gidx;
         if (!isset($data_tree[$ngidx]))
           $data_tree[$ngidx] = array();
-        if ($grouping && isset($this->mData[$gidx])) { // Add a head data layer
+        if (($grouping || $this->mType == "group") && $this->mHostTable == null && isset($this->mData[$gidx])) { // Add a head data layer
           $data_tree[$ngidx]["head"]       = "group";
           $data_tree[$ngidx]["group_type"] = $this->mType;
           $data_tree[$ngidx]["group_id"]   = $ngidx;

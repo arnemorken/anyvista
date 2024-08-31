@@ -667,13 +667,13 @@ anyTable.prototype.dbSearchList = async function(options)
   if (this._initSearch(options) == -1)
     return Promise.resolve(null);
 
-  let linkId    = options                                         ? options.linkId    : null;
-  let linkType  = options                                         ? options.linkType  : null;
-  let groupId   = options                                         ? options.groupId   : null; // If "groupId" is specified, we need only search in that group
-  let groupType = options                                         ? options.groupType : null; // If "groupType" is specified, search only for groups of that type
-  let grouping  = options && typeof options.grouping == "boolean" ? options.grouping  : true;
+  let linkId    = options ? options.linkId    : null;
+  let linkType  = options ? options.linkType  : null;
+  let groupId   = options ? options.groupId   : null; // If "groupId" is specified, we need only search in that group
+  let groupType = options ? options.groupType : null; // If "groupType" is specified, search only for groups of that type
+  let grouping  = this.type == "group" ? false : options && typeof options.grouping == "boolean" ? options.grouping  : true;
   grouping      = grouping !== false && grouping !== "false" && grouping !== "0";
-  let simple    = options && typeof options.simple   == "boolean" ? options.simple   : false; // In a "simple" list search we get only the id, name and parent_id
+  let simple    = options && typeof options.simple == "boolean" ? options.simple : false; // In a "simple" list search we get only the id, name and parent_id
   simple        = simple === true || simple === "true" || simple   === "1";
 
   // Get group data, unless we are searching in a specific group
@@ -1273,7 +1273,7 @@ anyTable.prototype.buildGroupTreeAndAttach = function(group_data,linkId,grouping
       let ngidx = gidx;
       if (!data_tree[ngidx])
         data_tree[ngidx] = {};
-      if (grouping && this.data[gidx]) { // Add a head data layer
+      if ((grouping || this.type == "group") && this.hostTable == null && this.data[gidx]) { // Add a head data layer
         data_tree[ngidx]["head"]       = "group";
         data_tree[ngidx]["group_type"] = this.type;
         data_tree[ngidx]["group_id"]   = ngidx;
