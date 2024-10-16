@@ -32,7 +32,7 @@ class groupTable extends anyTable
 
   protected $mTableName          = "any_group",
             $mTableNameMeta      = "any_groupmeta",
-            $mTableNameGroupLink = "any_group",
+            $mTableNameGroupLink = null, // No group link for groups
             $mTableNameUserLink  = "any_group_user";
 
   protected $mTableFields = [
@@ -98,6 +98,8 @@ class groupTable extends anyTable
             $mJoinedSuccessMsg = "Joined group. ",
             $mLeftAlreadyMsg   = "The user is not a member of this group. ",
             $mLeftSuccessMsg   = "Left group. ";
+
+  protected $mGroupIds = null;
 
   // Constructor
   public function __construct($connection)
@@ -198,6 +200,11 @@ class groupTable extends anyTable
     if (!$this->query($stmt))
       error_log("Warning: No group tree. ");
     $this->getRowData($this->mData,"list");
+
+    if ($grouping && isset($this->mData["nogroup"]))
+      $this->mGroupIds = array_keys($this->mData["nogroup"]);
+    else
+      $this->mGroupIds = array_keys($this->mData);
 
     if ($grouping)
       $data = $this->buildDataTree($this->mData["nogroup"]); // Get group tree and append data to it

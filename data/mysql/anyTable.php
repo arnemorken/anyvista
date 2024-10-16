@@ -319,7 +319,7 @@ class anyTable extends dbTable
     }
     if (!$this->mTableNameGroup)
       $this->mTableNameGroup = $this->mTablePrefix."group";
-    if (!$this->mTableNameGroupLink) {
+    if (!$this->mTableNameGroupLink && $this->mType != "group") {
       $ltn = ["group",$this->mType];
       sort($ltn);
       $this->mTableNameGroupLink = $this->mTablePrefix.implode("_",$ltn);
@@ -873,7 +873,8 @@ class anyTable extends dbTable
 
       // Get grouped data that may have illegal group type (i.e. not same as list type).
       // Ideally this should not happen, but if it does, such data will not show up unless we do this.
-      if (isset($group_data) && $linkId == "") {
+      if (isset($group_data) && $linkId == "" &&
+          isset($this->mGroupTable) && isset($this->mGroupTable->mGroupIds)) {
         //$success = $this->dbExecListStmt($groupType,-1,$linkType,$linkId,$grouping,$simple,$limit) || $success; // -1 signifies this special query
         $linktable    = $this->findLinkTableName("group");
         if ($this->tableExists($linktable)) {
@@ -883,13 +884,13 @@ class anyTable extends dbTable
                    "LEFT JOIN ".$linktable." ON CAST(".$linktable.".".$this->mIdKey." AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ".
                    "WHERE (";
           $part_stmt = "";
-          foreach ($group_data as $gid => $group) {
+          foreach ($this->mGroupTable->mGroupIds as $gid) {
             if ($gid != "nogroup") {
               $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
               $part_stmt .= $linktable.".".$linktable_id." != ".$db_gid." AND ";
             }
           }
-          $part_stmt  = rtrim($part_stmt,"AND ");
+          $part_stmt = rtrim($part_stmt,"AND ");
           if ($part_stmt != "") {
             $part_stmt .= ") ";
             $stmt .= $part_stmt."ORDER BY ". $this->mTableName.".".$this->mIdKeyTable." ";
@@ -1185,7 +1186,7 @@ class anyTable extends dbTable
     }
 
     // Match with group table
-    if ($groupId == "nogroup") {
+    if ($groupId == "nogroup" && $has_group_linktable) {
       // Search items not belonging to any group
       $ng_str = $this->mTableNameGroupLink.".".$this->mIdKey." IS NULL ";
       if ($where === "")
@@ -1619,7 +1620,9 @@ class anyTable extends dbTable
           }
           $data_tree[$ngidx]["group_name"] = isset($gname)
                                              ? $gname
-                                             : "Unknown group"; // TODO! i18n
+                                             : ($this->mType != "group"
+                                               ? "Unknown group" // TODO! i18n
+                                               : null);
         } // if grouping
         if (!isset($data_tree[$ngidx]["data"]))
           $data_tree[$ngidx]["data"] = $this->buildDataTree($this->mData[$gidx],null);
@@ -1745,7 +1748,7 @@ class anyTable extends dbTable
         if (isset($group))
           if (isset($group["data"]))
             $this->dbAttachToGroups($group["data"],$data_tree,$type); // Recursive call
-        if (isset($group["data"])) {
+        if ($type != "group" || isset($group["data"])) {
           $group["head"] = "group";
           if ($type != "group") {
             if (isset($group["list"])) unset($group["list"]);

@@ -405,7 +405,7 @@ $.any.anyView.prototype._findMode = function (data,id)
   }
   if (!mode) {
     // No mode specified, so fall back to default
-    mode = this.options.defaultMode;
+    mode = this.model && this.model.type != "group" ? this.options.defaultMode : "head";
   }
   return mode;
 }; // _findMode
@@ -1081,7 +1081,7 @@ $.any.anyView.prototype.refreshHeader = function (params,skipName)
   let data   = params.data;
   let id     = params.id;
 
-  if (!parent || !parent.length || !data || (mode != "head" && !data.grouping))
+  if (!parent || !parent.length || !data || (mode != "head" && (!data.grouping || type == "group")))
     return null;
 
   // Get the correct filter
