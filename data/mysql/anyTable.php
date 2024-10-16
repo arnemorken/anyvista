@@ -1745,35 +1745,36 @@ class anyTable extends dbTable
     //vlog("dbAttachToGroups,data_tree:", $data_tree);
     if (isset($group_tree)) {
       foreach ($group_tree as $gid => &$group) { // Iterate over group ids
-        if (isset($group))
+        if (isset($group)) {
           if (isset($group["data"]))
             $this->dbAttachToGroups($group["data"],$data_tree,$type); // Recursive call
-        if ($type != "group" || isset($group["data"])) {
-          $group["head"] = "group";
-          if ($type != "group") {
-            if (isset($group["list"])) unset($group["list"]);
-            if (isset($group["item"])) unset($group["item"]);
-          }
-        }
-        $idx = null;
-        if (isset($data_tree[$gid]))
-          $idx = $gid;
-        else
-        if (isset($data_tree["+".$gid]))
-          $idx = "+".$gid;
-        if (isset($idx) && isset($data_tree[$idx])) {
-          if (isset($data_tree[$idx]["data"])) {
+          if ($type != "group" || isset($group["data"])) {
             $group["head"] = "group";
             if ($type != "group") {
               if (isset($group["list"])) unset($group["list"]);
               if (isset($group["item"])) unset($group["item"]);
             }
-            if (array_key_exists("data",$group) && !isset($group["data"]))
-              $group["data"] = array();
-            foreach ($data_tree[$idx]["data"] as $id => $obj)
-              $group["data"][$id] = $data_tree[$idx]["data"][$id];
           }
-        }
+          $idx = null;
+          if (isset($data_tree[$gid]))
+            $idx = $gid;
+          else
+          if (isset($data_tree["+".$gid]))
+            $idx = "+".$gid;
+          if (isset($idx)) {
+              $group["head"] = "group";
+              if ($type != "group") {
+                if (isset($group["list"])) unset($group["list"]);
+                if (isset($group["item"])) unset($group["item"]);
+              }
+              if (array_key_exists("data",$group) && !isset($group["data"]))
+                $group["data"] = array();
+              if (isset($data_tree[$idx])) {
+                foreach ($data_tree[$idx]["data"] as $id => $obj)
+                  $group["data"][$id] = $data_tree[$idx]["data"][$id];
+              }
+          } // if idx
+        } // if group
       } // foreach
     } // if
   } // dbAttachToGroups

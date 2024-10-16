@@ -1424,8 +1424,7 @@ anyTable.prototype.dbAttachToGroups = function(group_tree,data_tree,type)
           }
         }
         let idx = gid;
-        if (idx && data_tree[idx]) {
-          if (data_tree[idx]["data"]) {
+        if (idx) {
             group["head"] = "group";
             if (type != "group") {
               if (group["list"]) delete group["list"];
@@ -1433,10 +1432,10 @@ anyTable.prototype.dbAttachToGroups = function(group_tree,data_tree,type)
             }
             if (!group["data"])
               group["data"] = {};
-            for (let id in data_tree[idx]["data"]) {
-              group["data"][id] = data_tree[idx]["data"][id];
+            if (data_tree[idx] && data_tree[idx]["data"]) {
+              for (let id in data_tree[idx]["data"])
+                group["data"][id] = data_tree[idx]["data"][id];
             }
-          }
         } // if idx
       } // if group
     } // for
