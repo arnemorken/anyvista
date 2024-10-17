@@ -215,7 +215,7 @@ var anyViewWidget = $.widget("any.anyView", {
 
     this.mode         = this.options.mode
                         ? this.options.mode
-                        : "";
+                        : "list";
 
     this.id_stack = []; // Dynamic stack of id strings for views
     this.views    = {};
