@@ -25,7 +25,7 @@
  * @param {Object}  options.model                  The model with data to be displayed. Default: null.
  * @param {Object}  options.filters                The filters define how the data will be displayed. Default: null.
  * @param {String}  options.id                     The jQuery id of a container element in which to display the view. Default: null.
- * @param {String}  options.mode                   The current mode of display for the view. Default: this.options.defaultMode.
+ * @param {String}  options.mode                   The current mode of display for the view. Default: null.
  * @param {boolean} options.isSelectable           An icon for selecting a list row will be displayed. Ignored for items. If isSelectable is set,
  *                                                 isAddable, isRemovable, isEditable and isDeletable will be ignored. Default: false.
  * @param {boolean} options.isAddable              An icon for adding new rows may be displayed. Ignored if isSelectable is set. Default: false.
@@ -74,7 +74,6 @@
  * @param {boolean} options.onFocusoutRemoveEmpty  The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
  * @param {boolean} options.useOddEvenColums       If true, tags for odd and even columns will be generated for list entries. Default: false.
  * @param {boolean} options.useOddEvenRows         If true, tags for odd and even rows will be generated for list entries. Default: false.
- * @param {String}  options.defaultMode            The default mode to use for display. One of `head`. `list` or `item`. Default: `list`.
  * @param {integer} options.itemsPerPage           The number of rows to show per page. Only applicable for "list" and "select" modes. Default: 20.
  * @param {integer} options.currentPage            The current page to show. Only applicable for "list" and "select" modes. Default: 1.
  * @param {String}  options.grouping               How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
@@ -139,7 +138,6 @@ var anyViewWidget = $.widget("any.anyView", {
     useOddEvenColums:       true,
     useOddEvenRows:         true,
     mode:                   null,
-    defaultMode:            "list",
     itemsPerPage:           20,
     currentPage:            1,
     grouping:               "",
@@ -217,7 +215,7 @@ var anyViewWidget = $.widget("any.anyView", {
 
     this.mode         = this.options.mode
                         ? this.options.mode
-                        : this.options.defaultMode;
+                        : "";
 
     this.id_stack = []; // Dynamic stack of id strings for views
     this.views    = {};
@@ -405,7 +403,7 @@ $.any.anyView.prototype._findMode = function (data,id)
   }
   if (!mode) {
     // No mode specified, so fall back to default
-    mode = this.model && this.model.type != "group" ? this.options.defaultMode : "head";
+    mode = this.model && this.model.type != "group" ? "list" : "head";
   }
   return mode;
 }; // _findMode
@@ -571,7 +569,7 @@ $.any.anyView.prototype.refresh = function (params)
             let curr_type = view._findType(data,id,prev_type);
             let curr_mode = view._findMode(data,id);
             // See if we need to add to id_stack
-            if (curr_mode == "head" || curr_mode == "item") {
+            if (curr_mode !== "list") {
               let idx = Number.isInteger(parseInt(id)) ? ""+parseInt(id) : id;
               this.id_stack.push(idx);
             }
@@ -658,7 +656,7 @@ $.any.anyView.prototype.refresh = function (params)
                    });
               new_view = false;
             }
-            if (curr_mode == "head" || curr_mode == "item")
+            if (curr_mode !== "list")
               this.id_stack.pop();
             else
             if (curr_mode == "list" && prev_mode == "list" && prev_type != curr_type)
@@ -2928,7 +2926,6 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
     showButtonAddLinkGroup: this.options.showButtonAddLinkGroup,
     useOddEvenColums:       this.options.useOddEvenColums,
     useOddEvenRows:         this.options.useOddEvenRows,
-    defaultMode:            this.options.defaultMode,
     sortBy:                 this.options.sortBy,
     sortDirection:          this.options.sortDirection,
     link_options:           this.options.link_options,
@@ -3338,7 +3335,6 @@ $.any.anyView.prototype.getListViewOptions = function (model,view_id,edit,view)
     showTableFooter: false,
     showToolbar:     false,
     onEscEndEdit:    true,
-    defaultMode:     "list",
   };
 }; // getListViewOptions
 
