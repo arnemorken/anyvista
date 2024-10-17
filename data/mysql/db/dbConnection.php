@@ -32,8 +32,7 @@ class dbConnection
     }
     catch (PDOException $e) {
       $this->mError = $e->getMessage();
-      error_log($this->mError);
-      echo 'dbConnection: Connection failed: ' . $this->mError;
+      error_log("dbConnection: Connection failed: ".$this->mError);
     }
   }
 
