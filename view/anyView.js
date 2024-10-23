@@ -1750,7 +1750,7 @@ $.any.anyView.prototype.refreshTableDataIngress = function (params)
   let filter_id  = type+"_ingress";
   let filter_key = filter[filter_id];
 
-  if (data[id] && data[id][filter_id]) {
+  if (filter_key && data[id] && data[id][filter_id]) {
     let lists = filter_key.TYPE == "list" && data[id] && data[id].data ? data[id].data["link-"+filter_key.LIST] : null;
     let str = this.getCellEntryStr(id,type,mode,row_id_str,filter_id,filter_key,data[id],lists,edit);
     let ncells = Object.size(data[id]);
