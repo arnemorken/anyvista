@@ -27,7 +27,7 @@
 
 <script>
 var view_area     = "<?php print $gViewArea;?>";
-var data_id       = "<?php echo Parameters::get("document_id");?>";
+var data_id       = "<?php echo htmlspecialchars(Parameters::get('document_id'));?>";
 var serverdata    = <?php echo $the_data;?>;
 if (serverdata && serverdata.JSON_CODE)
   serverdata = serverdata.JSON_CODE;

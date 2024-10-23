@@ -29,7 +29,7 @@
 
 <script>
 var view_area     = "<?php print $gViewArea;?>";
-var data_id       = "<?php echo Parameters::get("event_id");?>";
+var data_id       = "<?php echo htmlspecialchars(Parameters::get('event_id'));?>";
 var grouping      = "<?php echo Parameters::get("grouping");?>";
 var date_start    = "<?php echo Parameters::get('event_date_start'); ?>";
 var date_end      = "<?php echo Parameters::get('event_date_end'); ?>";
