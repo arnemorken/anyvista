@@ -820,10 +820,10 @@ class anyTable extends dbTable
       $groupId = Parameters::get("group_id"); // If "groupId" is specified, we need only search in that group.
     if (!isset($groupType) || $groupType == "")
       $groupType = Parameters::get("group_type"); // If "groupType" is specified, search only for groups of that type
-    if ($grouping == null)
+    if ($grouping === null)
       $grouping = Parameters::get("grouping");
     $grouping = $this->mType == "group" ? false : $grouping && $grouping !== "false" && $grouping !== "0";
-    if ($simple == null)
+    if ($simple === null)
       $simple = Parameters::get("simple"); // In a "simple" list search we get only the id, name and parent_id
     $simple = $simple === true || $simple === "true" || $simple   === "1";
 
