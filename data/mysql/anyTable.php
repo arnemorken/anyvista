@@ -1186,7 +1186,7 @@ class anyTable extends dbTable
     }
 
     // Match with group table
-    if ($groupId == "nogroup" && $has_group_linktable) {
+    if ($grouping && $groupId == "nogroup" && $has_group_linktable) {
       // Search items not belonging to any group
       $ng_str = $this->mTableNameGroupLink.".".$this->mIdKey." IS NULL ";
       if ($where === "")
