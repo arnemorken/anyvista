@@ -37,6 +37,7 @@ var is_new        = (data_id == "new" || parseInt(data_id) == -1);
 var is_me         = serverdata.permission && parseInt(serverdata.permission.current_user_id) == parseInt(data_id);
 var model_options = { source:       "remote",
                       data:         serverdata ? serverdata.data       : null,
+                      id:           data_id,
                       message:      serverdata ? serverdata.message    : null,
                       error_server: serverdata ? serverdata.error      : null,
                       permission:   serverdata ? serverdata.permission : null,

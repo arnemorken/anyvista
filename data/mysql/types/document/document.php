@@ -37,6 +37,7 @@ var is_new        = (data_id == "new" || parseInt(data_id) == -1);
 var hide_result   = !is_logged_in || "<?php echo Parameters::get("hide_result_column");?>";
 var model_options = { source:       "remote",
                       data:         serverdata ? serverdata.data       : null,
+                      id:           data_id,
                       message:      serverdata ? serverdata.message    : null,
                       error_server: serverdata ? serverdata.error      : null,
                       permission:   serverdata ? serverdata.permission : null,
