@@ -4819,7 +4819,7 @@ $.any.anyView.prototype._addPreSelections = function (select_list_view)
   let preselected = select_list_view.options.preselected;
   let select      = select_list_view.options.select;
   for (var val in preselected) {
-    if (preselected.hasOwnProperty(val)) {
+    if (preselected.hasOwnProperty(val) && !val.startsWith("grouping")) {
       let d = preselected[val];
       let sel_id = d[model.id_key];
       if ((sel_id || sel_id === 0) && d.list == model.type)
