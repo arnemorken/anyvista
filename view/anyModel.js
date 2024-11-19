@@ -733,7 +733,7 @@ anyModel.prototype.dataSearch = function (options,
       return data[id].data; // TODO! Not very elegant
     return data;
   }
-  let itemlist = [];
+  let itemlist = {};
   for (let idc in data) {
     if (data.hasOwnProperty(idc) && data[idc] && !idc.startsWith("grouping") &&  !["head","item","list"].includes(idc)) {
       let item = null;
@@ -756,15 +756,15 @@ anyModel.prototype.dataSearch = function (options,
           // type search
           if (!data[idc].head) {
             if (!options.parent)
-              itemlist.push(data[idc]);
+              itemlist[idc] = data[idc];
             else {
-              itemlist.push(data);
+              itemlist = data;
               break;
             }
           }
           else // head
           if (options.parent) {
-            itemlist.push(data[idc]);
+            itemlist[idc] = data[idc];
             break;
           }
         }
@@ -793,13 +793,13 @@ anyModel.prototype.dataSearch = function (options,
         if (item && item.data && !options.parent)
           item = item.data;
       }
-      if (item && itemlist.length < 1)
+      if (item && Object.size(itemlist) < 1)
         return item; // Found id
     }
   } // for
   if (itemlist.length > 0) // Found type list
     if (options.parent)
-      return itemlist[0];
+      return itemlist[Object.keys(itemlist)[0]];
     else
       return itemlist;
   return null; // Not found
