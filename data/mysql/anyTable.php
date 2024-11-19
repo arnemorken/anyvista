@@ -822,7 +822,9 @@ class anyTable extends dbTable
       $groupType = Parameters::get("group_type"); // If "groupType" is specified, search only for groups of that type
     if ($grouping === null)
       $grouping = Parameters::get("grouping");
-    $grouping = $this->mType == "group" ? false : $grouping && $grouping !== "false" && $grouping !== "0";
+    $grouping = $this->mType == "group" 
+                ? false 
+                : $grouping && $grouping !== "false" && $grouping !== "0";
     if ($simple === null)
       $simple = Parameters::get("simple"); // In a "simple" list search we get only the id, name and parent_id
     $simple = $simple === true || $simple === "true" || $simple   === "1";
@@ -837,10 +839,13 @@ class anyTable extends dbTable
         // Get a "flat" group list, make it into a tree below
         $this->mGroupTable = anyTableFactory::createClass("group",$this);
         $group_data = isset($this->mGroupTable)
-                      ? $this->mGroupTable->dbSearchGroupInfo($this->mType,$groupId,true)
+                      ? $this->mGroupTable->dbSearchGroupInfo($this->mType,$groupId,$this->mType == "group")
                       : null;
         if (!isset($group_data))
           $this->setError($this->mGroupTable->mError);
+        else
+        if ($this->mType != "group")
+          $group_data = $group_data["nogroup"];
       }
     }
 
@@ -929,9 +934,15 @@ class anyTable extends dbTable
     if ($this->mSortFunction)
       call_user_func($this->mSortFunction);
 
-    // Group the data and build the data tree
+    // Get the grouped group tree
     if (!$this->mGroupTable)
       $this->mGroupTable = $this;
+    if ($this->mType != "group") // TODO! Should not be necceassery, we already have the group data
+      $group_data = isset($this->mGroupTable)
+                    ? $this->mGroupTable->dbSearchGroupInfo($this->mType,$groupId,true)
+                    : null;
+
+    // Group the data and build the data tree
     if (!$group_data)
       if ($this->mType == "group")
         $group_data = $this->mData;
