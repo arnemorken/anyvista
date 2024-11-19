@@ -46,7 +46,7 @@ define("gAnyPaginator_js",  gAnyPaginatorURL . "anypaginator-1.1.0.min.js");
 
 // jQuery / jQuery widget factory
 define("gjQueryURL",        gServer          . gThirdpartyFolder . "jquery/");
-define("gjQuery_js",        gjQueryURL       . "jquery-3.7.0.min.js");
+define("gjQuery_js",        gjQueryURL       . "jquery-3.7.1.min.js");
 define("gjQueryWidgetURL",  gServer          . gThirdpartyFolder . "jquery/");
 define("gjQueryWidget_js",  gjQueryWidgetURL . "jquery-widget-1.12.1.min.js");
 
