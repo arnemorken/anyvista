@@ -1715,7 +1715,7 @@ class anyTable extends dbTable
     $retval  = array();
     $id_name = $this->mIdKey; // TODO! Use $this->mIdKeyTable?
     foreach ($flatdata as $idx => &$subdata) {
-      if (isset($subdata) && strpos($idx,"grouping") !== 0) {
+      if (isset($subdata) && is_array($subdata) && strpos($idx,"grouping") !== 0) {
         $parent_not_in_group = isset($subdata["parent_id"]) && $subdata["parent_id"] != "" &&
                                !isset($flatdata[$subdata["parent_id"]]) && !isset($flatdata["+".$subdata["parent_id"]]);
         $pid = null;
@@ -1725,7 +1725,7 @@ class anyTable extends dbTable
         }
         if (!isset($subdata["parent_id"]) || $subdata["parent_id"] == "")
           $subdata["parent_id"] = null;
-        if ($subdata["parent_id"] == $parentId && is_array($subdata)) {
+        if ($subdata["parent_id"] == $parentId) {
           $children = null;
           if (isset($subdata[$id_name]) && $subdata[$id_name] != "")
             $children = $this->buildDataTree($flatdata,$subdata[$id_name]);
