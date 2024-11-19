@@ -856,66 +856,63 @@ class anyTable extends dbTable
     else
     // If a 'LIMIT' operator applies, we need to search for results for each group separately
     if ($limit) {
-      $has_nogroup = false;
-      if (isset($group_data) && $this->tableExists($this->mTableNameGroupLink)) {
-        foreach ($group_data as $gid => $group) {
-          if (isset($group) && isset($group["group_type"]) && $group["group_type"] == $this->mType) {
-            $success = $this->dbExecListStmt($groupType,$gid,$linkType,$linkId,$grouping,$simple,$limit) || $success;
-            if ($gid == "nogroup")
-              $has_nogroup = true;
-          }
-        } // foreach
-      } // if tableExists
+      // Build and execute the query for ungrouped data
+      $success = $this->dbExecListStmt($groupType,"nogroup",$linkType,$linkId,$grouping,$simple,$limit) || $success;
 
-      // Build and execute the query for ungrouped data (if not queried already)
-      if (!$has_nogroup)
-        $success = $this->dbExecListStmt($groupType,"nogroup",$linkType,$linkId,$grouping,$simple,$limit) || $success;
-
-      // Get grouped data that may have illegal group type (i.e. not same as list type).
-      // Ideally this should not happen, but if it does, such data will not show up unless we do this.
-      if (isset($group_data) && $linkId == "" &&
-          isset($this->mGroupTable) && isset($this->mGroupTable->mGroupIds)) {
-        //$success = $this->dbExecListStmt($groupType,-1,$linkType,$linkId,$grouping,$simple,$limit) || $success; // -1 signifies this special query
-        $linktable    = $this->findLinkTableName("group");
-        if ($this->tableExists($linktable)) {
-          $linktable_id = $this->findLinkTableId("group");
-          $stmt =  "SELECT DISTINCT ".$this->mTableName.".*  ".
-                   "FROM ".$this->mTableName." ".
-                   "LEFT JOIN ".$linktable." ON CAST(".$linktable.".".$this->mIdKey." AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ".
-                   "WHERE (";
-          $part_stmt = "";
-          foreach ($this->mGroupTable->mGroupIds as $gid) {
-            if ($gid != "nogroup") {
-              $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
-              $part_stmt .= $linktable.".".$linktable_id." != ".$db_gid." AND ";
+      // Build and execute the query for grouped data
+      if (isset($group_data)) {
+        if ($this->tableExists($this->mTableNameGroupLink)) {
+          foreach ($group_data as $gid => $group) {
+            if ($gid != "nogroup" && isset($group) && isset($group["group_type"]) && ($group["group_type"] == $this->mType || $group["group_type"] == "group")) {
+              $success = $this->dbExecListStmt($groupType,$gid,$linkType,$linkId,$grouping,$simple,$limit) || $success;
             }
-          }
-          $part_stmt = rtrim($part_stmt,"AND ");
-          if ($part_stmt != "") {
-            $part_stmt .= ") ";
-            $stmt .= $part_stmt."ORDER BY ". $this->mTableName.".".$this->mIdKeyTable." ";
-            //elog("dbSearchList:".$stmt);
-            if (!(!$stmt || $stmt == "" || !$this->query($stmt) || $this->isError())) {
-              // Get the data
-              $xdata = null;
-              $ok = $this->getRowData($xdata,"list",$simple);
-              if ($ok) {
-                if (isset($xdata) && isset($xdata["nogroup"])) {
-                  $this->mData["unknown"] = null;
-                  $i = 0;
-                  foreach ($xdata["nogroup"] as $key => $val) {
-                    $this->mData["unknown"][$key] = $val;
-                    ++$i;
+          } // foreach
+        } // if tableExists
+
+        // Get grouped data that may have illegal group type (i.e. not same as list type).
+        // Ideally this should not happen, but if it does, such data will not show up unless we do this.
+        if ($linkId == "" && isset($this->mGroupTable) && isset($this->mGroupTable->mGroupIds)) {
+          $linktable = $this->findLinkTableName("group");
+          if ($this->tableExists($linktable)) {
+            $linktable_id = $this->findLinkTableId("group");
+            $stmt =  "SELECT DISTINCT ".$this->mTableName.".*  ".
+                     "FROM ".$this->mTableName." ".
+                     "LEFT JOIN ".$linktable." ON CAST(".$linktable.".".$this->mIdKey." AS INT)=CAST(".$this->mTableName.".".$this->mIdKeyTable." AS INT) ".
+                     "WHERE (";
+            $part_stmt = "";
+            foreach ($this->mGroupTable->mGroupIds as $gid) {
+              if ($gid != "nogroup") {
+                $db_gid = is_numeric($gid) ? "CAST(".$gid." AS INT)" : "'".$gid."'";
+                $part_stmt .= $linktable.".".$linktable_id." != ".$db_gid." AND ";
+              }
+            }
+            $part_stmt = rtrim($part_stmt,"AND ");
+            if ($part_stmt != "") {
+              $part_stmt .= ") ";
+              $stmt .= $part_stmt."ORDER BY ". $this->mTableName.".".$this->mIdKeyTable." ";
+              //elog("dbSearchList:".$stmt);
+              if (!(!$stmt || $stmt == "" || !$this->query($stmt) || $this->isError())) {
+                // Get the data
+                $xdata = null;
+                $ok = $this->getRowData($xdata,"list",$simple);
+                if ($ok) {
+                  if (isset($xdata) && isset($xdata["nogroup"])) {
+                    $this->mData["unknown"] = null;
+                    $i = 0;
+                    foreach ($xdata["nogroup"] as $key => $val) {
+                      $this->mData["unknown"][$key] = $val;
+                      ++$i;
+                    }
+                    $this->mData["unknown"]["grouping_num_results"] = $i;
                   }
-                  $this->mData["unknown"]["grouping_num_results"] = $i;
+                  $x=0;
                 }
-                $x=0;
               }
             }
           }
         }
-      }
-    }
+      } // if group_data
+    } // if limit
     // Query data from all groups
     else {
       $success = $this->dbExecListStmt($groupType,null,$linkType,$linkId,$grouping,$simple,$limit);
@@ -1131,7 +1128,7 @@ class anyTable extends dbTable
                 ? "CAST(".$groupId." AS INT) "
                 : "'".$groupId."' "
                 );
-    $has_grouptable = $this->tableExists($this->mTableNameGroup);
+    $has_grouptable = $this->tableExists($this->mTableNameGroup) && isset($this->mGroupTable);
     if ($db_gid && $has_grouptable && $has_typetable && $typetable_name == $this->mTableNameGroup && $this->mType != "group") {
       $lj .= "LEFT JOIN ".$typetable_name." ON CAST(".$typetable_name.".".$typetable_id." AS INT)=".$db_gid." ";
       $lj .= "AND ".$this->mTableNameGroup.".group_type='".$this->mType."' ";
@@ -1152,7 +1149,7 @@ class anyTable extends dbTable
       }
     }
 
-    $has_grouptable      = $this->tableExists($this->mTableNameGroup);
+    $has_grouptable      = $this->tableExists($this->mTableNameGroup) && isset($this->mGroupTable);
     $has_group_linktable = $this->tableExists($this->mTableNameGroupLink);
 
     // If has parent_id while being a list-for list
@@ -1186,32 +1183,34 @@ class anyTable extends dbTable
     }
 
     // Match with group table
-    if ($grouping && $groupId == "nogroup" && $has_group_linktable) {
-      // Search items not belonging to any group
-      $ng_str = $this->mTableNameGroupLink.".".$this->mIdKey." IS NULL ";
-      if ($where === "")
-        $where  = " WHERE ".$ng_str;
-      else
-        $where .= " AND ".$ng_str;
-    }
-    else
-    if ($grouping && $this->mType != "group" && ($groupId || $groupId === 0) && $has_grouptable && isset($this->mGroupTable)) {
-      // Search items belonging to a group
-      if ($groupType) {
-        $gt_str = $this->mTableNameGroup.".group_type='".$groupType."' ";
+    if ($grouping) {
+      if ($groupId == "nogroup" && $has_group_linktable) {
+        // Search items not belonging to any group
+        $ng_str = $this->mTableNameGroupLink.".".$this->mIdKey." IS NULL ";
         if ($where === "")
-          $where  = " WHERE ".$gt_str;
+          $where  = " WHERE ".$ng_str;
         else
-          $where .= " AND ".$gt_str;
+          $where .= " AND ".$ng_str;
       }
-      if ($has_group_linktable && !isset($linkType) && $linkType !== "") {
-        $db_gid = is_numeric($groupId) ? "CAST(".$groupId." AS INT)" : "'".$groupId."'";
-        $lf_str = $this->mTableNameGroup.".group_id=".$db_gid." ";
-        if ($where === "")
-          $where  = " WHERE ".$lf_str;
-        else
-          $where .= " AND ".$lf_str;
-        $where .= "AND ".$this->mTableNameGroupLink.".group_id=".$db_gid." ";
+      else
+      if ($this->mType != "group" && ($groupId || $groupId === 0) && $has_grouptable && isset($this->mGroupTable)) {
+        // Search items belonging to a group
+        if ($groupType) {
+          $gt_str = $this->mTableNameGroup.".group_type='".$groupType."' ";
+          if ($where === "")
+            $where  = " WHERE ".$gt_str;
+          else
+            $where .= " AND ".$gt_str;
+        }
+        if ($has_group_linktable && !isset($linkType) && $linkType !== "") {
+          $db_gid = is_numeric($groupId) ? "CAST(".$groupId." AS INT)" : "'".$groupId."'";
+          $lf_str = $this->mTableNameGroup.".group_id=".$db_gid." ";
+          if ($where === "")
+            $where  = " WHERE ".$lf_str;
+          else
+            $where .= " AND ".$lf_str;
+          $where .= "AND ".$this->mTableNameGroupLink.".group_id=".$db_gid." ";
+        }
       }
     } // if grouping
     else
