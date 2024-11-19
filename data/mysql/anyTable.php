@@ -1712,27 +1712,25 @@ class anyTable extends dbTable
           $pid = $subdata["parent_id"];
           unset($subdata["parent_id"]);
         }
-        if (is_array($subdata)) {
-          if (!isset($subdata["parent_id"]) || $subdata["parent_id"] == "")
-            $subdata["parent_id"] = null;
-          if ($subdata["parent_id"] == $parentId) {
-            $children = null;
-            if (isset($subdata[$id_name]) && $subdata[$id_name] != "")
-              $children = $this->buildDataTree($flatdata,$subdata[$id_name]);
-            if ($this->mRecurseDepth > $this->mLastNumRows + $this->mRecurseMax)
-              break; // Break recursion
-            if ($children)
-              $subdata["data"] = $children;
-            if ($parent_not_in_group && ($pid || $pid === 0))
-              $subdata["parent_id"] = $pid;
-            $retval[$idx] = $subdata;
-            unset($subdata);
-          } // if subdata
-          else {
-            if ($pid != null)
-              $subdata["parent_id"] = $pid;
-          }
-        } // if is_array
+        if (!isset($subdata["parent_id"]) || $subdata["parent_id"] == "")
+          $subdata["parent_id"] = null;
+        if ($subdata["parent_id"] == $parentId && is_array($subdata)) {
+          $children = null;
+          if (isset($subdata[$id_name]) && $subdata[$id_name] != "")
+            $children = $this->buildDataTree($flatdata,$subdata[$id_name]);
+          if ($this->mRecurseDepth > $this->mLastNumRows + $this->mRecurseMax)
+            break; // Break recursion
+          if ($children)
+            $subdata["data"] = $children;
+          if ($parent_not_in_group && ($pid || $pid === 0))
+            $subdata["parent_id"] = $pid;
+          $retval[$idx] = $subdata;
+          unset($subdata);
+        } // if subdata
+        else {
+          if ($pid != null)
+            $subdata["parent_id"] = $pid;
+        }
       } // if isset
     } // foreach
     return $retval;
