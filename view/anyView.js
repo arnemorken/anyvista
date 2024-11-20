@@ -1811,7 +1811,7 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
   let is_hidden = false;
   tbody.empty();
   for (let filter_id in filter) {
-    if (filter.hasOwnProperty(filter_id) && filter_id != type+"_ingress") {
+    if (filter.hasOwnProperty(filter_id)) {
       let filter_key = filter[filter_id];
       if (filter_key && filter_key.DISPLAY) {
         ++n;
