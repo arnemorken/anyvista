@@ -3166,7 +3166,7 @@ $.any.anyView.prototype.getSelectStr = function (type,mode,id,val,edit,filter_ke
       str += o_str;
     }
     else
-      str += "<i>"+sval+"</i>";
+      str += sval;
     str += "</select>";
   }
   else {
