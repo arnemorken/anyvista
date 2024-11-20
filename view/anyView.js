@@ -4492,16 +4492,9 @@ $.any.anyView.prototype.getInputValues = function (type,mode,id,row_id_str)
       else
       if (elm.length)
         val = elm.val();
-      else {
-        // Send values marked as dirty to server even if they are not editable
-        input_id = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id+"[dirty='true']";
-        if (elm.length)
-          val = elm.val();
-      }
       if (val || val == "") {
         data_values[filter_id] = val;
         if (filter_id == "parent_id") {
-          let input_id = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_"+filter_id+" .itemSelect option:selected";
           let pname = elm.text();
           data_values["parent_name"] = pname;
         }
