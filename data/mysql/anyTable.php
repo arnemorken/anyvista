@@ -937,7 +937,7 @@ class anyTable extends dbTable
     // Get the grouped group tree
     if (!$this->mGroupTable)
       $this->mGroupTable = $this;
-    if ($this->mType != "group") // TODO! Should not be necceassery, we already have the group data
+    if ($this->mType != "group") // TODO! Should not be neccessary, we already have the group data
       $group_data = isset($this->mGroupTable)
                     ? $this->mGroupTable->dbSearchGroupInfo($this->mType,$groupId,true)
                     : null;

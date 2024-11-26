@@ -1752,7 +1752,7 @@ anyModel.prototype.dbSearchSuccess = function (context,serverdata,options)
     }
     if (!serverdata.data) {
       if (serverdata.id || serverdata.id === 0)
-        self.message = self.type.capitalize()+" not found. "; // TODO! i18n
+        self.message = self.type.capitalize()+" "+i18n.message.notFound;
       else
         self.message = "No "+self.type+"s found. "; // TODO! i18n
     }

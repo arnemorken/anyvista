@@ -27,6 +27,10 @@ var i18n = {
     removeByName:   "Do you want to remove %%",
     deleteByName:   "Do you want to delete '%%'? You cannot undo this action.",
     addRemove:      "Add / remove...",
+    openItemView:   "Open item view",
+    fileNotFound:   "File not found. ",
+    searchResults:  "search results. ",
+    notFound:       "not found. ",
   },
 
   // Error codes
@@ -47,6 +51,7 @@ var i18n = {
     ID_MISSING:            "Id missing. ",
     ID_TYPE_MISSING:       "Id and type missing. ",
     ID_ILLEGAL:            "Id must be a positive integer or a string. ",
+    ID_NEXT_NOT_FOUND:     "Next id not found. ",
     LINK_ITEMS_MISSING:    "No items to add or remove. ",
     NEW_ID_NOT_FOUND:      "Could not find new id for type %%. ",
     ITEM_NOT_FOUND:        "Could not find %% item with id &&. ",
@@ -55,6 +60,6 @@ var i18n = {
     TOO_MUCH_RECURSION:    "Too much recursion. ",
     NOTHING_TO_UPDATE:     "Nothing to update. ",
     NOTHING_TO_INSERT:     "Nothing to insert. ",
-    COULD_NOT_CREATE_VIEW: "Could not create view",
+    COULD_NOT_CREATE_VIEW: "Could not create view %% with id ##",
   },
 };

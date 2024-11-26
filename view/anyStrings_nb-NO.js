@@ -27,6 +27,10 @@ var i18n = {
     removeByName:   "Vil du fjerne %%",
     deleteByName:   "Vil du slette '%%'? Du kan ikke angre denne handlingen.",
     addRemove:      "Legg til / fjern...",
+    openItemView:   "Åpne item view. ",
+    fileNotFound:   "Filen ble ikke funnet. ",
+    searchResults:  "søkeresultat. ",
+    notFound:       "ikke funnet ",
   },
 
   // Error codes
@@ -47,6 +51,7 @@ var i18n = {
     ID_MISSING:            "Mangler id. ",
     ID_TYPE_MISSING:       "Mangler id og type. ",
     ID_ILLEGAL:            "Id må være et positivt heltall eller en streng. ",
+    ID_NEXT_NOT_FOUND:     "Neste id ikke funnet. ",
     LINK_ITEMS_MISSING:    "Mangler elementer å legge til eller fjerne. ",
     NEW_ID_NOT_FOUND:      "Fant ikke ny id for type %%. ",
     ITEM_NOT_FOUND:        "Fant ikke %% element med id &&. ",
@@ -55,6 +60,6 @@ var i18n = {
     TOO_MUCH_RECURSION:    "For mye rekursjon. ",
     NOTHING_TO_UPDATE:     "Ingenting å oppdatere. ",
     NOTHING_TO_INSERT:     "Ingenting å sette inn. ",
-    COULD_NOT_CREATE_VIEW: "Kunne ikke opprette view",
+    COULD_NOT_CREATE_VIEW: "Kunne ikke opprette view %% med id ##",
   },
 };

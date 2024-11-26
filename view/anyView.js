@@ -328,11 +328,11 @@ $.any.anyView.prototype._getOrCreateFilters = function (type,data)
   let f_str = type+"Filter";
   if (!window[f_str]) {
     let def_str = "anyFilter";
-    //console.warn("Filter class "+f_str+" not found, using "+def_str+". ");
+    //console.warn("Filter class "+f_str+" not found, using "+def_str+". "); // TODO! i18n
     f_str = def_str;
     // Check if default filter exists (it always should)
     if (!window[f_str]) {
-      console.warn("Filter class "+f_str+" not found. No filter for "+type+". ");
+      console.warn("Filter class "+f_str+" not found. No filter for "+type+". "); // TODO! i18n
       return f;
     }
   }
@@ -2182,7 +2182,7 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,mode,data,id,id
                       : this;
           init_opt.showHeader = true; // TODO! Perhaps not the right place to do this
           link_elem.off("click").on("click", init_opt, $.proxy(fun,con));
-          $("#"+td_id).prop("title", "Open item view"); // TODO i18n
+          $("#"+td_id).prop("title", i18n.message.openItemView);
         }
       } // else
     } // if link_elem.length
@@ -2869,13 +2869,15 @@ $.any.anyView.prototype.createView = function (params)
       view = this._findViewById(view_opt.id); // See if we can reuse view
     if (!view)
       view = new window[v_str](view_opt); // Create a new view
-    if (!Object.keys(view).length)
-      throw i18n.error.COULD_NOT_CREATE_VIEW+" "+v_str;
+    if (!Object.keys(view).length) {
+      let err = i18n.error.COULD_NOT_CREATE_VIEW.replace("%%", v_str);
+      err = err.replace("##", view_opt.id);
+      throw err;
+    }
   }
   catch (err) {
-    let errstr = err+" with id "+view_opt.id; // TODO! i18n
     this.model.error = i18n.error.SYSTEM_ERROR+"See console log for details. ";
-    console.error(errstr);
+    console.error(err);
     return null;
   }
   return view;
@@ -3464,7 +3466,7 @@ $.any.anyView.prototype._fileViewClicked = function (event)
     if (fileurl)
       window.open(fileurl); // Open file in a new window
     else
-      this.showMessages("File not found. "); // TODO! i18n
+      this.showMessages(i18n.message.fileNotFound);
   }
 }; // _fileViewClicked
 
@@ -3580,7 +3582,7 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
       w3_modaldialog({
         parentId:    par_view_id,
         elementId:   "",
-        heading:     list_type+" search results", // TODO! i18n
+        heading:     list_type+" "+i18n.message.searchResults,
         contents:    search_view.element,
         //width:       "30em", // TODO! css
         ok:          true,
@@ -3773,7 +3775,7 @@ $.any.anyView.prototype.addListEntry = function (event)
              });
       }
       else {
-        this.model.error = "Next id not found. "; // TODO! i18n
+        this.model.error = i18n.error.ID_NEXT_NOT_FOUND;
         console.error(this.model.error);
         return false;
       }
@@ -3941,7 +3943,7 @@ $.any.anyView.prototype.showItem = function (event)
     else { // remote
       if ((!id && id !== 0) || id < 0) {
         let f = []; f[0] = this.model.id_key;
-        this.showMessages(null,true); // TODO! i18n
+        this.showMessages(null,true);
         let model = this.model;
         let view  = this;
         if (type != this.model.type) {
@@ -4883,7 +4885,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   let link_id   = event.data.par_id;
 
   if (!data || !data[id]) {
-    console.warn("Data not found ("+type+" id="+id+"). ");
+    console.warn("Data not found ("+type+" id="+id+"). "); // TODO! i18n
     return null;
   }
   let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
