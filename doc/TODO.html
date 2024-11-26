@@ -10,17 +10,16 @@
     <h3>Code:</h3>
     <h4>- Server:</h4>
     <ol>
-        <li>Implement LIMIT for AlaSQL dbSearchList()</li>
+        <li>Implement LIMIT for AlaSQL dbSearchList() (pagination on client)</li>
         <li>alaSQL: Some async / await should be tested to see if they are neccessary</li>
     </ol>
     <h4>- Client:</h4>
     <ol>
+        <li>When removing an item from a group, it does not automatically show up in the "other" tab, must manually refresh</li>
         <li>When editing in tab no 2, and tab no 1 is empty, the tab switch from tab 2 to tab 1</li>
-        <li>Bug in showing grouped data in tab/sub-tabs</li>
-        <li>It should not be possible to remove items from the "nogroup" group</li>
-        <li>Grouping of groups does not work properly, disabled</li>
-        <li>anyModel: Some async / await should be tested to see if they are neccessary</li>
         <li>Implement sorting for local data</li>
+        <li>Implement pagination for AlaSQL (LIMIT on server)</li>
+        <li>anyModel: Some async / await should be tested to see if they are neccessary</li>
         <li>Go through all TODO comments in code</li>
         <li>Standard plugins (anyVista types) only partially implemented</li>
         <li>Server authorization (permissions) only partially implemented</li>
@@ -49,6 +48,7 @@
     </ol>
     <h4>- Client:</h4>
     <ol>
+        <li>Implement grouping of groups</li>
         <li>Adding an entry to a list for an item when the list is empty should create tab at correct place</li>
         <li>Pagination should remember sort order</li>
         <li>anyModel::dbInsert() convenience method</li>
