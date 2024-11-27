@@ -1804,12 +1804,11 @@ class anyTable extends dbTable
       $topidx = "+".$id;
     $data = array("data" => array($topidx => array()));
 
-    // Set header and "head"
+    // Set "head" and header
+    $data["data"][$topidx]["head"] = $this->mType;
     $hdr = $this->findHeader($this->mType,$this->mData,$id);
-    if (isset($hdr) && $hdr != "") {
-      $data["data"][$topidx]["head"] = $this->mType;
+    if (isset($hdr) && $hdr != "")
       $data["data"][$topidx][$this->mNameKey] = $hdr;
-    }
 
     // Set data
     if (isset($this->mData)) {
