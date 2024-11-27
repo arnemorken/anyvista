@@ -2521,7 +2521,7 @@ $.any.anyView.prototype.refreshCancelButton = function (opt)
 // By default calls dbRemoveDialog
 $.any.anyView.prototype.refreshRemoveButton = function (opt)
 {
-  if (!opt)
+  if (!opt || opt.par_id == "nogroup")
     return null;
 
   let parent  = opt.parent;
