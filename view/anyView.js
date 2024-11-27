@@ -346,7 +346,7 @@ $.any.anyView.prototype._getOrCreateFilters = function (type,data)
 }; // _getOrCreateFilters
 
 // Find the current type to use
-$.any.anyView.prototype._findType = function (data,id,otype)
+$.any.anyView.prototype._findType = function (data,id,intype)
 {
   let type = null;
   if (data) {
@@ -359,12 +359,12 @@ $.any.anyView.prototype._findType = function (data,id,otype)
     if (!type)
       type = data.list ? data.list : data.item ? data.item : data.head ? data.head : null;
   }
-  if (!type && otype)
-    type = otype; // Set to previous type
+  if (!type && intype)
+    type = intype; // Set to previous type
   if (!type)
     type = this._findTypeFromData(data); // Find type from *_name element of data[0]
-  if (!type && this.model)
-    type = this.model.type; // Set to model type
+  if (!type)
+    type = null; // No type was found
   return type;
 }; // _findType
 
@@ -388,7 +388,7 @@ $.any.anyView.prototype._findTypeFromData = function (data)
 }; // _findTypeFromData
 
 // Find the current mode to use
-$.any.anyView.prototype._findMode = function (data,id)
+$.any.anyView.prototype._findMode = function (data,id,intype)
 {
   let mode = null;
   if (data) {
@@ -403,7 +403,7 @@ $.any.anyView.prototype._findMode = function (data,id)
   }
   if (!mode) {
     // No mode specified, so fall back to default
-    mode = this.model && this.model.type != "group" ? "list" : "head";
+    mode = intype != "group" ? "list" : "head";
   }
   return mode;
 }; // _findMode
@@ -567,7 +567,7 @@ $.any.anyView.prototype.refresh = function (params)
           if (view) {
             // Find the type and mode of the current data item (default is the previous type/mode)
             let curr_type = view._findType(data,id,prev_type);
-            let curr_mode = view._findMode(data,id);
+            let curr_mode = view._findMode(data,id,curr_type);
             // See if we need to add to id_stack
             if (curr_mode !== "list") {
               let idx = Number.isInteger(parseInt(id)) ? ""+parseInt(id) : id;
@@ -2765,8 +2765,6 @@ $.any.anyView.prototype.createModel = function (params)
   let modelName = params && typeof params.modelName === "string"        ? params.modelName : null;
 
   type = type ? type : this._findType(data,id,null);
-  if (!type)
-    return null;
 
   // Create a new model if we dont already have one or if the caller asks for it
   let model_opt = this.getCreateModelOptions(type,data,id,par_id,par_type);
@@ -2819,25 +2817,26 @@ $.any.anyView.prototype.getCreateModelOptions = function(type,data,id,link_id,li
  */
 $.any.anyView.prototype.createView = function (params)
 {
-  let model        = params && params.model                                       ? params.model        : null;
-  let type         = model                                                        ? model.type          : null;
-  let mode         = model                                                        ? model.mode          : null;
-  let data         = model                                                        ? model.data          : null;
-  let id           = params && params.id                                          ? params.id           : model && model.id ? model.id          : "";
-  let parent       = params && params.parent                                      ? params.parent       : null;
-  let data_level   = params && (params.data_level   || params.data_level   === 0) ? params.data_level   : this.data_level   ? this.data_level   : 0;
-  let indent_level = params && (params.indent_level || params.indent_level === 0) ? params.indent_level : this.indent_level ? this.indent_level : 0;
-  let id_str       = params && params.id_str                                      ? params.id_str       : "";
+  if (!params || !params.model)
+    return null;
+
+  let inmodel      = params.model;
+  let type         = inmodel.type;
+  let mode         = inmodel.mode;
+  let data         = inmodel.data;
+  let id           = params.id                                        ? params.id           : inmodel.id   ? inmodel.id   : "";
+  let parent       = params.parent                                    ? params.parent       : null;
+  let data_level   = params.data_level   || params.data_level   === 0 ? params.data_level   : this.data_level   ? this.data_level   : 0;
+  let indent_level = params.indent_level || params.indent_level === 0 ? params.indent_level : this.indent_level ? this.indent_level : 0;
+  let id_str       = params.id_str                                    ? params.id_str       : "";
   let viewClass    = params.viewClass
                      ? params.viewClass
                      : this.options.viewClass
                        ? this.options.viewClass
                        : null;
   let view_str     = viewClass && viewClass.toLowerCase().startsWith(type) ? viewClass : null;
-  if (!model)
-    return null;
   type = type ? type : this._findType(data,id);
-  mode = mode ? mode : this._findMode(data,id);
+  mode = mode ? mode : this._findMode(data,id,type);
   if (!type || !mode)
     return null;
   if (!parent)
@@ -2846,7 +2845,7 @@ $.any.anyView.prototype.createView = function (params)
     return null;
 
   // Create the view
-  let view_opt = this.getCreateViewOptions(model,parent,type,mode,id_str,data_level,indent_level,params);
+  let view_opt = this.getCreateViewOptions(inmodel,parent,type,mode,id_str,data_level,indent_level,params);
   if (params && params.showHeader === false)
     view_opt.showHeader = false;
   let view  = null;
