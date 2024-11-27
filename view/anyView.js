@@ -4765,31 +4765,33 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
               the_view = parent_view._findViewOfType(link_type);
             }
           }
-          if (select_list_view.options.preselected)
-            parent_view._addPreSelections(select_list_view);
-          let par_view_id = parent_view.id_base+"_"+options.par_type+"_head_"+options.id_str+"_data";
-          let mod_opt = {
-            parentId:   par_view_id,
-            elementId:  "",
-            heading:    "Select "+link_type+"s to add / remove", // TODO! i18n
-            contents:   select_list_view.element,
-            width:      "25em", // TODO! css
-            ok:         true,
-            cancel:     true,
-            okFunction: the_view.dbUpdateLinkList,
-            context:    the_view,
-            // Used by okFunction:
-            data:       data,
-            type:       type,
-            id:         id,
-            link_data:  null,
-            link_type:  select_list_view.model.type,
-            link_id:    null,
-            select:     select_list_view.options.select,
-            unselect:   select_list_view.options.unselect,
-          };
-          w3_modaldialog(mod_opt);
-          select_list_view.refresh();
+          if (the_view) {
+            if (select_list_view.options.preselected)
+              parent_view._addPreSelections(select_list_view);
+            let par_view_id = parent_view.id_base+"_"+options.par_type+"_head_"+options.id_str+"_data";
+            let mod_opt = {
+              parentId:   par_view_id,
+              elementId:  "",
+              heading:    "Select "+link_type+"s to add / remove", // TODO! i18n
+              contents:   select_list_view.element,
+              width:      "25em", // TODO! css
+              ok:         true,
+              cancel:     true,
+              okFunction: the_view.dbUpdateLinkList,
+              context:    the_view,
+              // Used by okFunction:
+              data:       data,
+              type:       type,
+              id:         id,
+              link_data:  null,
+              link_type:  select_list_view.model.type,
+              link_id:    null,
+              select:     select_list_view.options.select,
+              unselect:   select_list_view.options.unselect,
+            };
+            w3_modaldialog(mod_opt);
+            select_list_view.refresh();
+          }
         }
         if (parent_view.options.showToolbar) {
           parent_view.options.item_opening = true; // To make top right close icon appear
