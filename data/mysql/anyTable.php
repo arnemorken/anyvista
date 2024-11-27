@@ -299,6 +299,11 @@ class anyTable extends dbTable
     //if ($paramOrType["path"])                $this->mPath                = $paramOrType["path"];
     }
     //
+    // Override table id key if table fields id is given
+    //
+    if ($this->mTableFields && $this->mTableFields[0])
+      $this->mIdKeyTable = $this->mTableFields[0];
+    //
     // Set defaults if not set yet
     //
     if (!$this->mIdKey)          $this->mIdKey          = $this->mType."_id";
