@@ -540,10 +540,6 @@ anyModel.prototype.dataInit = function (options)
       this.error_server = options.error_server;
       this.error        = i18n.error.SERVER_ERROR;
     }
-
-    if (this.table_fields && this.id_key && !this.table_fields.includes(this.id_key))
-      this.id_key = this.table_fields[0];
-
     if (!this.error) {
       if (!this.data)
         this.data = null;
