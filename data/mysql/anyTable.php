@@ -301,14 +301,14 @@ class anyTable extends dbTable
     //
     // Set defaults if not set yet
     //
-    if (!$this->mIdKey)             $this->mIdKey          = $this->mType."_id";
-    if (!$this->mIdKeyTable)        $this->mIdKeyTable     = $this->mIdKey;
-    if (!$this->mIdKeyMetaTable)    $this->mIdKeyMetaTable = $this->mIdKey;
-    if (!$this->mNameKey)           $this->mNameKey        = $this->mType."_name";
-    if (!$this->mMetaId)            $this->mMetaId         = "meta_id";
-    if (!$this->mOrderBy)           $this->mOrderBy        = $this->mNameKey;
-    if (!$this->mOrderDir)          $this->mOrderDir       = "DESC";
-  //if (!$this->mHeader)            $this->mHeader         = false;
+    if (!$this->mIdKey)          $this->mIdKey          = $this->mType."_id";
+    if (!$this->mIdKeyTable)     $this->mIdKeyTable     = $this->mIdKey;
+    if (!$this->mIdKeyMetaTable) $this->mIdKeyMetaTable = $this->mIdKey;
+    if (!$this->mNameKey)        $this->mNameKey        = $this->mType."_name";
+    if (!$this->mMetaId)         $this->mMetaId         = "meta_id";
+    if (!$this->mOrderBy)        $this->mOrderBy        = $this->mNameKey;
+    if (!$this->mOrderDir)       $this->mOrderDir       = "DESC";
+  //if (!$this->mHeader)         $this->mHeader         = false;
     if (!$this->mTableName)    {
       $this->mTableName = $this->mTablePrefix.$this->mType;
       // No meta table for default (i.e. auto-generated) table
@@ -822,8 +822,8 @@ class anyTable extends dbTable
       $groupType = Parameters::get("group_type"); // If "groupType" is specified, search only for groups of that type
     if ($grouping === null)
       $grouping = Parameters::get("grouping");
-    $grouping = $this->mType == "group" 
-                ? false 
+    $grouping = $this->mType == "group"
+                ? false
                 : $grouping && $grouping !== "false" && $grouping !== "0";
     if ($simple === null)
       $simple = Parameters::get("simple"); // In a "simple" list search we get only the id, name and parent_id
