@@ -605,7 +605,7 @@ $.any.anyView.prototype.refresh = function (params)
                              par_mode: par_mode,
                            });
               if (view) {
-                //view.empty(); // TODO! Commented out to make pagination work properly
+                view.empty(); // TODO! With this, pagination may not work properly
                 this.views[id_str] = view;
                 new_view = true;
               }
