@@ -3590,8 +3590,8 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
         okFunction:  self.searchSuccessOk,
         context:     self,
         // Sent to okFunction:
-        type:        self.type,
-        data:        self.data,
+        type:        self.type, // TODO! self.type if context is view??
+        data:        self.data, // TODO! --- " ---
       });
       search_view.refresh();
     } // if search_view
@@ -3970,7 +3970,7 @@ $.any.anyView.prototype.showItem = function (event)
     }
   }
   else
-    return this._doShowItem(event.data);
+    return this._doShowItem(event.data); // Search and show existing item
 }; // showItem
 
 $.any.anyView.prototype._foundNextIdFromDB = function (context,serverdata,options)
