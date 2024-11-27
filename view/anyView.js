@@ -5153,7 +5153,7 @@ $.any.anyView.prototype.initComponents = function ()
       menubar:    false,
       statusbar:  false,
       force_br_newlines: false,
-      forced_root_block: 'p',
+      forced_root_block: 'div',
       plugins: ["link", "image", "media", "autoresize", "lists", "table"],
       autoresize_bottom_margin: 0,
       toolbar_items_size: "small",
