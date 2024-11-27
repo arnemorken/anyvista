@@ -69,14 +69,12 @@ define("gAlaSQL_js",        gAlaSQLURL       . "alasql.min.js");
 //
 // Wordpress stuff
 //
-
-//define("WP_PLUGIN",""); // Comment out if using the server API, but not as a Wordpress plugin
-define("gWordpressURL",     gServer            . "Prosjekter/testserver/");
-define("gWProot", dirname(dirname(dirname(dirname(dirname(dirname(__FILE__))))))); // Path to wp-load.php
-define("gWPLoad", gWProot . "/wp-load.php"); // Wordpress functions
-
-// The names of user tables and columns depend on whether we run against a Wordpress database or not
+define("WP_PLUGIN",""); // Comment out if using the server API, but not as a Wordpress plugin
 if (defined("WP_PLUGIN")) {
+  define("gWordpressURL", gServer . "Prosjekter/testserver/");
+  define("gWProot", dirname(dirname(dirname(dirname(dirname(dirname(__FILE__))))))); // Path to wp-load.php
+  define("gWPLoad", gWProot . "/wp-load.php"); // Wordpress functions
+  // The names of user tables and columns depend on whether we run against a Wordpress database or not
   define('ANY_DB_USER_TABLE',    'wp_users');     // Name of user table
   define('ANY_DB_USERMETA_TABLE','wp_usermeta');  // Name of user meta table
   define('ANY_DB_USER_ID',       'ID');           // Name of id key in user table
