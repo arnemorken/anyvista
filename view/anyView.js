@@ -610,35 +610,36 @@ $.any.anyView.prototype.refresh = function (params)
                 new_view = true;
               }
             }
-            if (view) {
-              view.id_stack = JSON.parse(JSON.stringify(this.id_stack));
-              ++row_no;
-              if (this.options && (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num))) {
-                // If we have an item as (grand)parent, use its' type/data/id, not the immediate level above
-                let it = this._findParentItemModel();
-                if (it && it.id) {
-                  par_type = it.type;
-                  par_data = it.data;
-                  par_id   = it.id;
-                }
-                // Refresh a header, a single list row or a single item
-                view.refreshOne({
-                       parent:   the_parent,
-                       type:     curr_type,
-                       mode:     curr_mode,
-                       data:     data,
-                       id:       id,
-                       par_type: par_type,
-                       par_mode: par_mode,
-                       par_data: par_data,
-                       par_id:   par_id,
-                       edit:     edit,
-                       row_no:   row_no,
-                     });
-                if (curr_mode == "list" && !view.rows_changed)
-                  --row_no;
+            if (!view)
+              view = this; // If we haven't got a view, reuse this one
+            view.id_stack = JSON.parse(JSON.stringify(this.id_stack));
+            ++row_no;
+            if (this.options && (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num))) {
+              // If we have an item as (grand)parent, use its' type/data/id, not the immediate level above
+              let it = this._findParentItemModel();
+              if (it && it.id) {
+                par_type = it.type;
+                par_data = it.data;
+                par_id   = it.id;
               }
-            } // if view
+              // Refresh a header, a single list row or a single item
+              view.refreshOne({
+                     parent:   the_parent,
+                     type:     curr_type,
+                     mode:     curr_mode,
+                     data:     data,
+                     id:       id,
+                     par_type: par_type,
+                     par_mode: par_mode,
+                     par_data: par_data,
+                     par_id:   par_id,
+                     edit:     edit,
+                     row_no:   row_no,
+                   });
+              if (curr_mode == "list" && !view.rows_changed)
+                --row_no;
+            }
+
             if (id_str && view) {
               // Refresh bottom toolbar for this view
               let p_id = view.element.attr("id");
