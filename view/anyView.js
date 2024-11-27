@@ -4747,6 +4747,8 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
             if (options.par_type == "group")
               the_view = parent_view;
             else {
+              if (!parent_view.model.data[id].data[id].data)
+                parent_view.model.data[id].data[id].data = {};
               let data_idx = "link-"+link_type;
               parent_view.model.data[id].data[id].data[data_idx] =
                 {
