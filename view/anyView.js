@@ -376,7 +376,7 @@ $.any.anyView.prototype._findTypeFromData = function (data)
     if (ix) {
       for (let key in data[ix]) {
         if (data[ix].hasOwnProperty(key)) {
-          let n = key.lastIndexOf("_");
+          let n = key.lastIndexOf("_name");
           if (n != -1 && key.substring(0,n)) {
             return key.substring(0,n);
           }
