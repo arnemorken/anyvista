@@ -2405,7 +2405,7 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
     console.error("anyModel.dbUpdateLinkListGetURL: "+errstr);
     return null;
   }
-  if (!the_id || (typeof the_id !== "string" && !isInt(the_id))) {
+  if ((!the_id && the_id !== 0) || (typeof the_id !== "string" && !isInt(the_id))) {
     console.error("anyModel.dbUpdateLinkListGetURL: "+i18n.error.ID_ILLEGAL);
     return null;
   }
