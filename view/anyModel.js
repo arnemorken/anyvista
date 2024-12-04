@@ -2169,9 +2169,9 @@ anyModel.prototype.dbUpdateGetURL = function (options)
                : "&cmd=upd";
 
   // Link elements?
-  param_str += options.par_type && options.par_id
-               ? "&link_type="+options.par_type+"&link_id="+options.par_id // TODO! Is this used on server?
-               : "";
+  //param_str += options.par_type && options.par_id
+  //             ? "&link_type="+options.par_type+"&link_id="+options.par_id // TODO! Is this used on server?
+  //             : "";
 
   return this._getDataSourceName() + param_str;
 }; // dbUpdateGetURL
