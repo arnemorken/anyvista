@@ -251,9 +251,9 @@ class anyTable extends dbTable
     // Properties given as global parameter override fields in class.
     //
     if ($this->mIdKey == "user_id") {
-      $par_id = ltrim(Parameters::get("user_id"));
-      if ($par_id)
-        $this->mUserId = $par_id;
+      $user_id = ltrim(Parameters::get("user_id"));
+      if ($user_id)
+        $this->mUserId = $user_id;
     }
     $par_table_fields = Parameters::get("tableFields");
     if ($par_table_fields)
@@ -1918,7 +1918,7 @@ class anyTable extends dbTable
         //error_log("stmt:".$stmt);
         if (!$this->query($stmt)) {
           $this->setError("Error while inserting into group table. "); // TODO i18n
-          error_log($his->mError);
+          error_log($this->mError);
           return $this->mData;
         }
       }
