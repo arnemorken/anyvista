@@ -492,8 +492,8 @@ $.any.anyView.prototype.empty = function (params)
  * @param {string}  params.par_type The type of the data on the level above.
  *                                  Ignored if `model` is given, in which case `model.parent.type` is used.
  *                                  Default: "".
- * @param {string}  params.par_mode The mode of the data on the level above, or of `model.parent`, if `model`
- *                                  is given.
+ * @param {string}  params.par_mode The mode of the data on the level above,.
+ *                                  Ignored if `model` is given, in which case `model.parent.mode` is used.
  *                                  Default: "".
  * @param {Object}  params.par_data The data on the level above `data`.
  *                                  Ignored if `model` is given, in which case `model.parent.data` is used.
@@ -3532,9 +3532,9 @@ $.any.anyView.prototype._processSearch = function (event)
     search_opt.db_search_term = $("#"+search_opt.inp_id).val();
     search_opt.onSuccess      = this.searchSuccess; // TODO! Parameters to searchSuccess
     search_opt.context        = this;
-    search_opt.grouping       = this.options.grouping;
     search_opt.order          = this.options.sortBy;
     search_opt.direction      = this.options.sortDirection;
+    search_opt.grouping       = this.options.grouping;
     this.showMessages("",true);
     this.model.dbSearch(search_opt);
   }
@@ -4115,11 +4115,11 @@ $.any.anyView.prototype._doShowItem = function (opt)
     // Remote search: Will (normally) call refresh via onModelChange
     view.showMessages("",true);
     view.model.dbSearch({
+                 context:  view.model,
                  type:     type,
                  id:       the_id,
                  header:   true,
                  grouping: false, //this.options.grouping,
-                 context:  view.model,
                });
   }
   else {
@@ -4607,7 +4607,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
     let tr_id = this.id_base+"_"+type+"_"+mode+"_"+row_id_str+"_tr";
     let tr    = $("#"+tr_id);
     if (!tr.length) {
-      console.error("dbUpdate: Could find row "+tr_id);
+      console.error("dbUpdate: Could not find row "+tr_id); // TODO! i18n
       return false;
     }
     let params = {
@@ -4878,14 +4878,13 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   if (!event || !event.data)
     throw i18n.error.DATA_MISSING;
 
-  let type      = event.data.type;
-  let mode      = event.data.mode;
   let data      = event.data.data;
   let id        = event.data.id;
-  let link_type = event.data.par_type;
-  let link_mode = event.data.par_mode;
+  let type      = event.data.type;
+  let mode      = event.data.mode;
   let link_data = event.data.par_data;
   let link_id   = event.data.par_id;
+  let link_type = event.data.par_type;
 
   if (!data || !data[id]) {
     console.warn("Data not found ("+type+" id="+id+"). "); // TODO! i18n
