@@ -2630,7 +2630,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
 
   if (opt.mode == "item" && this.options.showButtonAddLinkItem) {
     // Popup menu for selecting types is only available for item views
-    let menu_id = this.id_base+"_"+opt.par_type+"_"+opt.par_mode+"_"+opt.id_str+"_link_dropdown";
+    let menu_id = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+opt.id_str+"_link_dropdown";
     opt.element_id = menu_id;
     if ($("#"+menu_id).length)
       $("#"+menu_id).remove();
