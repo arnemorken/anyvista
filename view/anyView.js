@@ -2589,7 +2589,7 @@ $.any.anyView.prototype.refreshNewItemButton = function (opt)
 // By default calls showLinkMenu
 $.any.anyView.prototype.refreshAddLinkButton = function (opt)
 {
-  if (!opt || !opt.par_id || !this.options)
+  if (!opt || !this.options)
     return null;
   if (!this.options.linkIcons)
     return;
