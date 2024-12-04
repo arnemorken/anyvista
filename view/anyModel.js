@@ -768,12 +768,12 @@ anyModel.prototype.dataSearch = function (options,
       if (!item && data[idc].data) { // subdata
         let p_data = options.parent ? data : null;
         let p_idc  = options.parent ? idc  : null;
-        let data_ptr = data[id]
-                       ? data[id]
-                       : data[""+id]
-                         ? data[""+id]
-                         : data["+"+id]
-                           ? data["+"+id]
+        let data_ptr = data[idc]
+                       ? data[idc]
+                       : data[""+idc]
+                         ? data[""+idc]
+                         : data["+"+idc]
+                           ? data["+"+idc]
                            : null;
         let _prev_type = data_ptr
                          ? data_ptr.list
