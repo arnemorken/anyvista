@@ -2,7 +2,7 @@
 
 # anyVista <img src="balanselogo_85x95.png" align="right">
 
-anyVista is a Javascript/jQuery library that can view, manage and persist data as lists and/or items, and which will greatly simplify building content-rich websites and apps.
+anyVista is a Javascript/PHP library that can view, manage and persist data as lists and/or items, and which will greatly simplify building content-rich websites and apps.
 
 anyVista can group, manipulate, display, edit and store hierarchical data as items or lists and display the data as almost any combination of HTML elements, freely mixing lists and items of different types, interacting with lists and list items, using predefined or user defined types and more.
 
