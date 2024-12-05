@@ -8,7 +8,9 @@ anyVista can group, manipulate, display, edit and store hierarchical data as ite
 
 anyVista can read complex hierarchical and clustered data structures and display them in beautiful tables or forms. The data may be read from server or client databases (both included), Ajax, inline code or indeed any data source, as long as it follows a certain flexible data format.
 
-The library is very versatile and can be used for displaying/editing data in web pages as well as in mobile apps, with or without a database back-end. Fully functional server (MySQL) and client (AlaSQL) databases are included for persistent data storage. And it can also be used as a Wordpress plugin.
+The library is very versatile and can be used for displaying/editing data in web pages as well as in mobile apps, with or without a database back-end. Fully functional server (MySQL) and client (AlaSQL) databases are included for persistent data storage. 
+
+anyVista can also be used as a Wordpress plugin.
 
 Early versions of the library are being used in both commercial and non-commercial projects - see screenshots below:
 
