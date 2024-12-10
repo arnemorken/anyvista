@@ -940,7 +940,7 @@ class anyTable extends dbTable
       call_user_func($this->mSortFunction);
 
     // Get the grouped group tree
-    if (!$this->mGroupTable)
+    if (!isset($this->mGroupTable) && $this->mType == "group")
       $this->mGroupTable = $this;
     if ($this->mType != "group") // TODO! Should not be neccessary, we already have the group data
       $group_data = isset($this->mGroupTable)
@@ -953,7 +953,7 @@ class anyTable extends dbTable
         $group_data = $this->mData;
       else
         $group_data = array();
-    if ($grouping || $this->mType == "group") {
+    if ($grouping || ($this->mType == "group" && !$linkType)) {
       if ($this->mType == "group")
         $group_data = $this->mGroupTable->buildDataTree($group_data["nogroup"]);
       else
@@ -1272,7 +1272,6 @@ class anyTable extends dbTable
     if (!$num || $num == "")
       return "";
     $lim = "LIMIT ".$num." ";
-    $from = $from;
     if ($from)
       $lim .= "OFFSET ".$from." ";
     return $lim;
