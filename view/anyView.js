@@ -4020,7 +4020,9 @@ $.any.anyView.prototype._doShowItem = function (opt)
       the_id = id;
     else
       the_id = 0;
-  if (!the_id && the_id !== 0 || this.model.error) {
+  if (this.model.error)
+    console.error(this.model.error);
+  if (!the_id && the_id !== 0) {
     console.error("System error: Could not find id. "); // TODO! i18n
     if (this.message)
       console.log("anyView._doShowItem: "+this.message);
