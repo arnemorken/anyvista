@@ -3506,8 +3506,6 @@ $.any.anyView.prototype.sortTable = function (event)
     num:       num,
     order:     order,
     direction: this.options.sortDirection,
-    par_type:  type,
-    group_id:  event.data.par_id,
     header:    false,
     grouping:  false,
   };
