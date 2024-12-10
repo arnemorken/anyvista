@@ -2282,8 +2282,8 @@ class anyTable extends dbTable
           foreach ($inslist as $updval) {
             if ($updval && $updval != $id) {
               $stmt = "UPDATE " . $this->mTableName . " " .
-                      "SET parent_id='" . $updval . "' " .
-                      "WHERE " . $this->mIdKey . "='" . $id . "'";
+                      "SET parent_id='" . $id . "' " .
+                      "WHERE " . $this->mIdKey . "='" . $updval . "'";
               //elog("dbUpdateLinkList(5):".$stmt);
               if (!$this->query($stmt))
                 return null;
