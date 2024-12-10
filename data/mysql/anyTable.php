@@ -735,9 +735,9 @@ class anyTable extends dbTable
       $user_id = ltrim(Parameters::get($this->mIdKey));
       $lj .= "LEFT JOIN ".$this->mTableNameUserLink." ".
              "ON "       .$this->mTableNameUserLink.".".$this->mIdKeyTable."='".$user_id."' ";
-      $cur_uid = $this->mPermission["current_user_id"];
-      if ($cur_uid || $cur_uid === 0)
-        $lj .= "AND ".$this->mTableNameUserLink.".user_id='".$cur_uid."' ";
+      //$cur_uid = $this->mPermission["current_user_id"];
+      //if ($cur_uid || $cur_uid === 0)
+      //  $lj .= "AND ".$this->mTableNameUserLink.".user_id='".$cur_uid."' ";
     }
 
     // Get parent name
@@ -1091,7 +1091,7 @@ class anyTable extends dbTable
 
   protected function findListLeftJoin($groupId,$linkType=null,$linkId=null,$grouping=true,$linktable_name="",$has_linktable=false)
   {
-    $cur_uid = $this->mPermission["current_user_id"];
+    //$cur_uid = $this->mPermission["current_user_id"];
     $lj = "";
 
     // Left join own table to get parent name
@@ -1100,18 +1100,18 @@ class anyTable extends dbTable
 
     // Left join link table
     if (($linkId || $linkId === 0) && isset($linkType) && $linkType != "" && $linkType != $this->mType)
-      $lj .= $this->findListLeftJoinOne($cur_uid,$groupId,$linkType,$linkId,$grouping,$linktable_name,$has_linktable);
+      $lj .= $this->findListLeftJoinOne(/*$cur_uid,*/$groupId,$linkType,$linkId,$grouping,$linktable_name,$has_linktable);
 
     // Left join group table
     if ($grouping && $this->mType != "group" && isset($this->mGroupTable)) {
       $linktable_name_grp = $this->findLinkTableName("group");
       $has_linktable_grp  = $this->tableExists($linktable_name_grp);
-      $lj .= $this->findListLeftJoinOne($cur_uid,$groupId,"group",$linkId,$grouping,$linktable_name_grp,$has_linktable_grp);
+      $lj .= $this->findListLeftJoinOne(/*$cur_uid,*/$groupId,"group",$linkId,$grouping,$linktable_name_grp,$has_linktable_grp);
     }
     return $lj;
   } // findListLeftJoin
 
-  protected function findListLeftJoinOne($cur_uid,$groupId,$linkType=null,$linkId=null,$grouping=true,$linktable_name="",$has_linktable=false)
+  protected function findListLeftJoinOne(/*$cur_uid,*/$groupId,$linkType=null,$linkId=null,$grouping=true,$linktable_name="",$has_linktable=false)
   {
     $typetable_name = $this->findTypeTableName($linkType);
     $typetable_id   = $this->findTypeTableId($linkType);
@@ -1127,8 +1127,8 @@ class anyTable extends dbTable
         $lj .= "OR ".$linktable_name.".".$this->mIdKeyTable."=tmp.".$this->mIdKeyTable." ";
 
       // Only return results for current user:
-      if (!isset($linkType) || $linkType == "user" && $cur_uid)
-        $lj .= "AND CAST(".$linktable_name.".".$linktable_id." AS INT)=CAST(".$cur_uid." AS INT) ";
+      //if (!isset($linkType) || $linkType == "user" && $cur_uid)
+      //  $lj .= "AND CAST(".$linktable_name.".".$linktable_id." AS INT)=CAST(".$cur_uid." AS INT) ";
 
       if ($has_typetable) {
         if ($linkType != "group")
