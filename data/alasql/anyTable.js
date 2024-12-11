@@ -99,7 +99,7 @@ var anyTable = function (connection,paramOrType)
   * @type       {String}
   * @default    "any_group"
   */
-  this.tableNameGroup = "acugroup"; // TODO!
+  this.tableNameGroup = "group";
 
   /**
   * Name of the group link table for this table type, e.g. "any_event_group".
@@ -1053,8 +1053,6 @@ anyTable.prototype.dbSearchParents = function()
 
 anyTable.prototype.dbSearchNameExists = function(tableName,name)
 {
-  if (tableName == "group")
-    tableName = "acugroup";
   this.err = "";
   if (!this.tableExists(tableName)) {
     this.err = "anyTable: Table does not exist:"+tableName+". "; // TODO! i18n
@@ -1073,7 +1071,7 @@ anyTable.prototype.dbSearchNameExists = function(tableName,name)
     .then (function(rows) {
       if (!rows || rows.length <= 0)
         return false;
-      let dataType = tableName == "acugroup" ? "group" : tableName;
+      let dataType = tableName;
       self.exist_id = rows[0][dataType+"_id"];
       return true;
     })
@@ -1091,8 +1089,6 @@ anyTable.prototype.dbSearchIdExists = function(tableName,id)
   if (id == "new")
     return Promise.resolve(false);
 
-  if (tableName == "group")
-    tableName = "acugroup";
   this.err = "";
   if (!this.tableExists(tableName)) {
     this.err = "anyTable: Table does not exist:"+tableName+". "; // TODO! i18n
