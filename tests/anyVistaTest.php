@@ -22,8 +22,8 @@
 
 <!-- QUnit -->
 <title>anyVista QUnit test suite</title>
-<link  href="http://localhost/Prosjekter/testserver/javascript/jquery/qunit/qunit-1.23.1.css" rel="stylesheet"/>
-<script src="http://localhost/Prosjekter/testserver/javascript/jquery/qunit/qunit-1.23.1.js"></script>
+<link  href="http://localhost/Prosjekter/thirdparty/jquery/qunit/qunit-1.23.1.css" rel="stylesheet"/>
+<script src="http://localhost/Prosjekter/thirdparty/jquery/qunit/qunit-1.23.1.js"></script>
 
 <!-- anyVista -->
 <script src="<?php print gAnyvistaURL;?>data/alasql/db/dbConnection.js"></script>
