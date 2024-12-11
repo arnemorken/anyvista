@@ -1296,7 +1296,6 @@ anyModel.prototype.dataUpdateLinkList = function (options)
             if (!the_ins_data[ins_id])
               the_ins_data[ins_id] = {};
             the_ins_data[ins_id].data = item;
-            this.data = item;
           }
         }
         else
