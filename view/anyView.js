@@ -3977,8 +3977,9 @@ $.any.anyView.prototype.showItem = function (event)
 $.any.anyView.prototype._foundNextIdFromDB = function (context,serverdata,options)
 {
   let self = context ? context : this;
-  if (serverdata) {
-    if (serverdata.JSON_CODE)
+  self.db_last_command = "sea";
+  if (serverdata && typeof serverdata === "object") {
+    if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
       serverdata = serverdata.JSON_CODE;
     self.message = serverdata.message;
     if (serverdata.error) {
@@ -3989,9 +3990,11 @@ $.any.anyView.prototype._foundNextIdFromDB = function (context,serverdata,option
       console.log("anyView._foundNextIdFromDB: "+self.message);
     if (self.error_server)
       console.error("anyView._foundNextIdFromDB: "+self.error_server);
+    self.max = parseInt(serverdata.id); // See also anyModel.dbSearchNextIdSuccess()
+    // View-specific code
     let view = options.context ? options.context : null;
-    self.model.dbSearchNextIdSuccess(self.model,serverdata,options);
     if (view) {
+      view.showMessages("",false);
       options.id = serverdata.id;
       view._doShowItem(options);
     }
