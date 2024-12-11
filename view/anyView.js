@@ -3785,6 +3785,7 @@ $.any.anyView.prototype.addListEntry = function (event)
                    table_fields: f,
                    onSuccess:    this._addListEntryFromDB,
                    context:      this,
+                   // The rest of the parameters are only used by the onSuccess method _addListEntryFromDB
                    id_str:       id_str,
                    row_id_str:   row_id_str,
                    table_div:    table_div,
@@ -3814,6 +3815,7 @@ $.any.anyView.prototype._addListEntryFromDB = function (context,serverdata,optio
       console.log("anyView._addListEntryFromDB: "+self.message);
     if (self.error_server)
       console.error("anyView._addListEntryFromDB: "+self.error_server);
+    // View-specific code:
     let view = options.context ? options.context : null;
     if (view) {
       view.showMessages("",false);
