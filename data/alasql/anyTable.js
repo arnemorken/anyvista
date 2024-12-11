@@ -1344,7 +1344,8 @@ anyTable.prototype.dbSearchGroupInfo = async function(type,groupId,grouping)
 {
   // Get group tree and append data to it
   let data = {};
-  data = this.buildDataTree(this.data["nogroup"]);
+  if (this.data && this.data["nogroup"])
+    data = this.buildDataTree(this.data["nogroup"]);
   //console.log("dbSearchGroupInfo,data:"); console.log(data);
 
   // Add the default "nogroup" group
