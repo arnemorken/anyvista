@@ -1673,9 +1673,8 @@ anyModel.prototype._dbSearchLocal = async function (options)
  */
 anyModel.prototype.dbSearchGetURL = function (options)
 {
-  let the_type      = options.type                              ? options.type   : this.type;
-  let the_id_key    = options.type && options.type != this.type ? the_type+"_id" : this.id_key;
-  let the_link_type = options.link_type;
+  let the_type   = options.type                              ? options.type   : this.type;
+  let the_id_key = options.type && options.type != this.type ? the_type+"_id" : this.id_key;
   if (!the_type) {
     console.error("anyModel.dbSearchGetURL: "+i18n.error.TYPE_MISSING);
     return null;
@@ -1684,35 +1683,31 @@ anyModel.prototype.dbSearchGetURL = function (options)
     console.error("anyModel.dbSearchGetURL: "+i18n.error.ID_KEY_MISSING);
     return null;
   }
-  let param_str = "?echo=y"+
-                  "&type="+the_type;
   let the_id = Number.isInteger(parseInt(options.id)) && options.id >= 0
                ? parseInt(options.id)
                : options.id
                  ? options.id
                  : null;
-  param_str += the_id
-               ? "&"+the_id_key+"="+the_id // Item search
-               : ""; // List search
   let the_gid = Number.isInteger(parseInt(options.group_id)) && options.group_id >= 0
                 ? parseInt(options.group_id)
                 : options.group_id
                   ? options.group_id
                   : null;
-  param_str += the_gid
-               ? "&group_id="+the_gid // Search specific group
-               : ""; // Search all groups
-  param_str += the_type == "group" && the_link_type ? "&group_type="+the_link_type : "";
-  param_str += options.grouping                     ? "&grouping="  +options.grouping : "";
-  param_str += options.simple                       ? "&simple="    +options.simple : "";
+  let param_str = "?echo=y";
+  param_str += "&type="+the_type;
+  param_str += the_id                                   ? "&"+the_id_key+"="+the_id : ""; // Item search if id is given, list search otherwise
+  param_str += the_gid                                  ? "&group_id="      +the_gid : ""; // If group_id is given, search a specific group
+  param_str += the_type == "group" && options.link_type ? "&group_type="    +options.link_type : "";
+  param_str += options.grouping                         ? "&grouping="      +options.grouping : "";
+  param_str += options.simple                           ? "&simple="        +options.simple : "";
   param_str += options.header === true  ||
                options.header === false ||
-               typeof options.header == "string"    ? "&header="    +options.header : "";
-  param_str += options.from || options.from === 0   ? "&from="      +options.from : "";
-  param_str += options.num                          ? "&num="       +options.num : "";
-  param_str += options.order                        ? "&order="     +options.order : "";
-  param_str += options.direction                    ? "&dir="       +options.direction : "";
-  param_str += options.db_search_term               ? "&term="      +options.db_search_term : "";
+               typeof options.header == "string"        ? "&header="        +options.header : "";
+  param_str += options.from || options.from === 0       ? "&from="          +options.from : "";
+  param_str += options.num                              ? "&num="           +options.num : "";
+  param_str += options.order                            ? "&order="         +options.order : "";
+  param_str += options.direction                        ? "&dir="           +options.direction : "";
+  param_str += options.db_search_term                   ? "&term="          +options.db_search_term : "";
   if (options.db_search_term)
     this.db_last_term = options.db_search_term;
   return this._getDataSourceName() + param_str;
