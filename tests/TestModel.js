@@ -346,9 +346,9 @@ function testModel()
                                                                  12:{myname:"bar12"}}}}});
     let res = dm.dataSearch({type:"bar"});
     deepEqual(res            !== null &&
-              res[0]         !== null &&
-              res[0].data    !== null &&
-              res[0].data[11].myname === "bar11" && res[0].data[12].myname === "bar12",
+              res[99]         !== null &&
+              res[99].data    !== null &&
+              res[99].data[11].myname === "bar11" && res[99].data[12].myname === "bar12",
               true, "dm.dataSearch('bar')) return correct type list data");
   });
 
@@ -745,7 +745,7 @@ function testModel()
               dm.data[99] !== undefined &&
               dm.data[99].data[11] === undefined &&
               dm.data[99].data[12] !== undefined &&
-              dm.data[99].data[14] !== undefined,
+              dm.data[99].data["link-user"].data[14] !== undefined,
               true, "dataUpdateLinkList - normal case 1. ");
 
     dm = new anyModel({type:"user",
@@ -768,7 +768,7 @@ function testModel()
               dm.data[99].data[11] !== undefined &&
               dm.data[99].data[12] !== undefined &&
               dm.data[99].data[13] === undefined &&
-              dm.data[99].data[14] !== undefined,
+              dm.data[99].data["link-event"].data[14] !== undefined,
               true, "dataUpdateLinkList - normal case 2. ");
 
     var evus = getPermutations(["user","event"], 4);
@@ -1170,32 +1170,40 @@ function testModel()
 
   asyncTest('dbUpdate - item: id exists in model, but not in database', 3, async function() {
     let tempdm = new anyModel({type:"event",db_search:false,source:gDBSource,db_connection:gDbase});
-    await tempdm.dbDelete({sync:true,id:"666"});
+    await tempdm.dbDelete({sync:true,id:"666"}); // Make sure item is not in database
     let data = {99:{list:"bar",data:{11:{list:"foo",foz_name:"The foo foz"},
                                      12:{list:"faz",foo_name:"The faz foo"},
                                      666:{list:"event",event_name:"The faz event",
                                          dirty:{list:"event",event_name:"The faz event"}}}}};
-    let dm = new anyModel({type:"event",db_search:false,source:gDBSource,db_connection:gDbase,data:data});
+    let dm = new anyModel({type:"event",data:data,db_search:false,source:gDBSource,db_connection:gDbase});
+    let is_new = true; // Should work with both true and false
     let res = await dm.dbUpdate({ type:"event",id:666,
+                                  is_new:is_new, // Must give is_new flag to update dbase when an id is also given
                        onSuccess:
                        async function(context,serverdata,options)
                        {
                          dm.dbUpdateSuccess(context,serverdata,options); // Call default success function to get data
                          let item = dm.dataSearch({type:"event",id:666});
-                         deepEqual(dm.error !== "" &&
-                                   item[666].event_name === "The faz event" &&
-                                   item[666].dirty != undefined,
+                         let tst = is_new
+                                   ? dm.error === "" &&
+                                     item[666].event_name === "The faz event" &&
+                                     item[666].dirty === undefined
+                                   : dm.error !== "" &&
+                                     item[666].event_name === "The faz event" &&
+                                     item[666].dirty !== undefined
+                         deepEqual(tst,
                                    true, "dbUpdate({type:'event',id:666}) returns with correct data in memory:"+
-                                         item[666].event_name+","+item[666].dirty);
+                                         item[666].event_name+","+item[666].dirty+",is_new:"+is_new+", error:"+dm.error);
                          let dm2 = new anyModel({type:"event",db_search:false,source:gDBSource,db_connection:gDbase});
                          await dm2.dbSearch({type:"event",id:666,
                              onSuccess:
                              function(context,serverdata,options)
                              {
-                               dm.dbSearchSuccess(context,serverdata,options); // Call default success function to get data
+                               dm2.dbSearchSuccess(context,serverdata,options); // Call default success function to get data
                                deepEqual(dm2.data != null &&
                                          dm2.data[666] != null &&
-                                         dm2.data[666].data == null,
+                                         dm2.data[666].data != null &&
+                                         dm2.data[666].data[666] != null,
                                          true, "dbUpdate({type:'event',id:666}) returns data from database after update");
                                },
                            });
