@@ -652,7 +652,7 @@ anyTable.prototype.dbSearchItemListOfType = async function(id,linkType,grouping,
         if (table.nameKey)
           self.data[gidx]["data"][idx]["data"][lidx][table.nameKey] = self.findDefaultItemListHeader(linkType);
         //console.log("item list "+linkType+":"); console.log(self.data);
-        return Promise.resolve(data);
+        return Promise.resolve(self.data);
       });
     } // if
   }
