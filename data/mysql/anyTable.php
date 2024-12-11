@@ -785,7 +785,9 @@ class anyTable extends dbTable
           $this->mError .= $table->getError();
         if (!$table->mData)
           return null;
-        $gidx  = isset($this->mData) ? array_key_first($this->mData) : "nogroup";
+        $gidx  = isset($this->mData)
+                 ? array_key_first($this->mData)
+                 : "nogroup";
         $idx   = "+".$id;
         $lidx  = "link-".$linkType;
         $tgidx = $idx;
@@ -2049,8 +2051,9 @@ class anyTable extends dbTable
     $this->dbMetaInsertOrUpdate($id);
 
     // Update link table(s) if any of the link fields (left join fields) are changed
-    $link_id = Parameters::get("link_id");
-    if (Parameters::get("link_type") && ($link_id || $link_id === 0))
+    $link_id   = Parameters::get("link_id");
+    $link_type = Parameters::get("link_type");
+    if ($link_type && ($link_id || $link_id === 0))
       $this->dbUpdateLink();
 
     // Set result message
