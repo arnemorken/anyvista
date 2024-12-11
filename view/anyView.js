@@ -4670,8 +4670,8 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
    parent_view: this,
    type:        event.data.link_type,
    id:          null,
-   par_type:    event.data.type,
-   par_id:      event.data.id,
+   link_type:   event.data.type,
+   link_id:     event.data.id,
    id_str:      event.data.id_str,
    header:      true,
    grouping:    null,
@@ -4709,9 +4709,9 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
     if (serverdata.data && options) {
       let parent_view = options.parent_view ? options.parent_view : null;
       if (parent_view) {
-        let type        = options.par_type ? options.par_type : model.type;
-        let data        = options.par_data ? options.par_data : model.data;
-        let id          = options.par_id   ? options.par_id   : model.id;
+        let type        = options.link_type ? options.link_type : model.type;
+        let data        = options.link_data ? options.link_data : model.data;
+        let id          = options.link_id   ? options.link_id   : model.id;
         let new_id_base = parent_view._createIdBase();
         let link_type   = options.type;
         let ll_id       = new_id_base+"_"+link_type+"_link_list";
@@ -4743,7 +4743,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                                                                     type: link_type });
           let the_view = parent_view._findViewOfType(link_type);
           if (!the_view) {
-            if (options.par_type == "group")
+            if (options.link_type == "group")
               the_view = parent_view;
             else {
               if (!parent_view.model.data[id].data[id].data)
@@ -4769,9 +4769,9 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           if (the_view) {
             if (select_list_view.options.preselected)
               parent_view._addPreSelections(select_list_view);
-            let par_view_id = parent_view.id_base+"_"+options.par_type+"_head_"+options.id_str+"_data";
+            let link_view_id = parent_view.id_base+"_"+options.link_type+"_head_"+options.id_str+"_data";
             let mod_opt = {
-              parentId:   par_view_id,
+              parentId:   link_view_id,
               elementId:  "",
               heading:    "Select "+link_type+"s to add / remove", // TODO! i18n
               contents:   select_list_view.element,

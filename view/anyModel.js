@@ -1525,10 +1525,12 @@ anyModel.prototype.dbCreateSuccess = function (context,serverdata,options)
  * @param {integer}  options.id         Item's id. If specified, the database will be searched for this item.
  *                                      If not specified, a list of items of the specified type will be searched for.
  *                                      Optional. Default: null.
+ * @param {string}   options.link_type
+ *                                      Optional. Default: null.
+ * @param {integer}  options.link_id
+ *                                      Optional. Default: null.
  * @param {integer}  options.group_id   If specified, search only in group with this id.
  *                                      Optional. Default: undefined.
- * @param {integer}  options.par_type
- *
  * @param {boolean}  options.grouping   If specified, tells the server to group the data before returning.
  *                                      If false, 0, null or undefined, data will not be grouped. Any other
  *                                      value will specify grouping.
@@ -1657,8 +1659,9 @@ anyModel.prototype._dbSearchLocal = async function (options)
  *
  * @param {integer} options.type
  * @param {integer} options.id
+ * @param {integer} options.link_type
+ * @param {integer} options.link_id
  * @param {integer} options.group_id
- * @param {integer} options.par_type
  * @param {string}  options.grouping
  * @param {boolean} options.simple
  * @param {string}  options.header
@@ -1672,9 +1675,9 @@ anyModel.prototype._dbSearchLocal = async function (options)
  */
 anyModel.prototype.dbSearchGetURL = function (options)
 {
-  let the_type   = options.type                              ? options.type   : this.type;
-  let the_id_key = options.type && options.type != this.type ? the_type+"_id" : this.id_key;
-  let the_par_type = options.par_type;
+  let the_type      = options.type                              ? options.type   : this.type;
+  let the_id_key    = options.type && options.type != this.type ? the_type+"_id" : this.id_key;
+  let the_link_type = options.link_type;
   if (!the_type) {
     console.error("anyModel.dbSearchGetURL: "+i18n.error.TYPE_MISSING);
     return null;
@@ -1701,17 +1704,17 @@ anyModel.prototype.dbSearchGetURL = function (options)
   param_str += the_gid
                ? "&group_id="+the_gid // Search specific group
                : ""; // Search all groups
-  param_str += the_type == "group" && the_par_type ? "&group_type="+the_par_type : "";
-  param_str += options.grouping                    ? "&grouping="  +options.grouping : "";
-  param_str += options.simple                      ? "&simple="    +options.simple : "";
+  param_str += the_type == "group" && the_link_type ? "&group_type="+the_link_type : "";
+  param_str += options.grouping                     ? "&grouping="  +options.grouping : "";
+  param_str += options.simple                       ? "&simple="    +options.simple : "";
   param_str += options.header === true  ||
                options.header === false ||
-               typeof options.header == "string"   ? "&header="    +options.header : "";
-  param_str += options.from || options.from === 0  ? "&from="      +options.from : "";
-  param_str += options.num                         ? "&num="       +options.num : "";
-  param_str += options.order                       ? "&order="     +options.order : "";
-  param_str += options.direction                   ? "&dir="       +options.direction : "";
-  param_str += options.db_search_term              ? "&term="      +options.db_search_term : "";
+               typeof options.header == "string"    ? "&header="    +options.header : "";
+  param_str += options.from || options.from === 0   ? "&from="      +options.from : "";
+  param_str += options.num                          ? "&num="       +options.num : "";
+  param_str += options.order                        ? "&order="     +options.order : "";
+  param_str += options.direction                    ? "&dir="       +options.direction : "";
+  param_str += options.db_search_term               ? "&term="      +options.db_search_term : "";
   if (options.db_search_term)
     this.db_last_term = options.db_search_term;
   return this._getDataSourceName() + param_str;
