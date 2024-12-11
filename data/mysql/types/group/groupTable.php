@@ -206,7 +206,7 @@ class groupTable extends anyTable
     else
       $this->mGroupIds = array_keys($this->mData);
 
-    if ($grouping)
+    if ($grouping && isset($this->mData["nogroup"]))
       $data = $this->buildDataTree($this->mData["nogroup"]); // Get group tree and append data to it
     else
       $data = $this->mData;
