@@ -4692,38 +4692,38 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
 // Note: The 'this' context is here the calling model! Use options.parent_view for view methods!
 $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
 {
-  let model = context ? context : this;
-  model.db_last_command = "sea";
+  let self = context ? context : this;
+  self.db_last_command = "sea";
 
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
     if (Object.size(serverdata.data) === 0)
       serverdata.data = null;
-    model.message = serverdata.message;
+    self.message = serverdata.message;
     if (serverdata.error) {
-      model.error_server = serverdata.error;
-      model.error        = i18n.error.SERVER_ERROR;
+      self.error_server = serverdata.error;
+      self.error        = i18n.error.SERVER_ERROR;
     }
-    if (model.message)
-      console.log("anyView.dbUpdateLinkListDialog: "+model.message);
-    if (model.error_server)
-      console.error("anyView.dbUpdateLinkListDialog: "+model.error_server);
+    if (self.message)
+      console.log("anyView.dbUpdateLinkListDialog: "+self.message);
+    if (self.error_server)
+      console.error("anyView.dbUpdateLinkListDialog: "+self.error_server);
 
     if (serverdata.data && options) {
       let parent_view = options.parent_view ? options.parent_view : null;
       if (parent_view) {
-        let type        = options.link_type ? options.link_type : model.type;
-        let data        = options.link_data ? options.link_data : model.data;
-        let id          = options.link_id   ? options.link_id   : model.id;
+        let type        = options.link_type ? options.link_type : self.type;
+        let data        = options.link_data ? options.link_data : self.data;
+        let id          = options.link_id   ? options.link_id   : self.id;
         let new_id_base = parent_view._createIdBase();
         let link_type   = options.type;
         let ll_id       = new_id_base+"_"+link_type+"_link_list";
         let ll_contents = $("<div id='"+ll_id+"'></div>");
-        let ll_model = parent_view.createModel({
-                                     type: link_type,
-                                     data: serverdata.data,
-                                   });
+        let ll_model    = parent_view.createModel({
+                                        type: link_type,
+                                        data: serverdata.data,
+                                      });
         let select_list_view = parent_view.createView({
                                              model:        ll_model,
                                              parent:       ll_contents,
@@ -4733,18 +4733,18 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                                            });
         if (select_list_view && select_list_view.options) {
           select_list_view.id_base = new_id_base;
-          select_list_view.options.grouping        = null;
-          select_list_view.options.showHeader      = false;
-          select_list_view.options.showTableHeader = false;
-          select_list_view.options.showTableFooter = false;
+          select_list_view.options.grouping               = null;
+          select_list_view.options.showHeader             = false;
+          select_list_view.options.showTableHeader        = false;
+          select_list_view.options.showTableFooter        = false;
           select_list_view.options.showButtonAddLinkItem  = false;
           select_list_view.options.showButtonAddLinkGroup = false;
           select_list_view.options.simple                 = options.simple; // true
-          select_list_view.options.isSelectable    = true; // Use the select filter, if available
-          select_list_view.options.unselect        = new Set();
-          select_list_view.options.select          = new Set();
-          select_list_view.options.preselected = model.dataSearch({ data: model.data,
-                                                                    type: link_type });
+          select_list_view.options.isSelectable           = true; // Use the select filter, if available
+          select_list_view.options.unselect               = new Set();
+          select_list_view.options.select                 = new Set();
+          select_list_view.options.preselected = self.dataSearch({ data: self.data,
+                                                                   type: link_type });
           let the_view = parent_view._findViewOfType(link_type);
           if (!the_view) {
             if (options.link_type == "group")
