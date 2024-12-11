@@ -1693,7 +1693,8 @@ class anyTable extends dbTable
   {
     // Get group tree and append data to it
     $data = array();
-    $data = $this->buildDataTree($this->mData["nogroup"]);
+    if (isset($this->mData) && isset($this->mData["nogroup"]))
+      $data = $this->buildDataTree($this->mData["nogroup"]);
     //vlog("dbSearchGroupInfo,data:",$data);
 
     // Add the default "nogroup" group
