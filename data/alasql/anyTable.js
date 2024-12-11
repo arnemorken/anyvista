@@ -632,6 +632,8 @@ anyTable.prototype.dbSearchItemListOfType = async function(id,linkType,grouping,
         if (!data)
           return Promise.resolve(null);
         let gidx = Object.keys(self.data)[0];
+        if (!gidx)
+          gidx = "nogroup";
         let idx  = id;
         let lidx = "link-"+linkType;
         let tgidx = idx;
