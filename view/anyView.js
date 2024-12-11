@@ -4644,8 +4644,6 @@ $.any.anyView.prototype.dbUpdate = function (event)
     let res = icdiv.find($(".fas"));
     res.toggleClass('fa-pencil-alt').toggleClass('fa-solid fa-spinner fa-spin'); // TODO! CSS
   }
-  if (par_id && par_data && par_data[par_id] && (par_data[par_id].head == "group" || par_data[par_id].item == "group" || par_data[par_id].list == "group"))
-    event.data.group_id = par_id;
   if (mode == "item")
     this.showMessages("",true);
   return this.model.dbUpdate(event.data);
