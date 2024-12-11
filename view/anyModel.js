@@ -1236,7 +1236,6 @@ anyModel.prototype.dataUpdateLinkList = function (options)
   let the_data      = options.data     ? options.data     : this.data;
   let the_type      = options.type     ? options.type     : this.type;
   let the_id        = options.id       ? options.id       : this.id;
-  let the_link_data = options.link_data;
   let the_link_type = options.link_type;
   let the_link_id   = options.link_id;
   let the_new_data  = options.new_data;
@@ -1249,7 +1248,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
   }
   if (the_link_id) {
     // Remove the link data and return
-    this.dataDelete({ data: the_link_data,
+    this.dataDelete({ data: the_data,
                       id:   the_link_id,
                       type: the_link_type,
                    });
