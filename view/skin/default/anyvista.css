@@ -259,7 +259,8 @@ input[type=submit] {
 .any-list-table {
   margin-left:  0.5em;
 }
-.any-table-2 {
+.any-table-2,
+.any-table-3 {
   width:  806px;
 }
 .any-th {
