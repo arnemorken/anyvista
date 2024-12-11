@@ -1914,8 +1914,6 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
   if (serverdata && typeof serverdata === "object") {
     if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
       serverdata = serverdata.JSON_CODE;
-    serverdata.is_new = options.is_new;
-    self.max     = parseInt(serverdata.id);
     self.message = serverdata.message;
     if (serverdata.error) {
       self.error_server = serverdata.error;
@@ -1925,6 +1923,7 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
       console.log("anyModel.dbSearchNextIdSuccess: "+self.message);
     if (self.error_server)
       console.error("anyModel.dbSearchNextIdSuccess: "+self.error_server);
+    self.max = parseInt(serverdata.id);
   }
   return context;
 }; // dbSearchNextIdSuccess
