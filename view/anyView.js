@@ -3803,8 +3803,9 @@ $.any.anyView.prototype.addListEntry = function (event)
 $.any.anyView.prototype._addListEntryFromDB = function (context,serverdata,options)
 {
   let self = context ? context : this;
-  if (serverdata) {
-    if (serverdata.JSON_CODE)
+  self.db_last_command = "sea";
+  if (serverdata && typeof serverdata === "object") {
+    if (serverdata.JSON_CODE) // Remove encapsulation, if it exists
       serverdata = serverdata.JSON_CODE;
     self.message = serverdata.message;
     if (serverdata.error) {
@@ -3838,6 +3839,7 @@ $.any.anyView.prototype._addListEntryFromDB = function (context,serverdata,optio
       view._addListEntry(serverdata);
     }
   }
+  return context;
 }; // _addListEntryFromDB
 
 $.any.anyView.prototype._addListEntry = function (opt)
