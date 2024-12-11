@@ -3960,7 +3960,6 @@ $.any.anyView.prototype.showItem = function (event)
         if (model && view)
           model.dbSearchNextId({
                   type:         type,
-                  is_new:       is_new,
                   table_fields: f,
                   onSuccess:    view._foundNextIdFromDB,
                   context:      view,
