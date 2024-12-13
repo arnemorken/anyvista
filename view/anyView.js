@@ -3973,6 +3973,7 @@ $.any.anyView.prototype.showItem = function (event)
                   table_fields: f,
                   onSuccess:    view._foundNextIdFromDB,
                   context:      view,
+                  is_new:       is_new,
                 }); // TODO! Asynchronous database call
       }
       else
