@@ -2486,7 +2486,8 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
     }
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
-    self.cbExecute({clear:true});
+    self.cbExecute({ parent: options.parent,
+                     clear:  true });
   return context;
 }; // dbUpdateLinkListSuccess
 
