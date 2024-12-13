@@ -3977,7 +3977,7 @@ $.any.anyView.prototype.showItem = function (event)
                 }); // TODO! Asynchronous database call
       }
       else
-        this._doShowItem(event.data); // TODO! Not tested!
+        return this._doShowItem(event.data); // TODO! Not tested!
     }
   }
   else
@@ -4006,12 +4006,14 @@ $.any.anyView.prototype._foundNextIdFromDB = function (context,serverdata,option
     if (view) {
       view.showMessages("",false);
       options.id = serverdata.id;
-      view._doShowItem(options);
+      return view._doShowItem(options);
     }
   }
 }; // _foundNextIdFromDB
 
 // Open a (possibly new and empty) item view.
+// If new item, a new model is returned
+// Returns null on error
 $.any.anyView.prototype._doShowItem = function (opt)
 {
   let type     = opt.head ? opt.head : opt.item ? opt.item : opt.list ? opt.list : opt.type ? opt.type : "";
@@ -4046,7 +4048,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
     if (this.error_server)
       console.error("anyView._doShowItem: "+this.error_server);
     this.showMessages(i18n.error.SERVER_ERROR);
-    return false;
+    return null;
   }
 
   // Find the item name
@@ -4114,7 +4116,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
                   });
   if (!view || !view.options || !view.options.top_view) {
     console.error("System error: View missing. "); // TODO! i18n
-    return false;
+    return null;
   }
   let top_view = this.options.top_view;
   if (top_view && top_view.element && top_view.element.length)
@@ -4152,7 +4154,7 @@ $.any.anyView.prototype._doShowItem = function (opt)
            clear: true,
          });
   } // else
-  return true;
+  return model;
 }; // _doShowItem
 
 $.any.anyView.prototype.closeItem = function (event)
