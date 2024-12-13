@@ -704,9 +704,17 @@ $.any.anyView.prototype.refresh = function (params)
   if (this.options && this.options.showToolbar && !this.options.isSelectable &&
       this.options.data_level === 0 && this.id_stack.length === 0 && this.model &&
       (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLinkItem || this.options.showButtonAddLinkGroup)) {
+    let d = data
+            ? data[0]
+              ? data[0]
+              : data["+0"]
+                ? data["+0"]
+                : data
+            : data;
+    let gtype = d ? d.head ? d.head : type : type;
     this.refreshToolbarBottom({
            parent:   parent,
-           type:     type,
+           type:     gtype,
            mode:     mode,
            data:     data,
            id:       this.model.id,
@@ -956,7 +964,7 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
   let class_id = "any-toolbar-bottom any-toolbar any-toolbar-"+this.data_level;
   if ($("#"+div_id).length)
     $("#"+div_id).remove();
-  let bardiv   = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
+  let bardiv = $("<div id='"+div_id+"' class='"+class_id+"'></div>");
   parent.append(bardiv);
 
   if ((this.options.showButtonAddLinkItem || this.options.showButtonAddLinkGroup) && data && id && data[id] &&
@@ -992,8 +1000,8 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
   else
   if (data && data[0])
     new_type = data[0].group_type;
-  else
-    new_type = this.model.type;
+  if (!new_type)
+    new_type = type;
   if (!new_type)
     new_type = this.model.type;
   if (this.options.showButtonNew && new_type) {
