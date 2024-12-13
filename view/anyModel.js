@@ -794,10 +794,10 @@ anyModel.prototype.dataSearch = function (options,
     }
   } // for
   if (Object.size(itemlist) > 0) // Found type list
-    if (options.parent)
-      return itemlist[Object.keys(itemlist)[0]];
-    else
+    if (options.parent || (!id && id !== 0))
       return itemlist;
+    else
+      return itemlist[Object.keys(itemlist)[0]];
   return null; // Not found
 }; // dataSearch
 
