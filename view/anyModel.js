@@ -2249,8 +2249,17 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
       }
     }
   }
-  if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
-    self.cbExecute();
+  if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false) {
+    let params = {};
+    params.data     = options.data;
+    params.mode     = options.mode;
+    params.type     = options.type;
+    params.par_data = options.par_data;
+    params.par_id   = options.par_id;
+    params.par_mode = options.par_mode;
+    params.par_type = options.par_type;
+    self.cbExecute(params);
+  }
   return context;
 }; // dbUpdateSuccess
 
