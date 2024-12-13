@@ -2474,8 +2474,15 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
              link_type: options.link_type,
              new_data:  options.new_data,
            }); // Remove data
-      if (serverdata.data && serverdata.data["link-"+options.link_type]) // TODO! Not an ideal solution, depends on server side index
-        $.extend(true, self.data, serverdata.data["link-"+options.link_type].data);
+      if (serverdata.data) {
+        let the_link_id = "link-"+options.link_type; // TODO! Not an ideal solution, depends on server side index
+        let data = self.dataSearch({
+                          data: serverdata.data,
+                          id:   the_link_id,
+                        });
+        if (data && data[the_link_id])
+          self.data = data[the_link_id].data;
+      }
     }
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
