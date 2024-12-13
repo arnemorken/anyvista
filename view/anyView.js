@@ -3905,6 +3905,7 @@ $.any.anyView.prototype._addListEntry = function (opt)
                });
   opt.new_id = null; // Important! To make addListEntry work with id === 0
 
+  let nrows = Object.size(the_data);
   this.refreshData({
          table_div:  table_div,
          type:       type,
@@ -3917,6 +3918,7 @@ $.any.anyView.prototype._addListEntry = function (opt)
          id_str:     id_str,
          row_id_str: row_id_str,
          edit:       true,
+         row_no:     nrows,
        });
 }; // _addListEntry
 
