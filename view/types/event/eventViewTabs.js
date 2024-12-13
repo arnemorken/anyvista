@@ -135,6 +135,13 @@ $.any.eventViewTabs.prototype.dbSetAttended = function (event)
   return this.model.dbUpdateLink(event.data);
 }; // dbSetAttended
 
+$.any.eventViewTabs.prototype.displayUserResult = function (type,mode,id,val,edit)
+{
+  if (val == "yes")
+    return "Completed";
+  return "Pending";
+}; // dbSetAttended
+
 // Upload directly after selecting file
 $.any.eventViewTabs.prototype._uploadClicked = function (event)
 {
