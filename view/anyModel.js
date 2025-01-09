@@ -5,7 +5,7 @@
 
 /****************************************************************************************
  *
- * anyVista is copyright (C) 2011-2024 Arne D. Morken and Balanse Software.
+ * anyVista is copyright (C) 2011-2025 Arne D. Morken and Balanse Software.
  *
  * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
@@ -130,6 +130,7 @@ var anyModel = function (options)
 
   /**
   * The model's base type, e.g. `"user"`.
+  * Any type found in `data` will override this type.
   * If already set (by a derived class), it will not be initialized.
   *
   * @type       {String}
@@ -680,6 +681,7 @@ anyModel.prototype.dataSearch = function (options,
   let data = options.data                   ? options.data : this.data;
   let type = options.type                   ? options.type : this.type;
   let id   = options.id || options.id === 0 ? options.id   : null;
+
   if (!_prev_type)
     _prev_type = this.type;
 
@@ -1233,11 +1235,12 @@ anyModel.prototype.dataUpdateLinkList = function (options)
     console.error("anyModel.dataUpdateLinkList: "+i18n.error.OPTIONS_MISSING);
     return false;
   }
-  let the_data      = options.data     ? options.data     : this.data;
-  let the_type      = options.type     ? options.type     : this.type;
-  let the_id        = options.id       ? options.id       : this.id;
-  let the_link_type = options.link_type;
+  let the_data      = options.data ? options.data : this.data;
+  let the_id        = options.id   ? options.id   : this.id;
+  let the_type      = options.type ? options.type : this.type;
+  let the_link_data = options.link_data;
   let the_link_id   = options.link_id;
+  let the_link_type = options.link_type;
   let the_new_data  = options.new_data;
 
   if (!the_data)
@@ -1948,6 +1951,12 @@ anyModel.prototype.dbSearchNextIdSuccess = function (context,serverdata,options)
  *                                        rather than updated. Note: If set, an insert operation will be performed
  *                                        even if `options.id` has a value.
  *                                        Optional. Default: false.
+ * @params (Set)     options.link_id
+ *                                        Optional. Default: undefined.
+ * @params (Set)     options.add
+ *                                        Optional. Default: undefined.
+ * @params (Set)     options.rem
+ *                                        Optional. Default: undefined.
  * @param {Object}   options.table_fields An array of strings to be sent to the server, indicating which columns
  *                                        of the table should be used in the update/insert. These fields are only
  *                                        applied if the server fails to find a filter corresponding to `type`.
@@ -1996,7 +2005,7 @@ anyModel.prototype.dbUpdate = function (options) // TODO! Should this be an asyn
     console.error("anyModel.dbUpdate: "+errstr);
     return false;
   }
-  let it = item; // Return this
+  //let it = item; // Return this
   if (!item[this.id_key]) {
     if (item[the_id])
       item = item[the_id];
@@ -2103,12 +2112,12 @@ anyModel.prototype._dbUpdateLocal = async function (options,item_to_send)
  * @method anyModel.dbUpdateGetURL
  * @param {Object} options An object which may contain these elements:
  *
- * @param {integer} options.id      Item's id. If specified, the server will update the item,
- *                                  if not specified, the server will insert the item.
- *                                  Optional. Default: null.
  * @param {integer} options.type    Item's type. If specified and not equal to `this.type`, then `[options.type]_id` will
  *                                  be used as the id_key instead of the value in `this.id_key` when calling the server.
  *                                  Optional. Default: `this.type`.
+ * @param {integer} options.id      Item's id. If specified, the server will update the item,
+ *                                  if not specified, the server will insert the item.
+ *                                  Optional. Default: null.
  * @param {boolean} options.is_new  true if the item is new (does not exist in database) and should be inserted
  *                                  and not updated. Note: If set, an insert operation will be performed even if
  *                                  `options.id` has a value.
@@ -2162,11 +2171,6 @@ anyModel.prototype.dbUpdateGetURL = function (options)
   param_str += options.is_new || !the_id
                ? "&cmd=ins"
                : "&cmd=upd";
-
-  // Link elements?
-  //param_str += options.par_type && options.par_id
-  //             ? "&link_type="+options.par_type+"&link_id="+options.par_id // TODO! Is this used on server?
-  //             : "";
 
   return this._getDataSourceName() + param_str;
 }; // dbUpdateGetURL

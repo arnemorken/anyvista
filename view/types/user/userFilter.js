@@ -60,7 +60,7 @@ var userFilter = function (options)
         user_email:      { HEADER:"Email",            DISPLAY:1, TYPE:"email"},
         user_result:     { HEADER:"Result",           DISPLAY:1, TYPE:"select", SELECT: {0:"No",1:"Yes"} },
         user_attended:   { HEADER:"Att.",             DISPLAY:1, TYPE:"check",  FUNCTION:"dataSetAttended" },
-        user_role:       { HEADER:"Role",             DISPLAY:1 /*!par_type*/ /* TODO */, TYPE:"label" },
+        user_role:       { HEADER:"Role",             DISPLAY:1 /*!link_type*/ /* TODO */, TYPE:"label" },
       },
       head: {
         user_name:       { HEADER:"User name",        DISPLAY:1, TYPE:"label" },

@@ -536,7 +536,7 @@ anyTable.prototype.dbSearchItemByKey = function(options)
         // Organize group at top
         let idx = Object.keys(self.data)[0];
         self.data[idx]["data"] = {};
-        $.extend(true,self.data[idx]["data"],self.data[idx]); // TODO! Could slow down execution if large data structure
+        $.extend(true,self.data[idx]["data"],self.data[idx]); // TODO! Could slow down execution if large data structure // TODO! jsQuery method!
         delete self.data[idx][id];
       }
       if (!skipLinks)
@@ -631,9 +631,9 @@ anyTable.prototype.dbSearchItemListOfType = async function(id,linkType,grouping,
           self.error += table.error;
         if (!data)
           return Promise.resolve(null);
-        let gidx = Object.keys(self.data)[0];
-        if (!gidx)
-          gidx = "nogroup";
+        let gidx = self.data
+                   ? Object.keys(self.data)[0]
+                   : "nogroup";
         let idx  = id;
         let lidx = "link-"+linkType;
         let tgidx = idx;
@@ -830,9 +830,11 @@ anyTable.prototype.findListSelect = function(groupId,linkType,linkId,grouping,li
     let linktable_name = this.findLinkTableName(linkType);
     if (has_linktable) {
       for (let idx in this.tableFieldsLeftJoin[linkType]) {
-        let field = this.tableFieldsLeftJoin[linkType][idx];
-        if (field)
-          sl += ", "+linktable_name+"."+field;
+        if (this.tableFieldsLeftJoin[linkType].hasOwnProperty(idx)) {
+          let field = this.tableFieldsLeftJoin[linkType][idx];
+          if (field)
+            sl += ", "+linktable_name+"."+field;
+        }
       }
       if (this.hasParentId())
         sl += ", tmp."+this.nameKey+" AS parent_name ";
@@ -846,9 +848,11 @@ anyTable.prototype.findListSelect = function(groupId,linkType,linkId,grouping,li
     let has_grouptable = this.tableExists(this.tableNameGroup);
     if (has_grouptable) {
       for (let idx in this.groupTable.tableFields) { // TODO! Is it neccessary to select all fields when this.type != group?
-        let field = this.groupTable.tableFields[idx];
-        if (field && field != "parent_id") // To avoid conflict with the current tables parent_id
-          sl += ", "+this.tableNameGroup+"."+field;
+        if (this.groupTable.tableFields.hasOwnProperty(idx)) {
+          let field = this.groupTable.tableFields[idx];
+          if (field && field != "parent_id") // To avoid conflict with the current tables parent_id
+            sl += ", "+this.tableNameGroup+"."+field;
+        }
       }
     }
   }
@@ -1411,32 +1415,35 @@ anyTable.prototype.dbAttachToGroups = function(group_tree,data_tree,type)
   //console.log("dbAttachToGroups,data_tree:");  console.log(data_tree);
   if (group_tree) {
     for (let gid in group_tree) { // Iterate over group ids
-      let group = group_tree[gid];
-      if (group) {
-        if (group["data"] && Object.size(group["data"]) > 0)
-          this.dbAttachToGroups(group["data"],data_tree,type); // Recursive call
-        if (group["data"]) {
-          group["head"] = "group";
-          if (type != "group") {
-            if (group["list"]) delete group["list"];
-            if (group["item"]) delete group["item"];
-          }
-        }
-        let idx = gid;
-        if (idx) {
+      if (group_tree.hasOwnProperty(gid)) {
+        let group = group_tree[gid];
+        if (group) {
+          if (group["data"] && Object.size(group["data"]) > 0)
+            this.dbAttachToGroups(group["data"],data_tree,type); // Recursive call
+          if (group["data"]) {
             group["head"] = "group";
             if (type != "group") {
               if (group["list"]) delete group["list"];
               if (group["item"]) delete group["item"];
             }
-            if (!group["data"])
-              group["data"] = {};
-            if (data_tree[idx] && data_tree[idx]["data"]) {
-              for (let id in data_tree[idx]["data"])
-                group["data"][id] = data_tree[idx]["data"][id];
-            }
-        } // if idx
-      } // if group
+          }
+          let idx = gid;
+          if (idx) {
+              group["head"] = "group";
+              if (type != "group") {
+                if (group["list"]) delete group["list"];
+                if (group["item"]) delete group["item"];
+              }
+              if (!group["data"])
+                group["data"] = {};
+              if (data_tree[idx] && data_tree[idx]["data"]) {
+                for (let id in data_tree[idx]["data"])
+                  if (data_tree[idx]["data"].hasOwnProperty(id))
+                    group["data"][id] = data_tree[idx]["data"][id];
+              }
+          } // if idx
+        } // if group
+      } // if hasOwnProp
     } // for
   } // if group_tree
 }; // dbAttachToGroups
@@ -1537,10 +1544,10 @@ anyTable.prototype.dbInsert = async function(options)
         });
       }
     }
-    // Insert in link table
+    // Insert in link table. TODO! Is this needed?
     let link_id = options.link_id;
     if ((link_id || link_id === 0) && link_id != "") {
-      options.add = link_id;
+      options.add = link_id; // TODO! Undocumented option!
       await this.dbUpdateLinkList(options);
     }
     // Set result message
@@ -1646,14 +1653,14 @@ anyTable.prototype.dbUpdate = async function(options)
   if (!this.dbValidateUpdate(options))
     return Promise.resolve(null);
 
-  let id = options.id;
+  //let id = options.id;
 
     // If no id, assume it is a new item
   if ((!options.id && options.id !== 0) || options.id == "" || options.is_new)
     return await this.dbInsert(options);
 
-    // Add or remove to/from list
-  if (options.add || options.rem)
+  // Add or remove to/from list. TODO! Is this needed?
+  if (options.add || options.rem) // TODO! Undocumented options!
     return this.dbUpdateLinkList(options);
 
   // Change a link TODO! Not tested
@@ -1767,8 +1774,8 @@ anyTable.prototype.dbPrepareUpdateStmtKeyVal = function(key,val)
  *
  * options.link_type:
  * options.id:
- * options.add:
- * options.rem:
+ * options.add: Links to add
+ * options.rem: Links to remove
  *
  * @return
  */
@@ -1912,7 +1919,7 @@ anyTable.prototype.dbUpdateLink = async function(options)
   let id_key         = options.idKey ? options.idKey : this.idKey;
   let id             = options.id    ? options.id    : null;
   let link_type      = options.link_type;
-  let link_id        = options.link_id;
+//let link_id        = options.link_id;
   let link_tablename = this.findLinkTableName(link_type);
   if (this.tableFieldsLeftJoin && this.tableFieldsLeftJoin[link_type]) {
     let val_found = false;

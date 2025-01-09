@@ -140,7 +140,7 @@ $.any.eventViewTabs.prototype.displayUserResult = function (type,mode,id,val,edi
   if (val == "yes")
     return "Completed";
   return "Pending";
-}; // dbSetAttended
+}; // displayUserResult
 
 // Upload directly after selecting file
 $.any.eventViewTabs.prototype._uploadClicked = function (event)

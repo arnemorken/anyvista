@@ -5,7 +5,7 @@
 
 /****************************************************************************************
  *
- * anyVista is copyright (C) 2011-2024 Arne D. Morken and Balanse Software.
+ * anyVista is copyright (C) 2011-2025 Arne D. Morken and Balanse Software.
  *
  * License: AGPLv3.0 for open source use or anyVista Commercial License for commercial use.
  * Get licences here: http://balanse.info/anyvista/license/ (coming soon).
@@ -318,7 +318,7 @@ $.any.anyView.prototype._getOrCreateFilters = function (type,data)
   if (!type)
    type = this._findType(data);
   if (!type) {
-    console.warn("No type specified, cannot create filters. ");
+    console.warn("No type specified, cannot create filters. "); // TODO! i18n
     return f;
   }
   // Return the filter for given type if we already have it in this.options
@@ -514,12 +514,15 @@ $.any.anyView.prototype.empty = function (params)
  */
 $.any.anyView.prototype.refresh = function (params)
 {
+  let parent = params && params.parent ? params.parent : this.element;
+  if (!parent)
+    throw i18n.error.VIEW_AREA_MISSING;
+
   if (params && params.reset_rec) {
     if (!this.options)
       this.options = {};
     this.options.ref_rec = 0; // Reset on every call to refresh
   }
-  let parent   = params && params.parent   ? params.parent   : this.element;
   let model    = params && params.model    ? params.model    : this.model;
   let type     = params && params.type     ? params.type     : model                 ? model.type        : "";
   let data     = params && params.data     ? params.data     : model                 ? model.data        : null;
@@ -534,14 +537,11 @@ $.any.anyView.prototype.refresh = function (params)
   if (!type)
     type = this._findType(data); // Find type from *_name element of data[0]
 
-  if (!parent)
-    throw i18n.error.VIEW_AREA_MISSING;
-
-  // See if we should clear the view area before displaying
+  // Should we clear the view area before displaying?
   if (params && params.clear)
     this.clearBeforeRefresh();
 
-  // See if we need a top close button (for item mode)
+  // Do we need a top close button (for item mode)?
   if (this.options.item_opening && this.id_stack.length == 1)
     this.refreshCloseItemButton(params);
 
@@ -549,6 +549,7 @@ $.any.anyView.prototype.refresh = function (params)
   if (!this.options.filters || !this.options.filters[type])
     this.options.filters = this._getOrCreateFilters(type,data);
 
+  // Do we need to do something before displaying?
   if (this.preRefresh)
     this.preRefresh(params);
 
@@ -704,13 +705,7 @@ $.any.anyView.prototype.refresh = function (params)
   if (this.options && this.options.showToolbar && !this.options.isSelectable &&
       this.options.data_level === 0 && this.id_stack.length === 0 && this.model &&
       (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLinkItem || this.options.showButtonAddLinkGroup)) {
-    let d = data
-            ? data[0]
-              ? data[0]
-              : data["+0"]
-                ? data["+0"]
-                : data
-            : data;
+    let d = data ? data[0] ? data[0] : data["+0"] ? data["+0"] : data : data;
     let gtype = d ? d.head ? d.head : type : type;
     this.refreshToolbarBottom({
            parent:   parent,
@@ -738,20 +733,18 @@ $.any.anyView.prototype.refresh = function (params)
 $.any.anyView.prototype._findParentItemModel = function ()
 {
   let cntdwn = ANY_MAX_REF_REC;
-  let it = this.model;
-  while (cntdwn-- && it) {
-    if (it.id)
+  let item_model = this.model;
+  while (cntdwn-- && item_model) {
+    if (item_model.id)
       break;
-    it = it.parent;
+    item_model = item_model.parent;
   }
-  return it;
+  return item_model;
 }; // _findParentItemModel
 
 // Called by refresh() if no data was given.
-// Shows a new, empty item for entering data.
 $.any.anyView.prototype.refreshNoData = function (params)
 {
-  //this.showItem({ data: params });
 }; // refreshNoData
 
 $.any.anyView.prototype.clearBeforeRefresh = function ()
@@ -761,23 +754,23 @@ $.any.anyView.prototype.clearBeforeRefresh = function ()
   this.current_edit = null;
 }; // clearBeforeRefresh
 
-$.any.anyView.prototype._addContainerRow = function (parent,par_type,par_mode,curr_type,curr_mode,id_str)
+$.any.anyView.prototype._addContainerRow = function (parent,prev_type,prev_mode,curr_type,curr_mode,id_str)
 {
   id_str = id_str.substr(0, id_str.lastIndexOf("_"));
   let the_parent = parent;
-  let filter   = this.getFilter(par_type,par_mode);
+  let filter   = this.getFilter(prev_type,prev_mode);
   let num_cols = filter ? Object.size(filter) : 5;
   let row_id   = this.id_base+"_"+curr_type+"_"+curr_mode+"_"+id_str+"_tr";
   let new_tr   = $("<tr id='"+row_id+"'>"+
                    "<td colspan='"+num_cols+"' style='padding-left:"+this.options.indent_amount+"px;' class='any-td any-list-td'></td>"+
                    "</tr>");
-  let tbody    = $("#"+this.id_base+"_"+par_type+"_"+par_mode+"_"+id_str+"_tbody");
+  let tbody    = $("#"+this.id_base+"_"+prev_type+"_"+prev_mode+"_"+id_str+"_tbody");
   if (tbody.length) {
     tbody.append(new_tr);
     the_parent = tbody.find("#"+row_id).find("td");
   }
   else {
-    let tr = $("#"+this.id_base+"_"+par_type+"_"+par_mode+"_"+id_str+"_tr");
+    let tr = $("#"+this.id_base+"_"+prev_type+"_"+prev_mode+"_"+id_str+"_tr");
     if (tr.length) {
       new_tr.insertAfter(tr);
       the_parent = new_tr.find("td");
@@ -799,10 +792,10 @@ $.any.anyView.prototype.refreshOne = function (params)
     return this;
 
   let parent = params.parent;
-  let type   = params.type;
-  let mode   = params.mode;
   let data   = params.data;
   let id     = params.id;
+  let type   = params.type;
+  let mode   = params.mode;
   let edit   = params.edit;
 
   // Find identifier strings for containers and rows
@@ -850,8 +843,8 @@ $.any.anyView.prototype.refreshOne = function (params)
 
   // If the data contains subdata, make a recursive call
   if (data) {
-    let subdata = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
-    if (subdata && subdata.data && Object.size(subdata.data) > 0) {
+    let subdata = data[id] ? data[id].data : data["+"+id] ? data["+"+id].data : null;
+    if (subdata && Object.size(subdata) > 0) {
       ++this.options.ref_rec;
       if (this.options.ref_rec > ANY_MAX_REF_REC) {
         this.options.ref_rec = 0;
@@ -859,7 +852,6 @@ $.any.anyView.prototype.refreshOne = function (params)
       }
       if (mode == "list")
         ++this.options.indent_level;
-      subdata = subdata.data;
       this.refresh({
              parent:    params.data_div,
              type:      type,
@@ -895,11 +887,11 @@ $.any.anyView.prototype.refreshToolbarForView = function (params)
   if (!params || !this.options)
     return null;
 
-  let parent   = params.parent;
-  let type     = params.type;
-  let mode     = params.mode;
-  let data     = params.data;
-  let id_str   = params.id_str;
+  let parent    = params.parent;
+  let data      = params.data;
+  let type      = params.type;
+  let mode      = params.mode;
+  let id_str    = params.id_str;
   let par_type = params.par_type;
   let par_mode = params.par_mode;
   let par_data = params.par_data;
@@ -919,16 +911,16 @@ $.any.anyView.prototype.refreshToolbarForView = function (params)
   parent.append(bardiv);
 
   this.refreshAddLinkButton({
-         parent: bardiv,
-         type:   type,
-         mode:   mode,
-         data:   data,
+         parent:    bardiv,
+         data:      data,
+         type:      type,
+         mode:      mode,
          par_type: par_type,
          par_mode: par_mode,
          par_data: par_data,
          par_id:   par_id,
-         id_str: id_str,
-         edit:   true,
+         id_str:    id_str,
+         edit:      true,
        });
 
   let nc = bardiv.children().length;
@@ -946,11 +938,11 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
   if (!this.model || !params || !this.options)
     return null;
 
-  let parent   = params.parent;
-  let type     = params.type;
-  let mode     = params.mode;
-  let data     = params.data;
-  let id       = params.id;
+  let parent    = params.parent;
+  let data      = params.data;
+  let id        = params.id;
+  let type      = params.type;
+  let mode      = params.mode;
   let par_type = params.par_type;
   let par_mode = params.par_mode;
   let par_data = params.par_data;
@@ -971,16 +963,16 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
      (data[id].item || data[id].head && data[id].data && data[id].data[id] && data[id].data[id].item)) {
     // Create an "add link" button
     this.refreshAddLinkButton({
-           parent: bardiv,
-           type:   type,
-           mode:   "item",
-           data:   data,
-           id:     id,
+           parent:    bardiv,
+           data:      data,
+           id:        id,
+           type:      type,
+           mode:      "item",
            par_type: par_type,
            par_mode: par_mode,
            par_data: par_data,
            par_id:   par_id,
-           id_str: Number.isInteger(parseInt(id)) ? parseInt(id) : id,
+           id_str:    Number.isInteger(parseInt(id)) ? parseInt(id) : id,
            edit:   true,
          });
   }
@@ -1009,10 +1001,10 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
     //console.log("New "+new_type);
     this.refreshNewItemButton({
            parent: bardiv,
-           type:   new_type,
-           mode:   "item",
            data:   data,
            id:     id, // Find a new id
+           type:   new_type,
+           mode:   "item",
            is_new: true,
          });
   }
@@ -1083,10 +1075,10 @@ $.any.anyView.prototype.refreshHeader = function (params,skipName)
     return null;
 
   let parent = params.parent;
-  let type   = params.type;
-  let mode   = params.mode;
   let data   = params.data;
   let id     = params.id;
+  let type   = params.type;
+  let mode   = params.mode;
 
   if (!parent || !parent.length || !data || (mode != "head" && (!data.grouping || type == "group")))
     return null;
@@ -1364,9 +1356,9 @@ $.any.anyView.prototype.refreshThead = function (params)
     return null;
 
   let thead      = params.parent;
+  let data       = params.data;
   let type       = params.type;
   let mode       = params.mode;
-  let data       = params.data;
   let id_str     = params.id_str;
   let row_id_str = params.id_str; // TODO! Check if this is correct when adding a new entry
 
@@ -1385,10 +1377,10 @@ $.any.anyView.prototype.refreshThead = function (params)
   let add_opt = null;
   if (this.options.showButtonAdd && !this.options.isSelectable) {
     add_opt = {
-      type:       type,
-      mode:       mode,
       data:       data,
       id:         "new", // Find a new id
+      type:       type,
+      mode:       mode,
       par_data:   params.par_data,
       par_id:     params.par_id,
       par_type:   params.par_type,
@@ -1517,9 +1509,9 @@ $.any.anyView.prototype.refreshDataFooter = function (params)
     return null;
 
   let extra_foot = params.parent;
+  let data       = params.data;
   let type       = params.type;
   let mode       = params.mode;
-  let data       = params.data;
   let id_str     = params.id_str;
 
   let num_results = 0;
@@ -1603,10 +1595,10 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     return null;
 
   let tbody      = params.parent;
-  let type       = params.type;
-  let mode       = params.mode;
   let data       = params.data;
   let id         = params.id;
+  let type       = params.type;
+  let mode       = params.mode;
   let par_type   = params.par_type;
   let par_mode   = params.par_mode;
   let par_data   = params.par_data;
@@ -1658,10 +1650,10 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
   }
   let cell_opt = {
     parent:     tr,
-    type:       type,
-    mode:       mode,
     data:       data,
     id:         id,
+    type:       type,
+    mode:       mode,
     par_type:   par_type,
     par_mode:   par_mode,
     par_data:   par_data,
@@ -1689,10 +1681,10 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
     return false;
 
   let tr         = params.parent;
-  let type       = params.type;
-  let mode       = params.mode;
   let data       = params.data;
   let id         = params.id;
+  let type       = params.type;
+  let mode       = params.mode;
   let par_data   = params.par_data;
   let par_id     = params.par_id;
   let id_str     = params.id_str;
@@ -1746,10 +1738,10 @@ $.any.anyView.prototype.refreshTableDataIngress = function (params)
     return false;
 
   let tr         = params.parent;
-  let type       = params.type;
-  let mode       = params.mode;
   let data       = params.data;
   let id         = params.id;
+  let type       = params.type;
+  let mode       = params.mode;
   let par_data   = params.par_data;
   let par_id     = params.par_id;
   let id_str     = params.id_str;
@@ -1782,10 +1774,10 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
     return null;
 
   let tbody      = params.parent;
-  let type       = params.type;
-  let mode       = params.mode;
   let data       = params.data;
   let id         = params.id;
+  let type       = params.type;
+  let mode       = params.mode;
   let par_data   = params.par_data;
   let par_id     = params.par_id;
   let id_str     = params.id_str;
@@ -1873,10 +1865,10 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
         tbody.append(tr);
         let cell_opt = {
           parent:     tr,
-          type:       type,
-          mode:       mode,
           data:       data,
           id:         id,
+          type:       type,
+          mode:       mode,
           par_data:   par_data,
           par_id:     par_id,
           id_str:     id_str,
@@ -1906,10 +1898,10 @@ $.any.anyView.prototype.refreshTableDataItemCells = function (params)
     return false;
 
   let tr         = params.parent;
-  let type       = params.type;
-  let mode       = params.mode;
   let data       = params.data;
   let id         = params.id;
+  let type       = params.type;
+  let mode       = params.mode;
   let par_data   = params.par_data;
   let par_id     = params.par_id;
   let id_str     = params.id_str;
@@ -1957,10 +1949,10 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
    return false;
 
   let tr         = params.parent;
-  let type       = params.type;
-  let mode       = params.mode;
   let data       = params.data;
   let id         = params.id;
+  let type       = params.type;
+  let mode       = params.mode;
   let par_type   = params.par_type;
   let par_mode   = params.par_mode;
   let par_data   = params.par_data;
@@ -1984,10 +1976,10 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
 
   let first_opt = {
     parent:     td,
-    type:       type,
-    mode:       mode,
     data:       data,
     id:         id,
+    type:       type,
+    mode:       mode,
     par_type:   par_type,
     par_mode:   par_mode,
     par_data:   par_data,
@@ -2034,10 +2026,10 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
    return false;
 
   let tr         = params.parent;
-  let type       = params.type;
-  let mode       = params.mode;
   let data       = params.data;
   let id         = params.id;
+  let type       = params.type;
+  let mode       = params.mode;
   let par_type   = params.par_type;
   let par_mode   = params.par_mode;
   let par_data   = params.par_data;
@@ -2064,10 +2056,10 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
     if (this.options.isEditable || this.options.isRemovable || edit) {
       let last_opt = {
         parent:     td,
-        type:       type,
-        mode:       mode,
         data:       data,
         id:         id,
+        type:       type,
+        mode:       mode,
         par_type:   par_type,
         par_mode:   par_mode,
         par_data:   par_data,
@@ -2122,10 +2114,10 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,mode,data,id,id
 
   let init_opt = {
     element_id: td_id,
-    type:       type,
-    mode:       mode,
     data:       data,
     id:         id,
+    type:       type,
+    mode:       mode,
     par_data:   par_data,
     par_id:     par_id,
     id_str:     id_str,
@@ -2747,9 +2739,9 @@ $.any.anyView.prototype.addGroupLink = function (event)
 {
   let e = {};
   e.data = {
-    link_type: event.data.type,
-    type:      event.data.par_type,
     id:        event.data.par_id,
+    type:      event.data.par_type,
+    link_type: event.data.type,
     id_str:    event.data.id_str,
   };
   this.dbSearchLinks(e);
@@ -2765,12 +2757,12 @@ $.any.anyView.prototype.addGroupLink = function (event)
  */
 $.any.anyView.prototype.createModel = function (params)
 {
-  let type      = params && params.type                                 ? params.type      : null;
+  let modelName = params && typeof params.modelName === "string"        ? params.modelName : null;
   let data      = params && params.data                                 ? params.data      : null;
   let id        = params && (params.id       || params.id       === 0)  ? params.id        : "";
+  let type      = params && params.type                                 ? params.type      : null;
   let par_id    = params && (params.par_id   || params.par_id   === 0)  ? params.par_id    : "";
   let par_type  = params && params.par_type                             ? params.par_type  : "";
-  let modelName = params && typeof params.modelName === "string"        ? params.modelName : null;
 
   type = type ? type : this._findType(data,id,null);
 
@@ -2795,7 +2787,7 @@ $.any.anyView.prototype.createModel = function (params)
 }; // createModel
 
 /**
- * Get the model options for a new view.
+ * Get the model options for a new model.
  *
  * @method anyView.getCreateModelOptions
  * @return opt
@@ -2803,9 +2795,9 @@ $.any.anyView.prototype.createModel = function (params)
 $.any.anyView.prototype.getCreateModelOptions = function(type,data,id,link_id,link_type)
 {
   return {
-    type:          type,
     data:          data,
     id:            id,
+    type:          type,
     link_id:       link_id,
     link_type:     link_type,
     parent:        this.model ? this.model               : null, // TODO! Not always correct.
@@ -2818,7 +2810,7 @@ $.any.anyView.prototype.getCreateModelOptions = function(type,data,id,link_id,li
 }; // getCreateModelOptions
 
 /**
- * Create a new model in a new view and return the view.
+ * Create and return a new view for the given model.
  *
  * @method anyView.createView
  * @return view
@@ -2828,12 +2820,12 @@ $.any.anyView.prototype.createView = function (params)
   if (!params || !params.model)
     return null;
 
+  let parent       = params.parent                                    ? params.parent       : null;
   let inmodel      = params.model;
-  let type         = inmodel.type;
-  let mode         = inmodel.mode;
   let data         = inmodel.data;
   let id           = params.id                                        ? params.id           : inmodel.id   ? inmodel.id   : "";
-  let parent       = params.parent                                    ? params.parent       : null;
+  let type         = inmodel.type;
+  let mode         = inmodel.mode;
   let data_level   = params.data_level   || params.data_level   === 0 ? params.data_level   : this.data_level   ? this.data_level   : 0;
   let indent_level = params.indent_level || params.indent_level === 0 ? params.indent_level : this.indent_level ? this.indent_level : 0;
   let id_str       = params.id_str                                    ? params.id_str       : "";
@@ -3315,8 +3307,8 @@ $.any.anyView.prototype.getListView = function (type,mode,id,val,edit,filter_key
 $.any.anyView.prototype.getListModelOptions = function (link_type,link_id,list_type,data)
 {
   return {
-    type:       list_type,
     data:       data,
+    type:       list_type,
     par_type:   link_type, // TODO! Dont need both par_type and link_type
     par_id:     link_id,   // TODO!
     link_type:  link_type,
@@ -3435,9 +3427,9 @@ $.any.anyView.prototype._uploadClicked = function (event)
     // Update the model
     let filter_id = event.data.filter_id;
     this.model.dataUpdate({
-                 type:     event.data.type,
                  data:     event.data.data,
                  id:       event.data.id,
+                 type:     event.data.type,
                  new_data: { [filter_id]: fname },
                });
     // Update the field to be sent to server
@@ -3465,8 +3457,8 @@ $.any.anyView.prototype._uploadClicked = function (event)
 
 $.any.anyView.prototype._fileViewClicked = function (event)
 {
-  let type = event.data.type;
   let id   = event.data.id;
+  let type = event.data.type;
   let item = this.model.dataSearch({ type:type, id:id });
   if (item && item[id]) {
     let filter_id = event.data.filter_id;
@@ -3559,9 +3551,9 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
     let ll_contents = $("<div id='"+ll_id+"'></div>");
 
     let model = this.createModel({
-                       type:     list_type,
-                       data:     self.model.data,
-                       id:       null,
+                       data: self.model.data,
+                       id:   null,
+                       type: list_type,
                      });
     let search_view = self.createView({
                              model:        model,
@@ -3590,11 +3582,11 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
         elementId:   "",
         heading:     list_type+" "+i18n.message.searchResults,
         contents:    search_view.element,
-        //width:       "30em", // TODO! css
         ok:          true,
         cancel:      false,
         okFunction:  self.searchSuccessOk,
         context:     self,
+      //width:       "30em", // TODO! css
         // Sent to okFunction:
         type:        self.type, // TODO! self.type if context is view??
         data:        self.data, // TODO! --- " ---
@@ -3726,8 +3718,8 @@ $.any.anyView.prototype._processKeyup = function (event)
 
 $.any.anyView.prototype.addListEntry = function (event)
 {
-  let type       = event.data.type;
   let id         = event.data.id;
+  let type       = event.data.type;
   let par_data   = event.data.par_data;
   let par_id     = event.data.par_id;
   let par_type   = event.data.par_type;
@@ -3743,9 +3735,9 @@ $.any.anyView.prototype.addListEntry = function (event)
     this.model.dataDelete({ id: new_id });
     let new_params = {
       table_div: table_div,
-      type:      type,
       data:      this.model.data,
       id:        par_id, // TODO! Is this correct?
+      type:      type,
       par_data:  par_data,
       par_id:    par_id,
       par_type:  par_type,
@@ -3754,9 +3746,9 @@ $.any.anyView.prototype.addListEntry = function (event)
   }
   // Get a new id (from database, if we use that) and add a new empty item to the data model.
   let the_data = this.model.dataSearch({
-                              type: type,
-                              id:   par_id,
                               data: this.model.data,
+                              id:   par_id,
+                              type: type,
                               parent: true,
                             }); // Find the place to add the new item
   if (is_new) {
@@ -3766,10 +3758,10 @@ $.any.anyView.prototype.addListEntry = function (event)
         row_id_str  = row_id_str.substr(0, row_id_str.lastIndexOf("_"));
         row_id_str += row_id_str ? "_"+new_id : new_id;
         this._addListEntry({
-               type:       type,
-               mode:       "list",
                data:       the_data,
                new_id:     new_id,
+               type:       type,
+               mode:       "list",
                par_data:   par_data,
                par_id:     par_id,
                par_type:   par_type,
@@ -3828,8 +3820,8 @@ $.any.anyView.prototype._addListEntryFromDB = function (context,serverdata,optio
     let view = options.context ? options.context : null;
     if (view) {
       view.showMessages("",false);
-      serverdata.mode       = "list";
       serverdata.type       = options.type;
+      serverdata.mode       = "list";
       serverdata.id_str     = options.id_str;
       serverdata.row_id_str = options.row_id_str;
       serverdata.new_id     = serverdata.id;
@@ -3890,17 +3882,17 @@ $.any.anyView.prototype._addListEntry = function (opt)
   let the_data = opt.data ? opt.data : this.model.data;
   if (new_id || new_id===0)
     this.model.dataInsert({
-                 type:     opt.type,
                  data:     the_data,
                  id:       null,
+                 type:     opt.type,
                  new_data: indata,
                  new_id:   new_id,
                });
   else
     this.model.dataUpdate({
-                 type:     opt.type,
                  data:     the_data,
                  id:       opt.id,
+                 type:     opt.type,
                  new_data: indata,
                });
   opt.new_id = null; // Important! To make addListEntry work with id === 0
@@ -3908,10 +3900,10 @@ $.any.anyView.prototype._addListEntry = function (opt)
   let nrows = Object.size(the_data);
   this.refreshData({
          table_div:  table_div,
-         type:       type,
-         mode:       mode,
          data:       the_data,
          id:         new_id,
+         type:       type,
+         mode:       mode,
          par_data:   par_data,
          par_id:     par_id,
          par_type:   par_type,
@@ -3933,8 +3925,8 @@ $.any.anyView.prototype.itemLinkClicked = function (event)
 $.any.anyView.prototype.showItem = function (event)
 {
   event.data.view = this;
-  let type   = event.data.type;
   let id     = event.data.id;
+  let type   = event.data.type;
   let is_new = event.data.is_new;
 
   if (is_new || id == "new" || id == -1 || (!id && id !== 0)) {
@@ -3959,13 +3951,13 @@ $.any.anyView.prototype.showItem = function (event)
         let view  = this;
         if (type != this.model.type) {
           model = this.createModel({
-                         type: type,
                          data: null,
                          id:   null,
+                         type: type,
                        });
           view  = this.createView({
-                    model:        model,
-                  });
+                         model: model,
+                       });
         }
         if (model && view)
           model.dbSearchNextId({
@@ -4016,9 +4008,9 @@ $.any.anyView.prototype._foundNextIdFromDB = function (context,serverdata,option
 // Returns null on error
 $.any.anyView.prototype._doShowItem = function (opt)
 {
-  let type     = opt.head ? opt.head : opt.item ? opt.item : opt.list ? opt.list : opt.type ? opt.type : "";
   let data     = opt.data;
   let id       = opt.id;
+  let type     = opt.head ? opt.head : opt.item ? opt.item : opt.list ? opt.list : opt.type ? opt.type : "";
   let is_new   = opt.is_new != undefined ? opt.is_new : false;
   let name_key = this.model.name_key ? this.model.name_key : type+"_name";
 
@@ -4097,9 +4089,9 @@ $.any.anyView.prototype._doShowItem = function (opt)
   let idx = Number.isInteger(parseInt(the_id)) ? ""+parseInt(the_id) : the_id;
 
   let model = this.createModel({
-                     type: type,
                      data: the_item,
                      id:   the_id,
+                     type: type,
                    });
   let view = this.createView({
                     model:        model,
@@ -4146,10 +4138,10 @@ $.any.anyView.prototype._doShowItem = function (opt)
     if (is_new && opt.showHeader)
       the_id = topidx;
     view.refresh({
-           type:  type,
-           mode:  "item",
            data:  the_item,
            id:    the_id,
+           type:  type,
+           mode:  "item",
            edit:  is_new,
            clear: true,
          });
@@ -4206,9 +4198,9 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
         }
         if (this.model && is_empty) {
           this.model.dataDelete({
-             type: opt.type,
              data: opt.data,
              id:   opt.id,
+             type: opt.type,
           });
           elem.remove();
           this.current_edit = null;
@@ -4216,10 +4208,10 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
       }
       let new_params = {
         parent:     this.element,
-        type:       opt.type,
-        mode:       opt.mode,
         data:       opt.data,
         id:         opt.id,
+        type:       opt.type,
+        mode:       opt.mode,
         par_type:   opt.par_type,
         par_mode:   opt.par_mode,
         par_data:   opt.par_data,
@@ -4245,10 +4237,10 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
     else {
       this.refreshItemTableDataRow({
              parent:     elem,
-             type:       opt.type,
-             mode:       opt.mode,
              data:       opt.data,
              id:         opt.id,
+             type:       opt.type,
+             mode:       opt.mode,
              par_data:   opt.par_data,
              par_id:     opt.par_id,
              id_str:     opt.id_str,
@@ -4272,10 +4264,10 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
       $("#"+delete_icon).show();
     $("#"+cancel_icon).show();
     this.current_edit = {
-      type:       opt.type,
-      mode:       opt.mode,
       data:       opt.data,
       id:         opt.id,
+      type:       opt.type,
+      mode:       opt.mode,
       par_data:   opt.par_data,
       par_id:     opt.par_id,
       id_str:     opt.id_str,
@@ -4340,10 +4332,10 @@ $.any.anyView.prototype._toggleChecked = function (event)
 // Does not  remove from memory (data structure).
 $.any.anyView.prototype.removeFromView = function (opt)
 {
-  let type   = opt.type;
-  let mode   = opt.mode;
   let data   = opt.data;
   let id     = opt.id;
+  let type   = opt.type;
+  let mode   = opt.mode;
   let id_str = opt.id_str;
 
   if (mode == "list") {
@@ -4398,19 +4390,19 @@ $.any.anyView.prototype.removeFromView = function (opt)
  * @param  mode
  * @param  id
  * @param  val
- * @param  par_id
+ * @param  link_id
  * @param  edit
  * @return true on success, false on error.
  */
-$.any.anyView.prototype.dbSearchParents = function (type,mode,id,val,edit,par_id)
+$.any.anyView.prototype.dbSearchParents = function (type,mode,id,val,edit,link_id)
 {
   if (!this.model)
     return val;
   let options = {
+   id:        null, // Search for all items of given type
    type:      type,
    mode:      mode,
-   id:        null, // Search for all items of given type
-   parent_id: par_id,
+   parent_id: link_id,
    child_id:  id,
    simple:    true,
    onSuccess: this.createParentDropdownMenu,
@@ -4452,11 +4444,11 @@ $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,
     if (serverdata.data) {
       let view = options.context ? options.context : null;
       if (view) {
+        let data      = serverdata.data;
+        let the_id    = Number.isInteger(parseInt(options.child_id)) ? parseInt(options.child_id) : options.child_id;
         let mode      = options.mode;
         let type_name = options.type+"_name";
-        let the_id    = Number.isInteger(parseInt(options.child_id)) ? parseInt(options.child_id) : options.child_id;
         let id_str    = "0_"+the_id;
-        let data      = serverdata.data;
         let itemsel_id = view.id_base+"_"+options.type+"_"+mode+"_"+id_str+"_parent_id .itemSelect";
         let itemsel_dd = $("#"+itemsel_id);
         let did_select = "selected='true'";
@@ -4541,10 +4533,10 @@ $.any.anyView.prototype.dbUpdate = function (event)
     this.showMessages();
     return false;
   }
-  let type       = event.data.type;
-  let mode       = event.data.mode;
   let new_data   = event.data.new_data;
   let id         = event.data.id;
+  let type       = event.data.type;
+  let mode       = event.data.mode;
   let par_type   = event.data.par_type;
   let par_mode   = event.data.par_mode;
   let par_data   = event.data.par_data;
@@ -4610,7 +4602,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
           head_item[topidx][this.options.view.model.name_key] = data_values[this.model.name_key];
           this.options.view.options.item_opening = true;
           this.options.view.id_stack = [];
-          this.options.view.refresh(); // TODO! Refreshes entire view, but only need to refresh header
+          //this.options.view.refresh(); // TODO! Refreshes entire view, but only need to refresh header
         }
       }
     }
@@ -4631,10 +4623,10 @@ $.any.anyView.prototype.dbUpdate = function (event)
     }
     let params = {
       parent:     tr.parent(),
-      type:       type,
-      mode:       mode,
       data:       new_data,
       id:         id,
+      type:       type,
+      mode:       mode,
       par_type:   par_type,
       par_mode:   par_mode,
       par_data:   par_data,
@@ -4648,7 +4640,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
   else {
     this.options.isDeletable = this.options.isEditable;
     this.id_stack.pop();
-    this.refresh();
+    //this.refresh();
   }
   // Update database
   let icid = event.currentTarget.id.replace("update","edit");
@@ -4685,8 +4677,8 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
     return false;
   let options = {
    parent_view: this,
-   type:        event.data.link_type,
    id:          null,
+   type:        event.data.link_type,
    link_type:   event.data.type,
    link_id:     event.data.id,
    id_str:      event.data.id_str,
@@ -4726,16 +4718,16 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
     if (serverdata.data && options) {
       let parent_view = options.parent_view ? options.parent_view : null;
       if (parent_view) {
-        let type        = options.link_type ? options.link_type : self.type;
         let data        = options.link_data ? options.link_data : self.data;
         let id          = options.link_id   ? options.link_id   : self.id;
-        let new_id_base = parent_view._createIdBase();
+        let type        = options.link_type ? options.link_type : self.type;
         let link_type   = options.type;
+        let new_id_base = parent_view._createIdBase();
         let ll_id       = new_id_base+"_"+link_type+"_link_list";
         let ll_contents = $("<div id='"+ll_id+"'></div>");
         let ll_model    = parent_view.createModel({
-                                        type: link_type,
                                         data: serverdata.data,
+                                        type: link_type,
                                       });
         let select_list_view = parent_view.createView({
                                              model:        ll_model,
@@ -4799,11 +4791,11 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
               context:    the_view,
               // Used by okFunction:
               data:       data,
-              type:       type,
               id:         id,
+              type:       type,
               link_data:  null,
-              link_type:  select_list_view.model.type,
               link_id:    null,
+              link_type:  select_list_view.model.type,
               select:     select_list_view.options.select,
               unselect:   select_list_view.options.unselect,
             };
@@ -4815,10 +4807,10 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           parent_view.options.item_opening = true; // To make top right close icon appear
           parent_view.refreshToolbarForView({
             parent: parent_view.element,
-            type:   type,
-            mode:   "item",
             data:   data,
             id:     id,
+            type:   type,
+            mode:   "item",
             edit:   false,
           });
         }
@@ -4888,6 +4880,17 @@ $.any.anyView.prototype._findViewById = function (id)
   return v;
 }; // _findViewById
 
+/**
+ * Removes an item from a list, a parent or a group in memory and database and refreshes view.
+ *
+ * @method anyView.dbRemoveDialog
+ * @param {Object} event
+ *
+ * @return this
+ *
+ * @throws {MODEL_MISSING} If `this.model` or `this.model.permission` are null or undefined.
+ * @throws {DATA_MISSING}
+ */
 $.any.anyView.prototype.dbRemoveDialog = function (event)
 {
   if (!this.model)
@@ -4993,7 +4996,7 @@ $.any.anyView.prototype.dbUpdateLinkList = function (opt)
  * Deletes an item from memory and database and refreshes view.
  *
  * @method anyView.dbDeleteDialog
- * @param {Object}  options
+ * @param {Object} event
  *
  * @return this
  *
@@ -5009,10 +5012,10 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
   if (!event || !event.data)
     throw i18n.error.DATA_MISSING;
 
-  let type   = event.data.type;
-  let mode   = event.data.mode;
   let data   = event.data.data;
   let id     = event.data.id;
+  let type   = event.data.type;
+  let mode   = event.data.mode;
   let id_str = event.data.row_id_str;
 
   let item = this.model.dataSearch({
@@ -5050,10 +5053,10 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
         okFunction: this.dbDelete,
         context:    this,
         // Sent to okFunction dbDelete:
-        type:       type,
-        mode:       mode,
         data:       data,
         id:         id,
+        type:       type,
+        mode:       mode,
         id_str:     id_str,
       });
   }
