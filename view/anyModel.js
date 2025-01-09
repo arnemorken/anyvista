@@ -2277,7 +2277,7 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *
  * @return true if the database call was made, false on error.
  */
-anyModel.prototype.dbUpdateLinkList = function (options)
+anyModel.prototype.dbUpdateLinkList = async function (options)
 {
   if (!options || typeof options != "object")
     options = {};
@@ -2306,7 +2306,7 @@ anyModel.prototype.dbUpdateLinkList = function (options)
     });
   }
   else { // Local method call (AlaSQL server)
-    this._dbUpdateLinkListLocal(options);
+    await this._dbUpdateLinkListLocal(options);
     return this.error == "";
   }
   return true;
@@ -2321,7 +2321,7 @@ anyModel.prototype._dbUpdateLinkListLocal = async function (options)
     let table = await this.table_factory.createClass(table_name,{type:the_type,header:true,path:options.path});
     if (table && table.error == "") {
       let self = this;
-      return table.dbUpdateLinkList(options)
+      return await table.dbUpdateLinkList(options) // TODO! Is await neccessary here?
       .then( function(serverdata) {
         if (self.success)
           return self.success(self.context,serverdata,options);
