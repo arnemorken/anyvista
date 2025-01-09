@@ -1801,8 +1801,7 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
     }
     if (dellist) {
       // Remove elements from the item's list
-      for (let i=0; i<dellist.length; i++) {
-        let delval = dellist[i];
+      for (const delval of dellist) {
         if (delval) {
           let stmt = "DELETE FROM " + link_tablename + " " +
                      "WHERE " +
@@ -1816,8 +1815,7 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
     }
     if (inslist) {
       // Add elements to the item's list (delete before insert to avoid error if element already exists in list)
-      for (let i=0; i<inslist.length; i++) {
-        let insval = inslist[i];
+      for (const insval of inslist) {
         if (insval) {
           let stmt = "DELETE FROM " + link_tablename + " " +
                      "WHERE " +
@@ -1842,8 +1840,7 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
     if (this.hasParentId()) {
       if (dellist) {
         // Remove parent for elements in dellist
-        for (let i=0; i<dellist.length; i++) {
-          let delval = dellist[i];
+        for (const delval of dellist) {
           if (delval) {
             let stmt = "UPDATE " + this.tableName + " " +
                        "SET parent_id=NULL " +
@@ -1855,8 +1852,7 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
       }
       if (inslist) {
         // Set parent for elements in inslist
-        for (let i=0; i<inslist.length; i++) {
-          let updval = inslist[i];
+        for (const updval of inslist) {
           if (updval && updval != id) {
             let stmt = "UPDATE " + this.tableName + " " +
                        "SET parent_id=" + id + " " +
@@ -1870,17 +1866,23 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
   }
   this.message = this.updateSuccessMsg;
 
+  // Hack to overcome alasql bug #1091
+  let thedb = this.connection.any_dbname;
+  await alasql.promise("DETACH DATABASE "+thedb+";");
+  await alasql.promise("ATTACH INDEXEDDB DATABASE "+thedb+";USE "+thedb+";" );
+
   // Get the (updated) list for the item
-  await this.dbSearchItemListOfType(link_type);
+  await this.dbSearchItemListOfType(id,link_type);
 
   if (this.error)
-    return Promise.resolve(null);
+    return null;
 
   if (this.data) {
+    // TODO! Why must we do this?
     this.data["data"] = this.data;
     this.data["nogroup"] = null;
   }
-  return Promise.resolve(this);
+  return this;
 }; // dbUpdateLinkList
 
 anyTable.prototype.dbValidateUpdateLinkList = function(options)
