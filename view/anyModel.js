@@ -2320,6 +2320,8 @@ anyModel.prototype._dbUpdateLinkListLocal = async function (options)
     let table_name = options && options.tableName ? options.tableName : the_type+"Table";
     let table = await this.table_factory.createClass(table_name,{type:the_type,header:true,path:options.path});
     if (table && table.error == "") {
+      options.add = options.select;
+      options.rem = options.unselect;
       let self = this;
       return await table.dbUpdateLinkList(options) // TODO! Is await neccessary here?
       .then( function(serverdata) {
