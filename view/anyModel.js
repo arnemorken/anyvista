@@ -1223,8 +1223,8 @@ anyModel.prototype.dataUpdateLinkList = function (options)
   if (the_link_id) {
     // Remove the link data and return
     this.dataDelete({ data: the_data,
-                      id:   the_link_id,
-                      type: the_link_type,
+                      id:   the_id,
+                      type: the_type,
                    });
     return true;
   } // if
