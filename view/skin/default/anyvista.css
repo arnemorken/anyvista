@@ -30,6 +30,23 @@
   -webkit-appearance: none;
 }
 
+/*** tinymce toolbar ***/
+.tox .tox-tbtn {
+    transform: scale(0.8) !important; /* you can set the scale that you want */
+    height: unset !important;
+    width: unset !important;
+}
+.tox .tox-tbtn--bespoke .tox-tbtn__select-label {
+    width: unset !important;
+}
+.tox .tox-toolbar, .tox .tox-toolbar__overflow, .tox .tox-toolbar__primary {
+  /* change the background y-positioning to : bottom 0*/
+  background: url("data:image/svg+xml;charset=utf8,%3Csvg height='39px' viewBox='0 0 40 39px' width='40' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='38px' width='100' height='1' fill='%23cccccc'/%3E%3C/svg%3E") left 0 bottom 0 #fff !important;
+}
+.tox-toolbar {
+   border-bottom: 1px solid #ccc !important;
+}
+
 /**************************
  * W3CSS
  **************************/
@@ -178,6 +195,8 @@ input[type=submit] {
   padding-bottom:   .1em;
   font-size:        1.1em;
   font-weight:      bold;
+  background:       #777;
+  color:            #eee;
 }
 .any-header-2 {
   padding-left:     1.0em;
@@ -260,7 +279,8 @@ input[type=submit] {
   margin-left:  0.5em;
 }
 .any-table-2,
-.any-table-3 {
+.any-table-3,
+.any-table-4 {
   width:  806px;
 }
 .any-th {
