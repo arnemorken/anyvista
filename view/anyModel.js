@@ -660,12 +660,12 @@ anyModel.prototype.dataSearch = function (options,
 
   if (!data)
     return null; // Not found
-  if (!type) {
-    console.error("anyModel.dataSearch: "+i18n.error.TYPE_MISSING);
-    return null;
-  }
   if (!id && id !== 0 && !type) {
     console.error("anyModel.dataSearch: "+i18n.error.ID_TYPE_MISSING+" ("+id+","+type+") ");
+    return null;
+  }
+  if (!type) {
+    console.error("anyModel.dataSearch: "+i18n.error.TYPE_MISSING);
     return null;
   }
 
@@ -827,12 +827,10 @@ anyModel.prototype.dataSearchMaxId = function (data,type,_prev_type)
     return -1;
   // If any non-numerical index is found, return immediately
   let datakeys = Object.keys(data);
-  for (const key in datakeys) {
-    if (datakeys.hasOwnProperty(key)) {
-      if (!isInt(datakeys[key])) {
-        this.max = Object.size(data)-1;
-        return this.max;
-      }
+  for (const key of datakeys) {
+    if (!isInt(datakeys[key])) {
+      this.max = Object.size(data)-1;
+      return this.max;
     }
   }
   // Must at least be bigger than biggest "index" in object
@@ -1231,7 +1229,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
     return true;
   } // if
 
-  if (options.unselect && options.unselect.size) {
+  if (options.unselect && (options.unselect.size || options.unselect.length)) {
     // Remove links in `unselect`
     for (let rem_id of options.unselect) {
       // Remove (delete) the link data with id 'id'
@@ -1246,7 +1244,7 @@ anyModel.prototype.dataUpdateLinkList = function (options)
   } // if
 
   // Insert or update link in `select`
-  if (options.select && options.select.size && the_id && the_type) {
+  if (options.select && (options.select.size || options.select.length) && the_id && the_type) {
     for (let sel_id of options.select) {
       // Only insert item if it is not already in model
       if (!this.dataSearch({ data: the_data,
@@ -2228,13 +2226,9 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false) {
     let params = {};
-    params.data     = options.data;
-    params.mode     = options.mode;
-    params.type     = options.type;
-    params.par_data = options.par_data;
-    params.par_id   = options.par_id;
-    params.par_mode = options.par_mode;
-    params.par_type = options.par_type;
+    params.data = options.data;
+    params.type = options.type;
+    params.mode = options.mode;
     self.cbExecute(params);
   }
   return context;
@@ -2400,12 +2394,12 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
     param_str += "&rem="+the_link_id;
   else {
     let has_add_or_rem = false;
-    if (options.select && options.select.size) {
+    if (options.select && (options.select.size || options.select.length)) {
       let sel = [...options.select];
       param_str += "&add="+sel;
       has_add_or_rem = true;
     }
-    if (options.unselect && options.unselect.size) {
+    if (options.unselect && (options.unselect.size || options.unselect.length)) {
       let unsel = [...options.unselect];
       param_str += "&rem="+unsel;
       has_add_or_rem = true;
@@ -2455,9 +2449,9 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
              data:      options.data,
              id:        options.id,
              type:      options.type,
+             link_type: options.link_type,
              select:    options.select,
              unselect:  options.unselect,
-             link_type: options.link_type,
              new_data:  options.new_data,
            }); // Remove data
       if (serverdata.data) {
