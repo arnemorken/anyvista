@@ -2451,6 +2451,8 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
              data:      options.data,
              id:        options.id,
              type:      options.type,
+             link_data: options.link_data,
+             link_id:   options.link_id,
              link_type: options.link_type,
              select:    options.select,
              unselect:  options.unselect,
@@ -2470,8 +2472,11 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
     }
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
-    self.cbExecute({ parent: options.parent,
-                     clear:  true });
+    self.cbExecute({ clear:  true,
+                     link_data: options.link_data,
+                     link_id:   options.link_id,
+                     link_type: options.link_type,
+                  });
   return context;
 }; // dbUpdateLinkListSuccess
 
