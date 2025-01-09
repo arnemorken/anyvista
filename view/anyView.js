@@ -2515,7 +2515,16 @@ $.any.anyView.prototype.refreshRemoveButton = function (opt)
             : this.option("context")
               ? this.option("context")
               : this;
-  btn.off("click").on("click",opt,$.proxy(fun,con));
+  let rem_opt = {
+        data:      opt.data,
+        id:        opt.id,
+        type:      opt.type,
+        mode:      opt.mode,
+        link_data: opt.link_data,
+        link_id:   opt.link_id,
+        link_type: opt.link_type,
+      };
+  btn.off("click").on("click",rem_opt,$.proxy(fun,con));
   return btn;
 }; // refreshRemoveButton
 
