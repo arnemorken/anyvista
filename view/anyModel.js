@@ -58,10 +58,6 @@
  *                                          Default: "[type]_name" if type is set, "" otherwise.
  * @param {anyModel} options.parent         The model's "parent" model, if any.
  *                                          Default: null.
- * @param {String}   options.link_id        Links to an item in the parent model (if any).
- *                                          Default: null.
- * @param {String}   options.link_type      Type of an item in the parent model (if any).
- *                                          Default: null.
  * @param {String}   options.source         Indicates whether db* operations should be performed by
  *                                          a locally defined method ("local") or call a database
  *                                          method on a remote server ("remote").
@@ -178,24 +174,6 @@ var anyModel = function (options)
   * @default    null
   */
   this.parent = null;
-
-  /**
-  * If this model is linked to an item in the parent model, `link_id` can
-  * be used to address the data as: `this.parent.data[this.link_id]`.
-  *
-  * @type       {String}
-  * @default    null
-  */
-  this.link_id = null;
-
-  /**
-  * If this model is linked to an item in the parent model, `link_type` is
-  * the type of the parent data.
-  *
-  * @type       {String}
-  * @default    null
-  */
-  this.link_type = null;
 
   /**
   * The model's source, e.g. `"local"` or `remote"`.
@@ -420,8 +398,6 @@ anyModel.prototype._dataInitDefault = function ()
   this.data            = null;
   this.id              = null;
   this.parent          = null;
-  this.link_id         = null;
-  this.link_type       = null;
   this.source          = typeof gSource !== 'undefined' ? gSource : "local";
   this.db_connection   = null;
   this.table_factory   = null;
@@ -460,7 +436,6 @@ anyModel.prototype._dataInitDefault = function ()
  * @param {String}  options.id_key         Id key, e.g. "user_id". Optional. Default: "[type]_id".
  * @param {String}  options.name_key       Name key, e.g. "user_name". Optional. Default: "[type]_name".
  * @param {String}  options.parent         The model's "parent" model, if any. Optional.
- * @param {String}  options.link_id        Links to to an item in the parent model (if any). Optional.
  * @param {String}  options.source         "local" or "remote". Optional.
  * @param {Object}  options.db_connection  The database connection. Only valid when `source` is "local". Optional.
  * @param {Object}  options.table_factory  The table factory class. Only valid when `source` is "local". Optional.
@@ -511,8 +486,6 @@ anyModel.prototype.dataInit = function (options)
     else
     if (!this.name_key && this.type)                   { this.name_key       = this.type+"_name"; }
     if (options.parent)                                { this.parent         = options.parent; }
-    if (options.link_id)                               { this.link_id        = options.link_id; }
-    if (options.link_type)                             { this.link_type      = options.link_type; }
     if (options.source)                                { this.source         = options.source; }
     if (options.db_connection)                         { this.db_connection  = options.db_connection; }
     if (options.table_factory)                         { this.table_factory  = options.table_factory; }
