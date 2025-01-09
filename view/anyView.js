@@ -477,36 +477,32 @@ $.any.anyView.prototype.empty = function (params)
  * @method anyView.refresh
  * @param {Object} params Undefined or an object which may contain these elements:
  *
- * @param {Object}  params.parent   The element in which to display data.
- *                                  Default: `this.element`.
- * @param {Object}  params.model    A model containing the data to display.
- *                                  Default: `this.model`.
- * @param {string}  params.type     The type of the data to display.
- *                                  Ignored if `model` is given.
- *                                  Default: "".
- * @param {string}  params.mode     The mode in which to display data ("list", "item" or "head").
- *                                  Default: "".
- * @param {Object}  params.data     The data to display / display from.
- *                                  Ignored if `model` is given.
- *                                  Default: `this.model.data` if `this.model` is set, null otherwise.
- * @param {string}  params.par_type The type of the data on the level above.
- *                                  Ignored if `model` is given, in which case `model.parent.type` is used.
- *                                  Default: "".
- * @param {string}  params.par_mode The mode of the data on the level above,.
- *                                  Ignored if `model` is given, in which case `model.parent.mode` is used.
- *                                  Default: "".
- * @param {Object}  params.par_data The data on the level above `data`.
- *                                  Ignored if `model` is given, in which case `model.parent.data` is used.
- *                                  Default: null.
- * @param {string}  params.par_id   The id in `par_data` where `data` may be found (`par_data[par_id] == data`).
- *                                  Ignored if `model` is given, in which case `model.parent.id` is used.
- *                                  Default: null.
- * @param {boolean} params.edit     If true, the item should be displayed as editable.
- *                                  Default: false.
- * @param {integer} params.from     Pagination start.
- *                                  Default: 1.
- * @param {integer} params.num      Pagination number of elements.
- *                                  Default: `this.options.itemsPerPage`.
+ * @param {Object}  params.parent    The element in which to display data.
+ *                                   Default: `this.element`.
+ * @param {Object}  params.model     A model containing the data to display.
+ *                                   Default: `this.model`.
+ * @param {Object}  params.data      The data to display / display from. If given, overrides data in `model`.
+ *                                   Default: `model.data` if `model` is set, null otherwise.
+ * @param {string}  params.type      The type of the data to display. If not given, finds value from `data`.
+ *                                   Default: null.
+ * @param {string}  params.mode      The mode in which to display data ("list", "item" or "head").
+ *                                   If not given, finds value from `data` and `type`.
+ *                                   Default: "head".
+ * @param {Object}  params.link_data The data on the level above `data`.
+ *                                   Ignored if `model` is given, in which case `model.parent.data` is used.
+ *                                   Default: null.
+ * @param {string}  params.link_id   The id in `link_data` where `data` may be found (`link_data[link_id] == data`).
+ *                                   Ignored if `model` is given, in which case `model.parent.id` is used.
+ *                                   Default: null.
+ * @param {string}  params.link_type The type of the data on the level above.
+ *                                   Ignored if `model` is given, in which case `model.parent.type` is used.
+ *                                   Default: "".
+ * @param {boolean} params.edit      If true, the item should be displayed as editable.
+ *                                   Default: false.
+ * @param {integer} params.from      Pagination start.
+ *                                   Default: 1.
+ * @param {integer} params.num       Pagination number of elements.
+ *                                   Default: `this.options.itemsPerPage`.
  *
  * @return this
  *
@@ -523,19 +519,16 @@ $.any.anyView.prototype.refresh = function (params)
       this.options = {};
     this.options.ref_rec = 0; // Reset on every call to refresh
   }
-  let model    = params && params.model    ? params.model    : this.model;
-  let type     = params && params.type     ? params.type     : model                 ? model.type        : "";
-  let data     = params && params.data     ? params.data     : model                 ? model.data        : null;
-  let mode     = params && params.mode     ? params.mode     : "";
-  let par_id   = params && params.par_id   ? params.par_id   : model && model.parent ? model.parent.id   : model ? model.link_id   : "";
-  let par_type = params && params.par_type ? params.par_type : model && model.parent ? model.parent.type : model ? model.link_type : "";
-  let par_data = params && params.par_data ? params.par_data : model && model.parent ? model.parent.data : null;
-  let par_mode = params && params.par_mode ? params.par_mode : "";
-  let edit     = params && params.edit     ? params.edit     : false;
-  let from     = params && params.from     ? params.from     : 1;
-  let num      = params && params.num      ? params.num      : this.options.itemsPerPage;
-  if (!type)
-    type = this._findType(data); // Find type from *_name element of data[0]
+  let model     = params && params.model     ? params.model     : this.model;
+  let data      = params && params.data      ? params.data      : model ? model.data : null;
+  let type      = params && params.type      ? params.type      : this._findType(data);
+  let mode      = params && params.mode      ? params.mode      : this._findMode(data,null,type);
+  let link_data = params && params.link_data ? params.link_data : model ? model.parent ? model.parent.data : null : null;
+  let link_id   = params && params.link_id   ? params.link_id   : model ? model.parent ? model.parent.id   : ""   : "";
+  let link_type = params && params.link_type ? params.link_type : model ? model.parent ? model.parent.type : ""   : "";
+  let edit      = params && params.edit      ? params.edit      : false;
+  let from      = params && params.from      ? params.from      : 1;
+  let num       = params && params.num       ? params.num       : this.options.itemsPerPage;
 
   // Should we clear the view area before displaying?
   if (params && params.clear)
@@ -576,7 +569,7 @@ $.any.anyView.prototype.refresh = function (params)
             }
             else
             if (curr_mode == "list" && prev_mode == "list" && prev_type != curr_type) {
-              let idx = Number.isInteger(parseInt(par_id)) ? ""+parseInt(par_id) : par_id;
+              let idx = Number.isInteger(parseInt(link_id)) ? ""+parseInt(link_id) : link_id;
               this.id_stack.push(idx);
             }
             // Create the current id_str
@@ -587,23 +580,21 @@ $.any.anyView.prototype.refresh = function (params)
                 (/*prev_mode != "" &&*/ prev_mode != curr_mode)) {
               // If the new type/mode is contained within a list, create a new row to contain a new parent container
               if (prev_mode == "list" && prev_type != curr_type &&
-                  params.par_id != "+0" && params.par_id != "0" && params.par_id !== 0 // TODO! Not a good test
+                  params && params.link_id != "+0" && params.link_id != "0" && params.link_id !== 0 // TODO! Not a good test
                   )
                 the_parent = view._addContainerRow(parent,prev_type,prev_mode,curr_type,curr_mode,id_str);
               model = this.createModel({
-                             type:     curr_type,
-                             data:     data,
-                             id:       curr_mode=="item" ? id : "",
-                             par_type: par_type,
-                             par_id:   par_id,
-                             par_data: par_data,
+                             data:      data,
+                             id:        curr_mode=="item" ? id : "",
+                             type:      curr_type,
+                             link_data: link_data,
+                             link_id:   link_id,
+                             link_type: link_type,
                            });
               view  = this.createView({
-                             model:    model,
-                             id:       id,
-                             parent:   the_parent,
-                             id_str:   id_str,
-                             par_mode: par_mode,
+                             model:  model,
+                             parent: the_parent,
+                             id_str: id_str,
                            });
               if (view) {
                 view.empty(); // TODO! With this, pagination may not work properly
@@ -619,42 +610,39 @@ $.any.anyView.prototype.refresh = function (params)
               // If we have an item as (grand)parent, use its' type/data/id, not the immediate level above
               let it = this._findParentItemModel();
               if (it && it.id) {
-                par_type = it.type;
-                par_data = it.data;
-                par_id   = it.id;
+                link_type = it.type;
+                link_data = it.data;
+                link_id   = it.id;
               }
               // Refresh a header, a single list row or a single item
               view.refreshOne({
-                     parent:   the_parent,
-                     type:     curr_type,
-                     mode:     curr_mode,
-                     data:     data,
-                     id:       id,
-                     par_type: par_type,
-                     par_mode: par_mode,
-                     par_data: par_data,
-                     par_id:   par_id,
-                     edit:     edit,
-                     row_no:   row_no,
+                     parent:    the_parent,
+                     data:      data,
+                     id:        id,
+                     type:      curr_type,
+                     mode:      curr_mode,
+                     link_data: link_data,
+                     link_id:   link_id,
+                     link_type: link_type,
+                     edit:      edit,
+                     row_no:    row_no,
                    });
               if (curr_mode == "list" && !view.rows_changed)
                 --row_no;
             }
-
             if (id_str && view) {
               // Refresh bottom toolbar for this view
               let p_id = view.element.attr("id");
               let p    = $("#"+p_id);
               view.refreshToolbarForView({
-                     parent:   p,
-                     type:     curr_type,
-                     mode:     curr_mode,
-                     data:     data,
-                     par_type: par_type,
-                     par_mode: par_mode,
-                     par_data: par_data,
-                     par_id:   par_id ? par_id : view.model.link_id,
-                     id_str:   id_str,
+                     parent:    p,
+                     data:      data,
+                     type:      curr_type,
+                     mode:      curr_mode,
+                     link_data: link_data,
+                     link_id:   link_id,
+                     link_type: link_type,
+                     id_str:    id_str,
                    });
               new_view = false;
             }
@@ -676,21 +664,8 @@ $.any.anyView.prototype.refresh = function (params)
       elm.empty();
     }
   } // if data
-  else {
-    // Arrive here if no data
-    this.refreshNoData({
-           parent:   parent,
-           type:     type,
-           mode:     mode,
-           data:     null,
-           id:       null,
-           par_type: par_type,
-           par_mode: par_mode,
-           par_data: par_data,
-           par_id:   par_id,
-           edit:     edit,
-         });
-  }
+  else
+    this.refreshNoData(params); // We might need to do something if no data
 
   if (edit) // Initialize thirdparty components (tinymce, etc.)
     this.initComponents();
@@ -708,19 +683,19 @@ $.any.anyView.prototype.refresh = function (params)
     let d = data ? data[0] ? data[0] : data["+0"] ? data["+0"] : data : data;
     let gtype = d ? d.head ? d.head : type : type;
     this.refreshToolbarBottom({
-           parent:   parent,
-           type:     gtype,
-           mode:     mode,
-           data:     data,
-           id:       this.model.id,
-           par_type: par_type,
-           par_mode: par_mode,
-           par_data: par_data,
-           par_id:   par_id,
-           id_str:   "",
+           parent:    parent,
+           data:      data,
+           id:        this.model.id,
+           type:      gtype,
+           mode:      mode,
+           link_data: link_data,
+           link_id:   link_id,
+           link_type: link_type,
+           id_str:    "",
          });
   }
 
+  // Do we need to do something after displaying?
   if (this.postRefresh)
     this.postRefresh(params);
 
@@ -845,6 +820,8 @@ $.any.anyView.prototype.refreshOne = function (params)
   if (data) {
     let subdata = data[id] ? data[id].data : data["+"+id] ? data["+"+id].data : null;
     if (subdata && Object.size(subdata) > 0) {
+      let subtype = this._findType(data,id,type);
+      let submode = this._findMode(data,id,type);
       ++this.options.ref_rec;
       if (this.options.ref_rec > ANY_MAX_REF_REC) {
         this.options.ref_rec = 0;
@@ -854,13 +831,12 @@ $.any.anyView.prototype.refreshOne = function (params)
         ++this.options.indent_level;
       this.refresh({
              parent:    params.data_div,
-             type:      type,
-             mode:      mode,
              data:      subdata,
-             par_type:  type,
-             par_mode:  mode,
-             par_data:  data,
-             par_id:    id,
+             type:      subtype,
+             mode:      submode,
+             link_data: data,
+             link_id:   id,
+             link_type: type,
              edit:      edit,
              reset_rec: false,
            });
@@ -892,14 +868,13 @@ $.any.anyView.prototype.refreshToolbarForView = function (params)
   let type      = params.type;
   let mode      = params.mode;
   let id_str    = params.id_str;
-  let par_type = params.par_type;
-  let par_mode = params.par_mode;
-  let par_data = params.par_data;
-  let par_id   = params.par_id;
+  let link_data = params.link_data;
+  let link_id   = params.link_id;
+  let link_type = params.link_type;
 
   if (!parent || !parent.length || !type || mode != "item" ||
-      par_type !== "group" || par_id === "nogroup" || par_id === "unknown" ||
-      (type == "group" && par_type == "group"))
+      link_type !== "group" || link_id === "nogroup" || link_id === "unknown" ||
+      (type == "group" && link_type == "group"))
     return null;
 
   // Create container
@@ -915,10 +890,9 @@ $.any.anyView.prototype.refreshToolbarForView = function (params)
          data:      data,
          type:      type,
          mode:      mode,
-         par_type: par_type,
-         par_mode: par_mode,
-         par_data: par_data,
-         par_id:   par_id,
+         link_data: link_data,
+         link_id:   link_id,
+         link_type: link_type,
          id_str:    id_str,
          edit:      true,
        });
@@ -943,10 +917,9 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
   let id        = params.id;
   let type      = params.type;
   let mode      = params.mode;
-  let par_type = params.par_type;
-  let par_mode = params.par_mode;
-  let par_data = params.par_data;
-  let par_id   = params.par_id;
+  let link_data = params.link_data;
+  let link_id   = params.link_id;
+  let link_type = params.link_type;
 
   if (!parent || !type)
     return null;
@@ -968,10 +941,9 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
            id:        id,
            type:      type,
            mode:      "item",
-           par_type: par_type,
-           par_mode: par_mode,
-           par_data: par_data,
-           par_id:   par_id,
+           link_data: link_data,
+           link_id:   link_id,
+           link_type: link_type,
            id_str:    Number.isInteger(parseInt(id)) ? parseInt(id) : id,
            edit:   true,
          });
@@ -1140,89 +1112,89 @@ $.any.anyView.prototype.refreshData = function (params)
   if (!params || !params.table_div)
     return null;
 
-  let table_div  = params.table_div;
-  let type       = params.type;
-  let mode       = params.mode;
-  let data       = params.data;
-  let id         = params.id;
-  let par_type   = params.par_type;
-  let par_mode   = params.par_mode;
-  let par_data   = params.par_data;
-  let par_id     = params.par_id;
-  let id_str     = params.id_str;
-  let row_id_str = params.row_id_str;
-  let edit       = params.edit;
+  if (params.mode != "head") {
+    let table_div  = params.table_div;
+    let data       = params.data;
+    let id         = params.id;
+    let type       = params.type;
+    let mode       = params.mode;
+    let link_data  = params.link_data;
+    let link_id    = params.link_id;
+    let link_type  = params.link_type;
+    let id_str     = params.id_str;
+    let row_id_str = params.row_id_str;
+    let edit       = params.edit;
 
-  let extra_foot = this.getOrCreateDataFooter(table_div,type,mode,id_str);
-  if (extra_foot) {
-    this.refreshDataFooter({
-           parent:     extra_foot,
-           type:       type,
-           mode:       mode,
-           data:       data,
-           par_data:   par_data,
-           par_id:     par_id,
-           par_type:   par_type,
-           edit:       edit,
-           id_str:     id_str,
-           row_id_str: row_id_str,
-         });
-  }
-  let thead = table_div.find("thead").length ? table_div.find("thead") : null;
-  if (!thead) {
-    thead = this.getOrCreateThead(table_div,type,mode,id_str);
-    if (thead)
-      this.refreshThead({
-             parent:     thead,
+    let extra_foot = this.getOrCreateDataFooter(table_div,type,mode,id_str);
+    if (extra_foot) {
+      this.refreshDataFooter({
+             parent:     extra_foot,
+             data:       data,
              type:       type,
              mode:       mode,
-             data:       data,
-             par_data:   par_data,
-             par_id:     par_id,
-             par_type:   par_type,
+             link_data:  link_data,
+             link_id:    link_id,
+             link_type:  link_type,
+             edit:       edit,
              id_str:     id_str,
              row_id_str: row_id_str,
-             edit:       edit,
            });
-  }
-  if (mode == "list" || mode == "item") {
-    let tbody = this.getOrCreateTbody(table_div,type,mode,id_str);
-    if (tbody) {
-      this.rows_changed = this.refreshTbodyRow({
-                                 parent:     tbody,
-                                 type:       type,
-                                 mode:       mode,
-                                 data:       data,
-                                 id:         id,
-                                 par_type:   par_type,
-                                 par_mode:   par_mode,
-                                 par_data:   par_data,
-                                 par_id:     par_id,
-                                 id_str:     id_str,
-                                 row_id_str: row_id_str,
-                                 edit:       edit,
-                                 row_no:     params.row_no,
-                               });
     }
+    let thead = table_div.find("thead").length ? table_div.find("thead") : null;
+    if (!thead) {
+      thead = this.getOrCreateThead(table_div,type,mode,id_str);
+      if (thead)
+        this.refreshThead({
+               parent:     thead,
+               data:       data,
+               type:       type,
+               mode:       mode,
+               link_data:  link_data,
+               link_id:    link_id,
+               link_type:  link_type,
+               id_str:     id_str,
+               row_id_str: row_id_str,
+               edit:       edit,
+             });
+    }
+    if (mode == "list" || mode == "item") {
+      let tbody = this.getOrCreateTbody(table_div,type,mode,id_str);
+      if (tbody) {
+        this.rows_changed = this.refreshTbodyRow({
+                                   parent:     tbody,
+                                   data:       data,
+                                   id:         id,
+                                   type:       type,
+                                   mode:       mode,
+                                   link_data:  link_data,
+                                   link_id:    link_id,
+                                   link_type:  link_type,
+                                   id_str:     id_str,
+                                   row_id_str: row_id_str,
+                                   edit:       edit,
+                                   row_no:     params.row_no,
+                                 });
+      }
+    }
+    let tfoot = this.getOrCreateTfoot(table_div,type,mode,id_str);
+    if (tfoot) {
+      this.refreshTfoot({
+             parent:    tfoot,
+             data:      data,
+             id:        id,
+             type:      type,
+             mode:      mode,
+             link_data: link_data,
+             link_id:   link_id,
+             id_str:    id_str,
+             edit:      edit,
+           });
+    }
+    // Clean up
+    if (extra_foot && !extra_foot.children().length)
+      extra_foot.remove();
   }
-  let tfoot = this.getOrCreateTfoot(table_div,type,mode,id_str);
-  if (tfoot) {
-    this.refreshTfoot({
-           parent:   tfoot,
-           type:     type,
-           mode:     mode,
-           data:     data,
-           id:       id,
-           par_data: par_data,
-           par_id:   par_id,
-           id_str:   id_str,
-           edit:     edit,
-         });
-  }
-  // Clean up
-  if (extra_foot && !extra_foot.children().length)
-    extra_foot.remove();
-  return table_div;
+  return params.table_div;
 }; // refreshData
 
 //
@@ -1381,9 +1353,9 @@ $.any.anyView.prototype.refreshThead = function (params)
       id:         "new", // Find a new id
       type:       type,
       mode:       mode,
-      par_data:   params.par_data,
-      par_id:     params.par_id,
-      par_type:   params.par_type,
+      link_data:   params.link_data,
+      link_id:     params.link_id,
+      link_type:   params.link_type,
       id_str:     id_str,
       row_id_str: row_id_str,
       filter:     filter,
@@ -1432,8 +1404,8 @@ $.any.anyView.prototype.refreshThead = function (params)
                          filter_id:  filter_id,
                          filter_key: filter_key,
                          type:       type,
-                         par_id:     params.par_id,
-                         par_type:   params.par_type,
+                         link_id:     params.link_id,
+                         link_type:   params.link_type,
                        };
           th.off("click").on("click",th_opt,$.proxy(fun,this));
         }
@@ -1599,10 +1571,9 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
   let id         = params.id;
   let type       = params.type;
   let mode       = params.mode;
-  let par_type   = params.par_type;
-  let par_mode   = params.par_mode;
-  let par_data   = params.par_data;
-  let par_id     = params.par_id;
+  let link_data  = params.link_data;
+  let link_id    = params.link_id;
+  let link_type  = params.link_type;
   let edit       = params.edit;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
@@ -1654,10 +1625,9 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
     id:         id,
     type:       type,
     mode:       mode,
-    par_type:   par_type,
-    par_mode:   par_mode,
-    par_data:   par_data,
-    par_id:     par_id,
+    link_data:  link_data,
+    link_id:    link_id,
+    link_type:  link_type,
     id_str:     id_str,
     row_id_str: row_id_str,
     edit:       edit,
@@ -1685,8 +1655,8 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
   let id         = params.id;
   let type       = params.type;
   let mode       = params.mode;
-  let par_data   = params.par_data;
-  let par_id     = params.par_id;
+  let link_data  = params.link_data;
+  let link_id    = params.link_id;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
   let edit       = params.edit;
@@ -1725,7 +1695,7 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
         let str = this.getCellEntryStr(id,type,mode,row_id_str,filter_id,filter_key,data[id],lists,edit,model_str,td);
         if (typeof str == "string")
           td.append(str);
-        this.initTableDataCell(td_id,type,mode,data,id,id_str,row_id_str,filter,filter_id,filter_key,edit,n,par_data,par_id);
+        this.initTableDataCell(td_id,type,mode,data,id,id_str,row_id_str,filter,filter_id,filter_key,edit,n,link_data,link_id);
       }
     }
   }
@@ -1742,8 +1712,8 @@ $.any.anyView.prototype.refreshTableDataIngress = function (params)
   let id         = params.id;
   let type       = params.type;
   let mode       = params.mode;
-  let par_data   = params.par_data;
-  let par_id     = params.par_id;
+  let link_data  = params.link_data;
+  let link_id    = params.link_id;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
   let edit       = params.edit;
@@ -1778,8 +1748,8 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
   let id         = params.id;
   let type       = params.type;
   let mode       = params.mode;
-  let par_data   = params.par_data;
-  let par_id     = params.par_id;
+  let link_data  = params.link_data;
+  let link_id    = params.link_id;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
   let edit       = params.edit;
@@ -1869,8 +1839,8 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
           id:         id,
           type:       type,
           mode:       mode,
-          par_data:   par_data,
-          par_id:     par_id,
+          link_data:   link_data,
+          link_id:     link_id,
           id_str:     id_str,
           row_id_str: row_id_str,
           edit:       edit,
@@ -1902,8 +1872,8 @@ $.any.anyView.prototype.refreshTableDataItemCells = function (params)
   let id         = params.id;
   let type       = params.type;
   let mode       = params.mode;
-  let par_data   = params.par_data;
-  let par_id     = params.par_id;
+  let link_data  = params.link_data;
+  let link_id    = params.link_id;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
   let edit       = params.edit;
@@ -1934,7 +1904,7 @@ $.any.anyView.prototype.refreshTableDataItemCells = function (params)
   let str = this.getCellEntryStr(id,type,mode,row_id_str,filter_id,filter_key,data[id],lists,edit,model_str,view_str,td3);
   if (typeof str == "string")
     td3.append(str);
-  this.initTableDataCell(td_id,type,mode,data,id,id_str,row_id_str,filter,filter_id,filter_key,edit,n,par_data,par_id);
+  this.initTableDataCell(td_id,type,mode,data,id,id_str,row_id_str,filter,filter_id,filter_key,edit,n,link_data,link_id);
   return true;
 }; // refreshTableDataItemCells
 
@@ -1953,10 +1923,9 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
   let id         = params.id;
   let type       = params.type;
   let mode       = params.mode;
-  let par_type   = params.par_type;
-  let par_mode   = params.par_mode;
-  let par_data   = params.par_data;
-  let par_id     = params.par_id;
+  let link_data  = params.link_data;
+  let link_id    = params.link_id;
+  let link_type  = params.link_type;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
   let edit       = params.edit;
@@ -1980,10 +1949,9 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
     id:         id,
     type:       type,
     mode:       mode,
-    par_type:   par_type,
-    par_mode:   par_mode,
-    par_data:   par_data,
-    par_id:     par_id,
+    link_data:  link_data,
+    link_id:    link_id,
+    link_type:  link_type,
     id_str:     id_str,
     row_id_str: row_id_str,
     filter:     filter,
@@ -2030,10 +1998,9 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
   let id         = params.id;
   let type       = params.type;
   let mode       = params.mode;
-  let par_type   = params.par_type;
-  let par_mode   = params.par_mode;
-  let par_data   = params.par_data;
-  let par_id     = params.par_id;
+  let link_data  = params.link_data;
+  let link_id    = params.link_id;
+  let link_type  = params.link_type;
   let id_str     = params.id_str;
   let row_id_str = params.row_id_str;
   let edit       = params.edit;
@@ -2060,10 +2027,9 @@ $.any.anyView.prototype.refreshTableDataLastCell = function (params)
         id:         id,
         type:       type,
         mode:       mode,
-        par_type:   par_type,
-        par_mode:   par_mode,
-        par_data:   par_data,
-        par_id:     par_id,
+        link_data:  link_data,
+        link_id:    link_id,
+        link_type:  link_type,
         id_str:     id_str,
         row_id_str: row_id_str,
         edit:       edit,
@@ -2107,7 +2073,7 @@ $.any.anyView.prototype._rowHasData = function (data,filter)
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-$.any.anyView.prototype.initTableDataCell = function (td_id,type,mode,data,id,id_str,row_id_str,filter,filter_id,filter_key,edit,n,par_data,par_id)
+$.any.anyView.prototype.initTableDataCell = function (td_id,type,mode,data,id,id_str,row_id_str,filter,filter_id,filter_key,edit,n,link_data,link_id)
 {
   if (!filter_key || !td_id)
     return;
@@ -2118,8 +2084,8 @@ $.any.anyView.prototype.initTableDataCell = function (td_id,type,mode,data,id,id
     id:         id,
     type:       type,
     mode:       mode,
-    par_data:   par_data,
-    par_id:     par_id,
+    link_data:  link_data,
+    link_id:    link_id,
     id_str:     id_str,
     row_id_str: row_id_str,
     edit:       edit,
@@ -2522,7 +2488,7 @@ $.any.anyView.prototype.refreshCancelButton = function (opt)
 // By default calls dbRemoveDialog
 $.any.anyView.prototype.refreshRemoveButton = function (opt)
 {
-  if (!opt || opt.par_id == "nogroup")
+  if (!opt || opt.link_id == "nogroup")
     return null;
 
   let parent  = opt.parent;
@@ -2651,9 +2617,9 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
     // Add the clickable menu entries
     for (let link_type in this.options.linkIcons) {
       if (this.options.linkIcons.hasOwnProperty(link_type)) {
-        let link_opt = { data:      opt.par_data,
-                         id:        opt.par_id,
-                         type:      opt.par_type,
+        let link_opt = { data:      opt.link_data,
+                         id:        opt.link_id,
+                         type:      opt.link_type,
                          link_type: link_type,
                          link_icon: this.options.linkIcons[link_type],
                          id_str:    opt.id_str,
@@ -2739,8 +2705,8 @@ $.any.anyView.prototype.addGroupLink = function (event)
 {
   let e = {};
   e.data = {
-    id:        event.data.par_id,
-    type:      event.data.par_type,
+    id:        event.data.link_id,
+    type:      event.data.link_type,
     link_type: event.data.type,
     id_str:    event.data.id_str,
   };
@@ -2757,17 +2723,15 @@ $.any.anyView.prototype.addGroupLink = function (event)
  */
 $.any.anyView.prototype.createModel = function (params)
 {
-  let modelName = params && typeof params.modelName === "string"        ? params.modelName : null;
-  let data      = params && params.data                                 ? params.data      : null;
-  let id        = params && (params.id       || params.id       === 0)  ? params.id        : "";
-  let type      = params && params.type                                 ? params.type      : null;
-  let par_id    = params && (params.par_id   || params.par_id   === 0)  ? params.par_id    : "";
-  let par_type  = params && params.par_type                             ? params.par_type  : "";
+  let modelName = params && typeof params.modelName === "string" ? params.modelName : null;
+  let data      = params && params.data                          ? params.data      : null;
+  let id        = params && (params.id || params.id === 0)       ? params.id        : "";
+  let type      = params && params.type                          ? params.type      : null;
 
   type = type ? type : this._findType(data,id,null);
 
   // Create a new model if we dont already have one or if the caller asks for it
-  let model_opt = this.getCreateModelOptions(type,data,id,par_id,par_type);
+  let model_opt = this.getCreateModelOptions(data,id,type);
   let model = null;
   let m_str = modelName
               ? modelName     // Use supplied model name
@@ -2792,15 +2756,13 @@ $.any.anyView.prototype.createModel = function (params)
  * @method anyView.getCreateModelOptions
  * @return opt
  */
-$.any.anyView.prototype.getCreateModelOptions = function(type,data,id,link_id,link_type)
+$.any.anyView.prototype.getCreateModelOptions = function(data,id,type)
 {
   return {
     data:          data,
     id:            id,
     type:          type,
-    link_id:       link_id,
-    link_type:     link_type,
-    parent:        this.model ? this.model               : null, // TODO! Not always correct.
+    parent:        this.model ? this.model               : null,
     source:        this.model ? this.model.source        : null,
     table_fields:  this.model ? this.model.table_fields  : null,
     db_connection: this.model ? this.model.db_connection : null,
@@ -2823,7 +2785,7 @@ $.any.anyView.prototype.createView = function (params)
   let parent       = params.parent                                    ? params.parent       : null;
   let inmodel      = params.model;
   let data         = inmodel.data;
-  let id           = params.id                                        ? params.id           : inmodel.id   ? inmodel.id   : "";
+  let id           = inmodel.id                                       ? inmodel.id          : "";
   let type         = inmodel.type;
   let mode         = inmodel.mode;
   let data_level   = params.data_level   || params.data_level   === 0 ? params.data_level   : this.data_level   ? this.data_level   : 0;
@@ -2980,7 +2942,7 @@ $.any.anyView.prototype.getCellEntryStr = function (id,type,mode,id_str,filter_i
   if (!filter_id || !filter_key)
     return "";
   let val    = data_item[filter_id];
-  let par_id = data_item["parent_id"];
+  let link_id = data_item["parent_id"];
   if (typeof val != "object")
     val = $("<textarea />").html(val).text(); // Convert html entities to real html
   if (filter_key.EDITABLE === 0 || filter_key.EDITABLE === false)
@@ -2999,8 +2961,8 @@ $.any.anyView.prototype.getCellEntryStr = function (id,type,mode,id_str,filter_i
     case "image":    return this.getImageStr   (type,mode,id,val,edit,filter_key);
     case "radio":    return this.getRadioStr   (type,mode,id,val,edit,filter_key,filter_id);
     case "check":    return this.getCheckStr   (type,mode,id,val,edit,filter_key,filter_id);
-    case "select":   return this.getSelectStr  (type,mode,id,val,edit,filter_key,par_id,data_item["parent_name"]);
-    case "function": return this.getFunctionStr(type,mode,id,val,edit,filter_key,par_id,data_item["parent_name"]);
+    case "select":   return this.getSelectStr  (type,mode,id,val,edit,filter_key,link_id,data_item["parent_name"]);
+    case "function": return this.getFunctionStr(type,mode,id,val,edit,filter_key,link_id,data_item["parent_name"]);
     case "list":     return this.getListView   (type,mode,id,val,edit,filter_key,id_str,data_lists,model_str,view_str,parent);
     case "upload":   return this.getUploadStr  (type,mode,id,val,edit,data_item,filter_id,id_str);
     case "fileview": return this.getFileViewStr(type,mode,id,val,edit,data_item,filter_id,id_str);
@@ -3121,13 +3083,13 @@ $.any.anyView.prototype.getDateStr = function (type,mode,id,val,edit)
 }; // getDateStr
 
 // Execute a function which should return an html string
-$.any.anyView.prototype.getFunctionStr = function (type,mode,id,val,edit,filter_key,par_id,pname)
+$.any.anyView.prototype.getFunctionStr = function (type,mode,id,val,edit,filter_key,link_id,pname)
 {
   let func_name = filter_key.FUNCTION;
   if (isFunction(this[func_name])) // Method in view class
-    return this[func_name](type,mode,id,val,edit,par_id);
+    return this[func_name](type,mode,id,val,edit,link_id);
   if (isFunction(window[func_name])) // Normal function
-    return window[func_name](type,mode,id,val,edit,par_id);
+    return window[func_name](type,mode,id,val,edit,link_id);
   return ""; // Function not found
 }; // getFunctionStr
 
@@ -3141,14 +3103,14 @@ $.any.anyView.prototype.getImageStr = function (type,mode,id,val,edit,filter_key
          "</div>";
 }; // getImageStr
 
-$.any.anyView.prototype.getSelectStr = function (type,mode,id,val,edit,filter_key,par_id,pname)
+$.any.anyView.prototype.getSelectStr = function (type,mode,id,val,edit,filter_key,link_id,pname)
 {
   let str  = "";
   let sval = val;
   let fval = filter_key.SELECT ? filter_key.SELECT : filter_key.FUNCTION;
   if (fval) {
     if (typeof this[fval] === 'function')
-      sval = this[fval](type,mode,id,val,edit,par_id);
+      sval = this[fval](type,mode,id,val,edit,link_id);
     else
     if (typeof fval == "object")
       sval = edit ? fval : fval[val];
@@ -3309,8 +3271,6 @@ $.any.anyView.prototype.getListModelOptions = function (link_type,link_id,list_t
   return {
     data:       data,
     type:       list_type,
-    par_type:   link_type, // TODO! Dont need both par_type and link_type
-    par_id:     link_id,   // TODO!
     link_type:  link_type,
     link_id:    link_id,
     db_search:  false,
@@ -3576,9 +3536,9 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
       search_view.options.showSearcher    = false;
       search_view.options.indent_level    = 0;
       search_view.options.itemLinkClicked = search_view.searchLinkClicked;
-      let par_view_id = self.id_base+"_"+self.model.type+"_head_0_data";
+      let link_view_id = self.id_base+"_"+self.model.type+"_head_0_data";
       w3_modaldialog({
-        parentId:    par_view_id,
+        parentId:    link_view_id,
         elementId:   "",
         heading:     list_type+" "+i18n.message.searchResults,
         contents:    search_view.element,
@@ -3588,8 +3548,10 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
         context:     self,
       //width:       "30em", // TODO! css
         // Sent to okFunction:
-        type:        self.type, // TODO! self.type if context is view??
-        data:        self.data, // TODO! --- " ---
+        options: {
+          data:        self.data, // TODO! self.type if context is view??
+          type:        self.type, // TODO! --- " ---
+        },
       });
       search_view.refresh();
     } // if search_view
@@ -3610,10 +3572,10 @@ $.any.anyView.prototype.searchLinkClicked = function (event)
   this.itemLinkClicked(event); // TODO! use method specified in this.options.itemLinkClicked?
 }; // searchLinkClicked
 
-$.any.anyView.prototype.searchSuccessOk = function (opt)
+$.any.anyView.prototype.searchSuccessOk = function (opt,parentId,elementId)
 {
   // Close dialog and stop spinner
-  w3_modaldialog_close(opt.parentId,opt.elementId);
+  w3_modaldialog_close(parentId,elementId);
   this.showMessages("",false);
 }; // searchSuccessOk
 
@@ -3720,9 +3682,9 @@ $.any.anyView.prototype.addListEntry = function (event)
 {
   let id         = event.data.id;
   let type       = event.data.type;
-  let par_data   = event.data.par_data;
-  let par_id     = event.data.par_id;
-  let par_type   = event.data.par_type;
+  let link_data  = event.data.link_data;
+  let link_id    = event.data.link_id;
+  let link_type  = event.data.link_type;
   let id_str     = event.data.id_str;
   let row_id_str = event.data.row_id_str;
   let edit       = event.data.edit;
@@ -3736,19 +3698,19 @@ $.any.anyView.prototype.addListEntry = function (event)
     let new_params = {
       table_div: table_div,
       data:      this.model.data,
-      id:        par_id, // TODO! Is this correct?
+      id:        link_id, // TODO! Is this correct?
       type:      type,
-      par_data:  par_data,
-      par_id:    par_id,
-      par_type:  par_type,
+      link_data: link_data,
+      link_id:   link_id,
+      link_type: link_type,
     };
     this.refreshData(new_params);
   }
   // Get a new id (from database, if we use that) and add a new empty item to the data model.
   let the_data = this.model.dataSearch({
-                              data: this.model.data,
-                              id:   par_id,
-                              type: type,
+                              data:   this.model.data,
+                              id:     link_id,
+                              type:   type,
                               parent: true,
                             }); // Find the place to add the new item
   if (is_new) {
@@ -3762,9 +3724,9 @@ $.any.anyView.prototype.addListEntry = function (event)
                new_id:     new_id,
                type:       type,
                mode:       "list",
-               par_data:   par_data,
-               par_id:     par_id,
-               par_type:   par_type,
+               link_data:  link_data,
+               link_id:    link_id,
+               link_type:  link_type,
                id_str:     id_str,
                row_id_str: row_id_str,
                table_div:  table_div,
@@ -3789,9 +3751,9 @@ $.any.anyView.prototype.addListEntry = function (event)
                    id_str:       id_str,
                    row_id_str:   row_id_str,
                    table_div:    table_div,
-                   par_data:     par_data,
-                   par_id:       par_id,
-                   par_type:     par_type,
+                   link_data:    link_data,
+                   link_id:      link_id,
+                   link_type:    link_type,
                  });
     }
   }
@@ -3831,9 +3793,9 @@ $.any.anyView.prototype._addListEntryFromDB = function (context,serverdata,optio
         if (serverdata.new_id.length && serverdata.new_id[0] != "+")
           serverdata.new_id = "+"+serverdata.new_id;
       serverdata.data      = options.data     ? options.data     : view.model.data;
-      serverdata.par_data  = options.par_data ? options.par_data : null;
-      serverdata.par_id    = options.par_id   ? options.par_id   : null;
-      serverdata.par_type  = options.par_type ? options.par_type : null;
+      serverdata.link_data = options.link_data ? options.link_data : null;
+      serverdata.link_id   = options.link_id   ? options.link_id   : null;
+      serverdata.link_type = options.link_type ? options.link_type : null;
       serverdata.filter    = view.getFilter(serverdata.type,serverdata.mode);
       serverdata.table_div = options.table_div;
       view._addListEntry(serverdata);
@@ -3847,9 +3809,9 @@ $.any.anyView.prototype._addListEntry = function (opt)
   let type       = opt.type;
   let mode       = opt.mode;
   let new_id     = opt.new_id;
-  let par_data   = opt.par_data;
-  let par_id     = opt.par_id;
-  let par_type   = opt.par_type;
+  let link_data  = opt.link_data;
+  let link_id    = opt.link_id;
+  let link_type  = opt.link_type;
   let id_str     = opt.id_str;
   let row_id_str = opt.row_id_str;
   let filter     = opt.filter;
@@ -3904,9 +3866,9 @@ $.any.anyView.prototype._addListEntry = function (opt)
          id:         new_id,
          type:       type,
          mode:       mode,
-         par_data:   par_data,
-         par_id:     par_id,
-         par_type:   par_type,
+         link_data:  link_data,
+         link_id:    link_id,
+         link_type:  link_type,
          id_str:     id_str,
          row_id_str: row_id_str,
          edit:       true,
@@ -4212,10 +4174,9 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
         id:         opt.id,
         type:       opt.type,
         mode:       opt.mode,
-        par_type:   opt.par_type,
-        par_mode:   opt.par_mode,
-        par_data:   opt.par_data,
-        par_id:     opt.par_id,
+        link_data:  opt.link_data,
+        link_id:    opt.link_id,
+        link_type:  opt.link_type,
         id_str:     opt.id_str,
         row_id_str: opt.row_id_str,
         edit:       opt.edit,
@@ -4241,8 +4202,8 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
              id:         opt.id,
              type:       opt.type,
              mode:       opt.mode,
-             par_data:   opt.par_data,
-             par_id:     opt.par_id,
+             link_data:   opt.link_data,
+             link_id:     opt.link_id,
              id_str:     opt.id_str,
              row_id_str: opt.row_id_str,
              edit:       opt.edit,
@@ -4268,8 +4229,8 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
       id:         opt.id,
       type:       opt.type,
       mode:       opt.mode,
-      par_data:   opt.par_data,
-      par_id:     opt.par_id,
+      link_data:  opt.link_data,
+      link_id:    opt.link_id,
       id_str:     opt.id_str,
       row_id_str: opt.row_id_str,
       edit:       true,
@@ -4537,10 +4498,9 @@ $.any.anyView.prototype.dbUpdate = function (event)
   let id         = event.data.id;
   let type       = event.data.type;
   let mode       = event.data.mode;
-  let par_type   = event.data.par_type;
-  let par_mode   = event.data.par_mode;
-  let par_data   = event.data.par_data;
-  let par_id     = event.data.par_id;
+  let link_data  = event.data.link_data;
+  let link_id    = event.data.link_id;
+  let link_type  = event.data.link_type;
   let id_str     = event.data.id_str;
   let row_id_str = event.data.row_id_str;
 
@@ -4627,10 +4587,9 @@ $.any.anyView.prototype.dbUpdate = function (event)
       id:         id,
       type:       type,
       mode:       mode,
-      par_type:   par_type,
-      par_mode:   par_mode,
-      par_data:   par_data,
-      par_id:     par_id,
+      link_data:  link_data,
+      link_id:    link_id,
+      link_type:  link_type,
       id_str:     id_str,
       row_id_str: row_id_str,
       edit:       false,
@@ -4679,8 +4638,8 @@ $.any.anyView.prototype.dbSearchLinks = function (event)
    parent_view: this,
    id:          null,
    type:        event.data.link_type,
-   link_type:   event.data.type,
    link_id:     event.data.id,
+   link_type:   event.data.type,
    id_str:      event.data.id_str,
    header:      true,
    grouping:    null,
@@ -4790,14 +4749,16 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
               okFunction: the_view.dbUpdateLinkList,
               context:    the_view,
               // Used by okFunction:
-              data:       data,
-              id:         id,
-              type:       type,
-              link_data:  null,
-              link_id:    null,
-              link_type:  select_list_view.model.type,
-              select:     select_list_view.options.select,
-              unselect:   select_list_view.options.unselect,
+              options: {
+                data:      data,
+                id:        id,
+                type:      type,
+                link_data: null,
+                link_id:   null,
+                link_type: select_list_view.model.type,
+                select:    select_list_view.options.select,
+                unselect:  select_list_view.options.unselect,
+              },
             };
             w3_modaldialog(mod_opt);
             select_list_view.refresh();
@@ -4902,9 +4863,9 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   let id        = event.data.id;
   let type      = event.data.type;
   let mode      = event.data.mode;
-  let link_data = event.data.par_data;
-  let link_id   = event.data.par_id;
-  let link_type = event.data.par_type;
+  let link_data = event.data.link_data;
+  let link_id   = event.data.link_id;
+  let link_type = event.data.link_type;
 
   if (!data || !data[id]) {
     console.warn("Data not found ("+type+" id="+id+"). "); // TODO! i18n
@@ -4912,27 +4873,38 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   }
   let name_key = this.model && this.model.name_key ? this.model.name_key : type+"_name";
   if (this.options.confirmRemove && !data[id].is_new) {
-    let linkdata = this.model.dataSearch({ type:   type,
-                                           id:     id,
-                                           parent: true,
-                                        });
     let the_name = data[id][name_key] ? data[id][name_key] : "";
-    let msgstr   = i18n.message.removeByName.replace("%%",type+" '"+the_name+"'");
+    let msgstr   = i18n.message.removeByName.replace("%%","'"+the_name+"'");
     if (mode == "list") {
-      let lfname = linkdata && linkdata[this.model.name_key]
-                   ? "from the "+linkdata[this.model.name_key]+" list"
-                   : "from this list"/*+link_type*/; // TODO! i18n TODO! link_type is always blank
-      msgstr += " "+lfname;
+      let li_data = this.model.dataSearch({ data: link_data,
+                                            id:   link_id,
+                                            type: link_type,
+                                         });
+      let li_name = li_data && li_data[link_id] ? li_data[link_id][link_type+"_name"] : null;
+      let it_data = this.model.dataSearch({ id:     id,
+                                            type:   type,
+                                            parent: true,
+                                         });
+      let it_name = it_data && it_data[this.model.name_key]
+                    ? "from the "+type+" '"+it_data[this.model.name_key]+"'"
+                    : li_name
+                      ? "from the "+link_type+" '"+li_name+"'"
+                      : "from this "+link_type;
+      msgstr += " "+it_name;
     }
     let msg = "<div class='any-confirm-remove-dialog' id='"+this.id_base+"_confirm_remove' style='padding:.8em;'>"+
               msgstr+"?"+
               "</div>";
     let parent_id = this.element.attr("id");
     if (parent_id) {
+      let hdng = mode == "item"
+                 ? i18n.button.buttonRemove
+                 : i18n.button.buttonRemoveFromList.replace("%%",type);
+      hdng = hdng.replace("##",link_type);
       let mod_opt = {
         parentId:   parent_id,
         elementId:  "",
-        heading:    mode == "item" ? i18n.button.buttonRemove : i18n.button.buttonRemoveFromList.replace("%%",type),
+        heading:    hdng,
         contents:   msg,
         width:      "25em", // TODO! css
         ok:         true,
@@ -4940,26 +4912,30 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         okFunction: this.dbUpdateLinkList,
         context:    this,
         // Sent to okFunction:
-        data:       link_data,
-        type:       link_type,
-        id:         link_id,
-        link_data:  data,
-        link_type:  type,
-        link_id:    id,
-        select:     new Set(),
-        unselect:   new Set().add(id),
+        options: {
+          data:      data,
+          id:        id,
+          type:      type,
+          mode:      mode,
+          link_data: link_data,
+          link_id:   link_id,
+          link_type: link_type,
+          select:    new Set(),
+          unselect:  new Set().add(id),
+        },
       };
       w3_modaldialog(mod_opt);
     } // if
   } // if
   else {
     let opt = {
-        data:      link_data,
-        type:      link_type,
-        id:        link_id,
-        link_data: data,
-        link_type: type,
-        link_id:   id,
+        data:      data,
+        id:        id,
+        type:      type,
+        mode:      mode,
+        link_data: link_data,
+        link_id:   link_id,
+        link_type: link_type,
         select:    new Set(),
         unselect:  new Set().add(id),
     };
@@ -4968,26 +4944,19 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   return this;
 }; // dbRemoveDialog
 
-$.any.anyView.prototype.dbUpdateLinkList = function (opt)
+$.any.anyView.prototype.dbUpdateLinkList = async function (opt,parentId,elementId)
 {
   // Close dialog and stop spinner
-  w3_modaldialog_close(opt.parentId,opt.elementId);
+  w3_modaldialog_close(parentId,elementId);
   this.showMessages("",false);
 
   // Make top right close icon appear
-  if (this.options)
+  if (this.options && opt && opt.mode == "item")
     this.options.item_opening = true;
 
   // Update database
   opt.context = this.model;
-  if (!opt.id)
-    opt.id  = this.model.link_id; // TODO! Is this always correct?
-  if (!opt.type)
-    if (this.model.type)
-      opt.type = this.model.type;
-    else
-      opt.type = opt.link_type;
-  if (!this.model.dbUpdateLinkList(opt))
+  if (await !this.model.dbUpdateLinkList(opt))
     return false;
   return true;
 }; // dbUpdateLinkList
@@ -5053,20 +5022,22 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
         okFunction: this.dbDelete,
         context:    this,
         // Sent to okFunction dbDelete:
-        data:       data,
-        id:         id,
-        type:       type,
-        mode:       mode,
-        id_str:     id_str,
+        options: {
+          data:   data,
+          id:     id,
+          type:   type,
+          mode:   mode,
+          id_str: id_str,
+        },
       });
   }
   return true;
 }; // dbDeleteDialog
 
-$.any.anyView.prototype.dbDelete = function (opt)
+$.any.anyView.prototype.dbDelete = function (opt,parentId,elementId)
 {
   // Close dialog and start spinner
-  w3_modaldialog_close(opt.parentId,opt.elementId);
+  w3_modaldialog_close(parentId,elementId);
   this.showMessages("",true);
 
   if (!this.model)

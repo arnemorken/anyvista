@@ -122,7 +122,7 @@ function w3_autocomplete(fieldOrFieldId,type,id,arr,onSelect,context)
               inp.value = name;
               closeAllLists(); // close the list of autocompleted values, (or any other open lists of autocompleted values
               var pid = typeof fieldOrFieldId == "string" ? fieldOrFieldId : fieldOrFieldId.id;
-              onSelect.call(context,type,sel_id,name,pid);
+              onSelect.call(context,type,sel_id,name,pid,id);
             }
           );
           a.appendChild(b);
@@ -233,9 +233,9 @@ function w3_modaldialog(options)
             "</div>";
   let p = $("#"+parentId);
   p.append(str);
-  $("#"+dia_id+"_ok_btn").on      ("click",context,$.proxy(okFunction,    context,options));
+  $("#"+dia_id+"_ok_btn").on      ("click",context,$.proxy(okFunction,    context,options.options,parentId,elementId));
   if (options.cancelFunction)
-    $("#"+dia_id+"_cancel_btn").on("click",context,$.proxy(cancelFunction,context,options));
+    $("#"+dia_id+"_cancel_btn").on("click",context,$.proxy(cancelFunction,context,options.options,parentId,elementId));
   else
     $("#"+dia_id+"_cancel_btn").on("click",context,$.proxy(cancelFunction,context,parentId,elementId));
   $("#"+dia_id+"").css("display","block");
