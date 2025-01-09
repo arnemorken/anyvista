@@ -1807,10 +1807,10 @@ class anyTable extends dbTable
     $data = array("data" => array($topidx => array()));
 
     // Set "head" and header
-    $data["data"][$topidx]["head"] = $this->mType;
+    $data["data"][$topidx]["head"] = "group";
     $hdr = $this->findHeader($this->mType,$this->mData,$id);
     if (isset($hdr) && $hdr != "")
-      $data["data"][$topidx][$this->mNameKey] = $hdr;
+      $data["data"][$topidx]["group_name"] = $hdr;
 
     // Set data
     if (isset($this->mData)) {
