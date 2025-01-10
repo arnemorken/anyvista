@@ -755,13 +755,12 @@ anyTable.prototype.dbSearchList = async function(options)
       console.log(err);
     }
     else
-    if (linkType != "group") {
-      if (this.data && this.data["nogroup"])
-        this.data = this.data["nogroup"];
+    if (this.data && this.data["nogroup"]) {
+      this.data = this.data["nogroup"];
     }
-    else {
-      if (this.data && this.data[linkId])
-        this.data = this.data[linkId];
+    else
+    if (this.data && this.data[linkId]) {
+      this.data = this.data[linkId];
     }
   }
   //console.log("dbSearchList, tree list data:"); console.log(this.data);

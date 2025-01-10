@@ -981,12 +981,11 @@ class anyTable extends dbTable
         error_log($err);
       }
       else
-      if ($linkType != "group") {
-        if (isset($this->mData) && isset($this->mData["nogroup"]))
-          $this->mData = $this->mData["nogroup"];
+      if (isset($this->mData) && isset($this->mData["nogroup"])) {
+        $this->mData = $this->mData["nogroup"];
       }
-      else {
-        if (isset($this->mData) && isset($this->mData[$linkId]))
+      else
+      if (isset($this->mData) && isset($this->mData[$linkId])) {
           $this->mData = $this->mData[$linkId];
       }
     }
