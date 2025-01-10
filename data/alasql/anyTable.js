@@ -1844,7 +1844,7 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
           if (delval) {
             let stmt = "UPDATE " + this.tableName + " " +
                        "SET parent_id=NULL " +
-                       "WHERE " + id_key + "=" + delval + "";
+                       "WHERE " + id_key + "=" + id + "";
             //console.log("dbUpdateLinkList(4):"+stmt);
             await alasql.promise(stmt);
           }
@@ -1855,8 +1855,8 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
         for (const updval of inslist) {
           if (updval && updval != id) {
             let stmt = "UPDATE " + this.tableName + " " +
-                       "SET parent_id=" + id + " " +
-                       "WHERE " + id_key + "=" + updval + "";
+                       "SET parent_id=" + updval + " " +
+                       "WHERE " + id_key + "=" + id + "";
             //console.log("dbUpdateLinkList(5):"+stmt);
             await alasql.promise(stmt);
           }
