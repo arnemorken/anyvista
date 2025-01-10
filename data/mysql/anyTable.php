@@ -2273,7 +2273,7 @@ class anyTable extends dbTable
             if ($delval) {
               $stmt = "UPDATE " . $this->mTableName . " " .
                       "SET parent_id=NULL " .
-                      "WHERE " . $this->mIdKey . "='" . $delval . "'";
+                      "WHERE " . $this->mIdKey . "='" . $id . "'";
               //elog("dbUpdateLinkList(4):".$stmt);
               if (!$this->query($stmt))
                 return null;
@@ -2285,8 +2285,8 @@ class anyTable extends dbTable
           foreach ($inslist as $updval) {
             if ($updval && $updval != $id) {
               $stmt = "UPDATE " . $this->mTableName . " " .
-                      "SET parent_id='" . $id . "' " .
-                      "WHERE " . $this->mIdKey . "='" . $updval . "'";
+                      "SET parent_id='" . $updval . "' " .
+                      "WHERE " . $this->mIdKey . "='" . $id . "'";
               //elog("dbUpdateLinkList(5):".$stmt);
               if (!$this->query($stmt))
                 return null;
