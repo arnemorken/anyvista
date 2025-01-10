@@ -25,7 +25,6 @@
  * @param {Object}  options.model                  The model with data to be displayed. Default: null.
  * @param {Object}  options.filters                The filters define how the data will be displayed. Default: null.
  * @param {String}  options.id                     The jQuery id of a container element in which to display the view. Default: null.
- * @param {String}  options.mode                   The current mode of display for the view. Default: null.
  * @param {boolean} options.isSelectable           An icon for selecting a list row will be displayed. Ignored for items. If isSelectable is set,
  *                                                 isAddable, isRemovable, isEditable and isDeletable will be ignored. Default: false.
  * @param {boolean} options.isAddable              An icon for adding new rows may be displayed. Ignored if isSelectable is set. Default: false.
@@ -4815,8 +4814,7 @@ $.any.anyView.prototype._findViewOfType = function (type)
     for (let x in this.views) {
       if (this.views.hasOwnProperty(x)) {
         let the_view = this.views[x];
-        if (the_view.model && the_view.model.type == type &&
-            the_view.mode != "head") // TODO! We should get rid of this.mode, this seems to be the only place it is used
+        if (the_view.model && the_view.model.type == type)
           return the_view;
         else {
           v = the_view._findViewOfType(type);
