@@ -2458,7 +2458,6 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
              unselect:  options.unselect,
              new_data:  options.new_data,
            }); // Remove data
-/*
       if (serverdata.data) {
         let the_link_id = "link-"+options.link_type; // TODO! Not an ideal solution, depends on server side index
         let data = self.dataSearch({
@@ -2468,7 +2467,6 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
         if (data && data[the_link_id])
           self.data = data[the_link_id].data;
       }
-*/
     }
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false)
