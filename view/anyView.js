@@ -1665,9 +1665,6 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
     if (filter.hasOwnProperty(filter_id) && filter_id != type+"_ingress") {
       let filter_key = filter[filter_id];
       if (filter_key && filter_key.DISPLAY) {
-        let model_str = params.filter
-                        ? params.filter[filter_id].MODEL
-                        : null;
         let disp_str = filter_key.DISPLAY == 2 || filter_key.DISPLAY == "2"
                        ? "display:none;"
                        : "";
@@ -1686,7 +1683,7 @@ $.any.anyView.prototype.refreshTableDataListCells = function (params)
         let td  = $("<td id='"+td_id+"' class='any-td any-list-td "+odd_even+" "+class_id+"' "+style_str+"></td>");
         tr.append(td);
         let lists = filter_key.TYPE == "list" && data[id] && data[id].data ? data[id].data["link-"+filter_key.LIST] : null;
-        let str = this.getCellEntryStr(data,id,type,mode,row_id_str,filter_id,filter_key,data[id],lists,edit,model_str,td);
+        let str = this.getCellEntryStr(this.model,data[id],lists,mode,row_id_str,filter,filter_id,filter_key,edit,td);
         if (typeof str == "string")
           td.append(str);
         this.initTableDataCell(td_id,type,mode,data,id,id_str,row_id_str,filter,filter_id,filter_key,edit,n,link_data,link_id);
@@ -1717,7 +1714,7 @@ $.any.anyView.prototype.refreshTableDataIngress = function (params)
 
   if (filter_key && data[id] && data[id][filter_id]) {
     let lists = filter_key.TYPE == "list" && data[id] && data[id].data ? data[id].data["link-"+filter_key.LIST] : null;
-    let str = this.getCellEntryStr(data,id,type,mode,row_id_str,filter_id,filter_key,data[id],lists,edit);
+    let str = this.getCellEntryStr(this.model,data[id],lists,mode,row_id_str,filter,filter_id,filter_key,edit);
     let ncells = Object.size(data[id]);
     let odd_even = this.options.useOddEvenRows && params.row_no
                    ? params.row_no%2
@@ -1876,8 +1873,6 @@ $.any.anyView.prototype.refreshTableDataItemCells = function (params)
   let filter_key = params.filter_key;
   let pl_str     = params.pl_str;
   let n          = params.n;
-  let model_str  = params.filter ? params.filter[filter_id].MODEL : null;
-  let view_str   = params.filter ? params.filter[filter_id].VIEW  : null;
 
   let class_id_name = "any-item-name-"+filter_id;
   let class_id_val  = "any-item-val-"+filter_id;
@@ -1895,7 +1890,7 @@ $.any.anyView.prototype.refreshTableDataItemCells = function (params)
   }
   tr.append(td3);
   let lists = filter_key.TYPE == "list" && data[id] && data[id].data ? data[id].data["link-"+filter_key.LIST] : null;
-  let str = this.getCellEntryStr(data,id,type,mode,row_id_str,filter_id,filter_key,data[id],lists,edit,model_str,view_str,td3);
+  let str = this.getCellEntryStr(this.model,data[id],lists,mode,row_id_str,filter,filter_id,filter_key,edit,td3);
   if (typeof str == "string")
     td3.append(str);
   this.initTableDataCell(td_id,type,mode,data,id,id_str,row_id_str,filter,filter_id,filter_key,edit,n,link_data,link_id);
@@ -2939,7 +2934,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-$.any.anyView.prototype.getCellEntryStr = function (data,id,type,mode,id_str,filter_id,filter_key,data_item,data_lists,edit,model_str,view_str,parent)
+$.any.anyView.prototype.getCellEntryStr = function (model,data_item,data_lists,mode,id_str,filter,filter_id,filter_key,edit,parent)
 {
   if (!filter_id || !filter_key)
     return "";
@@ -2950,29 +2945,29 @@ $.any.anyView.prototype.getCellEntryStr = function (data,id,type,mode,id_str,fil
   if (filter_key.EDITABLE === 0 || filter_key.EDITABLE === false)
     edit = false;
   switch (filter_key.TYPE) {
-    case "label":    return this.getLabelStr   (data,id,type,mode,val); // Always noneditable
-    case "html":     return this.getHtmlStr    (data,id,type,mode,val,edit);
-    case "textarea": return this.getTextAreaStr(data,id,type,mode,val,edit,filter_id,id_str);
-    case "text":     return this.getTextStr    (data,id,type,mode,val,edit);
-    case "password": return this.getPasswordStr(data,id,type,mode,val,edit);
-    case "link":     return this.getLinkStr    (data,id,type,mode,val,edit);
+    case "label":    return this.getLabelStr   (model,mode,val); // Always noneditable
+    case "html":     return this.getHtmlStr    (model,mode,val,edit);
+    case "textarea": return this.getTextAreaStr(model,mode,val,edit,filter_id,id_str);
+    case "text":     return this.getTextStr    (model,mode,val,edit);
+    case "password": return this.getPasswordStr(model,mode,val,edit);
+    case "link":     return this.getLinkStr    (model,mode,val,edit);
     case "mailto":
-    case "email":    return this.getEmailStr   (data,id,type,mode,val,edit);
-    case "number":   return this.getNumberStr  (data,id,type,mode,val,edit);
-    case "date":     return this.getDateStr    (data,id,type,mode,val,edit);
-    case "image":    return this.getImageStr   (data,id,type,mode,val,edit,filter_key);
-    case "radio":    return this.getRadioStr   (data,id,type,mode,val,edit,filter_key,filter_id);
-    case "check":    return this.getCheckStr   (data,id,type,mode,val,edit,filter_key,filter_id);
-    case "select":   return this.getSelectStr  (data,id,type,mode,val,edit,filter_key,link_id,data_item["parent_name"]);
-    case "function": return this.getFunctionStr(data,id,type,mode,val,edit,filter_key,link_id,data_item["parent_name"]);
-    case "list":     return this.getListView   (data,id,type,mode,val,edit,filter_key,id_str,data_lists,model_str,view_str,parent);
-    case "upload":   return this.getUploadStr  (data,id,type,mode,val,edit,data_item,filter_id,id_str);
-    case "fileview": return this.getFileViewStr(data,id,type,mode,val,edit,data_item,filter_id,id_str);
+    case "email":    return this.getEmailStr   (model,mode,val,edit);
+    case "number":   return this.getNumberStr  (model,mode,val,edit);
+    case "date":     return this.getDateStr    (model,mode,val,edit);
+    case "image":    return this.getImageStr   (model,mode,val,edit,filter_key);
+    case "radio":    return this.getRadioStr   (model,mode,val,edit,filter_key,filter_id);
+    case "check":    return this.getCheckStr   (model,mode,val,edit,filter_key,filter_id);
+    case "select":   return this.getSelectStr  (model,mode,val,edit,filter_key,link_id,data_item["parent_name"]);
+    case "function": return this.getFunctionStr(model,mode,val,edit,filter_key,link_id,data_item["parent_name"]);
+    case "list":     return this.getListView   (model,mode,val,edit,filter_key,filter_id,filter,id_str,data_lists,parent);
+    case "upload":   return this.getUploadStr  (model,mode,val,edit,data_item,filter_id,id_str);
+    case "fileview": return this.getFileViewStr(model,mode,val,edit,data_item,filter_id,id_str);
     /* Not used yet
     case "http":
-    case "https":    return this.getHttpStr    (data,id,type,mode,val,edit);
-    case "textspan": return this.getTextspanStr(data,id,type,mode,val,edit);
-    case "tokenlist":return this.getTokenlist  (data,id,type,mode,val,edit);
+    case "https":    return this.getHttpStr    (model,mode,val,edit);
+    case "textspan": return this.getTextspanStr(model,mode,val,edit);
+    case "tokenlist":return this.getTokenlist  (model,mode,val,edit);
     */
   }
   if (!val)
@@ -2980,12 +2975,12 @@ $.any.anyView.prototype.getCellEntryStr = function (data,id,type,mode,id_str,fil
   return val;
 }; // getCellEntryStr
 
-$.any.anyView.prototype.getHtmlStr = function (data,id,type,mode,val,edit)
+$.any.anyView.prototype.getHtmlStr = function (model,mode,val,edit)
 {
   return val;
 }; // getHtmlStr
 
-$.any.anyView.prototype.getLabelStr = function (data,id,type,mode,val)
+$.any.anyView.prototype.getLabelStr = function (model,mode,val)
 {
   if (val == null || val == undefined)
     val = "";
@@ -2998,55 +2993,55 @@ $.any.anyView.prototype.getLabelStr = function (data,id,type,mode,val)
   return "<div class='itemUnedit itemLabel'>"+val+"</div>";
 }; // getLabelStr
 
-$.any.anyView.prototype.getTextAreaStr = function (data,id,type,mode,val,edit,filter_id,id_str)
+$.any.anyView.prototype.getTextAreaStr = function (model,mode,val,edit,filter_id,id_str)
 {
   if (edit) {
     if (typeof tinyMCE !== "undefined") {
-      let nameid = this.id_base+"_"+type+"_"+mode+"_"+id_str+"_"+filter_id;
+      let nameid = this.id_base+"_"+model.type+"_"+mode+"_"+id_str+"_"+filter_id;
       if (tinyMCE.EditorManager.get(nameid))
         tinymce.EditorManager.execCommand('mceRemoveEditor',true, nameid);
     }
     return "<textarea class='itemEdit tinymce'>"+val+"</textarea>";
   }
   else
-    return this.getLabelStr(data,id,type,mode,val);
+    return this.getLabelStr(model,mode,val);
 }; // getTextAreaStr
 
-$.any.anyView.prototype.getTextStr = function (data,id,type,mode,val,edit)
+$.any.anyView.prototype.getTextStr = function (model,mode,val,edit)
 {
   if (edit)
     return "<input class='itemEdit itemText' type='text' value='"+val+"'/>";
   else
-    return this.getLabelStr(data,id,type,mode,val);
+    return this.getLabelStr(model,mode,val);
 }; // getTextStr
 
-$.any.anyView.prototype.getPasswordStr = function (data,id,type,mode,val,edit)
+$.any.anyView.prototype.getPasswordStr = function (model,mode,val,edit)
 {
   if (edit)
     return "<input class='itemEdit itemText password' type='password' value='"+val+"'/>";
   else
-    return this.getLabelStr(data,id,type,mode,"");
+    return this.getLabelStr(model,mode,"");
 }; // getLabelStr
 
-$.any.anyView.prototype.getLinkStr = function (data,id,type,mode,val,edit)
+$.any.anyView.prototype.getLinkStr = function (model,mode,val,edit)
 {
   if (edit)
-    return this.getTextStr(data,id,type,mode,val,edit);
+    return this.getTextStr(model,mode,val,edit);
   else
     return "<div class='itemUnedit itemText pointer underline' attr='link'>"+val+"</div>";
 }; // getLinkStr
 
-$.any.anyView.prototype.getEmailStr = function (data,id,type,mode,val,edit)
+$.any.anyView.prototype.getEmailStr = function (model,mode,val,edit)
 {
   if (edit)
-    return this.getTextStr(data,id,type,mode,val,edit);
+    return this.getTextStr(model,mode,val,edit);
   else
     return "<div class='itemUnedit itemText pointer underline'><a href='mailto:"+val+"'>"+val+"</a></div>";
 }; // getEmailStr
 
 // In edit mode, the input field is modified with a filter
 // in append methods to allow only numerals and '.'
-$.any.anyView.prototype.getNumberStr = function (data,id,type,mode,val,edit)
+$.any.anyView.prototype.getNumberStr = function (model,mode,val,edit)
 {
   if (edit)
     return "<input class='itemEdit itemNumber' type='text' value='"+val+"'/>";
@@ -3061,7 +3056,7 @@ $.any.anyView.prototype.getNumberStr = function (data,id,type,mode,val,edit)
 }; // getNumberStr
 
 // In edit mode, a date selector will be shown.
-$.any.anyView.prototype.getDateStr = function (data,id,type,mode,val,edit)
+$.any.anyView.prototype.getDateStr = function (model,mode,val,edit)
 {
   let str = "";
   if (edit) {
@@ -3085,34 +3080,34 @@ $.any.anyView.prototype.getDateStr = function (data,id,type,mode,val,edit)
 }; // getDateStr
 
 // Execute a function which should return an html string
-$.any.anyView.prototype.getFunctionStr = function (data,id,type,mode,val,edit,filter_key,link_id,pname)
+$.any.anyView.prototype.getFunctionStr = function (model,mode,val,edit,filter_key,link_id,pname)
 {
   let func_name = filter_key.FUNCTION;
   if (isFunction(this[func_name])) // Method in view class
-    return this[func_name](data,id,type,mode,val,edit,link_id);
+    return this[func_name](model,mode,val,edit,link_id);
   if (isFunction(window[func_name])) // Normal function
-    return window[func_name](data,id,type,mode,val,edit,link_id);
+    return window[func_name](model,mode,val,edit,link_id);
   return ""; // Function not found
 }; // getFunctionStr
 
-$.any.anyView.prototype.getImageStr = function (data,id,type,mode,val,edit,filter_key)
+$.any.anyView.prototype.getImageStr = function (model,mode,val,edit,filter_key)
 {
   let image_src = filter_key.IMAGE;
   if (!image_src && filter_key.FUNCTION && typeof window[filter_key.FUNCTION] == "function")
-    return this.getFunctionStr(data,id,type,mode,val,edit,filter_key);
+    return this.getFunctionStr(model,mode,val,edit,filter_key);
   return "<div class='itemUnedit'>"+
          "<img class='imageRef pointer' src='"+image_src+"' title='"+val+"' style='box-shadow:none;'>"+
          "</div>";
 }; // getImageStr
 
-$.any.anyView.prototype.getSelectStr = function (data,id,type,mode,val,edit,filter_key,link_id,pname)
+$.any.anyView.prototype.getSelectStr = function (model,mode,val,edit,filter_key,link_id,pname)
 {
   let str  = "";
   let sval = val;
   let fval = filter_key.SELECT ? filter_key.SELECT : filter_key.FUNCTION;
   if (fval) {
     if (typeof this[fval] === 'function')
-      sval = this[fval](data,id,type,mode,val,edit,link_id);
+      sval = this[fval](model,mode,val,edit,link_id);
     else
     if (typeof fval == "object")
       sval = edit ? fval : fval[val];
@@ -3144,14 +3139,14 @@ $.any.anyView.prototype.getSelectStr = function (data,id,type,mode,val,edit,filt
   return str;
 }; // getSelectStr
 
-$.any.anyView.prototype.getRadioStr = function (data,id,type,mode,val,edit,filter_key,filter_id)
+$.any.anyView.prototype.getRadioStr = function (model,mode,val,edit,filter_key,filter_id)
 {
   let str  = "";
   let sval = val;
   let fval = filter_key.RADIO;
   if (fval) {
     if (typeof this[fval] == "function")
-      sval = this[fval](data,id,type,mode,val,edit);
+      sval = this[fval](model,mode,val,edit);
     else
     if (typeof fval == "object")
       sval = edit ? fval : fval[val];
@@ -3180,7 +3175,7 @@ $.any.anyView.prototype.getRadioStr = function (data,id,type,mode,val,edit,filte
   return str;
 }; // getRadioStr
 
-$.any.anyView.prototype.getCheckStr = function (data,id,type,mode,val,edit,filter_key,filter_id)
+$.any.anyView.prototype.getCheckStr = function (model,mode,val,edit,filter_key,filter_id)
 {
   let str = "";
   if (edit) {
@@ -3188,9 +3183,9 @@ $.any.anyView.prototype.getCheckStr = function (data,id,type,mode,val,edit,filte
     str = "<input class='itemEdit' type='checkbox' onclick='$(this).val(this.checked?1:0)' value='"+val+"' "+checked+"/>";
   }
   else {
-    let the_id      = Number.isInteger(parseInt(id)) ? parseInt(id) : id;
+    let the_id      = Number.isInteger(parseInt(model.id)) ? parseInt(model.id) : model.id;
     let id_str      = ""+the_id;
-    let it_id       = this.id_base+"_"+type+"_"+mode+"_"+id_str+"_"+filter_id+"_check";
+    let it_id       = this.id_base+"_"+model.type+"_"+mode+"_"+id_str+"_"+filter_id+"_check";
     let check_class = (val == "1")
                       ? "fa-regular fa-square-check"
                       : "fa-regular fa-square";
@@ -3205,7 +3200,7 @@ $.any.anyView.prototype.getCheckStr = function (data,id,type,mode,val,edit,filte
 }; // getCheckStr
 
 // Return a view containing a list
-$.any.anyView.prototype.getListView = function (data,id,type,mode,val,edit,filter_key,id_str,data_lists,model_str,view_str,parent)
+$.any.anyView.prototype.getListView = function (model,mode,val,edit,filter_key,filter_id,filter,id_str,data_lists,parent)
 {
   if (!this.model)
     throw i18n.error.MODEL_MISSING;
@@ -3214,7 +3209,7 @@ $.any.anyView.prototype.getListView = function (data,id,type,mode,val,edit,filte
 
   // Create the list model
   let list_type = filter_key.LIST;
-  let model_opt = this.getListModelOptions(type,id,list_type,val);
+  let model_str = filter ? filter[filter_id].MODEL : null;
   let m_str     = model_str && typeof model_str === "string"
                   ? model_str
                   : list_type.capitalize()+"Model";
@@ -3223,17 +3218,19 @@ $.any.anyView.prototype.getListView = function (data,id,type,mode,val,edit,filte
     console.warn(m_str+" is not a valid list model, using "+def_str+". ");
     m_str = def_str;
   }
-  let list_model = new window[m_str](model_opt);
+  let model_opt   = this.getListModelOptions(model.type,model.id,list_type,val);
+  let list_model  = new window[m_str](model_opt);
   list_model.data = data_lists ? data_lists.data : null;
 
   // Create the list view
-  let list_view_id = this.id_base+"_"+type+"_"+mode+"_"+id_str+"_"+list_type+"_list";
+  let list_view_id = this.id_base+"_"+model.type+"_"+mode+"_"+id_str+"_"+list_type+"_list";
   let view_opt     = this.getListViewOptions(list_model,list_view_id,edit,this);
-  let v_str = view_str && typeof view_str === "string"
-              ? view_str
-              : view_opt.grouping
-                ? list_type.capitalize()+"View"+view_opt.grouping.capitalize()
-                : list_type.capitalize()+"View";
+  let view_str     = filter ? filter[filter_id].VIEW  : null;
+  let v_str        = view_str && typeof view_str === "string"
+                     ? view_str
+                     : view_opt.grouping
+                       ? list_type.capitalize()+"View"+view_opt.grouping.capitalize()
+                       : list_type.capitalize()+"View";
   if (!window[v_str]) {
     // Use fallback view name
     //console.warn("View class "+v_str+" not found, using anyView. "); // TODO! i18n
@@ -3245,9 +3242,8 @@ $.any.anyView.prototype.getListView = function (data,id,type,mode,val,edit,filte
   }
   view_opt.filter_key = filter_key;
   view_opt.top_view = this.options.top_view;
-  let view = null;
   try {
-    view = new window[v_str](view_opt);
+    let view = new window[v_str](view_opt);
     if (!Object.keys(view).length) {
       console.error("Couldn't create list view "+v_str+" with id "+list_view_id);
       view = null;
@@ -3260,11 +3256,12 @@ $.any.anyView.prototype.getListView = function (data,id,type,mode,val,edit,filte
         view.refresh();
       return null;
     }
+    return view;
   }
   catch (err) {
     console.error("Couldn't create list view "+v_str+": "+err);
+    return null;
   }
-  return view;
 }; // getListView
 
 // May be overidden by derived classes
@@ -3302,14 +3299,14 @@ $.any.anyView.prototype.getListViewOptions = function (model,view_id,edit,view)
   };
 }; // getListViewOptions
 
-$.any.anyView.prototype.getUploadStr = function (data,id,type,mode,val,edit,data_item,filter_id,id_str)
+$.any.anyView.prototype.getUploadStr = function (model,mode,val,edit,data_item,filter_id,id_str)
 {
   // Shows a clickable label that opens a file select dialog when pressed
-  let elem_id = this.id_base+"_"+type+"_"+mode+"_"+id_str+"_"+filter_id; // element id
-//let name    = data_item[type+"_name"];                                 // real file name from user
+  let elem_id = this.id_base+"_"+model.type+"_"+mode+"_"+id_str+"_"+filter_id; // element id
+//let name    = data_item[model.type+"_name"];                                 // real file name from user
   let style   = "style='cursor:pointer;'";
   let title   = "title='Select a new file for upload'"; // TODO i18n
-  let filter  = this.getFilter(type,mode);
+  let filter  = this.getFilter(model.type,mode);
   let img_str = "<i class='fa fa-upload'></i>";
   if (filter && filter[filter_id] && filter[filter_id]["IMAGE"])
     img_str = "<img src='"+filter[filter_id]["IMAGE"]+"' style='border:0;box-shadow:none;'/>";
@@ -3321,9 +3318,9 @@ $.any.anyView.prototype.getUploadStr = function (data,id,type,mode,val,edit,data
   return str;
 }; // getUploadStr
 
-$.any.anyView.prototype.getFileViewStr = function (data,id,type,mode,val,edit,data_item,filter_id,id_str)
+$.any.anyView.prototype.getFileViewStr = function (model,mode,val,edit,data_item,filter_id,id_str)
 {
-  let elem_id  = this.id_base+"_"+type+"_"+mode+"_"+id_str+"_"+filter_id; // element id
+  let elem_id  = this.id_base+"_"+model.type+"_"+mode+"_"+id_str+"_"+filter_id; // element id
   let filename = data_item[filter_id] ? data_item[filter_id]          : ""; // local file name on server
   let fileurl  = filename             ? any_defs.uploadURL + filename : ""; // url of server file
   let style    = mode == "list" ? "style='text-align:center;'" : "";
@@ -3339,13 +3336,13 @@ $.any.anyView.prototype.getFileViewStr = function (data,id,type,mode,val,edit,da
 
 /************ The following get methods are not used yet ************/
 /*
-$.any.anyView.prototype.getHttpStr = function (data,id,type,mode,val,edit,nameid)
+$.any.anyView.prototype.getHttpStr = function (model,mode,val,edit,nameid)
 {
   if (edit) {
-    return this.getTextStr(data,id,type,mode,val,edit);
+    return this.getTextStr(model.data,model.id,model.type,mode,val,edit);
   }
   else {
-    let id_str  = "" + (Number.isInteger(parseInt(id))       ? parseInt(id)       : id);
+    let id_str  = "" + (Number.isInteger(parseInt(model.id)) ? parseInt(model.id) : model.id);
     val = val.replace("https://","");
     val = val.replace("http://","");
     let it_id = this.id_base+"_link_"+filterKey+"_"+id_str;
@@ -3354,12 +3351,12 @@ $.any.anyView.prototype.getHttpStr = function (data,id,type,mode,val,edit,nameid
   }
 };
 
-$.any.anyView.prototype.getTokenList = function (data,id,type,mode,val,edit,nameid)
+$.any.anyView.prototype.getTokenList = function (model,mode,val,edit,nameid)
 {
   return "<input id='"+nameid+"' name='"+nameid+"' class='tokenList' type='text' value='"+val+"'/>";
 };
 
-$.any.anyView.prototype.getTextspanStr = function (data,id,type,mode,val,edit,nameid)
+$.any.anyView.prototype.getTextspanStr = function (model,mode,val,edit,nameid)
 {
   return "<span class='itemInput' value='"+val+"'>"+val+"</span>"+
          "<input id='"+nameid+"' name='"+nameid+"' type='hidden' value='"+val+"'/>";
