@@ -106,7 +106,7 @@ $.any.eventViewTabs.prototype.bindCell = function (options,view)
 }; // bindCell
 */
 
-$.any.eventViewTabs.prototype.getPlaces = function (data,id,type,mode,val,edit,link_id)
+$.any.eventViewTabs.prototype.getPlaces = function (model,mode,val,edit,link_id)
 {
   let obj = {"": "[Velg sted]", "0":"Oslo", "1":"Bergen", "2":"Bergsdalen"}; // TODO: Get this from database event settings
   if (edit)
@@ -114,7 +114,7 @@ $.any.eventViewTabs.prototype.getPlaces = function (data,id,type,mode,val,edit,l
   return obj[val];
 };
 
-$.any.eventViewTabs.prototype.getArrangers = function (data,id,type,mode,val,edit,link_id)
+$.any.eventViewTabs.prototype.getArrangers = function (model,mode,val,edit,link_id)
 {
   let obj = {"0":"UCI", "1":"NCF"}; // TODO: Get this from database event settings
   if (edit)
@@ -122,7 +122,7 @@ $.any.eventViewTabs.prototype.getArrangers = function (data,id,type,mode,val,edi
   return obj[val];
 };
 
-$.any.eventViewTabs.prototype.getInstructors = function (data,id,type,mode,val,edit,link_id)
+$.any.eventViewTabs.prototype.getInstructors = function (model,mode,val,edit,link_id)
 {
   let obj = {"0":"John", "1":"Jane"}; // TODO: Get this from database event settings
   if (edit)
@@ -135,7 +135,7 @@ $.any.eventViewTabs.prototype.dbSetAttended = function (event)
   return this.model.dbUpdateLink(event.data);
 }; // dbSetAttended
 
-$.any.eventViewTabs.prototype.displayUserResult = function (data,id,type,mode,val,edit,link_id)
+$.any.eventViewTabs.prototype.displayUserResult = function (model,mode,val,edit,link_id)
 {
   if (val == "yes")
     return "Completed";
