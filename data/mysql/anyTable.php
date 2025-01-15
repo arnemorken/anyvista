@@ -1170,8 +1170,8 @@ class anyTable extends dbTable
     $has_group_linktable = $this->tableExists($this->mTableNameGroupLink);
 
     // If has parent_id while being a list-for list
-    if ($this->hasParentId() && (isset($linkType) && $linkType != "" || (($linkId && $linkId !== 0)))) {
-      if (($linkId && $linkId !== 0) && is_numeric($linkId) && (!isset($linkType) || $linkType == "" || $linkType == $this->mType)) {
+    if ($this->hasParentId() && (isset($linkType) && $linkType != "" || ($linkId || $linkId === 0))) {
+      if (($linkId || $linkId === 0) && is_numeric($linkId) && (!isset($linkType) || $linkType == "" || $linkType == $this->mType)) {
         $gstr = $this->mTableName.".".$this->mIdKeyTable." IN ( ".
                 "SELECT ".$this->mTableName.".".$this->mIdKeyTable." ".
                 "FROM (SELECT @pv := '".$linkId."') ".
@@ -1188,17 +1188,6 @@ class anyTable extends dbTable
         }
       }
     }
-
-    // TODO! What's this for?
-    if ($linkType == $this->mType && $linkId != "nogroup") {
-      $db_id = $this->mType == "group" ? "'".$linkId."'" : $linkId;
-      $skip_str = $this->mTableName.".".$this->mIdKeyTable." != ".$db_id."";
-      if ($where === "")
-        $where  = "WHERE (".$skip_str.") ";
-      else
-        $where .= " AND (".$skip_str.") ";
-    }
-
     // Match with group table
     if ($grouping) {
       if ($groupId == "nogroup" && $has_group_linktable) {
@@ -2297,13 +2286,16 @@ class anyTable extends dbTable
     $this->setMessage($this->mUpdateSuccessMsg);
 
     // Get the (updated) list for the item
+    $link_id = Parameters::get("link_id");
+    $type    = Parameters::get("type");
     $this->dbSearchItemListOfType($id,$link_type);
 
     if ($this->isError())
       return null;
 
     if (isset($this->mData)) {
-      $this->mData["data"] = $this->mData;
+      // Prepare data
+      $this->mData["data"] = $this->mData; // TODO! clone?
       $this->mData["nogroup"] = null;
     }
     return $this->mData;

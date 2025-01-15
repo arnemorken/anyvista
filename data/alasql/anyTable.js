@@ -952,17 +952,6 @@ anyTable.prototype.findListWhere = function(groupType,groupId,linkType,linkId,gr
       }
     }
   }
-
-  // TODO! What's this for?
-  if (linkType == this.type && linkId != "nogroup") {
-    let db_id = this.type == "group" ? "'"+linkId+"'" : linkId;
-    let skip_str = this.tableName+"."+this.idKey+" != "+db_id+"";
-    if (where === "")
-      where  = "WHERE ("+skip_str+") ";
-    else
-      where += " AND ("+skip_str+") ";
-  }
-
   // Match with group table
   if (groupId == "nogroup") {
     // Search items not belonging to any group
@@ -1876,14 +1865,14 @@ anyTable.prototype.dbUpdateLinkList = async function(options)
   await this.dbSearchItemListOfType(id,link_type);
 
   if (this.error)
-    return null;
+    return Promise.resolve(null);
 
   if (this.data) {
-    // TODO! Why must we do this?
-    this.data["data"] = this.data;
+      // Prepare data
+    $.extend(true,this.data["data"],this.data); // TODO! Could slow down execution if large data structure // TODO! jsQuery method!
     this.data["nogroup"] = null;
   }
-  return this;
+  return Promise.resolve(this);
 }; // dbUpdateLinkList
 
 anyTable.prototype.dbValidateUpdateLinkList = function(options)
