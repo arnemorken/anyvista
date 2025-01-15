@@ -4728,13 +4728,13 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                                                                    type: type });
           let the_view = parent_view._findViewOfType(type);
           if (!the_view) {
-            if (options.type == "group")
+            if (options.type == "group") // TODO! Why?
               the_view = parent_view;
             else {
-              if (!parent_view.model.data[id].data[id].data)
-                parent_view.model.data[id].data[id].data = {};
+              if (!parent_view.model.data[link_id].data[link_id].data)
+                parent_view.model.data[link_id].data[link_id].data = {};
               let data_idx = "link-"+type;
-              parent_view.model.data[id].data[id].data[data_idx] =
+              parent_view.model.data[link_id].data[link_id].data[data_idx] =
                 {
                   data: {
                    0: { // Dummy entry, to make parent create a list view/model
