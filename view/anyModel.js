@@ -1170,29 +1170,29 @@ anyModel.prototype.dataUpdate = function (options)
  *                                    Optional. Default: `this.id`.
  * @param {String}  options.link_type If `link_id` is specified, the type of an item in the data structure with
  *                                    id `link_id`.
- *                                    If `link_id` is not specified, the type of the items in the `select` and
- *                                    the `unselect` arrays.
+ *                                    If `link_id` is not specified, the type of the items in the `add` and
+ *                                    the `rem` arrays.
  *                                    Mandatory.
  * @param {String}  options.link_id   The id of an item to unlink from item with id `id`.
  *                                    If specified, the link will be removed and no other action will be taken
- *                                    (the `select` and `unselect` arrays will be ignored).
- *                                    If not given, links will be added and/or removed as per the `select`
- *                                    and `unselect` arrays.
+ *                                    (the `add` and `rem` arrays will be ignored).
+ *                                    If not given, links will be added and/or removed as per the `add`
+ *                                    and `rem` arrays.
  *                                    Optional. Default: undefined.
- * @param {Object}  options.unselect  A list of ids to unlink from item with id `id` (if `link_id` is not given).
- *                                    This will be done *before* the ids in `select` are added.
+ * @param {Object}  options.rem       A list of ids to unlink from item with id `id` (if `link_id` is not given).
+ *                                    This will be done *before* the ids in `add` are added.
  *                                    Optional. Default: undefined.
- * @param {Object}  options.select    A list of ids to link to item with id `id`(if `link_id` is not given).
- *                                    This will be done *after* the ids in `unselect` has been removed.
+ * @param {Object}  options.add       A list of ids to link to item with id `id`(if `link_id` is not given).
+ *                                    This will be done *after* the ids in `rem` has been removed.
  *                                    If the link already exists, the link's data will be update with the data
  *                                    in `new_data`, if specified.
  *                                    Optional. Default: undefined.
  * @param {Object}  options.new_data  An object containing data to update the data structure with when the
- *                                    `select` list is specified and `link_id` is not specified. If `new_data`
+ *                                    `add` list is specified and `link_id` is not specified. If `new_data`
  *                                    is not specified, the data to link is assumed to be found in the `data`
  *                                    data structure. If not found, it is an error.
  *                                    Optional. Default: null, and `data` will be searched for the items with
- *                                    ids specified in `select`.
+ *                                    ids specified in `add`.
  * @param {String}  options.name_key
  *
  * @return true on success, false on error.
@@ -1229,9 +1229,9 @@ anyModel.prototype.dataUpdateLinkList = function (options)
     return true;
   } // if
 
-  if (options.unselect && (options.unselect.size || options.unselect.length)) {
-    // Remove links in `unselect`
-    for (let rem_id of options.unselect) {
+  if (options.rem && (options.rem.size || options.rem.length)) {
+    // Remove links in `rem`
+    for (let rem_id of options.rem) {
       // Remove (delete) the link data with id 'id'
       if (!this.dataDelete({ data: the_data,
                              id:   rem_id,
@@ -1243,9 +1243,9 @@ anyModel.prototype.dataUpdateLinkList = function (options)
       delete the_data["link-"+the_type];
   } // if
 
-  // Insert or update link in `select`
-  if (options.select && (options.select.size || options.select.length) && the_id && the_type) {
-    for (let sel_id of options.select) {
+  // Insert or update link in `add`
+  if (options.add && (options.add.size || options.add.length) && the_id && the_type) {
+    for (let sel_id of options.add) {
       // Only insert item if it is not already in model
       if (!this.dataSearch({ data: the_data,
                              id:   sel_id,
@@ -2249,20 +2249,20 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
  *                                      Optional.
  * @param {String}   options.link_type  If `link_id` is specified, the type of an item in the data structure with
  *                                      id `link_id`.
- *                                      If `link_id` is not specified, the type of the items in the `select` and
- *                                      the `unselect` arrays.
+ *                                      If `link_id` is not specified, the type of the items in the `add` and
+ *                                      the `rem` arrays.
  *                                      Mandatory if `link_id` is given.
  * @param {String}   options.link_id    The id of an item to unlink from item with id `id`.
  *                                      If specified, the link will be removed and no other action will be taken
- *                                      (the `select` and `unselect` arrays will be ignored).
- *                                      If not given, links will be added and/or removed as per the `select`
- *                                      and `unselect` arrays.
+ *                                      (the `add` and `rem` arrays will be ignored).
+ *                                      If not given, links will be added and/or removed as per the `add`
+ *                                      and `rem` arrays.
  *                                      Optional. Default: undefined.
- * @param {Object}   options.unselect   A list of ids to unlink from item with id `id` (if `link_id` is not given).
- *                                      This will be done *before* the ids in `select` are added.
+ * @param {Object}   options.rem        A list of ids to unlink from item with id `id` (if `link_id` is not given).
+ *                                      This will be done *before* the ids in `add` are added.
  *                                      Optional. Default: undefined.
- * @param {Object}   options.select     A list of ids to link to item with id `id`(if `link_id` is not given).
- *                                      This will be done *after* the ids in `unselect` has been removed.
+ * @param {Object}   options.add        A list of ids to link to item with id `id`(if `link_id` is not given).
+ *                                      This will be done *after* the ids in `rem` has been removed.
  *                                      If the link already exists, the link's data will be update with the data
  *                                      in `new_data`, if specified. TODO! new_data does not exist here!
  *                                      Optional. Default: undefined.
@@ -2320,8 +2320,11 @@ anyModel.prototype._dbUpdateLinkListLocal = async function (options)
     let table_name = options && options.tableName ? options.tableName : the_type+"Table";
     let table = await this.table_factory.createClass(table_name,{type:the_type,header:true,path:options.path});
     if (table && table.error == "") {
-      options.add = options.select;
-      options.rem = options.unselect;
+      if ((options.add && (options.add.size === 0 || options.add.length === 0)) &&
+          (options.link_id || options.link_id === 0)) {
+        options.add = new Set();
+        options.rem = new Set().add(options.link_id);
+      }
       let self = this;
       return await table.dbUpdateLinkList(options) // TODO! Is await neccessary here?
       .then( function(serverdata) {
@@ -2396,13 +2399,13 @@ anyModel.prototype.dbUpdateLinkListGetURL = function (options)
     param_str += "&rem="+the_link_id;
   else {
     let has_add_or_rem = false;
-    if (options.select && (options.select.size || options.select.length)) {
-      let sel = [...options.select];
+    if (options.add && (options.add.size || options.add.length)) {
+      let sel = [...options.add];
       param_str += "&add="+sel;
       has_add_or_rem = true;
     }
-    if (options.unselect && (options.unselect.size || options.unselect.length)) {
-      let unsel = [...options.unselect];
+    if (options.rem && (options.rem.size || options.rem.length)) {
+      let unsel = [...options.rem];
       param_str += "&rem="+unsel;
       has_add_or_rem = true;
     }
@@ -2454,8 +2457,8 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
              link_data: options.link_data,
              link_id:   options.link_id,
              link_type: options.link_type,
-             select:    options.select,
-             unselect:  options.unselect,
+             add:       options.add,
+             rem:       options.rem,
              new_data:  options.new_data,
            }); // Remove data
       if (serverdata.data) {

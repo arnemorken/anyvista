@@ -73,8 +73,8 @@
  * @param {boolean} options.onFocusoutRemoveEmpty  The current row being edited in a list will be removed when loosing focus if the row is empty. Default: true.
  * @param {boolean} options.useOddEvenColums       If true, tags for odd and even columns will be generated for list entries. Default: false.
  * @param {boolean} options.useOddEvenRows         If true, tags for odd and even rows will be generated for list entries. Default: false.
- * @param {integer} options.itemsPerPage           The number of rows to show per page. Only applicable for "list" and "select" modes. Default: 20.
- * @param {integer} options.currentPage            The current page to show. Only applicable for "list" and "select" modes. Default: 1.
+ * @param {integer} options.itemsPerPage           The number of rows to show per page. Only applicable for "list" mode. Default: 20.
+ * @param {integer} options.currentPage            The current page to show. Only applicable for "list" mode. Default: 1.
  * @param {String}  options.grouping               How to group data: Empty string for no grouping, "tabs" for using anyViewTabs to group data into tabs. Default: "".
  * @param {boolean} options.simple                 If true, display only the value of the [name_key] data entry and disregard other data entires. Default: false.
  * @param {String}  options.sortBy                 The filter id of the table header that the table should be sorted by. Only valid if isSortable is `true`. Default: "".
@@ -82,8 +82,8 @@
  * @param {boolean} options.refresh                If true, the constructor will call `this.refresh` at the end of initialization. Default: false.
  * @param {boolean} options.uploadDirect           If true, the selected file will be uploaded without the user having to press the "edit" and "update" buttons. Default: true.
  * @param {Object}  options.linkIcons              Icons to use in the link popup menu. Default: null.
- * @param {Set}     options.select                 List of ids that are marked as selected. Default: new Set().
- * @param {Set}     options.unselect               List of ids that are marked as unselected. Default: new Set().
+ * @param {Set}     options.add                    List of ids that are marked as selected. Default: new Set().
+ * @param {Set}     options.rem                    List of ids that are marked as unselected. Default: new Set().
  *
  * @example
  *      new anyView({model:mymodel,filters:myfilters,id:"mycontent"});
@@ -146,8 +146,8 @@ var anyViewWidget = $.widget("any.anyView", {
     refresh:                false,
     uploadDirect:           true,
     linkIcons:              null,
-    select:                 new Set(), // List of ids that are marked as selected.
-    unselect:               new Set(), // List of ids that are marked as unselected.
+    add:                    new Set(), // List of ids that are marked as selected.
+    rem:                    new Set(), // List of ids that are marked as unselected.
 
     // Local methods
     localSelect:     null,
@@ -1957,7 +1957,7 @@ $.any.anyView.prototype.refreshTableDataFirstCell = function (params)
     edit:       edit,
   };
   if (this.options.isSelectable && this.options.showButtonSelect==1 && mode == "list") {
-    let checked = this.options.select.has(parseInt(id));
+    let checked = this.options.add.has(parseInt(id));
     first_opt.checked = checked;
     this.refreshSelectButton(first_opt);
   }
@@ -2927,8 +2927,8 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
     menulinkContext:        this.options.menulinkContext ? this.options.menulinkContext : null,
 
     preselected:            this.options.isSelectable    ? this.options.preselected     : null,
-    select:                 this.options.isSelectable    ? this.options.select          : null,
-    unselect:               this.options.isSelectable    ? this.options.unselect        : null,
+    add:                    this.options.isSelectable    ? this.options.add             : null,
+    rem:                    this.options.isSelectable    ? this.options.rem             : null,
     localSelect:            this.options.localSelect     ? this.options.localSelect     : null,
     localUpdate:            this.options.localUpdate     ? this.options.localUpdate     : null,
     localDelete:            this.options.localDelete     ? this.options.localDelete     : null,
@@ -4286,17 +4286,17 @@ $.any.anyView.prototype._toggleChecked = function (event)
   if (chk.length)
     chk.html(check_str);
   opt.checked = !opt.checked;
-  if (!this.options.select)
-    this.options.select = new Set();
-  if (!this.options.unselect)
-    this.options.unselect = new Set();
+  if (!this.options.add)
+    this.options.add = new Set();
+  if (!this.options.rem)
+    this.options.rem = new Set();
   if (opt.checked) {
-    this.options.select.add(parseInt(opt.id));
-    this.options.unselect.delete(parseInt(opt.id));
+    this.options.add.add(parseInt(opt.id));
+    this.options.rem.delete(parseInt(opt.id));
   }
   else {
-    this.options.select.delete(parseInt(opt.id));
-    this.options.unselect.add(parseInt(opt.id));
+    this.options.add.delete(parseInt(opt.id));
+    this.options.rem.add(parseInt(opt.id));
   }
 }; // _toggleChecked
 
@@ -4719,8 +4719,8 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           select_list_view.options.showButtonAddLinkGroup = false;
           select_list_view.options.simple                 = options.simple; // true
           select_list_view.options.isSelectable           = true; // Use the select filter, if available
-          select_list_view.options.unselect               = new Set();
-          select_list_view.options.select                 = new Set();
+          select_list_view.options.add                    = new Set();
+          select_list_view.options.rem                    = new Set();
           select_list_view.options.preselected = self.dataSearch({ data: self.data,
                                                                    type: type });
           let the_view = parent_view._findViewOfType(type);
@@ -4768,8 +4768,8 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                 type:      link_type,
                 link_data: data,
                 link_type: type,
-                select:    select_list_view.options.select,
-                unselect:  select_list_view.options.unselect,
+                add:       select_list_view.options.add,
+                rem:       select_list_view.options.rem,
               },
             };
             w3_modaldialog(mod_opt);
@@ -4797,13 +4797,13 @@ $.any.anyView.prototype._addPreSelections = function (select_list_view)
 {
   let model       = select_list_view.model;
   let preselected = select_list_view.options.preselected;
-  let select      = select_list_view.options.select;
+  let add         = select_list_view.options.add;
   for (var val in preselected) {
     if (preselected.hasOwnProperty(val) && !val.startsWith("grouping")) {
       let d = preselected[val];
       let sel_id = d[model.id_key];
       if ((sel_id || sel_id === 0) && d.list == model.type)
-        select.add(parseInt(sel_id));
+        add.add(parseInt(sel_id));
       if (d.data && this.model.id && sel_id != this.model.id && parseInt(sel_id) != parseInt(this.model.id))
         this._addPreSelections(select_list_view);
     }
@@ -4931,8 +4931,8 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
           link_data: link_data,
           link_id:   link_id,
           link_type: link_type,
-          select:    new Set(),
-          unselect:  new Set().add(id),
+          add:       new Set(),
+          rem:       new Set().add(id),
         },
       };
       w3_modaldialog(mod_opt);
@@ -4947,8 +4947,8 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
         link_data: link_data,
         link_id:   link_id,
         link_type: link_type,
-        select:    new Set(),
-        unselect:  new Set().add(id),
+        add:       new Set(),
+        rem:       new Set().add(id),
     };
     this.dbUpdateLinkList(opt);
   } // else

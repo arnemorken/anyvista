@@ -736,8 +736,8 @@ function testModel()
     let res = dm.dataUpdateLinkList({type:      "user",
                                      id:        99,
                                      link_type: "user",
-                                     unselect:  del,
-                                     select:    ins,
+                                     rem:       del,
+                                     add:       ins,
                                      new_data:  new_data,
                                    });
     console.log(JSON.stringify(dm.data));
@@ -757,8 +757,8 @@ function testModel()
     new_data = {14:{list:"event",event_name:"Added event 14"}};
     res = dm.dataUpdateLinkList({type:      "user",
                                  id:        99,
-                                 unselect:  del,
-                                 select:    ins,
+                                 rem:       del,
+                                 add:       ins,
                                  link_type: "event",
                                  new_data:  new_data,
                                });
@@ -795,8 +795,8 @@ function testModel()
       console.log(JSON.stringify(new_data));
       let res = dm.dataUpdateLinkList({type:      ttyp,
                                        id:        99,
-                                       unselect:  del,
-                                       select:    ins,
+                                       rem:       del,
+                                       add:       ins,
                                        link_type: tlnk,
                                        new_data:  new_data,
                                      });
@@ -1371,7 +1371,7 @@ function testModel()
 
   asyncTest('dbUpdateLinkList add a user-event link (event-user link 20900-23 must exist in event_user table)', 2, async function() {
     let dm = new anyModel({type:"user",id:23,db_search:false,source:gDBSource,db_connection:gDbase,data:null});
-    let res = await dm.dbUpdateLinkList({ link_type:"event",select:[98,99,10894],unselect:[20900],
+    let res = await dm.dbUpdateLinkList({ link_type:"event",add:[98,99,10894],rem:[20900],
                                           onSuccess:
                                           function(context,serverdata,options)
                                           {
