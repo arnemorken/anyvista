@@ -3287,6 +3287,7 @@ $.any.anyView.prototype.getListModelOptions = function (link_type,link_id,list_t
     type:       list_type,
     link_type:  link_type,
     link_id:    link_id,
+    parent:     this.model,
     db_search:  false,
     source:     this.model.source,
     permission: this.model.permission,
