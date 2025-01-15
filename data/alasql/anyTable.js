@@ -613,9 +613,11 @@ anyTable.prototype.dbSearchItemLists = async function(id,grouping,groupId)
 anyTable.prototype.dbSearchItemListOfType = async function(id,linkType,grouping,groupId)
 {
   let link_tablename = this.findLinkTableName(linkType);
-  if (this.tableExists(link_tablename)) {
+  if (this.tableExists(link_tablename) && (id || id === 0)) {
     let factory = new anyTableFactory(this.connection);
-    let link_classname = this.linkTypes[linkType].className;
+    let link_classname = this.linkTypes && this.linkTypes[linkType]
+                         ? this.linkTypes[linkType].className
+                         : null;
     let table = await factory.createClass(link_classname,{type:linkType, header:true, path:this.path});
     //console.log("created class "+link_classname);
     if (table && (table.type != this.type || this.hasParentId())) {

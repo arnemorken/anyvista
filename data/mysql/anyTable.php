@@ -776,7 +776,7 @@ class anyTable extends dbTable
   protected function dbSearchItemListOfType($id,$linkType,$grouping=false,$groupId=null)
   {
     $link_tablename = $this->findLinkTableName($linkType);
-    if ($this->tableExists($link_tablename)) {
+    if ($this->tableExists($link_tablename) && ($id || $id === 0)) {
       $table = anyTableFactory::createClass($linkType,$this);
       //elog("created class ".$linkType);
       if ($table && ($table->mType != $this->mType || $this->hasParentId())) {
