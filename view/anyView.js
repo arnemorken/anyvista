@@ -366,20 +366,22 @@ $.any.anyView.prototype._findType = function (data,id,intype)
 // Try to determine type from *_name element of first item in data
 $.any.anyView.prototype._findTypeFromData = function (data)
 {
+  let type = null;
   if (data) {
     let ix = Object.keys(data)[0];
     if (ix) {
       for (let key in data[ix]) {
         if (data[ix].hasOwnProperty(key)) {
-          let n = key.lastIndexOf("_name");
-          if (n != -1 && key.substring(0,n)) {
-            return key.substring(0,n);
-          }
+          let type = key == "list" || key == "item"|| key == "head"
+                     ? data[ix][key]
+                     : null;
+          if (type)
+            return type;
         }
       }
     }
   }
-  return "";
+  return type;
 }; // _findTypeFromData
 
 // Find the current mode to use
