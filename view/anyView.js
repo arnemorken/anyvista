@@ -577,8 +577,7 @@ $.any.anyView.prototype.refresh = function (params)
                 (/*prev_mode != "" &&*/ prev_mode != curr_mode)) {
               // If the new type/mode is contained within a list, create a new row to contain a new parent container
               if (prev_mode == "list" && prev_type != curr_type &&
-                  params && params.link_id != "+0" && params.link_id != "0" && params.link_id !== 0 // TODO! Not a good test
-                  )
+                  params && params.link_id != "+0" && params.link_id != "0" && params.link_id !== 0) // TODO! Not a good test
                 the_parent = view._addContainerRow(parent,prev_type,prev_mode,curr_type,curr_mode,id_str);
               model = this.createModel({
                              data:      data,
@@ -674,9 +673,14 @@ $.any.anyView.prototype.refresh = function (params)
   // Refresh bottom toolbar
   if (!model)
     model = this.model;
-  if (this.options && this.options.showToolbar && !this.options.isSelectable &&
-      this.options.data_level === 0 && this.id_stack.length === 0 && this.model &&
-      (this.options.showMessages || this.options.showButtonNew || this.options.showButtonAddLinkItem || this.options.showButtonAddLinkGroup)) {
+  if (this.model && this.options &&
+       this.options.showToolbar &&
+      !this.options.isSelectable &&
+      (this.options.showMessages ||
+       this.options.showButtonNew ||
+       this.options.showButtonAddLinkItem ||
+       this.options.showButtonAddLinkGroup) &&
+      this.options.data_level === 0 && this.id_stack.length === 0) {
     let d = data ? data[0] ? data[0] : data["+0"] ? data["+0"] : data : data;
     d = d && d[this.model.id] && d[this.model.id].data && d[this.model.id].data[this.model.id]
         ? d[this.model.id].data
@@ -4369,16 +4373,16 @@ $.any.anyView.prototype.removeFromView = function (opt)
  * @param  edit
  * @return true on success, false on error.
  */
-$.any.anyView.prototype.dbSearchParents = function (type,mode,id,val,edit,link_id)
+$.any.anyView.prototype.dbSearchParents = function (model,mode,val,edit,link_id)
 {
   if (!this.model)
     return val;
   let options = {
    id:        null, // Search for all items of given type
-   type:      type,
+   type:      model.type,
    mode:      mode,
    parent_id: link_id,
-   child_id:  id,
+   child_id:  model.id,
    simple:    true,
    onSuccess: this.createParentDropdownMenu,
    context:   this,
@@ -4388,10 +4392,10 @@ $.any.anyView.prototype.dbSearchParents = function (type,mode,id,val,edit,link_i
     return this.model.dbSearch(options); // TODO! What if source == "local"?
   }
   else {
-    options.id = id;
+    options.id = model.id;
     let item = this.model.dataSearch(options);
     if (item)
-      return item[id].parent_name;
+      return item[model.id].parent_name;
     return "";
   }
 }; // dbSearchParents
