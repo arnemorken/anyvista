@@ -399,7 +399,7 @@ $.any.anyView.prototype._findMode = function (data,id,intype)
   }
   if (!mode) {
     // No mode specified, so fall back to default
-    mode = intype != "group" ? "list" : "head";
+    mode ="list";
   }
   return mode;
 }; // _findMode
