@@ -4678,30 +4678,27 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
           select_list_view.options.rem                    = new Set();
           select_list_view.options.preselected = self.dataSearch({ data: self.data,
                                                                    type: type });
-          let the_view = parent_view._findViewOfType(type);
+          let the_view = parent_view._findViewByTypeId(link_type,link_id);
           if (!the_view) {
-            if (options.type == "group") // TODO! Why?
-              the_view = parent_view;
-            else {
-              if (!parent_view.model.data[link_id].data[link_id].data)
-                parent_view.model.data[link_id].data[link_id].data = {};
-              let data_idx = "link-"+type;
-              parent_view.model.data[link_id].data[link_id].data[data_idx] =
-                {
-                  data: {
-                   0: { // Dummy entry, to make parent create a list view/model
-                     list: type,
-                     grouping: true,
-                   }
-                  },
-                  head: type,
-                  grouping: true,
-                  [type+"_name"]: type+"s", // TODO!
-                };
-              parent_view.options.item_opening = true;
-              parent_view.refresh();
-              the_view = parent_view._findViewOfType(type);
-            }
+            if (!parent_view.model.data[link_id].data[link_id].data)
+              parent_view.model.data[link_id].data[link_id].data = {};
+            let data_idx = "link-"+type;
+            parent_view.model.data[link_id].data[link_id].data[data_idx] =
+              {
+                data: {
+                  0: { // Dummy entry, to make parent create a list view/model
+                    list: type,
+                    grouping: true,
+                  }
+                },
+                head: type,
+                grouping: true,
+                [type+"_name"]: type+"s", // TODO! i18n
+              };
+            parent_view.options.item_opening = true;
+            parent_view.refresh();
+            the_view = parent_view._findViewByTypeId(link_type,link_id);
+
           }
           if (the_view) {
             if (select_list_view.options.preselected)
@@ -4767,7 +4764,7 @@ $.any.anyView.prototype._addPreSelections = function (select_list_view)
 }; // _addPreSelections
 
 // This method is used by dbUpdateLinkListDialog()
-$.any.anyView.prototype._findViewOfType = function (type)
+$.any.anyView.prototype._findViewByTypeId = function (type,id)
 {
   let v = null;
   if (this.views) {
@@ -4775,10 +4772,10 @@ $.any.anyView.prototype._findViewOfType = function (type)
     for (let x in this.views) {
       if (this.views.hasOwnProperty(x)) {
         let the_view = this.views[x];
-        if (the_view.model && the_view.model.type == type)
+        if (the_view.model && the_view.model.type == type && the_view.model.id == id)
           return the_view;
         else {
-          v = the_view._findViewOfType(type);
+          v = the_view._findViewByTypeId(type,id);
           if (v && v.model && v.model.type == type)
             return v;
         }
@@ -4786,7 +4783,7 @@ $.any.anyView.prototype._findViewOfType = function (type)
     }
   }
   return v;
-}; // _findViewOfType
+}; // _findViewByTypeId
 
 $.any.anyView.prototype._findViewById = function (id)
 {
