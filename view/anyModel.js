@@ -1985,7 +1985,9 @@ anyModel.prototype.dbUpdate = function (options) // TODO! Should this be an asyn
   if (!options.is_new && !item.is_new && !Object.size(item.dirty)) {
     this.message = i18n.error.NOTHING_TO_UPDATE;
     console.log("anyModel.dbUpdate: "+this.message);
-    this.cbExecute();
+    this.cbExecute({ data:   new_data,
+                     id_str: options.id_str,
+                  });
     return false;
   }
   // Data to update or insert
@@ -2224,11 +2226,11 @@ anyModel.prototype.dbUpdateSuccess = function (context,serverdata,options)
     }
   }
   if (self.cbExecute && self.auto_refresh && options.auto_refresh !== false) {
-    let params = {};
-    params.data = options.data;
-    params.type = options.type;
-    params.mode = options.mode;
-    self.cbExecute(params);
+    self.cbExecute({ data:   options.data,
+                     type:   options.type,
+                     mode:   options.mode,
+                     id_str: options.id_str,
+                  });
   }
   return context;
 }; // dbUpdateSuccess
@@ -2476,6 +2478,7 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
                      link_data: options.link_data,
                      link_id:   options.link_id,
                      link_type: options.link_type,
+                     id_str:    options.id_str,
                   });
   return context;
 }; // dbUpdateLinkListSuccess
