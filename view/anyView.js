@@ -702,6 +702,8 @@ $.any.anyView.prototype.refresh = function (params)
          });
   }
 
+  this.showMessages();
+
   // Do we need to do something after displaying?
   if (this.postRefresh)
     this.postRefresh(params);
