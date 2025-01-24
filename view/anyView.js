@@ -211,7 +211,6 @@ var anyViewWidget = $.widget("any.anyView", {
                         ? this.options.model
                         : null;
 
-    this.id_stack = []; // Dynamic stack of id strings for views
     this.views    = {};
 
     if (this.model && this.options.subscribe_default) {
@@ -561,18 +560,19 @@ $.any.anyView.prototype.refresh = function (params)
             // Find the type and mode of the current data item (default is the previous type/mode)
             let curr_type = view._findType(data,id,prev_type);
             let curr_mode = view._findMode(data,id,curr_type);
-            // See if we need to add to id_stack
-            if (curr_mode !== "list") {
-              let idx = Number.isInteger(parseInt(id)) ? ""+parseInt(id) : id;
-              this.id_stack.push(idx);
-            }
-            else
-            if (curr_mode == "list" && prev_mode == "list" && prev_type != curr_type) {
-              let idx = Number.isInteger(parseInt(link_id)) ? ""+parseInt(link_id) : link_id;
-              this.id_stack.push(idx);
-            }
+            // See if we need to change id_str
+            let idx = curr_mode !== "list"
+                      ? Number.isInteger(parseInt(id)) ? ""+parseInt(id) : id
+                      : curr_mode == "list" && prev_mode == "list" && prev_type != curr_type
+                        ? Number.isInteger(parseInt(link_id)) ? ""+parseInt(link_id) : link_id
+                        : null;
             // Create the current id_str
-            let id_str = this.id_stack.join('_');
+            let idstr  = (params && params.id_str) ? params.id_str : "";
+            let id_str = idstr
+                         ? idx && curr_mode != "item"
+                           ? idstr + "_" + idx
+                           : idstr
+                         : idx || "";
             // Create new view whenever we encounter a new type or a new mode
             if ((prev_type != "" && prev_type != curr_type) ||
                 (/*prev_mode != "" &&*/ prev_mode != curr_mode)) {
@@ -600,7 +600,6 @@ $.any.anyView.prototype.refresh = function (params)
             }
             if (!view)
               view = this; // If we haven't got a view, reuse this one
-            view.id_stack = JSON.parse(JSON.stringify(this.id_stack));
             ++row_no;
             if (this.options && (!this.options.showPaginator || (from == -1 || from <= row_no && row_no < from + num))) {
               // If we have an item as (grand)parent, use its' type/data/id, not the immediate level above
@@ -620,6 +619,7 @@ $.any.anyView.prototype.refresh = function (params)
                      link_data: link_data,
                      link_id:   link_id,
                      link_type: link_type,
+                     id_str:    id_str,
                      row_no:    row_no,
                      edit:      edit,
                    });
@@ -641,11 +641,6 @@ $.any.anyView.prototype.refresh = function (params)
                      id_str:    id_str,
                    });
             }
-            if (curr_mode !== "list")
-              this.id_stack.pop();
-            else
-            if (curr_mode == "list" && prev_mode == "list" && prev_type != curr_type)
-              this.id_stack.pop();
             prev_type = curr_type;
             prev_mode = curr_mode;
           } // if view
@@ -679,7 +674,7 @@ $.any.anyView.prototype.refresh = function (params)
        this.options.showButtonNew ||
        this.options.showButtonAddLinkItem ||
        this.options.showButtonAddLinkGroup) &&
-      this.options.data_level === 0 && this.id_stack.length === 0) {
+      this.options.data_level === 0 && (!params || !params.id_str)) {
     let d = data ? data[0] ? data[0] : data["+0"] ? data["+0"] : data : data;
     d = d && d[this.model.id] && d[this.model.id].data && d[this.model.id].data[this.model.id]
         ? d[this.model.id].data
@@ -784,9 +779,9 @@ $.any.anyView.prototype.refreshOne = function (params)
   let type   = params.type;
   let mode   = params.mode;
   let edit   = params.edit;
+  let id_str = params.id_str;
 
   // Find identifier strings for containers and rows
-  let id_str = this.id_stack.join('_');
   let idx = Number.isInteger(parseInt(id))
             ? ""+parseInt(id)
             : id;
@@ -795,7 +790,6 @@ $.any.anyView.prototype.refreshOne = function (params)
                      ? id_str+"_"+idx
                      : idx
                    : id_str;
-  params.id_str     = id_str;
   params.row_id_str = row_id_str; // Used by refreshData etc.
 
   // Refresh header
@@ -849,6 +843,7 @@ $.any.anyView.prototype.refreshOne = function (params)
              link_data: data,
              link_id:   id,
              link_type: type,
+             id_str:    id_str,
              edit:      edit,
              reset_rec: false,
            });
@@ -1520,7 +1515,7 @@ $.any.anyView.prototype.refreshDataFooter = function (params)
                    div_info: {
                      type:   type,
                      mode:   mode,
-                     id_str: JSON.parse(JSON.stringify(this.id_stack)),
+                     id_str: id_str,
                    },
                 });
         pager.numItems(num_results);
@@ -2511,6 +2506,7 @@ $.any.anyView.prototype.refreshRemoveButton = function (opt)
         link_data: opt.link_data,
         link_id:   opt.link_id,
         link_type: opt.link_type,
+        id_str:    opt.id_str,
       };
   btn.off("click").on("click",rem_opt,$.proxy(fun,con));
   return btn;
@@ -2861,6 +2857,7 @@ $.any.anyView.prototype.getCreateViewOptions = function(model,parent,type,mode,i
     id:                     view_id,
     view:                   this, // Used by dbUpdate and dbDeleteDialog
     id_base:                this.id_base,
+    id_str:                 id_str,
     data_level:             data_level   || data_level   === 0 ? data_level   : this.data_level,
     indent_level:           indent_level || indent_level === 0 ? indent_level : this.indent_level,
     grouping:               this.options.grouping,
@@ -3474,7 +3471,6 @@ $.any.anyView.prototype.sortTable = function (event)
     this.options.indent_level = -1;
     this.options.ref_rec = 0;
     this.showMessages("",true);
-    this.id_stack.pop(); // TODO! Not a good solution
     this.model.dbSearch(mod_opt);
   } // if remote
   else {
@@ -3600,7 +3596,6 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
   this.options.data_level = 0;
   this.data_level = 0; // TODO! Why is this in 2 places?
   if (this.model.source == "remote" && !mod_opt.simple) { // If "simple" mode, we assume all data is read already
-    this.id_stack = [];
     this.options.ref_rec = 0;
     mod_opt.from -= 1; // from is 0-based on server
     if (this.model.db_last_term && this.model.db_last_term != "")
@@ -4579,11 +4574,9 @@ $.any.anyView.prototype.dbUpdate = function (event)
     };
     this.refreshListTableDataRow(params);
   }
-  else {
+  else
     this.options.isDeletable = this.options.isEditable;
-    this.id_stack.pop();
-    //this.refresh();
-  }
+
   // Update database
   let icid = event.currentTarget.id.replace("update","edit");
   if (icid && icid != "") {
@@ -4734,6 +4727,7 @@ $.any.anyView.prototype.dbUpdateLinkListDialog = function (context,serverdata,op
                 link_type: type,
                 add:       select_list_view.options.add,
                 rem:       select_list_view.options.rem,
+                id_str:    ""+options.id_str,
               },
             };
             w3_modaldialog(mod_opt);
@@ -4897,6 +4891,7 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
           link_type: link_type,
           add:       new Set(),
           rem:       new Set().add(id),
+          id_str:    ""+event.data.id_str,
         },
       };
       w3_modaldialog(mod_opt);
