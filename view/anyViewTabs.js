@@ -211,23 +211,17 @@ $.any.anyViewTabs.prototype.refreshData = function (params)
 $.any.anyViewTabs.prototype.dbUpdateLinkListDialog = function (context,serverdata,options)
 {
   $.any.anyView.prototype.dbUpdateLinkListDialog.call(this,context,serverdata,options);
-  let list_type = null;
   if (serverdata) {
     if (serverdata.JSON_CODE)
       serverdata = serverdata.JSON_CODE;
-    if (serverdata.data) {
-      let parent_view = options.parent_view ? options.parent_view : null;
-      if (parent_view)
-        list_type = options.type;
-    }
   }
   if (options.parent_view) {
-    if (list_type) {
-      let v = options.parent_view._findViewOfType(list_type);
+    if (options.type) {
+      let v = options.parent_view._findViewByTypeId(options.type);
       if (v) {
         let view_id = v.element.attr("id");
         view_id = view_id.substring(0,view_id .lastIndexOf("_"));
-        view_id = view_id + "_link-" + list_type;
+        view_id = view_id + "_link-" + options.type;
         v.openTab({id_base:view_id});
       }
     }
