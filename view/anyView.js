@@ -4527,22 +4527,18 @@ $.any.anyView.prototype.dbUpdate = function (event)
       });
     }
   }
-  if (id || id === 0) { // TODO!
-    if (mode == "item" && this.options.view) {
-      // Update header for item view
-      let topidx = "+0";
-      if (id || id === 0)
-        topidx = id;
-      let head_item = this.options.view.model.dataSearch({
-                                                type: type,
-                                                id:   topidx,
-                                              });
-      if (head_item && head_item[topidx]) {
+  if (id || id === 0) {
+    if (mode == "item" && this.options.top_view) {
+      let head_item = this.options.top_view.model.dataSearch({
+                                                    type: type,
+                                                    id:   id,
+                                                  });
+      if (head_item && head_item[id]) {
         if (data_values[this.model.name_key]) {
-          head_item[topidx][this.options.view.model.name_key] = data_values[this.model.name_key];
-          this.options.view.options.item_opening = true;
-          this.options.view.id_stack = [];
-          //this.options.view.refresh(); // TODO! Refreshes entire view, but only need to refresh header
+          // Update header in "parent" list view // TODO! Neccessary? Isnt this done above?
+          head_item[id][this.model.name_key] = data_values[this.model.name_key];
+          // Update item header
+          $("#"+this.options.id_base+"_group_head_"+parseInt(id)+"_header").find(".group_name").html(data_values[this.model.name_key]);
         }
       }
     }
