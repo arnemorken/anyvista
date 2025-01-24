@@ -531,8 +531,11 @@ $.any.anyView.prototype.refresh = function (params)
     this.clearBeforeRefresh();
 
   // Do we need a top close button (for item mode)?
-  if (this.options.item_opening && this.id_stack.length == 1)
-    this.refreshCloseItemButton(params);
+  if (this.options.item_opening && this.data_level == 0)
+    this.refreshCloseItemButton({ parent: parent,
+                                  type:   type,
+                                  mode:   mode,
+                               });
 
   // Find the filters to use if we don't have them already
   if (!this.options.filters || !this.options.filters[type])
@@ -2254,7 +2257,7 @@ $.any.anyView.prototype.refreshCloseItemButton = function (opt)
               : this;
   btn.off("click").on("click",new_opt,$.proxy(fun,con));
   if (parent && parent.length)
-    parent.prev().prepend(btn);
+    parent.prepend(btn);
   this.options.item_opening = false;
   return btn;
 }; // refreshCloseItemButton
