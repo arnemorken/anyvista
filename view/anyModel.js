@@ -595,8 +595,6 @@ anyModel.prototype.cbExecute = function (params)
       let cb_context  = this._listeners[i][1];
       let cb_params   = this._listeners[i][2];
       if (cb_function) {
-        //console.log(cb_function);
-        //console.log(cb_context);
         if (params)
           cb_params = params; // Incoming params override params in _listeners array
         cb_function.call(cb_context,this,cb_params);
@@ -701,7 +699,7 @@ anyModel.prototype.dataSearch = function (options,
       return _parent_data[_parent_id];
     }
     if (data[id] && data[id].data && data[id].data[id])
-      return data[id].data; // TODO! Not very elegant
+      return data[id].data;
     return data;
   }
   let itemlist = {};
@@ -1127,7 +1125,7 @@ anyModel.prototype.dataUpdate = function (options)
     return null;
   }
   if (!new_data) {
-    console.warn("anyModel.dataUpdate: "+i18n.error.NOTHING_TO_UPDATE);
+    console.log("anyModel.dataUpdate: "+i18n.error.NOTHING_TO_UPDATE);
     return null;
   }
   let item = this.dataSearch({data:the_data,id:the_id,type:the_type});
@@ -1956,7 +1954,7 @@ anyModel.prototype.dbUpdate = function (options) // TODO! Should this be an asyn
                  ? parseInt(options.id)
                  : options.id
                    ? options.id
-                   : null;
+                   : null; // TODO! Use this.id here?
   if (!new_data)
     return null; // No new data
   if (!the_type) {
@@ -1978,7 +1976,6 @@ anyModel.prototype.dbUpdate = function (options) // TODO! Should this be an asyn
     console.error("anyModel.dbUpdate: "+errstr);
     return false;
   }
-  //let it = item; // Return this
   if (!item[this.id_key]) {
     if (item[the_id])
       item = item[the_id];

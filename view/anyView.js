@@ -591,7 +591,7 @@ $.any.anyView.prototype.refresh = function (params)
                              id_str: id_str,
                            });
               if (view) {
-                view.empty(); // TODO! With this, pagination may not work properly
+                view.empty(); // TODO! With this, pagination may not work properly(?)
                 this.views[id_str] = view;
               }
             }
@@ -637,7 +637,6 @@ $.any.anyView.prototype.refresh = function (params)
                      link_type: link_type,
                      id_str:    id_str,
                    });
-              new_view = false;
             }
             if (curr_mode !== "list")
               this.id_stack.pop();
@@ -1078,8 +1077,6 @@ $.any.anyView.prototype.refreshHeader = function (params,skipName)
     return null;
   }
   // Create the header entries
-  //if (params.id != "nogroup") // TODO! Temporary fix - unclear why we have to do this check!
-  //  parent.empty();
   let d = data[id] ? data[id] : data["+"+id] ? data["+"+id] : null;
   let n = 0;
   for (let filter_id in filter) {
@@ -1622,7 +1619,7 @@ $.any.anyView.prototype.refreshListTableDataRow = function (params)
   let tr = $("#"+tr_id);
   if (tr.length) {
     let td_ids = tr_id+" > td";
-    $("#"+td_ids).remove(); // Do not remove the tr tag, only the contents TODO! Should we use detach or empty instead of remove?
+    $("#"+td_ids).remove(); // Do not remove the tr tag, only the contents
   }
   else {
     tr = $("<tr id='"+tr_id+"'"+odd_even+"></tr>");
@@ -2373,8 +2370,8 @@ $.any.anyView.prototype.refreshUpdateButton = function (opt)
     return null;
 
   opt.is_new   = opt.data && opt.data[parseInt(opt.id)] ? opt.data[parseInt(opt.id)].is_new : false;
-  opt.new_data = opt.data;
-  opt.data     = null;
+  opt.new_data = opt.data; // TODO! Why?
+  opt.data     = null;     // TODO! Why?
 
   let parent  = opt.parent;
   let idstr   = opt.row_id_str;
@@ -3520,7 +3517,7 @@ $.any.anyView.prototype.searchSuccess = function (context,serverdata,options)
                              parent:       ll_contents,
                              data_level:   0,
                              indent_level: 0,
-                             //id_str:       "", // TODO!
+                           //id_str:       "", // TODO!
                           });
     if (search_view) {
       if (search_view.model && self.model)
@@ -3595,7 +3592,7 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
     type:      pager.options.div_info.type,
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
-    header:    "All "+pager.options.div_info.type+"s", // TODO! Not a good solution
+    header:    "All "+pager.options.div_info.type+"s", // TODO! i18n TODO! Not a good solution
   };
   this.options.data_level = 0;
   this.data_level = 0; // TODO! Why is this in 2 places?
@@ -4456,6 +4453,8 @@ $.any.anyView.prototype.getInputValues = function (type,mode,id,row_id_str)
   return data_values;
 }; // getInputValues
 
+// Update data structure and database with new values
+// Return false on error, true on success or nothing to update
 $.any.anyView.prototype.dbUpdate = function (event)
 {
   if (!this.model)
@@ -4494,8 +4493,11 @@ $.any.anyView.prototype.dbUpdate = function (event)
   }
   // Update model with contents of input fields
   let data_values = this.getInputValues(type,mode,id,row_id_str);
-  if (data_values == {})
+  if (data_values == {}) {
+    this.model.message = i18n.error.NOTHING_TO_UPDATE;
+    console.log("anyView.dbUpdate: "+this.model.message);
     return true; // Nothing to update
+  }
   this.model.dataUpdate({
      type:     type,
      id:       id,
@@ -4584,7 +4586,7 @@ $.any.anyView.prototype.dbUpdate = function (event)
   if (icid && icid != "") {
     let icdiv = $("#"+icid);
     let res = icdiv.find($(".fas"));
-    res.toggleClass('fa-pencil-alt').toggleClass('fa-solid fa-spinner fa-spin'); // TODO! CSS // TODO! Does not work for item mode
+    res.toggleClass('fa-pencil-alt').toggleClass('fa-solid fa-spinner fa-spin'); // TODO! CSS
   }
   if (mode == "item")
     this.showMessages("",true);
