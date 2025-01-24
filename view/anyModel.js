@@ -671,7 +671,7 @@ anyModel.prototype.dataSearch = function (options,
 
   // See if item is found at top level
   if (isInt(id) && data[this.id_key] == id ||
-      parseInt(id) != NaN && parseInt(data[this.id_key]) != NaN && parseInt(id) == parseInt(data[this.id_key]))
+      !isNaN(parseInt(id)) && !isNaN(parseInt(data[this.id_key])) && parseInt(id) == parseInt(data[this.id_key]))
     return data;
 
   let name_key = type == this.type
@@ -948,8 +948,8 @@ anyModel.prototype.dataInsert = function (options)
     return null;
   }
   if ((the_id || the_id === 0) &&
-      ((Number.isInteger(parseInt(the_id)) && the_id < 0) ||
-       (!Number.isInteger(parseInt(the_id)) && typeof the_id != "string"))) {
+      ((Number.isInteger(the_id) && the_id < 0) ||
+       (!Number.isInteger(the_id) && typeof the_id != "string"))) {
     console.error("anyModel.dataInsert: "+i18n.error.ID_ILLEGAL);
     return null;
   }
@@ -976,8 +976,10 @@ anyModel.prototype.dataInsert = function (options)
   }
   if (the_id || the_id === 0) {
     // An id was specified and found in the_data
-    if (!item[the_id])
+    if (!item[the_id]) {
       the_id = "+"+the_id;
+      item[the_id] = {};
+    }
     if (new_id) {
       // A new id was specified or should be auto-generated
       if (new_id < 0)

@@ -136,7 +136,6 @@ var anyViewWidget = $.widget("any.anyView", {
     onFocusoutRemoveEmpty:  true,
     useOddEvenColums:       true,
     useOddEvenRows:         true,
-    mode:                   null,
     itemsPerPage:           20,
     currentPage:            1,
     grouping:               "",
@@ -571,7 +570,6 @@ $.any.anyView.prototype.refresh = function (params)
             }
             // Create the current id_str
             let id_str = this.id_stack.join('_');
-            let new_view   = false;
             // Create new view whenever we encounter a new type or a new mode
             if ((prev_type != "" && prev_type != curr_type) ||
                 (/*prev_mode != "" &&*/ prev_mode != curr_mode)) {
@@ -595,7 +593,6 @@ $.any.anyView.prototype.refresh = function (params)
               if (view) {
                 view.empty(); // TODO! With this, pagination may not work properly
                 this.views[id_str] = view;
-                new_view = true;
               }
             }
             if (!view)
@@ -620,8 +617,8 @@ $.any.anyView.prototype.refresh = function (params)
                      link_data: link_data,
                      link_id:   link_id,
                      link_type: link_type,
-                     edit:      edit,
                      row_no:    row_no,
+                     edit:      edit,
                    });
               if (curr_mode == "list" && !view.rows_changed)
                 --row_no;
@@ -797,7 +794,7 @@ $.any.anyView.prototype.refreshOne = function (params)
                      : idx
                    : id_str;
   params.id_str     = id_str;
-  params.row_id_str = row_id_str;
+  params.row_id_str = row_id_str; // Used by refreshData etc.
 
   // Refresh header
   let have_data  = data && Object.size(data[id]) > 0;
@@ -983,7 +980,6 @@ $.any.anyView.prototype.refreshToolbarBottom = function (params)
     new_type = this.model.type;
   if (this.options.showButtonNew && new_type) {
     // Create a "new item"  button
-    //console.log("New "+new_type);
     this.refreshNewItemButton({
            parent: bardiv,
            data:   data,
@@ -1543,7 +1539,7 @@ $.any.anyView.prototype.refreshDataFooter = function (params)
     if (!searcher) {
       let search_box_id = this.id_base+"_"+type+"_"+mode+"_"+id_str+"_search_box";
       let search_box    = "Search: <input id='"+search_box_id+"' type='search' style='height:25px;min-height:25px;'>";
-      let searcher_id = this.id_base+"_"+type+"_"+mode+"_"+id_str+"_searcher_foot";
+      let searcher_id   = this.id_base+"_"+type+"_"+mode+"_"+id_str+"_searcher_foot";
       searcher = $("<div id='"+searcher_id+"' style='display:inline-block;float:right;padding-top:10px;'>"+search_box+"</div>"); // TODO! CSS
       extra_foot.append(searcher);
       let search_opt = { data:   data,
@@ -1846,8 +1842,8 @@ $.any.anyView.prototype.refreshItemTableDataRow = function (params)
           id:         id,
           type:       type,
           mode:       mode,
-          link_data:   link_data,
-          link_id:     link_id,
+          link_data:  link_data,
+          link_id:    link_id,
           id_str:     id_str,
           row_id_str: row_id_str,
           edit:       edit,
@@ -2227,15 +2223,12 @@ $.any.anyView.prototype.bindTableDataCellEdit = function (elem,params)
 // By default calls closeItem
 $.any.anyView.prototype.refreshCloseItemButton = function (opt)
 {
-  if (!opt)
+  if (!opt || !opt.parent || !opt.type || !opt.mode)
     return null;
 
-  let parent = opt.parent ? opt.parent : null;
-  let type   = opt.type   ? opt.type   : null;
-  let mode   = opt.mode   ? opt.mode   : null;
-
-  if (!parent || !type || !mode)
-    return null;
+  let parent = opt.parent;
+  let type   = opt.type;
+  let mode   = opt.mode;
 
   // Create cancel/close button for item view
   let new_opt = {
@@ -2245,11 +2238,11 @@ $.any.anyView.prototype.refreshCloseItemButton = function (opt)
     top_view: this.options.top_view,
   };
   let tit_str = i18n.button.buttonClose;
-  //let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
+//let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
   let btn_id  = this.id_base+"_cancel_new_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
-  let btn = $("<div id='"+btn_id+"' class='any-tool-cancel any-tool-button pointer' title='"+tit_str+"'>"+
+  let btn = $("<div id='"+btn_id+"' class='any-tool-closeitem any-tool-button pointer' title='"+tit_str+"'>"+
               //tit_str+
               //btn_str+
               "<i class='far fa-window-close fa-lg'></i>"+
@@ -2277,11 +2270,10 @@ $.any.anyView.prototype.refreshAddButton = function (opt)
     return null;
 
   let parent  = opt.parent;
-  let id_str  = opt.id_str;
-
+  let idstr   = opt.id_str;
   let tit_str = i18n.button.buttonAddToList.replace("%%",opt.type);
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+id_str+"_new_line_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+idstr+"_new_line_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' style='display:inline-block;' class='any-tool-add any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2310,11 +2302,10 @@ $.any.anyView.prototype.refreshSelectButton = function (opt)
     return null;
 
   let parent  = opt.parent;
-  let id_str  = opt.row_id_str;
-
+  let idstr   = opt.row_id_str;
   let tit_str = i18n.button.buttonSelect;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+id_str+"_select_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+idstr+"_select_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let check_str = opt.checked
@@ -2347,11 +2338,10 @@ $.any.anyView.prototype.refreshEditButton = function (opt)
     return null;
 
   let parent  = opt.parent;
-  let id_str  = opt.row_id_str;
-
+  let idstr   = opt.row_id_str;
   let tit_str = i18n.button.buttonEdit;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+id_str+"_edit_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+idstr+"_edit_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-edit-icon any-icon pointer' title='"+tit_str+"'>"+
@@ -2379,10 +2369,7 @@ $.any.anyView.prototype.refreshEditButton = function (opt)
 // By default calls dbUpdate
 $.any.anyView.prototype.refreshUpdateButton = function (opt)
 {
-  if (!this.options.isEditable || !opt.edit)
-    return null;
-
-  if (!opt)
+  if (!opt || !opt.edit || !this.options.isEditable)
     return null;
 
   opt.is_new   = opt.data && opt.data[parseInt(opt.id)] ? opt.data[parseInt(opt.id)].is_new : false;
@@ -2390,11 +2377,10 @@ $.any.anyView.prototype.refreshUpdateButton = function (opt)
   opt.data     = null;
 
   let parent  = opt.parent;
-  let id_str  = opt.row_id_str;
-
+  let idstr   = opt.row_id_str;
   let tit_str = i18n.button.buttonUpdate;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+id_str+"_update_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+idstr+"_update_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-update-icon any-icon pointer' title='"+tit_str+"'>"+
@@ -2426,11 +2412,10 @@ $.any.anyView.prototype.refreshDeleteButton = function (opt)
     return null;
 
   let parent  = opt.parent;
-  let id_str  = opt.row_id_str;
-
+  let idstr   = opt.row_id_str;
   let tit_str = i18n.button.buttonDelete;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+id_str+"_delete_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+idstr+"_delete_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-delete-icon any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2462,11 +2447,10 @@ $.any.anyView.prototype.refreshCancelButton = function (opt)
     return null;
 
   let parent  = opt.parent;
-  let id_str  = opt.row_id_str;
-
+  let idstr   = opt.row_id_str;
   let tit_str = i18n.button.buttonCancel;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+id_str+"_cancel_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+idstr+"_cancel_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-cancel-icon any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2497,11 +2481,10 @@ $.any.anyView.prototype.refreshRemoveButton = function (opt)
     return null;
 
   let parent  = opt.parent;
-  let id_str  = opt.row_id_str;
-
+  let idstr   = opt.row_id_str;
   let tit_str = i18n.button.buttonRemove;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
-  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+id_str+"_remove_icon";
+  let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+idstr+"_remove_icon";
   if ($("#"+btn_id).length)
     $("#"+btn_id).remove();
   let btn = $("<div id='"+btn_id+"' class='any-remove-icon any-tool-button pointer' title='"+tit_str+"'>"+
@@ -2541,7 +2524,6 @@ $.any.anyView.prototype.refreshNewItemButton = function (opt)
     return null;
 
   let parent  = opt.parent;
-
   let tit_str = this.options.newButtonLabel ? this.options.newButtonLabel : i18n.button.buttonNew+" "+opt.type;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'> "+/*tit_str+*/"</span>" : "";
   let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_new_icon";
@@ -2577,7 +2559,6 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
     return;
 
   let parent  = opt.parent;
-  let id_str  = opt.id_str;
   let tit_str = i18n.message.addRemove;
   let btn_str = this.options.showButtonLabels ? "<span class='any-button-text'>"+tit_str+"</span>" : "";
   let btn_id  = this.id_base+"_"+opt.type+"_"+opt.mode+"_"+opt.id_str+"_add_icon";
@@ -2605,7 +2586,7 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
             : this.option("context")
               ? this.option("context")
               : this;
-  opt.top_view = this.options.top_view; //parent.parent();
+  opt.top_view = this.options.top_view;
   btn.off("click").on("click", opt, $.proxy(fun,con));
 
   if (opt.mode == "item" && this.options.showButtonAddLinkItem) {
@@ -2624,9 +2605,9 @@ $.any.anyView.prototype.refreshAddLinkButton = function (opt)
     // Pressing ESC (27) will hide the menu
     if (!window.anyKeydownHandler)
       window.anyKeydownHandler = [];
-    if (window.anyKeydownHandler.indexOf(id_str) == -1) {
+    if (window.anyKeydownHandler.indexOf(opt.id_str) == -1) {
       window.addEventListener("keydown", (e) => this.handleEsc(e,opt,this));
-      window.anyKeydownHandler.push(id_str);
+      window.anyKeydownHandler.push(opt.id_str);
     }
     // Add the clickable menu entries
     for (let link_type in this.options.linkIcons) {
@@ -3608,9 +3589,9 @@ $.any.anyView.prototype.pageNumClicked = function (pager)
   let from = pager.options.itemsPerPage *(pager.currentPage() - 1) + 1;
   let num  = pager.options.itemsPerPage;
   let mod_opt = {
+    context:   this.model,
     from:      from,
     num:       num,
-    context:   this.model,
     type:      pager.options.div_info.type,
     order:     this.options.sortBy,
     direction: this.options.sortDirection,
@@ -4206,10 +4187,10 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
                                     id_str: opt.id_str,
                                   });
       new_params.table_div = this.getOrCreateTable({
-                                    parent:     new_params.data_div,
-                                    type:       opt.type,
-                                    mode:       opt.mode,
-                                    id_str:     opt.id_str,
+                                    parent: new_params.data_div,
+                                    type:   opt.type,
+                                    mode:   opt.mode,
+                                    id_str: opt.id_str,
                                   });
       this.refreshData(new_params);
     }
@@ -4220,28 +4201,15 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
              id:         opt.id,
              type:       opt.type,
              mode:       opt.mode,
-             link_data:   opt.link_data,
-             link_id:     opt.link_id,
+             link_data:  opt.link_data,
+             link_id:    opt.link_id,
              id_str:     opt.id_str,
              row_id_str: opt.row_id_str,
              edit:       opt.edit,
            });
     }
   }
-  let edit_icon   = prefix+"_edit .any-edit-icon";
-  let update_icon = prefix+"_edit .any-update-icon";
-  let add_icon    = prefix+"_add_icon";
-  let remove_icon = prefix+"_remove_icon";
-  let delete_icon = prefix+"_delete_icon";
-  let cancel_icon = prefix+"_cancel_icon";
   if (this.options.isEditable && opt.edit) {
-    $("#"+edit_icon).hide();
-    $("#"+update_icon).show();
-    $("#"+add_icon).show();
-    $("#"+remove_icon).hide();
-    if (this.options.isDeletable && this.options.showButtonDelete)
-      $("#"+delete_icon).show();
-    $("#"+cancel_icon).show();
     this.current_edit = {
       data:       opt.data,
       id:         opt.id,
@@ -4268,14 +4236,6 @@ $.any.anyView.prototype.doToggleEdit = function (opt)
     this.initComponents();
   }
   else {
-    if (this.options.isEditable && this.options.showButtonEdit)
-      $("#"+edit_icon).show();
-    $("#"+update_icon).hide();
-    $("#"+add_icon).hide();
-    if (this.options.isRemovable && this.options.showButtonRemove)
-      $("#"+remove_icon).show();
-    $("#"+delete_icon).hide();
-    $("#"+cancel_icon).hide();
     this.current_edit = null;
     this.showMessages("");
   }
@@ -4401,7 +4361,7 @@ $.any.anyView.prototype.dbSearchParents = function (model,mode,val,edit,link_id)
 }; // dbSearchParents
 
 // Create the dropdown menu to select parent from.
-$.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,options)
+$.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,params)
 {
   let self = context ? context : this;
   self.db_last_command = "sea";
@@ -4421,24 +4381,24 @@ $.any.anyView.prototype.createParentDropdownMenu = function (context,serverdata,
     if (self.error_server)
       console.error("anyView.createParentDropdownMenu: "+self.error_server);
     if (serverdata.data) {
-      let view = options.context ? options.context : null;
+      let view = params.context ? params.context : null;
       if (view) {
         let data      = serverdata.data;
-        let the_id    = Number.isInteger(parseInt(options.child_id)) ? parseInt(options.child_id) : options.child_id;
-        let mode      = options.mode;
-        let type_name = options.type+"_name";
+        let the_id    = Number.isInteger(parseInt(params.child_id)) ? parseInt(params.child_id) : params.child_id;
+        let mode      = params.mode;
+        let type_name = params.type+"_name";
         let id_str    = "0_"+the_id;
-        let itemsel_id = view.id_base+"_"+options.type+"_"+mode+"_"+id_str+"_parent_id .itemSelect";
+        let itemsel_id = view.id_base+"_"+params.type+"_"+mode+"_"+id_str+"_parent_id .itemSelect";
         let itemsel_dd = $("#"+itemsel_id);
         let did_select = "selected='true'";
         let topidx = "+0";
         if (the_id || the_id === 0)
           topidx = the_id;
         data = data[topidx] ? data[topidx].data : data;
-        data = data[options.type] ? data[options.type].data : data;
+        data = data[params.type] ? data[params.type].data : data;
         $.each(data,function (id,item) {
           if (parseInt(id) != the_id) {
-            let sel = parseInt(id) == parseInt(options.parent_id) ? "selected='true'" : "";
+            let sel = parseInt(id) == parseInt(params.parent_id) ? "selected='true'" : "";
             let pname = data[id][type_name];
             itemsel_dd.append($("<option "+sel+">").attr("value",parseInt(id)).text(pname));
             if (sel != "") {
@@ -4624,19 +4584,11 @@ $.any.anyView.prototype.dbUpdate = function (event)
   if (icid && icid != "") {
     let icdiv = $("#"+icid);
     let res = icdiv.find($(".fas"));
-    res.toggleClass('fa-pencil-alt').toggleClass('fa-solid fa-spinner fa-spin'); // TODO! CSS
+    res.toggleClass('fa-pencil-alt').toggleClass('fa-solid fa-spinner fa-spin'); // TODO! CSS // TODO! Does not work for item mode
   }
   if (mode == "item")
     this.showMessages("",true);
   return this.model.dbUpdate(event.data);
-
-/* Never reached!
-  if (item && item[id]) {
-    delete item[id].is_new;
-    delete item[id].dirty;
-  }
-  return true;
-*/
 }; // dbUpdate
 
 /**

@@ -225,10 +225,10 @@ $.any.anyViewTabs.prototype.dbUpdateLinkListDialog = function (context,serverdat
     if (list_type) {
       let v = options.parent_view._findViewOfType(list_type);
       if (v) {
-        let id = v.element.attr("id");
-        id = id.substring(0,id.lastIndexOf("_"));
-        id = id + "_link-" + list_type;
-        v.openTab({id_base:id});
+        let view_id = v.element.attr("id");
+        view_id = view_id.substring(0,view_id .lastIndexOf("_"));
+        view_id = view_id + "_link-" + list_type;
+        v.openTab({id_base:view_id});
       }
     }
   }
