@@ -632,7 +632,7 @@ anyModel.prototype._getDataSourceName = function ()
  * @param {integer} options.id     The id to search for.
  *                                 Optional. Default: null.
  * @param {boolean} options.parent If true, search for parent of the item with the specified id.
- *                                 Optional. Default: Same as `type`.
+ *                                 Optional. Default: false.
  *
  * @return If id is specified and parent is false: A pointer to the item found, or null if not found or on error.
  *         If id is specified and parent is true: A pointer to the parent of the item found, or null if not found or on error.
@@ -704,7 +704,7 @@ anyModel.prototype.dataSearch = function (options,
   }
   let itemlist = {};
   for (let idc in data) {
-    if (data.hasOwnProperty(idc) && data[idc] && !idc.startsWith("grouping") &&  !["head","item","list"].includes(idc)) {
+    if (data.hasOwnProperty(idc) && !idc.startsWith("grouping") &&  !["head","item","list"].includes(idc)) {
       let item = null;
       let dtype = data[idc].list
                   ? data[idc].list
