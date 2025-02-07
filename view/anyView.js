@@ -4952,7 +4952,7 @@ $.any.anyView.prototype.dbDeleteDialog = function (event)
 
   if (item[id].is_new || !this.options.confirmDelete) {
     if (item[id].is_new)
-      event.data.top_view = this.options.view;
+      event.data.top_view = this.options.top_view;
     this.dbDelete(event.data);
   }
   else { // Ask for confirmation
