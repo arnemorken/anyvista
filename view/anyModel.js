@@ -1349,6 +1349,12 @@ anyModel.prototype.dataDelete = function (options)
     return null;
   delete it_ptr[it_idc];
 
+  if (Object.size(it_ptr) == 1 && it_ptr.grouping_num_results) {
+    if (item.data)
+      delete item.data;
+    else
+      delete it_ptr.grouping_num_results;
+  }
   if (this.auto_callback)
     this.cbExecute();
   return item; // Should be empty
