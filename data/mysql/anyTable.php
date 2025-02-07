@@ -593,7 +593,8 @@ class anyTable extends dbTable
         throw new Exception($this->mError);
       if ($this->mMaxId >= 0)
         return $this->mData;
-      return $this->prepareData(Parameters::get($this->mIdKey));
+      $mode = ($id || $id === 0) ? "item" : "list";
+      return $this->prepareData(Parameters::get($this->mIdKey,$mode));
     }
     catch (Exception $e) {
       $this->mError = $e->getMessage();
@@ -668,13 +669,14 @@ class anyTable extends dbTable
     $grouping = Parameters::get("grouping"); // Grouping of the lists of the item
     $grouping = $grouping !== false && $grouping !== "false" && $grouping !== "0";
 
-    $this->mNumResults = 0;
     // Build and execute the query
+    $this->mNumResults = 0;
     $stmt = $this->dbPrepareSearchItemStmt($key,$val,$includeUser);
     //elog("dbSearchItemByKey:".$stmt);
     if (!$this->query($stmt))
       return null; // An error occured
-    // Get the data
+
+    // Get and prepare the data
     if ($this->getRowData($this->mData,"item",false,$grouping)) {
       $this->dbSearchMeta("item",$id); // Get meta data for the item
       if (isset($this->mData) && $this->mData["nogroup"]) {
@@ -1646,7 +1648,7 @@ class anyTable extends dbTable
       if (!isset($data_tree["unknown"]))
         $data_tree["unknown"] = null;
       if (isset($data_tree["unknown"])) {
-        $group_data["unknown"] = null;
+        $group_data["unknown"] = [];
         $group_data["unknown"]["group_id"]   = "unknown";
         $group_data["unknown"]["group_name"] = "Unknown"; // TODO! i18n
         $group_data["unknown"]["group_description"] = ucfirst($this->mType)."s belonging to non-".$this->mType." group&nbsp;&nbsp;".
@@ -1787,24 +1789,35 @@ class anyTable extends dbTable
   /**
    * Prepare data related to a list or a single item.  Adds a default top header.
    */
-  public function prepareData($id=null)
+  public function prepareData($id=null,$mode="list")
   {
     //vlog("data before prepare:",$this->mData);
+    $is_item = ($id || $id === 0) && $id != "";
     // Make room for a top level header
-    $topidx = "+0";
-    if (($id || $id === 0) && $id != "")
+    if ($is_item)
       $topidx = "+".$id;
+    else
+      $topidx = "+0";
     $data = array("data" => array($topidx => array()));
 
-    // Set "head" and header
-    $data["data"][$topidx]["head"] = "group";
+    // Set top level mode / type
+    $grouping = Parameters::get("grouping");
+    $grouping = $grouping !== false && $grouping !== "false" && $grouping !== "0";
+    $data["data"][$mode] = $grouping ? "group" : $this->mType;
+
+    $data["data"][$topidx]["grouping"] = $grouping;
+
+    // Set top level header
     $hdr = $this->findHeader($this->mType,$this->mData,$id);
     if (isset($hdr) && $hdr != "")
       $data["data"][$topidx]["group_name"] = $hdr;
 
-    // Set data
+    // Set "head" and header
+    $data["data"][$topidx]["head"] = "group";
+
+    // Set top level data
     if (isset($this->mData)) {
-      if (($id || $id === 0) && $id != "") {
+      if ($is_item) {
         $gidx = array_key_first($this->mData);
         $data["data"][$topidx]["data"] = $this->mData[$gidx]["data"];
       }
@@ -1812,7 +1825,7 @@ class anyTable extends dbTable
         $data["data"][$topidx]["data"] = $this->mData;
     }
     else
-        $data["data"][$topidx]["data"] = null;
+      $data["data"][$topidx]["data"] = null;
 
     // Set link types
     $data["link_types"] = $this->mLinkTypes;
