@@ -1730,6 +1730,8 @@ class anyTable extends dbTable
             $subdata["data"] = $children;
           if ($parent_not_in_group && ($pid || $pid === 0))
             $subdata["parent_id"] = $pid;
+          if ($subdata["parent_id"] == null && $parentId == null)
+            unset($subdata["parent_id"]);
           $retval[$idx] = $subdata;
           unset($subdata);
         } // if subdata
