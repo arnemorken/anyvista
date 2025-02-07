@@ -396,10 +396,8 @@ $.any.anyView.prototype._findMode = function (data,id,intype)
     if (!mode)
       mode = data.list ? "list" : data.item ? "item" : data.head ? "head" : null;
   }
-  if (!mode) {
-    // No mode specified, so fall back to default
-    mode ="list";
-  }
+  if (!mode)
+    mode ="list"; // No mode specified, fall back to default
   return mode;
 }; // _findMode
 
@@ -4823,10 +4821,10 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
   if (!event || !event.data)
     throw i18n.error.DATA_MISSING;
 
+  let mode      = event.data.mode;
   let data      = event.data.data;
   let id        = event.data.id;
   let type      = event.data.type;
-  let mode      = event.data.mode;
   let link_data = event.data.link_data;
   let link_id   = event.data.link_id;
   let link_type = event.data.link_type;
@@ -4845,19 +4843,13 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
                                             type: link_type,
                                          });
       let li_name = li_data && li_data[link_id] ? li_data[link_id][link_type+"_name"] : null;
-      let it_data = this.model.dataSearch({ id:     id,
-                                            type:   type,
-                                            parent: true,
-                                         });
-      let it_name = it_data && it_data[this.model.name_key]
-                    ? "from the "+type+" '"+it_data[this.model.name_key]+"'"
-                    : li_name
-                      ? "from the "+link_type+" '"+li_name+"'"
-                      : "from this "+link_type;
-      msgstr += " "+it_name;
+      let it_name = li_name
+                    ? "from the "+link_type+" '"+li_name+"'"
+                    : "from this "+link_type;
+      msgstr += " "+it_name+"?";
     }
     let msg = "<div class='any-confirm-remove-dialog' id='"+this.id_base+"_confirm_remove' style='padding:.8em;'>"+
-              msgstr+"?"+
+              msgstr+
               "</div>";
     let parent_id = this.element.attr("id");
     if (parent_id) {
@@ -4880,7 +4872,6 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
           data:      data,
           id:        id,
           type:      type,
-          mode:      mode,
           link_data: link_data,
           link_id:   link_id,
           link_type: link_type,
@@ -4891,13 +4882,12 @@ $.any.anyView.prototype.dbRemoveDialog = function (event)
       };
       w3_modaldialog(mod_opt);
     } // if
-  } // if
+  } // if confirmRemove
   else {
     let opt = {
         data:      data,
         id:        id,
         type:      type,
-        mode:      mode,
         link_data: link_data,
         link_id:   link_id,
         link_type: link_type,
