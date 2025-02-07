@@ -1226,6 +1226,8 @@ anyModel.prototype.dataUpdateLinkList = function (options)
                       id:   the_id,
                       type: the_type,
                    });
+    if (Object.size(this.data) == 1 && this.data.grouping_num_results)
+      this.data = null;
     return true;
   } // if
 
@@ -1281,6 +1283,8 @@ anyModel.prototype.dataUpdateLinkList = function (options)
       }
     } // for
   } // if
+  if (Object.size(this.data) == 1 && this.data.grouping_num_results)
+    this.data = null;
   return true;
 }; // dataUpdateLinkList
 
@@ -2452,7 +2456,7 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
     if (serverdata.error == "") {
       options.new_data = serverdata.data;
       self.dataUpdateLinkList({
-             data:      options.data,
+             data:      self.data,
              id:        options.id,
              type:      options.type,
              link_data: options.link_data,
@@ -2463,13 +2467,14 @@ anyModel.prototype.dbUpdateLinkListSuccess = function (context,serverdata,option
              new_data:  options.new_data,
            }); // Remove data
       if (serverdata.data) {
-        let the_link_id = "link-"+options.link_type; // TODO! Not an ideal solution, depends on server side index
+        let the_link_id = "link-"+options.link_type;
         let data = self.dataSearch({
-                          data: serverdata.data,
+                          data: self.data,
                           id:   the_link_id,
+                          type: options.link_type,
                         });
-        if (data && data[the_link_id])
-          self.data = data[the_link_id].data;
+        if (data && data[the_link_id] && (!data[the_link_id].data || data[the_link_id].data.grouping_num_results == 1))
+          delete data[the_link_id];
       }
     }
   }
